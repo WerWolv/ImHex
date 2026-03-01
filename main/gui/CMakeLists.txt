@@ -38,7 +38,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE
 add_dependencies(imhex_all main)
 
 if (EMSCRIPTEN)
-    target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1 -Wno-pthreads-mem-growth)
+    target_compile_options(main PRIVATE --use-port=contrib.glfw3)
+    target_link_options(main PRIVATE --use-port=contrib.glfw3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1 -Wno-pthreads-mem-growth)
     target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
     target_link_options(main PRIVATE -sGL_UNSAFE_OPTS=0)

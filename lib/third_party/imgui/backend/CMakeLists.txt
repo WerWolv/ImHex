@@ -25,6 +25,10 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(imgui_backend PUBLIC ${X11_LIBRARIES})
     endif()
 
+    if (EMSCRIPTEN)
+        target_compile_options(imgui_backend PRIVATE --use-port=contrib.glfw3)
+    endif()
+
     find_package(GLFW QUIET)
     if (NOT GLFW_FOUND OR "${GLFW_LIBRARIES}" STREQUAL "")
         find_package(glfw3 QUIET)

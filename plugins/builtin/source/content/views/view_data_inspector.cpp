@@ -183,9 +183,9 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::executeInspector(const std::string& code, const std::fs::path& path, const std::map<std::string, pl::core::Token::Literal>& inVariables) {
-        if (m_runtime.executeString(code, pl::api::Source::DefaultSource, {}, inVariables, true) == 0) {
+        if (m_runtime.executeString(code, pl::api::Source::DefaultSource, {}, inVariables, true) != 0) {
 
-            auto displayFunction = createPatternErrorDisplayFunction();
+            auto displayFunction = createPatternErrorDisplayFunction(path);
 
             // Insert the inspector containing the error message into the list
             m_workData.emplace_back(
@@ -226,7 +226,13 @@ namespace hex::plugin::builtin {
 
             try {
                 // Set up the display function using the pattern's formatter
-                auto displayFunction = [pattern,value = pattern->getFormattedValue()] {
+                auto displayFunction = [pattern, value = pattern->getFormattedValue(), path] {
+                    ContentRegistry::DataInspector::drawMenuItems([&] {
+                        if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.open_pattern"_lang, ICON_VS_FOLDER_OPENED)) {
+                            fs::openFileExternal(path);
+                        }
+                    });
+
                     auto drawer = ui::VisualizerDrawer();
                     if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
                         drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
@@ -249,7 +255,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.patterns",
                                                       "hex.builtin.achievement.patterns.data_inspector.name");
             } catch (const pl::core::err::EvaluatorError::Exception &) {
-                auto displayFunction = createPatternErrorDisplayFunction();
+                auto displayFunction = createPatternErrorDisplayFunction(path);
 
                 // Insert the inspector containing the error message into the list
                 m_workData.emplace_back(
@@ -460,7 +466,7 @@ namespace hex::plugin::builtin {
             // Handle copying the value to the clipboard when clicking the row
             if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
                 m_selectedEntryName = entry.unlocalizedName;
-                if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
+                if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && entry.requiredSize > 0) {
                     ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress(), .size=entry.requiredSize });
                 }
             }
@@ -603,7 +609,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    ContentRegistry::DataInspector::impl::DisplayFunction ViewDataInspector::createPatternErrorDisplayFunction() {
+    ContentRegistry::DataInspector::impl::DisplayFunction ViewDataInspector::createPatternErrorDisplayFunction(const std::fs::path &path) {
         // Generate error message
         std::string errorMessage;
         if (const auto &compileErrors = m_runtime.getCompileErrors(); !compileErrors.empty()) {
@@ -615,7 +621,13 @@ namespace hex::plugin::builtin {
         }
 
         // Create a dummy display function that displays the error message
-        auto displayFunction = [errorMessage = std::move(errorMessage)] {
+        auto displayFunction = [errorMessage = std::move(errorMessage), path] {
+            ContentRegistry::DataInspector::drawMenuItems([&, path] {
+                if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.open_pattern"_lang, ICON_VS_FOLDER_OPENED)) {
+                    fs::openFileExternal(path);
+                }
+            });
+
             ImGuiExt::HelpHover(
                 errorMessage.c_str(),
                 "hex.builtin.view.data_inspector.execution_error"_lang,

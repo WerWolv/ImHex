@@ -1,9 +1,13 @@
+#include <GLFW/glfw3.h>
+
 #include "window.hpp"
+#include "hex/api/imhex_api/system.hpp"
 
 #if defined(OS_WEB)
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
+#include <GLFW/emscripten_glfw3.h>
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/events_gui.hpp>
@@ -16,20 +20,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-// Function used by c++ to get the size of the html canvas
-EM_JS(int, canvas_get_width, (), {
-    return Module.canvas.width;
-});
-
-// Function used by c++ to get the size of the html canvas
-EM_JS(int, canvas_get_height, (), {
-    return Module.canvas.height;
-});
-
-// Function called by javascript
-EM_JS(void, resizeCanvas, (), {
-    js_resizeCanvas();
-});
 
 EM_JS(bool, isMacOS, (), {
     return navigator.userAgent.indexOf('Mac OS X') != -1
@@ -52,6 +42,11 @@ EM_JS(bool, isDarkModeEnabled, (), {
 EMSCRIPTEN_KEEPALIVE
 extern "C" void handleThemeChange() {
     hex::EventOSThemeChanged::post();
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void updateFramebufferSize(int width, int height) {
+    glfwSetWindowSize(hex::ImHexApi::System::getMainWindowHandle(), width, height);
 }
 
 
@@ -79,9 +74,12 @@ namespace hex {
 
     void Window::configureGLFW() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         glfwWindowHint(GLFW_DECORATED, GL_FALSE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
+        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
+
+        emscripten::glfw3::SetNextWindowCanvasSelector("#canvas");
     }
 
     void Window::initNative() {
@@ -101,8 +99,23 @@ namespace hex {
         });
     }
 
+    static float calculateNativeScale(GLFWwindow *window) {
+        int windowW, windowH;
+        int displayW, displayH;
+        glfwGetWindowSize(window, &windowW, &windowH);
+        glfwGetFramebufferSize(window, &displayW, &displayH);
+
+        const auto xScale = (windowW > 0) ? float(displayW) / windowW : 1.0f;
+        const auto yScale = (windowH > 0) ? float(displayH) / windowH : 1.0f;
+
+        auto scaleFactor = std::midpoint(xScale, yScale);
+        if (scaleFactor <= 0.0F)
+            scaleFactor = 1.0F;
+
+        return scaleFactor;
+    }
+
     void Window::setupNativeWindow() {
-        resizeCanvas();
         setupThemeListener();
         setupInputModeListener();
         fixCanvasInPlace();
@@ -123,15 +136,20 @@ namespace hex {
 
         glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            resizeCanvas();
             win->fullFrame();
         });
 
         if (themeFollowSystem)
             EventOSThemeChanged::post();
 
-        if (isMacOS())
+        if (emscripten::glfw3::IsRuntimePlatformApple())
             ShortcutManager::enableMacOSMode();
+
+        glfwSetWindowAttrib(m_window, GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
+        glfwShowWindow(m_window);
+        emscripten::glfw3::MakeCanvasResizable(m_window, "#canvas-wrapper");
+        ImHexApi::System::impl::setNativeScale(calculateNativeScale(m_window));
+        EventDPIChanged::post(1.0, ImHexApi::System::getBackingScaleFactor());
     }
 
     void Window::beginNativeWindowFrame() {
@@ -140,40 +158,18 @@ namespace hex {
 
     void Window::endNativeWindowFrame() {
         static float prevScaleFactor = 0;
-
-        const float currScaleFactor = MAIN_THREAD_EM_ASM_DOUBLE({
-            try {
-                return window.devicePixelRatio;
-            } catch (e) {
-                return 1.0;
-            }
-        });
+        const float currScaleFactor = ImHexApi::System::getBackingScaleFactor();
 
         if (prevScaleFactor != 0 && prevScaleFactor != currScaleFactor) {
             EventDPIChanged::post(prevScaleFactor, currScaleFactor);
-            resizeCanvas();
 
-            ImHexApi::System::impl::setNativeScale(currScaleFactor);
+            ImHexApi::System::impl::setNativeScale(calculateNativeScale(m_window));
 
             ThemeManager::reapplyCurrentTheme();
         }
-
-                static i32 prevWidth = 0;
-        static i32 prevHeight = 0;
-
-        auto width = canvas_get_width();
-        auto height = canvas_get_height();
-
-        if (prevWidth != width || prevHeight != height) {
-            // Size has changed
-
-            prevWidth  = width;
-            prevHeight = height;
-            this->resize(width, height);
-            resizeCanvas();
-        }
-
         prevScaleFactor = currScaleFactor;
+
+        glfwSetWindowSize(m_window, EM_ASM_INT({ return document.getElementById("canvas-wrapper").clientWidth; }), EM_ASM_INT({ return document.getElementById("canvas-wrapper").clientHeight; }));
     }
 
 }

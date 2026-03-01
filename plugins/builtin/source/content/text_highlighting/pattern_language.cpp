@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
     }
 
     void TextHighlighter::next(i32 count) {
-        if (m_viewPatternEditor->wasInterrupted()) {
+        if (m_viewPatternEditor->interrupted()) {
             m_viewPatternEditor->resetInterrupt();
             throw std::out_of_range("Highlights were deliberately interrupted");
         }
@@ -2510,7 +2510,7 @@ namespace hex::plugin::builtin {
         m_viewPatternEditor->resetInterrupt();
         ON_SCOPE_EXIT {
             m_viewPatternEditor->incrementRunningHighlighters(-1);
-            m_viewPatternEditor->setChangesWereColored(!m_viewPatternEditor->wasInterrupted());
+            m_viewPatternEditor->setChangesWereColored(!m_viewPatternEditor->interrupted());
         };
         try {
             m_viewPatternEditor->incrementRunningHighlighters(1);
@@ -2556,7 +2556,7 @@ namespace hex::plugin::builtin {
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
-            m_viewPatternEditor->setWasInterrupted(true);
+            m_viewPatternEditor->interrupt();
             return;
         }
 

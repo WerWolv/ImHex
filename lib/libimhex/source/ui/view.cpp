@@ -5,7 +5,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 
-#include <hex/providers/provider.hpp>
+#include <imgui_internal.h>
 
 #include <imgui.h>
 
@@ -120,11 +120,73 @@ namespace hex {
 
     void View::Window::draw(ImGuiWindowFlags extraFlags) {
         if (this->shouldDraw()) {
+            const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+
+            const ImGuiContext& g = *ImGui::GetCurrentContext();
+            bool foundTopFocused = false;
+            ImGuiWindow *imguiFocusedWindow = nullptr;
+            ImGuiWindow *focusedSubWindow = nullptr;
+
+            if (g.NavWindow != nullptr) {
+                imguiFocusedWindow = g.NavWindow;
+                foundTopFocused = true;
+            }
+            for (auto focusedWindow: g.WindowsFocusOrder | std::views::reverse) {
+                if (focusedWindow == nullptr || !focusedWindow->WasActive)
+                    continue;
+                std::string focusedWindowName = focusedWindow->Name;
+                if (!foundTopFocused) {
+                    imguiFocusedWindow = focusedWindow;
+                    foundTopFocused = true;
+                }
+                if (imguiFocusedWindow == nullptr || !focusedWindowName.contains("###hex.builtin.view."))
+                    continue;
+                if (auto focusedChild = focusedWindow->NavLastChildNavWindow; focusedChild != nullptr)
+                    focusedSubWindow = focusedChild;
+                else if (focusedWindow == focusedWindow->RootWindow)
+                    focusedSubWindow = focusedWindow;
+
+                break;
+            }
+
+            std::string imguiFocusedWindowName = "NULL";
+            if (imguiFocusedWindow != nullptr)
+                imguiFocusedWindowName.assign(imguiFocusedWindow->Name);
+
+            std::string focusedSubWindowName;
+            if (focusedSubWindow != nullptr || m_focusedSubWindow != nullptr) {
+                focusedSubWindowName = focusedSubWindow != nullptr ? focusedSubWindow->Name : m_focusedSubWindow->Name;
+                if (focusedSubWindow != nullptr && m_focusedSubWindow != nullptr) {
+                    std::string_view windowName = m_focusedSubWindow->Name;
+                    auto stringsVector = wolv::util::splitString(focusedSubWindowName, "/");
+                    if (stringsVector.back().contains("resize") || (focusedSubWindow == focusedSubWindow->RootWindow && windowName.starts_with(focusedSubWindowName)))
+                        focusedSubWindowName = windowName;
+                    else
+                        m_focusedSubWindow = focusedSubWindow;
+                } else if (focusedSubWindow != nullptr)
+                    m_focusedSubWindow = focusedSubWindow;
+
+                bool windowAlreadyFocused = focusedSubWindowName == imguiFocusedWindowName;
+                bool titleFocused = focusedSubWindowName.starts_with(title);
+
+                if (titleFocused && !windowAlreadyFocused) {
+
+                    bool windowMayNeedFocus = focusedSubWindowName.starts_with(imguiFocusedWindowName);
+                    std::string activeName = g.ActiveIdWindow ? g.ActiveIdWindow->Name : "NULL";
+
+                    if ((activeName == "NULL" || windowMayNeedFocus) && (imguiFocusedWindowName == "##MainMenuBar" || imguiFocusedWindowName.starts_with("ImHexDockSpace") || imguiFocusedWindowName.contains("###hex.builtin.view."))) {
+                        if (m_focusedSubWindow == m_focusedSubWindow->RootWindow)
+                            ImGui::FocusWindow(m_focusedSubWindow, ImGuiFocusRequestFlags_RestoreFocusedChild);
+                        else
+                            ImGui::FocusWindow(m_focusedSubWindow, ImGuiFocusRequestFlags_None);
+                    }
+                }
+            }
+
             if (!allowScroll())
                 extraFlags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
             ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-            const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
             if (ImGui::Begin(title.c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | extraFlags | this->getWindowFlags())) {
                 TutorialManager::setLastItemInteractiveHelpPopup([this]{ this->drawHelpText(); });
                 this->drawContent();

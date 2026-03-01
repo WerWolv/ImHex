@@ -145,8 +145,9 @@ namespace hex {
      * @brief A view that draws a regular window. This should be the default for most views
      */
     class View::Window : public View {
+        ImGuiWindow *m_focusedSubWindow;
     public:
-        explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
+        explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon), m_focusedSubWindow(nullptr) {}
 
         /**
          * @brief Draws help text for the view
@@ -195,8 +196,6 @@ namespace hex {
         bool allowScroll() const final {
             return true;
         }
-
-        [[nodiscard]] bool shouldStoreWindowState() const override { return false; }
     };
 
     /**

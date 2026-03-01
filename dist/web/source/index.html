@@ -96,7 +96,9 @@
     </div>
 </div>
 
-<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+<div id="canvas-wrapper" style="width: 100%; height: 100%">
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+</div>
 
 <script src="wasm-config.js"></script>
 <script async src="imhex.js"></script>

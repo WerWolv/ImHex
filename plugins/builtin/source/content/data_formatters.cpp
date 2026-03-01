@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size, bool) {
-            return formatLanguageArray(provider, offset, size, "const byte[] data = {", "0x{0:02X}, ", "};");
+            return formatLanguageArray(provider, offset, size, "byte[] data = {", "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size, bool) {

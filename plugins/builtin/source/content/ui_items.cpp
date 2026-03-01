@@ -26,6 +26,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <toasts/toast_notification.hpp>
+#include <popups/popup_question.hpp>
 
 #include <csignal>
 #include <fonts/tabler_icons.hpp>
@@ -107,7 +108,14 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("ImHex")) {
                     if (ImGui::BeginChild("Scrolling", ImGui::GetContentRegionAvail())) {
                         ImGui::Checkbox("Show Debug Variables", &dbg::impl::getDebugWindowState());
-
+                        if (ImGui::Button("Request a restart")) {
+                            TaskManager::doLater([] {
+                                ui::PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
+                                    ImHexApi::System::restartImHex,
+                                    []{}
+                                );
+                            });
+                        }
                         ImGuiExt::Header("Information");
                         ImGuiExt::TextFormatted("Running Tasks: {0}", TaskManager::getRunningTaskCount());
                         ImGuiExt::TextFormatted("Running Background Tasks: {0}", TaskManager::getRunningBackgroundTaskCount());

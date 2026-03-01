@@ -1019,8 +1019,14 @@ namespace hex {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+
+        // Don't hide the window on the web build, otherwise the mouse cursor offset will not
+        // be calculated correctly if the canvas is not filling the entire screen
+        #if !defined(OS_WEB)
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        #endif
+
         configureGLFW();
 
         if (initialWindowProperties.has_value()) {
