@@ -10,6 +10,7 @@
 #include <imgui.h>
 
 #include <string>
+#include <GLFW/glfw3.h>
 
 namespace hex {
 
@@ -117,44 +118,43 @@ namespace hex {
         return s_lastFocusedView;
     }
 
+    void View::Window::handleFocusRestoration() {
+        const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
 
-    void View::Window::draw(ImGuiWindowFlags extraFlags) {
-        if (this->shouldDraw()) {
-            const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+        const ImGuiContext& g = *ImGui::GetCurrentContext();
+        bool foundTopFocused = false;
+        ImGuiWindow *imguiFocusedWindow = nullptr;
+        ImGuiWindow *focusedSubWindow = nullptr;
 
-            const ImGuiContext& g = *ImGui::GetCurrentContext();
-            bool foundTopFocused = false;
-            ImGuiWindow *imguiFocusedWindow = nullptr;
-            ImGuiWindow *focusedSubWindow = nullptr;
-
-            if (g.NavWindow != nullptr) {
-                imguiFocusedWindow = g.NavWindow;
+        if (g.NavWindow != nullptr) {
+            imguiFocusedWindow = g.NavWindow;
+            foundTopFocused = true;
+        }
+        for (auto focusedWindow: g.WindowsFocusOrder | std::views::reverse) {
+            if (focusedWindow == nullptr || !focusedWindow->WasActive)
+                continue;
+            std::string focusedWindowName = focusedWindow->Name;
+            if (!foundTopFocused) {
+                imguiFocusedWindow = focusedWindow;
                 foundTopFocused = true;
             }
-            for (auto focusedWindow: g.WindowsFocusOrder | std::views::reverse) {
-                if (focusedWindow == nullptr || !focusedWindow->WasActive)
-                    continue;
-                std::string focusedWindowName = focusedWindow->Name;
-                if (!foundTopFocused) {
-                    imguiFocusedWindow = focusedWindow;
-                    foundTopFocused = true;
-                }
-                if (imguiFocusedWindow == nullptr || !focusedWindowName.contains("###hex.builtin.view."))
-                    continue;
-                if (auto focusedChild = focusedWindow->NavLastChildNavWindow; focusedChild != nullptr)
-                    focusedSubWindow = focusedChild;
-                else if (focusedWindow == focusedWindow->RootWindow)
-                    focusedSubWindow = focusedWindow;
+            if (imguiFocusedWindow == nullptr || !focusedWindowName.contains("###hex.builtin.view."))
+                continue;
+            if (auto focusedChild = focusedWindow->NavLastChildNavWindow; focusedChild != nullptr)
+                focusedSubWindow = focusedChild;
+            else if (focusedWindow == focusedWindow->RootWindow)
+                focusedSubWindow = focusedWindow;
 
-                break;
-            }
+            break;
+        }
 
-            std::string imguiFocusedWindowName = "NULL";
-            if (imguiFocusedWindow != nullptr)
-                imguiFocusedWindowName.assign(imguiFocusedWindow->Name);
+        std::string imguiFocusedWindowName = "NULL";
+        if (imguiFocusedWindow != nullptr)
+            imguiFocusedWindowName.assign(imguiFocusedWindow->Name);
 
-            std::string focusedSubWindowName;
-            if (focusedSubWindow != nullptr || m_focusedSubWindow != nullptr) {
+        std::string focusedSubWindowName;
+        if (focusedSubWindow != nullptr || m_focusedSubWindow != nullptr) {
+            if (glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FOCUSED)) {
                 focusedSubWindowName = focusedSubWindow != nullptr ? focusedSubWindow->Name : m_focusedSubWindow->Name;
                 if (focusedSubWindow != nullptr && m_focusedSubWindow != nullptr) {
                     std::string_view windowName = m_focusedSubWindow->Name;
@@ -182,6 +182,15 @@ namespace hex {
                     }
                 }
             }
+        }
+    }
+
+
+    void View::Window::draw(ImGuiWindowFlags extraFlags) {
+        if (this->shouldDraw()) {
+            const auto title = fmt::format("{} {}", this->getIcon(), View::toWindowName(this->getUnlocalizedName()));
+
+            handleFocusRestoration();
 
             if (!allowScroll())
                 extraFlags |= ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
