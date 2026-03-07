@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ImHex
 
@@ -78,7 +78,7 @@ jobs:
       IMHEX_VERSION: ${{ steps.verify_version.outputs.IMHEX_VERSION }}
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ImHex
           submodules: recursive
@@ -102,7 +102,7 @@ jobs:
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
 
       - name: ⬇️ Download artifacts from latest workflow
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v12
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: build.yml
@@ -135,7 +135,7 @@ jobs:
           rm artifact.tar || true
 
       - name: ⬆️ Upload Unsigned x86_64 Windows Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         id: upload-installer-x86_64
         with:
           if-no-files-found: error
@@ -145,7 +145,7 @@ jobs:
 
       - name: ⬆️ Upload Unsigned ARM64 Windows Installer
         if: false
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         id: upload-installer-arm64
         with:
           if-no-files-found: error
@@ -191,7 +191,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ImHex
 
@@ -217,7 +217,7 @@ jobs:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         if: "${{ env.AUR_SSH_PRIVATE_KEY != '' }}"
 
-        uses: KSXGitHub/github-actions-deploy-aur@v2
+        uses: KSXGitHub/github-actions-deploy-aur@v4
         with:
           pkgname: imhex-bin
           pkgbuild: ./PKGBUILD
