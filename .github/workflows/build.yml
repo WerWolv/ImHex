@@ -246,7 +246,7 @@ jobs:
 
       - name: 📦 Install vcpkg
         uses: friendlyanon/setup-vcpkg@v1
-        with: { committish: ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0 }
+        with: { committish: 66c0373dc7fca549e5803087b9487edfe3aca0a1 }
 
       - name: ⬇️ Install dependencies
         run: |

@@ -146,7 +146,7 @@ namespace hex {
      */
     class View::Window : public View {
     public:
-        explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
+        explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon), m_focusedSubWindow(nullptr) {}
 
         /**
          * @brief Draws help text for the view
@@ -158,6 +158,12 @@ namespace hex {
         virtual bool allowScroll() const {
             return false;
         }
+
+    private:
+        void handleFocusRestoration();
+
+    private:
+        ImGuiWindow *m_focusedSubWindow;
     };
 
     /**

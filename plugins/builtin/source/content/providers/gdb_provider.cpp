@@ -255,6 +255,7 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult GDBProvider::open() {
+        CachedProvider::open();
         std::scoped_lock lock(m_mutex);
 
         CachedProvider::open();
@@ -276,6 +277,8 @@ namespace hex::plugin::builtin {
 
         CachedProvider::close();
         m_socket.disconnect();
+
+        CachedProvider::close();
     }
 
     bool GDBProvider::isConnected() const {
