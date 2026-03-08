@@ -21,6 +21,7 @@
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <popups/popup_file_chooser.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -763,7 +764,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -772,6 +773,20 @@ namespace hex::plugin::builtin {
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
+
+            // DEBUGGING
+            auto ss = wolv::util::time_t_to_SYSTEMTIME(endianAdjustedTime);
+            SYSTEMTIME ass;
+            //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
+            ass = ss.value();
+            if (ss) {
+                auto mdt = wolv::util::formatDateFromSYSTEMTIME(L"pl-PL", &ass);
+                if (mdt) {
+                    value += " --- " + mdt.value();
+                }
+
+            }
+            //
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -783,7 +798,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -805,7 +820,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
