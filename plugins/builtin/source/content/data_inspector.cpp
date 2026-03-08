@@ -763,7 +763,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -783,7 +783,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -805,7 +805,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
