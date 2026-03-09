@@ -1479,11 +1479,7 @@ namespace hex::plugin::builtin {
                 interrupt();
             else if (m_runningHighlighters == 0 && m_changesWereParsed && !m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setViewPatternEditor(this);
-                try {
-                    m_textHighlighter.get(provider).updateRequiredInputs();
-                } catch (...) {
-
-                }
+                m_textHighlighter.get(provider).updateRequiredInputs();
                 TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
             } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setRequestedIdentifierColors();
