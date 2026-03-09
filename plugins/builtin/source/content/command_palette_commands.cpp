@@ -370,7 +370,13 @@ namespace hex::plugin::builtin {
                         std::vector<std::string> names;
                         std::transform(entry.unlocalizedNames.begin(), entry.unlocalizedNames.end(), std::back_inserter(names), [](auto &name) { return Lang(name); });
 
-                        if (auto combined = wolv::util::combineStrings(names, " -> "); hex::containsIgnoreCase(combined, input) && !combined.contains(ContentRegistry::UserInterface::impl::SeparatorValue) && !combined.contains(ContentRegistry::UserInterface::impl::SubMenuValue)) {
+                        auto combined = wolv::util::combineStrings(names, " -> ");
+                        if (
+                            hex::containsIgnoreCase(combined, input) &&
+                            !combined.contains(ContentRegistry::UserInterface::impl::SeparatorValue) &&
+                            !combined.contains(ContentRegistry::UserInterface::impl::SubMenuValue) &&
+                            !combined.contains(ContentRegistry::UserInterface::impl::TaskBarMenuValue)
+                        ) {
                             result.emplace_back(ContentRegistry::CommandPalette::impl::QueryResult {
                                 std::move(combined),
                                 [&entry](const auto&) { entry.callback(); }

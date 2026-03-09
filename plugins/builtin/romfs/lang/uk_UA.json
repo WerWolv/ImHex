@@ -1088,7 +1088,7 @@
     "hex.builtin.welcome.start.create_file": "Створити новий файл",
     "hex.builtin.welcome.start.open_file": "Відкрити файл",
     "hex.builtin.welcome.start.open_other": "Інші джерела даних",
-    "hex.builtin.welcome.start.recent": "Останнє відкрите",
+    "hex.builtin.welcome.start.recent": "Нещодавно відкрите",
     "hex.builtin.welcome.start.recent.auto_backups": "Резервні копії",
     "hex.builtin.welcome.start.recent.auto_backups.backup": "Резервна копія від {:%Y-%m-%d %H:%M:%S}",
     "hex.builtin.welcome.tip_of_the_day": "Підказка дня",

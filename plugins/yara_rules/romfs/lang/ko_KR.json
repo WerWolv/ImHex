@@ -11,5 +11,8 @@
     "hex.yara_rules.view.yara.reload": "새로 고침",
     "hex.yara_rules.view.yara.reset": "재설정",
     "hex.yara_rules.view.yara.rule_added": "Yara 규칙 추가됨!",
-    "hex.yara_rules.view.yara.whole_data": "모든 파일을 검색했습니다!"
+    "hex.yara_rules.view.yara.whole_data": "모든 파일을 검색했습니다!",
+    "hex.yara.information_section.advanced_data_info.no_information.add_new": "새 정보를 추가하려면, '카테고리'와 '이름' 메타 태그가 있는 새로운 규칙을 Yara Advanced Analysis 폴더에 추가하세요.",
+    "hex.yara.information_section.advanced_data_info": "고급 데이터 정보",
+    "hex.yara.information_section.advanced_data_info.no_information": "더이상의 정보가 없습니다."
 }

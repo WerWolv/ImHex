@@ -11,5 +11,19 @@
     "hex.visualizers.pl_visualizer.coordinates.longitude": "경도",
     "hex.visualizers.pl_visualizer.coordinates.query": "주소 찾기",
     "hex.visualizers.pl_visualizer.coordinates.querying": "주소 쿼리 중...",
-    "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "찾은 주소가 없습니다"
+    "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "찾은 주소가 없습니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_vertex_count": "오류: 정점의 개수는 3의 배수여야 합니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_invalid_indices": "오류: 인덱스는 0 이상, 정점의 개수보다 작아야 합니다. 잘못된 인덱스: ",
+    "hex.visualizers.pl_visualizer.3d.error_message_count": "{}의 값은 {}의 배수여야 합니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_colors": "색",
+    "hex.visualizers.pl_visualizer.3d.error_message_uv_coords": "텍스쳐 좌표",
+    "hex.visualizers.pl_visualizer.3d.error_message_invalid_index_pattern": "오류: 인덱스 타입 크기를 결정할 수 없습니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_index_count": "오류: 인덱스는 3의 배수여야 합니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_not_empty": "{}는(은) 비어있을 수 없습니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_expected": "기댓값은 \"{}\"이지만, \"{}\"가 발견되었습니다",
+    "hex.visualizers.pl_visualizer.3d.error_message_positions": "위치",
+    "hex.visualizers.pl_visualizer.3d.error_message_for_vertex_count": " 정점 {}",
+    "hex.visualizers.pl_visualizer.3d.error_message_invalid_texture_file": "오류: 올바르지 않은 텍스쳐 파일",
+    "hex.visualizers.pl_visualizer.task.visualizing": "데이터 시각화 하는중...",
+    "hex.visualizers.pl_visualizer.3d.error_message_normals": "정상"
 }

@@ -243,12 +243,13 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult CommandProvider::open() {
+        CachedProvider::open();
         m_open = true;
         return {};
     }
 
     void CommandProvider::close() {
-
+        CachedProvider::close();
     }
 
     bool CommandProvider::drawLoadInterface() {

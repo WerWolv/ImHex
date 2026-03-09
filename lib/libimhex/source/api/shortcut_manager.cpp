@@ -367,7 +367,11 @@ namespace hex {
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        runShortcut(pressedShortcut, currentView);
+        const auto inheritedShortcutsView = currentView->getMenuItemInheritView();
+        if (!runShortcut(pressedShortcut, currentView)) {
+            if (inheritedShortcutsView != nullptr)
+                runShortcut(pressedShortcut, inheritedShortcutsView);
+        }
     }
 
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {

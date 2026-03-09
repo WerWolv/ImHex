@@ -1479,7 +1479,11 @@ namespace hex::plugin::builtin {
                 interrupt();
             else if (m_runningHighlighters == 0 && m_changesWereParsed && !m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setViewPatternEditor(this);
-                m_textHighlighter.get(provider).updateRequiredInputs();
+                try {
+                    m_textHighlighter.get(provider).updateRequiredInputs();
+                } catch (...) {
+
+                }
                 TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
             } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setRequestedIdentifierColors();
@@ -1944,6 +1948,9 @@ namespace hex::plugin::builtin {
     }
 
     ui::TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
+        if (!this->isFocused())
+            return nullptr;
+
         auto provider = ImHexApi::Provider::get();
         if (provider != nullptr) {
             if (m_focusedSubWindowName.contains(ConsoleView)) {
@@ -1961,7 +1968,7 @@ namespace hex::plugin::builtin {
 
 
         /* Open File */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.open_pattern" }, ICON_VS_FOLDER_OPENED, 1100, AllowWhileTyping + CTRLCMD + Keys::O, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.open_pattern" }, ICON_VS_FOLDER_OPENED, 1200, AllowWhileTyping + CTRLCMD + SHIFT + Keys::O, [this] {
             openPatternFile(true);
         }, [] { return ImHexApi::Provider::isValid(); },
         this);

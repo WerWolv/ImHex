@@ -12,6 +12,8 @@
 namespace hex::plugin::remote {
 
     prv::Provider::OpenResult SSHProvider::open() {
+        CachedProvider::open();
+
         if (!m_sftpClient.isConnected()) {
             try {
                 if (m_authMethod == AuthMethod::Password) {
@@ -47,7 +49,8 @@ namespace hex::plugin::remote {
             m_remoteFile->close();
 
         m_sftpClient.disconnect();
-        m_remoteFilePath.clear();
+
+        CachedProvider::close();
     }
 
     void SSHProvider::save() {
