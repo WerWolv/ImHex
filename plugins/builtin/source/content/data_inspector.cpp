@@ -763,9 +763,26 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i32 *>(buffer.data()), endian);
 
-           auto lc = LocalizationManager::getSelectedLanguageId();
-            std::string value = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, false);
-            std::string ws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, true);
+            auto lc = LocalizationManager::getSelectedLanguageId();
+
+            std::string value;
+            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, false);
+            if (!optval) {
+                value = "Invalid";
+            }
+            else {
+                value = optval.value();
+            }
+
+            std::string ws;
+            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, false);
+            if (!optws) {
+                ws = "Invalid";
+            }
+            else {
+                ws = optws.value();
+            }
+
             value += " --- " + ws;
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
@@ -777,8 +794,25 @@ namespace hex::plugin::builtin {
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i64 *>(buffer.data()), endian);
 
             auto lc = LocalizationManager::getSelectedLanguageId();
-            std::string value = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, true);
-            std::string ws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, true);
+
+            std::string value;
+            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, true);
+            if (!optval) {
+                value = "Invalid";
+            }
+            else {
+                value = optval.value();
+            }
+
+            std::string ws;
+            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, true);
+            if (!optws) {
+                ws = "Invalid";
+            }
+            else {
+                ws = optws.value();
+            }
+
             value += " --- " + ws;
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
