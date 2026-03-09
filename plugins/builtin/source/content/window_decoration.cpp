@@ -381,7 +381,8 @@ namespace hex::plugin::builtin {
                     toolbarIndex
                 ] = menuItem;
 
-                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), shortcut, view, callback, enabledCallback, selectedCallback);
+                Shortcut changedShortcut = ShortcutManager::getShortcutByName(unlocalizedNames, view);
+                createNestedMenu(unlocalizedNames | std::views::drop(1), icon.glyph.c_str(), changedShortcut, view, callback, enabledCallback, selectedCallback);
             }
         }
 
