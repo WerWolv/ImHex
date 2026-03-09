@@ -763,32 +763,10 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i32 *>(buffer.data()), endian);
 
-            std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (fmt::format_error &) {
-                value = "Invalid";
-            }
-
-            // DEBUGGING
-            auto ss = wolv::util::time_t_to_SYSTEMTIME(endianAdjustedTime, false);
-            SYSTEMTIME ass;
-            //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
-            ass = ss.value();
-            if (ss) {
-                auto lc = LocalizationManager::getSelectedLanguageId();
-                auto mdt = wolv::util::formatDateFromSYSTEMTIME(lc.c_str(), &ass);
-                if (mdt) {
-                    value += " --- " + mdt.value();
-                }
-
-            }
-            //
+           auto lc = LocalizationManager::getSelectedLanguageId();
+            std::string value = wolv::util::formatDTPOSIX(lc.c_str(), endianAdjustedTime, false);
+            std::string ws = wolv::util::formatDT(lc.c_str(), endianAdjustedTime, true);
+            value += " --- " + ws;
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -798,32 +776,10 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i64 *>(buffer.data()), endian);
 
-            std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (fmt::format_error &) {
-                value = "Invalid";
-            }
-
-            // DEBUGGING
-            auto ss = wolv::util::time_t_to_SYSTEMTIME(endianAdjustedTime, true);
-            SYSTEMTIME ass;
-            //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
-            ass = ss.value();
-            if (ss) {
-                auto lc = LocalizationManager::getSelectedLanguageId();
-                auto mdt = wolv::util::formatDateFromSYSTEMTIME(lc.c_str(), &ass);
-                if (mdt) {
-                    value += " --- " + mdt.value();
-                }
-
-            }
-            //
+            auto lc = LocalizationManager::getSelectedLanguageId();
+            std::string value = wolv::util::formatDTPOSIX(lc.c_str(), endianAdjustedTime, true);
+            std::string ws = wolv::util::formatDT(lc.c_str(), endianAdjustedTime, true);
+            value += " --- " + ws;
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
