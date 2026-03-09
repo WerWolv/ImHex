@@ -348,7 +348,6 @@ namespace hex::ui {
             if (u.m_addedRange.m_start == Invalid || u.m_addedRange.m_end == Invalid)
                 return;
         }
-        m_lines.m_textChanged = true;
         if (!m_lines.m_readOnly && undo) {
             u.m_after = m_lines.m_state;
             UndoRecords v;
