@@ -826,15 +826,12 @@ namespace hex::plugin::builtin {
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
             std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (const fmt::format_error &e) {
+            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, true);
+            if (!optval) {
                 value = "Invalid";
+            }
+            else {
+                value = optval.value();
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
