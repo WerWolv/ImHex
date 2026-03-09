@@ -133,7 +133,8 @@ namespace hex {
         void setLanguage(const LanguageId &languageId) {
             if (languageId == "native") {
                 setLanguage(hex::getOSLanguage().value_or(FallbackLanguageId));
-                s_selectedLanguageId = languageId;
+                // s_selectedLanguageId = languageId;
+                //  /\-- Was this a bug, or have I made one?
                 return;
             }
 
