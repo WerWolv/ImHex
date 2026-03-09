@@ -22,6 +22,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <popups/popup_file_chooser.hpp>
 #include <wolv/utils/date_time_format.hpp>
+#include <hex/api/localization_manager.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -780,7 +781,8 @@ namespace hex::plugin::builtin {
             //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
             ass = ss.value();
             if (ss) {
-                auto mdt = wolv::util::formatDateFromSYSTEMTIME(L"zh-CN", &ass);
+                auto lc = LocalizationManager::getSelectedLanguageId();
+                auto mdt = wolv::util::formatDateFromSYSTEMTIME(lc.c_str(), &ass);
                 if (mdt) {
                     value += " --- " + mdt.value();
                 }
@@ -814,7 +816,8 @@ namespace hex::plugin::builtin {
             //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
             ass = ss.value();
             if (ss) {
-                auto mdt = wolv::util::formatDateFromSYSTEMTIME(L"zh-CN", &ass);
+                auto lc = LocalizationManager::getSelectedLanguageId();
+                auto mdt = wolv::util::formatDateFromSYSTEMTIME(lc.c_str(), &ass);
                 if (mdt) {
                     value += " --- " + mdt.value();
                 }
