@@ -455,9 +455,6 @@ namespace hex::plugin::builtin {
 
             auto defaultEditorSize = ImGui::GetContentRegionAvail();
             defaultEditorSize.y *= 0.66F;
-            //if (getLastFocusedView() == this) {
-            //    m_textEditor.get(provider).setFocus(false);
-            //}
 
             fonts::CodeEditor().push();
             ImGui::SetNextWindowSizeConstraints(

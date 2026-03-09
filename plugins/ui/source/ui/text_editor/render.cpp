@@ -746,12 +746,12 @@ namespace hex::ui {
                 continue;
             for (i32 i = 0; i < count; i++) {
                 Interval sgm = {foldedLine.m_foldedSegments[2 * i].m_column, foldedLine.m_foldedSegments[2 * i + 1].m_column};
-                m_rowToFoldSegments[row].push_back({foldedLine.m_keys[i].m_start, indexScreenPosition(lineIndex, sgm)});
+                m_rowToFoldSegments[row].emplace_back(foldedLine.m_keys[i].m_start, indexScreenPosition(lineIndex, sgm));
                 ImVec2 screenPosEnd = indexCoordsToScreen(lineCoordinates(lineIndex, foldedLine.m_ellipsisIndices[i]));
                 m_rowCodeFoldTooltips[row].emplace_back(this, foldedLine.m_keys[i],ImRect(screenPosEnd, screenPosEnd + ImVec2(Ellipsis.lineTextSize(), m_charAdvance.y)));
             }
             Interval sgm = {foldedLine.m_foldedSegments[2 * count].m_column, foldedLine.m_foldedSegments[2 * count + 1].m_column};
-            m_rowToFoldSegments[row].push_back({foldedLine.m_keys[count - 1].m_end, indexScreenPosition(lineIndex, sgm)});
+            m_rowToFoldSegments[row].emplace_back(foldedLine.m_keys[count - 1].m_end, indexScreenPosition(lineIndex, sgm));
         }
     }
 
@@ -1221,7 +1221,7 @@ namespace hex::ui {
                     ImGui::BeginChild(m_lines.m_title.c_str());
             }
             if (m_showCursor)
-                drawCursor(0,textEditorSize, true, drawList);
+                drawCursor(0,textEditorSize, ImGui::IsWindowFocused(), drawList);
             ImGui::Dummy(m_lines.m_charAdvance);
         }
 

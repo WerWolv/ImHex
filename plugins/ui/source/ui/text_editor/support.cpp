@@ -172,12 +172,7 @@ namespace hex::ui {
         return *this;
     }
 
-    LineIterator &LineIterator::operator=(const LineIterator &other) {
-        m_charsIter = other.m_charsIter;
-        m_colorsIter = other.m_colorsIter;
-        m_flagsIter = other.m_flagsIter;
-        return *this;
-    }
+    LineIterator &LineIterator::operator=(const LineIterator &other) = default;
 
     bool LineIterator::operator!=(const LineIterator &other) const {
         return m_charsIter != other.m_charsIter || m_colorsIter != other.m_colorsIter ||
@@ -537,8 +532,8 @@ namespace hex::ui {
 
     bool TextEditor::ActionableBox::trigger() {
         auto mousePos = ImGui::GetMousePos();
-        return !(mousePos.x <= m_box.Min.x || mousePos.x >= m_box.Max.x ||
-            mousePos.y < m_box.Min.y || mousePos.y > m_box.Max.y);
+        return mousePos.x > m_box.Min.x && mousePos.x < m_box.Max.x &&
+            mousePos.y >= m_box.Min.y && mousePos.y <= m_box.Max.y;
     }
 
     void TextEditor::ActionableBox::shiftBoxVertically(float lineCount, float lineHeight) {
@@ -1052,7 +1047,7 @@ namespace hex::ui {
 
                 while (iter != end) {
                     iter++;
-                    if (((pos = iter->position()) > byteIndex))
+                    if (pos = iter->position(); pos > byteIndex)
                         break;
                 }
             }
@@ -1279,6 +1274,7 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::setAllCodeFolds() {
+        initializeCodeFolds();
         CodeFoldBlocks intervals = foldPointsFromSource();
         m_codeFoldKeys.clear();
         m_codeFolds.clear();
@@ -1333,6 +1329,7 @@ namespace hex::ui {
                 m_useSavedFoldStatesRequested = true;
             }
             deleteSelection();
+            setTextChanged(false);
         }
     }
 
@@ -1348,6 +1345,7 @@ namespace hex::ui {
             if (m_unfoldedLines[lineIndex].m_chars.starts_with("//+-"))
                 m_unfoldedLines.erase(m_unfoldedLines.begin() + lineIndex);
             insertLine(lineIndex, hiddenLine.m_line);
+            setTextChanged(false);
         }
     }
 
@@ -1506,7 +1504,7 @@ namespace hex::ui {
         if (!isLocationValid(location))
             return -1;
         i32 line1 = location.line - 1;
-        i32 line2 = nextLine(line1);
+        i32 line2 = nextLineIndex(line1);
         auto tokenCount = m_tokens.size();
         i32 lineCount = m_firstTokenIdOfLine.size();
         if (line1 < 0 || line1 >= lineCount || tokenCount == 0)
@@ -1527,14 +1525,14 @@ namespace hex::ui {
         return -1;
     }
 
-    i32 TextEditor::Lines::nextLine(i32 line) {
-        if (line < 0 || line >= size())
+    i32 TextEditor::Lines::nextLineIndex(i32 lineIndex) {
+        if (lineIndex < 0 || lineIndex >= size())
             return -1;
-        auto currentTokenId = m_firstTokenIdOfLine[line];
+        auto currentTokenId = m_firstTokenIdOfLine[lineIndex];
         i32 i = 1;
-        while (line + i < size() &&
-               (m_firstTokenIdOfLine[line + i] == currentTokenId || m_firstTokenIdOfLine[line + i] == (i32) 0xFFFFFFFF))
+        while (lineIndex + i < size() &&
+               (m_firstTokenIdOfLine[lineIndex + i] == currentTokenId || m_firstTokenIdOfLine[lineIndex + i] == (i32) 0xFFFFFFFF))
             i++;
-        return i + line;
+        return i + lineIndex;
     }
 }
