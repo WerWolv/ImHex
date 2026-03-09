@@ -27,7 +27,7 @@ namespace hex::ui {
         Interval result = NotValid;
         auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
 
-        bool foundKey = false;
+        bool foundKeyword = false;
         bool foundComment = false;
         m_curr = tokenStart + interval.m_start;
         while (interval.m_end >= getTokenId()) {
@@ -37,8 +37,8 @@ namespace hex::ui {
                 return NotValid;
 
             while (true) {
-                if (const auto *docComment = const_cast<Token::DocComment *>(getValue<Token::DocComment>(0)); docComment != nullptr) {
-                    if (foundKey)
+                if (const auto *docComment = const_cast<Token::DocComment *>(getValue<Token::DocComment>(0)); docComment != nullptr && getTokenId() == m_firstTokenIdOfLine.at(m_curr->location.line - 1)) {
+                    if (foundKeyword)
                         break;
                     if (docComment->singleLine) {
                         foundComment = true;
@@ -48,8 +48,8 @@ namespace hex::ui {
                             break;
                         return {result.m_start, result.m_start};
                     }
-                } else if (const auto *comment = const_cast<Token::Comment *>(getValue<Token::Comment>(0)); comment != nullptr) {
-                    if (foundKey)
+                } else if (const auto *comment = const_cast<Token::Comment *>(getValue<Token::Comment>(0)); comment != nullptr && getTokenId() == m_firstTokenIdOfLine.at(m_curr->location.line - 1)) {
+                    if (foundKeyword)
                         break;
                     if (comment->singleLine) {
                         foundComment = true;
@@ -59,24 +59,30 @@ namespace hex::ui {
                             break;
                         return {result.m_start, result.m_start};
                     }
-                } else if (const auto *keyword = const_cast<Token::Keyword *>(getValue<Token::Keyword>(0));keyword != nullptr && *keyword == Token::Keyword::Import) {
+                } else if (const auto *keyword = const_cast<Token::Keyword *>(getValue<Token::Keyword>(0));keyword != nullptr && *keyword == Token::Keyword::Import && getTokenId() == m_firstTokenIdOfLine.at(m_curr->location.line - 1)) {
                     if (foundComment)
                         break;
-                    foundKey = true;
-                    while (!peek(tkn::Separator::Semicolon) && !peek(tkn::Separator::EndOfProgram))
-                        next();
-                    next();
-                } else if (const auto *directive = const_cast<Token::Directive *>(getValue<Token::Directive>(0));directive != nullptr && *directive == Token::Directive::Include) {
+                    foundKeyword = true;
+                    i32 lineIndex = m_curr->location.line - 1;
+                    auto nextIndex = nextLineIndex(lineIndex);
+                    if (nextIndex == lineIndex || nextIndex == -1)
+                        break;
+                    auto tokenId = m_firstTokenIdOfLine.at(nextIndex);
+                    next(tokenId - getTokenId());
+                } else if (const auto *directive = const_cast<Token::Directive *>(getValue<Token::Directive>(0));directive != nullptr && *directive == Token::Directive::Include && getTokenId() == m_firstTokenIdOfLine.at(m_curr->location.line - 1)) {
                     if (foundComment)
                         break;
-                    foundKey = true;
-                    u32 line = m_curr->location.line;
-                    while (m_curr->location.line == line && !peek(tkn::Separator::EndOfProgram))
-                        next();
+                    foundKeyword = true;
+                    i32 lineIndex = m_curr->location.line - 1;
+                    auto nextIndex = nextLineIndex(lineIndex);
+                    if (nextIndex == lineIndex || nextIndex == -1)
+                        break;
+                    auto tokenId = m_firstTokenIdOfLine.at(nextIndex);
+                    next(tokenId - getTokenId());
                 } else
                     break;
             }
-            if (foundKey || foundComment) {
+            if (foundKeyword || foundComment) {
                 auto currentId = getTokenId();
                 if (peek(tkn::Separator::EndOfProgram) || (currentId > 0 && currentId < (i32) m_tokens.size())) {
                     next(-1);
@@ -235,7 +241,7 @@ namespace hex::ui {
 
     void TextEditor::Lines::advanceToNextLine(i32 &lineIndex, i32 &currentTokenId, Location &location) {
         i32 tempLineIndex;
-        if (tempLineIndex = nextLine(lineIndex); lineIndex == tempLineIndex) {
+        if (tempLineIndex = nextLineIndex(lineIndex); lineIndex == tempLineIndex) {
             lineIndex++;
             currentTokenId = -1;
             location = Location::Empty();
@@ -469,18 +475,18 @@ namespace hex::ui {
             } else
                 codeFoldIndex++;
         }
-        if (closedFoldIncrements.empty())
-            return;
         if (!m_hiddenLines.empty())
             m_hiddenLines.clear();
-        std::string result = "//+-#:";
-        for (u32 i = 0; i < closedFoldIncrements.size(); ++i) {
-            result += std::to_string(closedFoldIncrements[i]);
-            if (i < closedFoldIncrements.size() - 1)
-                result += ",";
+        if (!closedFoldIncrements.empty()) {
+            std::string result = "//+-#:";
+            for (u32 i = 0; i < closedFoldIncrements.size(); ++i) {
+                result += std::to_string(closedFoldIncrements[i]);
+                if (i < closedFoldIncrements.size() - 1)
+                    result += ",";
+            }
+            auto lineIndex = 0;
+            m_hiddenLines.emplace_back(lineIndex, result);
         }
-        auto lineIndex = 0;
-        m_hiddenLines.emplace_back(lineIndex, result);
     }
 
     void TextEditor::applyCodeFoldStates() {
@@ -752,10 +758,6 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::next(i32 count) {
-        if (m_interrupt) {
-            m_interrupt = false;
-            throw std::out_of_range("Highlights were deliberately interrupted");
-        }
         if (count == 0)
             return;
         i32 id = getTokenId();

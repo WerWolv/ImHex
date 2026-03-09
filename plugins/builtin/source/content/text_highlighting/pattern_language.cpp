@@ -33,11 +33,11 @@ namespace hex::plugin::builtin {
     }
 
     bool TokenInterval::operator<(const TokenInterval &other) const {
-        return other.m_end > m_end;
+        return other.m_end == m_end ? other.m_start < m_start :  m_end < other.m_end;
     }
 
     bool TokenInterval::operator>(const TokenInterval &other) const {
-        return m_end > other.m_end;
+        return other.m_end == m_end ? other.m_start > m_start :  m_end > other.m_end;
     }
 
     bool TokenInterval::operator==(const TokenInterval &other) const {
@@ -49,11 +49,11 @@ namespace hex::plugin::builtin {
     }
 
     bool TokenInterval::operator<=(const TokenInterval &other) const {
-        return other.m_end >= m_end;
+        return other.m_end == m_end ? other.m_start  <= m_start : m_end < other.m_end;
     }
 
     bool TokenInterval::operator>=(const TokenInterval &other) const {
-        return m_end >= other.m_end;
+        return other.m_end == m_end ? other.m_start  >= m_start : m_end > other.m_end;
     }
 
     [[nodiscard]] bool TokenInterval::contains(const TokenInterval &other) const {
@@ -124,11 +124,8 @@ namespace hex::plugin::builtin {
         auto &result = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor->getResult();
         std::ranges::copy(result.begin(),result.end(),std::back_inserter(fullTokens));
         editedText = editor->getText();
-        m_textHighlighter->loadText();;
+        m_textHighlighter->loadText();
 
-        linesOfColors.clear();
-        for (auto &line : m_textHighlighter->m_lines)
-            linesOfColors.emplace_back(line.size(), ' ');
     }
 
     void TextHighlighter::RequiredInputs::setCompileErrors() {
@@ -1605,8 +1602,8 @@ namespace hex::plugin::builtin {
                         curr = m_curr;
                     }
                     if (peek(tkn::Literal::Identifier)) {
-                        std::string nameScape;
-                        if (findNamespace(nameScape) && !nameScape.empty() && std::ranges::find(m_UDTs, (nameScape.append( "::" + name))) != m_UDTs.end()) {
+                        std::string nameSpace;
+                        if (findNamespace(nameSpace) && !nameSpace.empty() && std::ranges::find(m_UDTs, fmt::format("{}::{}",nameSpace, name)) != m_UDTs.end()) {
                             m_scopeChains.insert(tokenIndex);
                         }
                     }
@@ -1805,7 +1802,7 @@ namespace hex::plugin::builtin {
                 continue;
             }
             if (findNamespace(nameSpace,tokenId)) {
-                auto fullName = nameSpace + "::" + variableName;
+                auto fullName = fmt::format("{}::{}",nameSpace, variableName);
                 auto typeName = findIdentifierType(fullName, "");
                 if (typeName != IdentifierType::Unknown) {
                     setIdentifierColor(-1, typeName);
@@ -1834,10 +1831,12 @@ namespace hex::plugin::builtin {
         while (m_firstTokenIdOfLine.at(topLine) == -1)
             topLine++;
         auto bottomLine = previousLine(m_firstTokenIdOfLine.size());
+        m_requiredInputs.linesOfColors.resize(m_lines.size());
         for (u32 line = topLine; line < bottomLine; line = nextLine(line)) {
             if (m_lines[line].empty())
                 continue;
-            std::string &lineOfColors = m_requiredInputs.linesOfColors[line];//std::string(m_lines[line].size(), 0);
+            m_requiredInputs.linesOfColors[line] = std::string(m_lines[line].size(), 0);
+            auto &lineOfColors = m_requiredInputs.linesOfColors[line];
             for (auto tokenIndex = m_firstTokenIdOfLine.at(line); tokenIndex < m_firstTokenIdOfLine.at(nextLine(line)); tokenIndex++) {
                 auto *token = const_cast<Token *>(&m_requiredInputs.fullTokens.at(tokenIndex));
                 if (m_tokenColors.contains(tokenIndex) && token->type == Token::Type::Identifier) {
@@ -1864,12 +1863,12 @@ namespace hex::plugin::builtin {
         if (auto iterator = m_inheritances.find(name); iterator != m_inheritances.end()) {
             auto inheritances = std::move(iterator->second);
             m_inheritances.erase(iterator);
-            for (auto inheritance: inheritances) {
+            for (const auto& inheritance: inheritances) {
                 recurseInheritances(inheritance);
                 auto definitions = m_UDTVariables[inheritance];
                 if (definitions.empty())
                     definitions = m_ImportedUDTVariables[inheritance];
-                for (auto [variableName, variableDefinitions]: definitions) {
+                for (const auto &[variableName, variableDefinitions]: definitions) {
                     auto tokenRange = m_UDTTokenRange[name];
                     u32 tokenIndex = tokenRange.m_start;
                     for (auto token = tokenRange.m_start; token < tokenRange.m_end; token++) {
@@ -1944,13 +1943,15 @@ namespace hex::plugin::builtin {
 
         if (length < 0)
             return false;
-        if (length > (i32) m_lines[line].size()-col)
+        if (line < (i32) m_lines.size() && length > (i32) m_lines[line].size()-col)
             length -= (i32)( m_lines[line].size()-col);
-        while (m_firstTokenIdOfLine[line] == m_firstTokenIdOfLine[line + 1]) {
+        while (line < (i32) m_lines.size() && m_firstTokenIdOfLine[line] == m_firstTokenIdOfLine[line + 1]) {
             length -= (i32) m_lines[line].size();
             line++;
         }
-        return !(length > (i32) m_lines[line].size()-col && m_firstTokenIdOfLine[line + 1] != -1);
+        if (line < (i32) m_lines.size())
+            return length <= (i32) m_lines[line].size()-col || m_firstTokenIdOfLine[line + 1] == -1;
+        return false;
     }
 
 // Find the string of the variable type. This works on function variables, views,
@@ -2576,7 +2577,5 @@ namespace hex::plugin::builtin {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
             return;
         }
-
-        return;
     }
 }

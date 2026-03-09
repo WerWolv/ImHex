@@ -93,10 +93,10 @@ namespace hex::ui {
             bool operator==(const Range &o) const;
             bool operator!=(const Range &o) const;
             bool operator<(const Range &o) const {
-                return m_end < o.m_end;
+                return o.m_end == m_end ? o.m_start < m_start :  m_end < o.m_end;
             }
             bool operator>(const Range &o) const {
-                return m_end > o.m_end;
+                return o.m_end == m_end ? o.m_start > m_start : m_end > o.m_end;
             }
             bool operator<=(const Range &o) const {
                 return !(*this > o);
@@ -125,12 +125,12 @@ namespace hex::ui {
 
             Interval &operator=(const Interval &interval);
             Interval &operator=(Interval &&interval) noexcept;
-            bool operator<(const Interval &other) const { return other.m_end > m_end; }
-            bool operator>(const Interval &other) const { return m_end > other.m_end; }
+            bool operator<(const Interval &other) const { return other.m_end == m_end ? other.m_start < m_start :  m_end < other.m_end; }
+            bool operator>(const Interval &other) const { return other.m_end == m_end ? other.m_start > m_start :  m_end > other.m_end; }
             bool operator==(const Interval &other) const { return m_start == other.m_start && m_end == other.m_end; }
             bool operator!=(const Interval &other) const { return m_start != other.m_start || m_end != other.m_end; }
-            bool operator<=(const Interval &other) const { return other.m_end >= m_end; }
-            bool operator>=(const Interval &other) const { return m_end >= other.m_end; }
+            bool operator<=(const Interval &other) const { return other.m_end == m_end ? other.m_start  <= m_start : m_end < other.m_end; }
+            bool operator>=(const Interval &other) const { return other.m_end == m_end ? other.m_start  >= m_start : m_end > other.m_end; }
             [[nodiscard]] bool contains_or_equals(const Interval &other) const { return other.m_start >= m_start && other.m_end <= m_end; }
             [[nodiscard]] bool contains(const Interval &other) const { return (other.m_start >= m_start && other.m_end < m_end) || (other.m_start > m_start && other.m_end <= m_end); }
             [[nodiscard]] bool contains(i32 value, bool inclusive = true) const;
@@ -738,7 +738,7 @@ namespace hex::ui {
             i32 getTokenId(SafeTokenIterator tokenIterator);
             i32 getTokenId();
             void loadFirstTokenIdOfLine();
-            i32 nextLine(i32 line);
+            i32 nextLineIndex(i32 lineIndex);
             void setAllCodeFolds();
             void setCodeFoldState(CodeFoldState states);
             CodeFoldState getCodeFoldState() const;
@@ -844,7 +844,6 @@ namespace hex::ui {
             Tokens m_tokens;
             SafeTokenIterator m_curr;
             SafeTokenIterator m_startToken, m_originalPosition, m_partOriginalPosition;
-            bool m_interrupt = false;
             Indices m_firstTokenIdOfLine;
             CodeFoldBlocks m_foldPoints;
             GlobalBlocks m_globalBlocks;
@@ -887,9 +886,8 @@ namespace hex::ui {
         void clearActionables() { m_lines.clearActionables();}
         void saveCodeFoldStates();
         void applyCodeFoldStates();
-        void removeHiddenLinesFromPattern() { m_lines.removeHiddenLinesFromPattern(); };
-        void addHiddenLinesToPattern() { m_lines.addHiddenLinesToPattern(); };
-
+        void removeHiddenLinesFromPattern() { m_lines.removeHiddenLinesFromPattern(); }
+        void addHiddenLinesToPattern() { m_lines.addHiddenLinesToPattern(); }
 // Highlighting
     private:
         void preRender();
@@ -1009,8 +1007,8 @@ namespace hex::ui {
         void codeFoldCollapse(i32 level=1, bool recursive=false, bool all=false);
         i32 getCodeFoldLevel(i32 line) const;
         void resetFoldedSelections();
-        void computeLPSArray(const std::string &pattern, Indices & lps);
-        Indices KMPSearch(const std::string& text, const std::string& pattern);
+        //void computeLPSArray(const std::string &pattern, Indices & lps);
+        //Indices KMPSearch(const std::string& text, const std::string& pattern);
         bool isEmpty();
 
 // utf8

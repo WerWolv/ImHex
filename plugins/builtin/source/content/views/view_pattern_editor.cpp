@@ -69,9 +69,6 @@ namespace hex::plugin::builtin {
 
     constexpr static auto TextEditorView    = "/##pattern_editor_";
     constexpr static auto ConsoleView       = "/##console_";
-    constexpr static auto VariablesView     = "/##env_vars_";
-    constexpr static auto SettingsView      = "/##settings_";
-    constexpr static auto VirtualFilesView  = "/##virtual_file_tree_";
     constexpr static auto DebuggerView      = "/##debugger_";
 
     class ViewPatternEditor::PopupAcceptPattern : public Popup<PopupAcceptPattern> {
@@ -454,16 +451,13 @@ namespace hex::plugin::builtin {
                 return;
 
             if (g.NavWindow != nullptr) {
-                std::string name =  g.NavWindow->Name;
-                if (name.contains(TextEditorView) || name.contains(ConsoleView) || name.contains(VariablesView) || name.contains(SettingsView) || name.contains(VirtualFilesView) || name.contains(DebuggerView))
-                    m_focusedSubWindowName = name;
+                const std::string_view focusedName = g.NavWindow->Name;
+                if (focusedName.contains(TextEditorView) || focusedName.contains(ConsoleView) || focusedName.contains(DebuggerView))
+                    m_focusedSubWindowName = focusedName;
             }
 
             auto defaultEditorSize = ImGui::GetContentRegionAvail();
             defaultEditorSize.y *= 0.66F;
-            //if (getLastFocusedView() == this) {
-            //    m_textEditor.get(provider).setFocus(false);
-            //}
 
             fonts::CodeEditor().push();
             ImGui::SetNextWindowSizeConstraints(
