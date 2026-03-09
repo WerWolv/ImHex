@@ -1948,6 +1948,9 @@ namespace hex::plugin::builtin {
     }
 
     ui::TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
+        if (!this->isFocused())
+            return nullptr;
+
         auto provider = ImHexApi::Provider::get();
         if (provider != nullptr) {
             if (m_focusedSubWindowName.contains(ConsoleView)) {
