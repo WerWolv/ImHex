@@ -1968,7 +1968,7 @@ namespace hex::plugin::builtin {
 
 
         /* Open File */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.open_pattern" }, ICON_VS_FOLDER_OPENED, 1100, AllowWhileTyping + CTRLCMD + Keys::O, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.open_pattern" }, ICON_VS_FOLDER_OPENED, 1200, AllowWhileTyping + CTRLCMD + SHIFT + Keys::O, [this] {
             openPatternFile(true);
         }, [] { return ImHexApi::Provider::isValid(); },
         this);
