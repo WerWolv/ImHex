@@ -757,10 +757,10 @@ namespace hex::plugin::builtin {
 
 #if defined(OS_WINDOWS)
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(i32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i32 *>(buffer.data()), endian);
 
             std::string value;
             try {
@@ -775,12 +775,12 @@ namespace hex::plugin::builtin {
             }
 
             // DEBUGGING
-            auto ss = wolv::util::time_t_to_SYSTEMTIME(endianAdjustedTime);
+            auto ss = wolv::util::time_t_to_SYSTEMTIME(endianAdjustedTime, false);
             SYSTEMTIME ass;
             //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
             ass = ss.value();
             if (ss) {
-                auto mdt = wolv::util::formatDateFromSYSTEMTIME(L"pl-PL", &ass);
+                auto mdt = wolv::util::formatDateFromSYSTEMTIME(L"zh-CN", &ass);
                 if (mdt) {
                     value += " --- " + mdt.value();
                 }
@@ -791,10 +791,10 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(u64), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(i64), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u64 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i64 *>(buffer.data()), endian);
 
             std::string value;
             try {
@@ -807,6 +807,20 @@ namespace hex::plugin::builtin {
             } catch (fmt::format_error &) {
                 value = "Invalid";
             }
+
+            // DEBUGGING
+            auto ss = wolv::util::time_t_to_SYSTEMTIME(endianAdjustedTime, true);
+            SYSTEMTIME ass;
+            //SystemTimeToTzSpecificLocalTime(NULL, &ss.value(), &ass);
+            ass = ss.value();
+            if (ss) {
+                auto mdt = wolv::util::formatDateFromSYSTEMTIME(L"zh-CN", &ass);
+                if (mdt) {
+                    value += " --- " + mdt.value();
+                }
+
+            }
+            //
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
