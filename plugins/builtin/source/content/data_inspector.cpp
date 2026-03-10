@@ -766,7 +766,7 @@ namespace hex::plugin::builtin {
             auto lc = LocalizationManager::getSelectedLanguageId();
 
             std::string value;
-            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime,  wolv::util::TTSz::_32);
+            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime,  wolv::util::DTOpts::_32);
             if (!optval) {
                 value = "Invalid";
             }
@@ -775,7 +775,7 @@ namespace hex::plugin::builtin {
             }
 
             std::string ws;
-            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, wolv::util::TTSz::_32);
+            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, wolv::util::DTOpts::_32);
             if (!optws) {
                 ws = "Invalid";
             }
@@ -796,7 +796,7 @@ namespace hex::plugin::builtin {
             auto lc = LocalizationManager::getSelectedLanguageId();
 
             std::string value;
-            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, wolv::util::TTSz::_64);
+            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, wolv::util::DTOpts::_64);
             if (!optval) {
                 value = "Invalid";
             }
@@ -805,7 +805,7 @@ namespace hex::plugin::builtin {
             }
 
             std::string ws;
-            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, wolv::util::TTSz::_64);
+            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, wolv::util::DTOpts::_64);
             if (!optws) {
                 ws = "Invalid";
             }
