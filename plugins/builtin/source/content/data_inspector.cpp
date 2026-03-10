@@ -770,7 +770,7 @@ namespace hex::plugin::builtin {
             std::string value;
             auto optval = formatTTPOSIX(lc.c_str(), endianAdjustedTime,  DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
-                value = "Invalid";
+                value = "Can't format";
             }
             else {
                 value = optval.value();
@@ -779,7 +779,7 @@ namespace hex::plugin::builtin {
             std::string ws;
             auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
             if (!optws) {
-                ws = "Invalid";
+                ws = "Can't format";
             }
             else {
                 ws = optws.value();
@@ -802,7 +802,7 @@ namespace hex::plugin::builtin {
             std::string value;
             auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
-                value = "Invalid";
+                value = "Can't format";
             }
             else {
                 value = optval.value();
@@ -811,7 +811,7 @@ namespace hex::plugin::builtin {
             std::string ws;
             auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
             if (!optws) {
-                ws = "Invalid";
+                ws = "Can't format";
             }
             else {
                 ws = optws.value();
@@ -832,7 +832,7 @@ namespace hex::plugin::builtin {
             std::string value;
             auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
-                value = "Invalid";
+                value = "Can't format";
             }
             else {
                 value = optval.value();
