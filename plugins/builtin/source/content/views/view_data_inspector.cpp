@@ -29,6 +29,12 @@ namespace hex::plugin::builtin {
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
     ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
+        // Handle language change
+         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [this](const ContentRegistry::Settings::SettingsValue&) {
+            // Invalidate inspector rows
+            m_shouldInvalidate = true;
+         });
+
         // Handle region selection
         EventRegionSelected::subscribe(this, [this](const auto &region) {
             // Save current selection
