@@ -2556,10 +2556,7 @@ namespace hex::plugin::builtin {
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
-            m_viewPatternEditor->interrupt();
             return;
         }
-
-                return;
     }
 }
