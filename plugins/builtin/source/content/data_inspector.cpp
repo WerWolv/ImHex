@@ -765,27 +765,15 @@ namespace hex::plugin::builtin {
 
             auto lc = LocalizationManager::getSelectedLanguageId();
 
-            using wolv::util::DTOpts; 
-
             std::string value;
-            auto optval = formatTTPOSIX(lc.c_str(), endianAdjustedTime,  DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
+            using wolv::util::DTOpts;
+            auto optval = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
                 value = "Can't format";
             }
             else {
                 value = optval.value();
             }
-
-            std::string ws;
-            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
-            if (!optws) {
-                ws = "Can't format";
-            }
-            else {
-                ws = optws.value();
-            }
-
-            value += " --- " + ws;
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -797,27 +785,15 @@ namespace hex::plugin::builtin {
 
             auto lc = LocalizationManager::getSelectedLanguageId();
 
-            using wolv::util::DTOpts; 
-
             std::string value;
-            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
+            using wolv::util::DTOpts;
+            auto optval = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
                 value = "Can't format";
             }
             else {
                 value = optval.value();
             }
-
-            std::string ws;
-            auto optws = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
-            if (!optws) {
-                ws = "Can't format";
-            }
-            else {
-                ws = optws.value();
-            }
-
-            value += " --- " + ws;
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -830,6 +806,7 @@ namespace hex::plugin::builtin {
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
             std::string value;
+            using wolv::util::DTOpts;
             auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
                 value = "Can't format";
