@@ -761,11 +761,11 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i32 *>(buffer.data()), endian);
 
-            auto lc = LocalizationManager::getSelectedLanguageId();
+            const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
 
             std::string value;
             using wolv::util::DTOpts;
-            auto optval = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
+            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
                 value = "Can't format";
             }
@@ -781,11 +781,11 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
-            auto lc = LocalizationManager::getSelectedLanguageId();
+            const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
 
             std::string value;
             using wolv::util::DTOpts;
-            auto optval = wolv::util::formatTT(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
+            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
             if (!optval) {
                 value = "Can't format";
             }

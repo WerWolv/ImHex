@@ -8,12 +8,15 @@
 
 #include <mutex>
 #include <hex/helpers/debugging.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 namespace hex {
 
     namespace LocalizationManager {
 
         constexpr static auto FallbackLanguageId = "en-US";
+
+        wolv::util::locale s_locale;
 
         namespace {
 
@@ -145,10 +148,16 @@ namespace hex {
             s_selectedLanguageId = languageId;
 
             populateLocalization(languageId, s_localizations);
+
+            s_locale.set(languageId);
         }
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
             return *s_selectedLanguageId;
+        }
+
+        [[nodiscard]] const wolv::util::locale& getSelectedLocale() {
+            return s_locale;
         }
 
         [[nodiscard]] const std::string& get(const LanguageId &languageId, const UnlocalizedString &unlocalizedString) {
