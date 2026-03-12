@@ -756,8 +756,6 @@ namespace hex::plugin::builtin {
             };
         });
 
-#if defined(OS_WINDOWS)
-
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(i32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
@@ -778,10 +776,10 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(i64), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i64 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
             auto lc = LocalizationManager::getSelectedLanguageId();
 
@@ -797,28 +795,6 @@ namespace hex::plugin::builtin {
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
-
-#else
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
-            std::ignore = style;
-
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
-
-            std::string value;
-            using wolv::util::DTOpts;
-            auto optval = wolv::util::formatTTPOSIX(lc.c_str(), endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
-            if (!optval) {
-                value = "Can't format";
-            }
-            else {
-                value = optval.value();
-            }
-
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
-
-#endif
 
         struct DOSDate {
             unsigned day   : 5;
