@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
         }
 
         bool noRunningTaskAndWritableProvider() {
-            return noRunningTasks() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable();
+            return noRunningTasks() && !ImHexApi::System::isReadOnlyMode() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable();
         }
 
     }
