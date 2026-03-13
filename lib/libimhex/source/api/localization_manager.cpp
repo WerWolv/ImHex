@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include <mutex>
+#include <shared_mutex>
 #include <hex/helpers/debugging.hpp>
 #include <wolv/utils/date_time_format.hpp>
 
@@ -16,7 +17,11 @@ namespace hex {
 
         constexpr static auto FallbackLanguageId = "en-US";
 
-        wolv::util::locale s_locale;
+        namespace {
+            std::shared_mutex s_localeLock;
+            wolv::util::locale s_locale;
+            void setSelectedLocale(const LanguageId &languageId);
+        }
 
         namespace {
 
@@ -149,7 +154,7 @@ namespace hex {
 
             populateLocalization(languageId, s_localizations);
 
-            s_locale.set(languageId);
+            setSelectedLocale(languageId);
         }
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
@@ -157,7 +162,15 @@ namespace hex {
         }
 
         [[nodiscard]] const wolv::util::locale& getSelectedLocale() {
+            std::shared_lock lock(s_localeLock);
             return s_locale;
+        }
+
+        namespace {
+            void setSelectedLocale(const LanguageId &languageId) {
+                std::unique_lock lock(s_localeLock);
+                s_locale.set(languageId);
+            }
         }
 
         [[nodiscard]] const std::string& get(const LanguageId &languageId, const UnlocalizedString &unlocalizedString) {
