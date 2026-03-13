@@ -754,6 +754,8 @@ for (const auto &path : m_paths) {
                 .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
             ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.pattern_data_max_filter_items", 128, 32, 1024);
 
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.data_inspector_exact_size_only", false);
+
             auto suggestPatterns = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.suggest_patterns", true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_apply_patterns", false).setEnabledCallback([=] {
                 return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();

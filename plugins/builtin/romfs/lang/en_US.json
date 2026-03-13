@@ -525,6 +525,7 @@
     "hex.builtin.setting.general.show_tips": "Show tips on startup",
     "hex.builtin.setting.general.sync_pattern_source": "Sync pattern source code between open data sources",
     "hex.builtin.setting.general.upload_crash_logs": "Upload crash reports",
+    "hex.builtin.setting.general.data_inspector_exact_size_only": "Only show data inspector rows that match selection size",
     "hex.builtin.setting.hex_editor": "Hex Editor",
     "hex.builtin.setting.hex_editor.byte_padding": "Extra byte cell padding",
     "hex.builtin.setting.hex_editor.bytes_per_row": "Bytes per row",

@@ -535,7 +535,7 @@ namespace hex::plugin::builtin {
 
         constexpr static auto MaxStringLength = 64;
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1,
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1, 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -566,7 +566,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.wstring", sizeof(wchar_t),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.wstring", sizeof(wchar_t), 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -612,7 +612,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string16", sizeof(char16_t),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string16", sizeof(char16_t), 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -658,7 +658,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string32", sizeof(char32_t),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string32", sizeof(char32_t), 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -704,7 +704,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding", 1, [encodingFile = EncodingFile()](const std::vector<u8> &, std::endian, Style) mutable {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding", 1, 512, [encodingFile = EncodingFile()](const std::vector<u8> &, std::endian, Style) mutable {
             std::string value, copyValue;
 
             if (encodingFile.valid()) {
