@@ -665,6 +665,11 @@ function(downloadImHexPatternsFiles dest)
         if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
             set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ImHex-Patterns")
         endif()
+
+        # it does not exist, fallback to empty path to skip installing.
+        if (NOT EXISTS ${imhex_patterns_SOURCE_DIR})
+            set(imhex_patterns_SOURCE_DIR "")
+        endif()
     endif ()
 
     install(CODE "set(imhex_patterns_SOURCE_DIR \"${imhex_patterns_SOURCE_DIR}\")")
