@@ -472,10 +472,11 @@ namespace hex::plugin::builtin {
                     u32 count = 0;
                     if (ImGui::BeginMenu(ICON_VS_ELLIPSIS)) {
                         for (const auto &[priority, menuItem] : menuItems) {
-                            ON_SCOPE_EXIT { count += 1; };
-                            if (count <= fittingItems)
-                                continue;
                             if (!visibleMainMenus.contains(menuItem.unlocalizedName))
+                                continue;
+
+                            ON_SCOPE_EXIT { count += 1; };
+                            if (count < fittingItems)
                                 continue;
 
                             defineMenu(menuItem.unlocalizedName);
