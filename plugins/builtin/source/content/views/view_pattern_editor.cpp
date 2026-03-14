@@ -67,10 +67,6 @@ namespace hex::plugin::builtin {
 
     constexpr static auto TextEditorView    = "/##pattern_editor_";
     constexpr static auto ConsoleView       = "/##console_";
-    constexpr static auto VariablesView     = "/##env_vars_";
-    constexpr static auto SettingsView      = "/##settings_";
-    constexpr static auto VirtualFilesView  = "/##virtual_file_tree_";
-    constexpr static auto DebuggerView      = "/##debugger_";
 
     class ViewPatternEditor::PopupAcceptPattern : public Popup<PopupAcceptPattern> {
     public:
