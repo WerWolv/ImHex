@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
         bool m_reverse = false;
 
         ui::VisualizerDrawer m_visualizerDrawer;
-        ImHexApi::HexEditor::ProviderRegion m_selectedRegion;
+        ImHexApi::HexEditor::ProviderRegion m_selectedRegion = {};
         size_t m_validBytes = 0;
         std::atomic<bool> m_dataValid = false;
 
@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
 
         TaskHolder m_updateTask;
 
-        std::string m_editingValue = "";
+        std::string m_editingValue;
 
         bool m_tableEditingModeEnabled = false;
         std::set<std::string> m_hiddenValues;
