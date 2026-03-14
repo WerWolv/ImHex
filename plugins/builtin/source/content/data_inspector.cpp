@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <string>
+#include <ctime>
 
 #include <imgui_internal.h>
 #include <fonts/vscode_icons.hpp>
@@ -24,8 +25,6 @@
 #include <wolv/utils/date_time_format.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#define _GNU_SOURCE
-#include <ctime>
 
 namespace hex::plugin::builtin {
 
@@ -829,7 +828,11 @@ namespace hex::plugin::builtin {
                 tm.tm_mon  = date.month - 1;
                 tm.tm_mday = date.day;
 
+#if defined(OS_WINDOWS)
                 time_t tt = _mkgmtime(&tm);
+#else
+                time_t tt = timegm(&tm);
+#endif
                 if (tt != -1) {
                     const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
 
