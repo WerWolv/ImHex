@@ -67,10 +67,6 @@ namespace hex::plugin::builtin {
 
     constexpr static auto TextEditorView    = "/##pattern_editor_";
     constexpr static auto ConsoleView       = "/##console_";
-    constexpr static auto VariablesView     = "/##env_vars_";
-    constexpr static auto SettingsView      = "/##settings_";
-    constexpr static auto VirtualFilesView  = "/##virtual_file_tree_";
-    constexpr static auto DebuggerView      = "/##debugger_";
 
     class ViewPatternEditor::PopupAcceptPattern : public Popup<PopupAcceptPattern> {
     public:
@@ -451,11 +447,9 @@ namespace hex::plugin::builtin {
             if (g.CurrentWindow->Appearing)
                 return;
 
-            if (g.NavWindow != nullptr) {
-                std::string name =  g.NavWindow->Name;
-                if (name.contains(TextEditorView) || name.contains(ConsoleView) || name.contains(VariablesView) || name.contains(SettingsView) || name.contains(VirtualFilesView) || name.contains(DebuggerView))
-                    m_focusedSubWindowName = name;
-            }
+            auto *focusedSubWindow = getFocusedSubWindow();
+            if (focusedSubWindow != nullptr)
+                m_focusedSubWindowName = focusedSubWindow->Name;
 
             auto defaultEditorSize = ImGui::GetContentRegionAvail();
             defaultEditorSize.y *= 0.66F;
@@ -690,10 +684,7 @@ namespace hex::plugin::builtin {
                 findReplaceHandler->setFindWord(textEditor, findWord);
                 requestFocus = true;
                 updateCount = true;
-                if (m_focusedSubWindowName.contains(ConsoleView))
-                    canReplace = false;
-                else if (m_focusedSubWindowName.contains(TextEditorView))
-                    canReplace = true;
+                canReplace = m_focusedSubWindowName.contains(TextEditorView);
             }
             bool enter     = ImGui::IsKeyPressed(ImGuiKey_Enter, false)         || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false);
             bool upArrow   = ImGui::IsKeyPressed(ImGuiKey_UpArrow, false)       || ImGui::IsKeyPressed(ImGuiKey_Keypad8, false);
@@ -1944,17 +1935,15 @@ namespace hex::plugin::builtin {
     }
 
     ui::TextEditor *ViewPatternEditor::getEditorFromFocusedWindow() {
-        if (!this->isFocused())
-            return nullptr;
 
-        auto provider = ImHexApi::Provider::get();
-        if (provider != nullptr) {
+        if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
             if (m_focusedSubWindowName.contains(ConsoleView)) {
                 return &m_consoleEditor.get(provider);
             }
             if (m_focusedSubWindowName.contains(TextEditorView)) {
                 return &m_textEditor.get(provider);
             }
+            return nullptr;
         }
 
         return nullptr;
