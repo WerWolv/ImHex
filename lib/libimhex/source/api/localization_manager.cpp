@@ -7,13 +7,21 @@
 #include <nlohmann/json.hpp>
 
 #include <mutex>
+#include <shared_mutex>
 #include <hex/helpers/debugging.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 namespace hex {
 
     namespace LocalizationManager {
 
         constexpr static auto FallbackLanguageId = "en-US";
+
+        namespace {
+            std::shared_mutex s_localeLock;
+            wolv::util::Locale s_locale;
+            void setSelectedLocale(const LanguageId &languageId);
+        }
 
         namespace {
 
@@ -133,7 +141,8 @@ namespace hex {
         void setLanguage(const LanguageId &languageId) {
             if (languageId == "native") {
                 setLanguage(hex::getOSLanguage().value_or(FallbackLanguageId));
-                s_selectedLanguageId = languageId;
+                // s_selectedLanguageId = languageId;
+                //  /\-- Was this a bug, or have I made one?
                 return;
             }
 
@@ -144,10 +153,36 @@ namespace hex {
             s_selectedLanguageId = languageId;
 
             populateLocalization(languageId, s_localizations);
+
+#if defined(OS_WINDOWS)
+            setSelectedLocale(languageId);
+#elif defined(OS_LINUX)
+            std::string osLangId(languageId);
+            std::replace(osLangId.begin(), osLangId.end(), '-', '_');
+            osLangId.append(".utf8");
+            setSelectedLocale(osLangId);
+#elif defined(OS_MAC)
+            std::string osLangId(languageId);
+            std::replace(osLangId.begin(), osLangId.end(), '-', '_');
+            hs.append(".UTF-8");
+            setSelectedLocale(osLangId);
+#endif
         }
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
             return *s_selectedLanguageId;
+        }
+
+        [[nodiscard]] const wolv::util::Locale& getSelectedLocale() {
+            std::shared_lock lock(s_localeLock);
+            return s_locale;
+        }
+
+        namespace {
+            void setSelectedLocale(const LanguageId &languageId) {
+                std::unique_lock lock(s_localeLock);
+                s_locale.set(languageId);
+            }
         }
 
         [[nodiscard]] const std::string& get(const LanguageId &languageId, const UnlocalizedString &unlocalizedString) {
