@@ -25,7 +25,6 @@
 #include <wolv/utils/date_time_format.hpp>
 #include <hex/api/localization_manager.hpp>
 
-
 namespace hex::plugin::builtin {
 
     using Style = ContentRegistry::DataInspector::NumberDisplayStyle;
@@ -865,7 +864,7 @@ namespace hex::plugin::builtin {
                  (time.seconds>=0 && time.seconds<=29)  )
             {
                 time_t tt = time.hours*60*60 + time.minutes*60 + time.seconds*2;
-    
+
                 const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
 
                 using wolv::util::DTOpts;
