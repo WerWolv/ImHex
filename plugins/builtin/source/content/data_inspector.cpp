@@ -766,11 +766,11 @@ namespace hex::plugin::builtin {
             std::string value;
             using wolv::util::DTOpts;
             auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
-            if (!optval) {
-                value = "Can't format";
+            if (optval) {
+                value = optval.value();
             }
             else {
-                value = optval.value();
+                value = "Can't format";
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
@@ -786,11 +786,11 @@ namespace hex::plugin::builtin {
             std::string value;
             using wolv::util::DTOpts;
             auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
-            if (!optval) {
-                value = "Can't format";
+            if (optval) {
+                value = optval.value();
             }
             else {
-                value = optval.value();
+                value = "Can't format";
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
