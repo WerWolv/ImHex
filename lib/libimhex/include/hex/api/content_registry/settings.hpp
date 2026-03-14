@@ -353,7 +353,7 @@ EXPORT_MODULE namespace hex {
         requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         class SettingsVariable {
         public:
-            explicit(false) SettingsVariable(T defaultValue) : m_defaultValue(std::move(defaultValue)) { }
+            explicit(false) SettingsVariable(T defaultValue) noexcept : m_defaultValue(std::move(defaultValue)) { }
 
             SettingsVariable(const SettingsVariable&) = delete;
             SettingsVariable& operator=(const SettingsVariable&) = delete;

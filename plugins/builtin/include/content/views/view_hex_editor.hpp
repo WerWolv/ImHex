@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hex/api/content_registry/views.hpp"
+
 #include <hex/ui/view.hpp>
 
 #include <ui/hex_editor.hpp>
@@ -40,6 +42,10 @@ namespace hex::plugin::builtin {
 
         void jumpIfOffScreen() {
             m_hexEditor.jumpIfOffScreen();
+        }
+
+        View* getMenuItemInheritView() const override {
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.data_inspector.name");
         }
 
     public:
