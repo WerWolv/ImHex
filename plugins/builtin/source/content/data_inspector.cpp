@@ -765,7 +765,7 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i32 *>(buffer.data()), endian);
 
-            const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
+            const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
 
             std::string value;
             using wolv::util::DTOpts;
@@ -785,7 +785,7 @@ namespace hex::plugin::builtin {
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
-            const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
+            const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
 
             std::string value;
             using wolv::util::DTOpts;
@@ -833,7 +833,7 @@ namespace hex::plugin::builtin {
                 time_t tt = timegm(&tm);
 #endif
                 if (tt != -1) {
-                    const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
+                    const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
 
                     using wolv::util::DTOpts;
                     auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D | DTOpts::LongDate);
@@ -865,7 +865,7 @@ namespace hex::plugin::builtin {
             {
                 time_t tt = time.hours*60*60 + time.minutes*60 + time.seconds*2;
 
-                const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
+                const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
 
                 using wolv::util::DTOpts;
                 auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::T);
