@@ -28,6 +28,7 @@ namespace hex {
             AutoReset<std::map<LanguageId, LanguageDefinition>> s_languageDefinitions;
             AutoReset<std::unordered_map<std::size_t, std::string>> s_localizations;
             AutoReset<LanguageId> s_selectedLanguageId;
+            AutoReset<LanguageId> s_selectedLanguageIdOSAdjuted;
 
         }
 
@@ -154,7 +155,19 @@ namespace hex {
 
             populateLocalization(languageId, s_localizations);
 
+#if defined(OS_WINDOWS)
             setSelectedLocale(languageId);
+#elif defined(OS_LINUX)
+            std::string osLangId(languageId);
+            std::replace(hs.begin(), hs.end(), '-', '_');
+            hs.append(".utf8");
+            setSelectedLocale(osLangId);
+#elif defined(OS_MAC)
+            std::string osLangId(languageId);
+            std::replace(hs.begin(), hs.end(), '-', '_');
+            hs.append(".UTF-8");
+            setSelectedLocale(osLangId);
+#endif
         }
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
@@ -162,6 +175,11 @@ namespace hex {
         }
 
         [[nodiscard]] const wolv::util::locale& getSelectedLocale() {
+            std::shared_lock lock(s_localeLock);
+            return s_locale;
+        }
+
+        [[nodiscard]] const wolv::util::locale& getSelectedLocaleOSAdjusted() {
             std::shared_lock lock(s_localeLock);
             return s_locale;
         }
