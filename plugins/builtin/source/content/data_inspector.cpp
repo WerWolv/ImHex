@@ -36,8 +36,8 @@ namespace hex::plugin::builtin {
         u8 data4[8];
     };
 
-    const std::string s_invalid         = "Invalid"_lang;
-    const std::string s_canNotFormat    = "Can not format"_lang;
+    const std::string s_invalid         = "Invalid";
+    const std::string s_canNotFormat    = "Can not format";
 
     template<std::unsigned_integral T, size_t Size = sizeof(T)>
     static ContentRegistry::DataInspector::impl::EditingFunction stringToUnsigned() requires(sizeof(T) <= sizeof(u64)) {
