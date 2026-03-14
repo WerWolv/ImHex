@@ -24,6 +24,9 @@
 #include <wolv/utils/date_time_format.hpp>
 #include <hex/api/localization_manager.hpp>
 
+#define _GNU_SOURCE
+#include <ctime>
+
 namespace hex::plugin::builtin {
 
     using Style = ContentRegistry::DataInspector::NumberDisplayStyle;
@@ -34,6 +37,9 @@ namespace hex::plugin::builtin {
         u16 data3;
         u8 data4[8];
     };
+
+    const std::string s_invalid         = "Invalid"_lang;
+    const std::string s_canNotFormat    = "Can not format"_lang;
 
     template<std::unsigned_integral T, size_t Size = sizeof(T)>
     static ContentRegistry::DataInspector::impl::EditingFunction stringToUnsigned() requires(sizeof(T) <= sizeof(u64)) {
@@ -770,7 +776,7 @@ namespace hex::plugin::builtin {
                 value = optval.value();
             }
             else {
-                value = "Can't format";
+                value = s_canNotFormat;
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
@@ -790,7 +796,7 @@ namespace hex::plugin::builtin {
                 value = optval.value();
             }
             else {
-                value = "Can't format";
+                value = s_canNotFormat;
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
@@ -815,7 +821,29 @@ namespace hex::plugin::builtin {
             std::memcpy(&date, buffer.data(), sizeof(DOSDate));
             date = hex::changeEndianness(date, endian);
 
-            auto value = fmt::format("{}/{}/{}", u8(date.day), u8(date.month), u8(date.year) + 1980);
+            bool ok = false;
+            std::string value;
+            if ( (date.day>=1 && date.day<=31) && (date.month>=1 && date.month<=12) ) {
+                std::tm tm{};
+                tm.tm_year = date.year + 80;
+                tm.tm_mon  = date.month - 1;
+                tm.tm_mday = date.day;
+
+                time_t tt = _mkgmtime(&tm);
+                if (tt != -1) {
+                    const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
+
+                    using wolv::util::DTOpts;
+                    auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D | DTOpts::LongDate);
+                    if (optval) {
+                        value = optval.value();
+                        ok = true;
+                    }
+                }
+            }
+            if (!ok) {
+                value = s_invalid;
+            }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -827,7 +855,26 @@ namespace hex::plugin::builtin {
             std::memcpy(&time, buffer.data(), sizeof(DOSTime));
             time = hex::changeEndianness(time, endian);
 
-            auto value = fmt::format("{:02}:{:02}:{:02}", u8(time.hours), u8(time.minutes), u8(time.seconds) * 2);
+            bool ok = false;
+            std::string value;
+            if ( (time.hours>=0 && time.hours<=23)     &&
+                 (time.minutes>=0 && time.minutes<=59) &&
+                 (time.seconds>=0 && time.seconds<=29)  )
+            {
+                time_t tt = time.hours*60*60 + time.minutes*60 + time.seconds*2;
+    
+                const wolv::util::locale &lc = LocalizationManager::getSelectedLocale();
+
+                using wolv::util::DTOpts;
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::T);
+                if (optval) {
+                    value = optval.value();
+                    ok = true;
+                }
+            }
+            if (!ok) {
+                    value = s_invalid;
+            }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
