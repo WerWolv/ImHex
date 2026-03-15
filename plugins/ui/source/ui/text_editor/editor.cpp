@@ -1,5 +1,6 @@
 #include <ui/text_editor.hpp>
 #include <algorithm>
+#include <ranges>
 #include <string>
 #include <regex>
 #include <cmath>
