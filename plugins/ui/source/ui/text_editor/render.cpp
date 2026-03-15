@@ -4,6 +4,7 @@
 #include <hex/helpers/scaling.hpp>
 #include <wolv/utils/string.hpp>
 #include <algorithm>
+#include <ranges>
 
 
 namespace hex::ui {
@@ -671,7 +672,7 @@ namespace hex::ui {
 
         bool triggered = false;
         std::map<Range, CodeFold> detectedFolds;
-        for (auto key : std::ranges::views::reverse(m_codeFoldKeys)) {
+        for (auto key : m_codeFoldKeys | std::views::reverse) {
             if (m_codeFolds[key].trigger())
                 triggered = true;
             if (m_codeFolds[key].isDetected())
