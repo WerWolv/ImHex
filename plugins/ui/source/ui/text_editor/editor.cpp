@@ -962,7 +962,7 @@ namespace hex::ui {
     }
 
     void TextEditor::UndoAction::undo(TextEditor *editor) {
-        for (auto &record : std::ranges::reverse_view(m_records))
+        for (auto &record : m_records | std::views::reverse)
             record.undo(editor);
     }
 
