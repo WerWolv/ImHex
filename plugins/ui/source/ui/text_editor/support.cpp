@@ -351,7 +351,7 @@ namespace hex::ui {
         i64 signedIndex = std::clamp((i64) index,0 - charsSize,charsSize - 1);
         if (signedIndex < 0)
             return m_chars[charsSize + signedIndex];
-        signedIndex = std::clamp(signedIndex, 0LL, charsSize - 1);
+        signedIndex = std::clamp(signedIndex, (i64) 0, charsSize - 1);
         return m_chars[signedIndex];
     }
 
@@ -384,7 +384,7 @@ namespace hex::ui {
         index = std::clamp(index, -utf8Length, utf8Length - 1);
         if (index < 0)
             index = utf8Length + index;
-        index = std::clamp(index, 0LL, utf8Length - 1);
+        index = std::clamp(index, (i64)0, utf8Length - 1);
         i64 utf8Start = 0;
         for (i64 utf8Index = 0; utf8Index < index; ++utf8Index) {
             utf8Start += TextEditor::utf8CharLength(m_chars[utf8Start]);
@@ -1237,7 +1237,7 @@ namespace hex::ui {
 
      Line &Lines::operator[](i32 index)  {
         if (size() != 0)
-            index = std::clamp(index,-size(), size()-1);
+            index = std::clamp(index,(i32)-size(), (i32) size()-1);
         else
             index = 0;
         if (index < 0)
@@ -1245,7 +1245,7 @@ namespace hex::ui {
          i32 row = lineIndexToRow(index);
          i32 globalRowMax = getGlobalRowMax();
          if (globalRowMax > 0)
-             row = std::clamp(row,0, globalRowMax);
+             row = std::clamp(row,(i32)0, globalRowMax);
          else
              row = 0;
          if (!m_foldedLines.contains(row) || m_foldedLines[row].m_full.m_start.m_line != index)
