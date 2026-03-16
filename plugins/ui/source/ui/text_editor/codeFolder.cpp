@@ -330,7 +330,7 @@ namespace hex::ui {
                 }
                 auto line = operator[](m_curr->location.line - 1);
                 size_t stringIndex = line.columnIndex(m_curr->location.column);
-                std::string openDelimiter = std::string(1, line[stringIndex - 1]);
+                std::string openDelimiter = std::string(1, line[static_cast<u64>(stringIndex - 1)]);
                 location = m_curr->location;
 
                 if (auto idx = openDelimiters.find(openDelimiter); idx != std::string::npos) {
@@ -391,7 +391,7 @@ namespace hex::ui {
         auto line = operator[](location.line - 1);
         std::string openDelimiter;
         if (auto columnIndex = line.m_chars.find_first_of(blockDelimiters, location.column - 1); columnIndex != std::string::npos)
-            openDelimiter = line[columnIndex];
+            openDelimiter = line[static_cast<u64>(columnIndex)];
         else
             return result;
 
