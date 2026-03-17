@@ -919,7 +919,7 @@ namespace hex::ui {
             m_foldedLine.append(Ellipsis);
             if (appendClosingLine) {
                 if (delimiterCoordinates.m_end.m_line == key.m_end.m_line) {
-                    auto line = lineEnd.subLine(delimiterCoordinates.m_end.m_column, -1).trim(TrimMode::TrimBoth);
+                    auto line = lineEnd.subLine(delimiterCoordinates.m_end.m_column,(u64) -1).trim(TrimMode::TrimBoth);
                     m_foldedLine.append(line);
                 } else {
                     auto line = lineEnd.trim(TrimMode::TrimBoth);
@@ -968,7 +968,7 @@ namespace hex::ui {
             auto const newPos = std::lower_bound(m_ellipsisIndices.begin(), m_ellipsisIndices.end(), newIndex);
             m_ellipsisIndices.insert(newPos, newIndex);
             m_foldedLine.append(Ellipsis);
-            auto line = lineEnd.subLine(delimiterCoordinates.m_end.m_column, -1).trim(TrimMode::TrimBoth);
+            auto line = lineEnd.subLine(delimiterCoordinates.m_end.m_column, (u64) -1).trim(TrimMode::TrimBoth);
             m_foldedLine.append(line);
             m_keys.push_back(key);
             m_full.m_end = key.m_end;

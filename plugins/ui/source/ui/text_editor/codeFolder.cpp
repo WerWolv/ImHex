@@ -169,7 +169,8 @@ namespace hex::ui {
         m_curr = tokenStart + start;
         Token::Separator openSeparator = Token::Separator::EndOfProgram;
         Token::Separator closeSeparator = Token::Separator::EndOfProgram;
-        Token::Operator openOperator, closeOperator;
+        Token::Operator openOperator  = Token::Operator{};
+        Token::Operator closeOperator = Token::Operator{};
         if (delimiters == "{}") {
             openSeparator = Token::Separator::LeftBrace;
             closeSeparator = Token::Separator::RightBrace;
@@ -552,7 +553,7 @@ namespace hex::ui {
     }
 
     void TextEditor::Lines::closeCodeFold(const Range &key, bool userTriggered) {
-        float topRow;
+        float topRow = 0.0f;
 
         if (userTriggered) {
             topRow = m_topRow;
@@ -768,8 +769,7 @@ namespace hex::ui {
             m_curr += -std::min(-count,id);
 
     }
-    constexpr static u32 Normal = 0;
-    constexpr static u32 Not    = 1;
+    enum : u32 { Normal = 0, Not = 1 };
 
     bool TextEditor::Lines::begin() {
         m_originalPosition = m_curr;
