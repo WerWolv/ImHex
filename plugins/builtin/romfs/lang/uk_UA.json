@@ -1258,5 +1258,7 @@
     "hex.builtin.footer.mcp.connected_to": "Підключено до '{0}'",
     "hex.builtin.footer.mcp.protocol_version": "Версія протоколу",
     "hex.builtin.title_bar_button.interactive_help": "Інтерактивна допомога",
-    "hex.builtin.view.pattern_editor.default_help_text": "Введіть тут код вашого шаблону та натисніть кнопку «Play» нижче, \nщоб виконати його.Після цього результати з’являться \nна панелі «Дані шаблону».\n\nБільше інформації можна знайти в документації.\n\n\nПростий приклад:\n\nimport std.io;\n\nstruct Pattern {\n    u32 int;\n    float floating_point;\n};\n\nPattern my_pattern @ 0x00;\nstd::print(\"0x{:08X}\", my_pattern.int);"
+    "hex.builtin.view.pattern_editor.default_help_text": "Введіть тут код вашого шаблону та натисніть кнопку «Play» нижче, \nщоб виконати його.Після цього результати з’являться \nна панелі «Дані шаблону».\n\nБільше інформації можна знайти в документації.\n\n\nПростий приклад:\n\nimport std.io;\n\nstruct Pattern {\n    u32 int;\n    float floating_point;\n};\n\nPattern my_pattern @ 0x00;\nstd::print(\"0x{:08X}\", my_pattern.int);",
+    "hex.builtin.view.data_inspector.open_pattern": "Відкрити шаблон",
+    "hex.builtin.setting.general.data_inspector_exact_size_only": "Показувати лише рядки інспектора даних, які відповідають виділеному розміру даних"
 }
