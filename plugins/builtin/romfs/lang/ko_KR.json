@@ -1259,5 +1259,6 @@
     "hex.builtin.information_section.magic.pattern_info.no_description": "더이상의 정보가 없습니다.",
     "hex.builtin.information_section.magic.pattern_info.add_description": "매칭된 데이터에 대해 더 많은 정보를 제공하려면 현재 패턴에 'fn get_data_description()' 함수를 추가하세요.",
     "hex.builtin.view.store.tab.disassemblers": "디스어셈블러",
-    "hex.builtin.welcome.nightly_build": "ImHex 나이틀리 버전을 실행하고 있습니다.\n\n버그가 발생했다면, GitHub 이슈 트래커에 보고해 주세요!"
+    "hex.builtin.welcome.nightly_build": "ImHex 나이틀리 버전을 실행하고 있습니다.\n\n버그가 발생했다면, GitHub 이슈 트래커에 보고해 주세요!",
+    "hex.builtin.setting.general.data_inspector_exact_size_only": "선택 크기와 일치하는 데이터 검사기 행만 표시"
 }
