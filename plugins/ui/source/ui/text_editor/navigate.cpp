@@ -646,6 +646,12 @@ namespace hex::ui {
 
     bool TextEditor::MatchedDelimiter::setNearCursor(Lines *lines,const Coordinates &from) {
         Coordinates fromCopy = from;
+        if (fromCopy.m_line >= lines->size())
+            return false;
+        if (m_nearCursor.m_line >= lines->size()) {
+            m_nearCursor = Invalid;
+            return false;
+        }
         if (coordinatesNearDelimiter(lines, fromCopy)) {
             m_nearCursor = fromCopy;
             return true;
@@ -718,6 +724,8 @@ namespace hex::ui {
         if (start == Invalid)
             return false;
         auto lineIndex = start.m_line;
+        if(lineIndex >= (i64) lines->size())
+            return false;
         auto charIndex = lines->lineCoordsIndex(start);
         auto direction1 = detectDirection(lines, start);
         auto charCoords = lines->lineIndexCoords(lineIndex + 1, charIndex);
