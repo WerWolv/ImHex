@@ -1,4 +1,4 @@
-// dear imgui, v1.92.5
+// dear imgui, v1.92.7 WIP
 // (drawing and font code)
 
 /*
@@ -19,10 +19,11 @@ Index of this file:
 // [SECTION] ImFontAtlas: backend for stb_truetype
 // [SECTION] ImFontAtlas: glyph ranges helpers
 // [SECTION] ImFontGlyphRangesBuilder
-// [SECTION] ImFont
+// [SECTION] ImFontBaked, ImFont
 // [SECTION] ImGui Internal Render Helpers
 // [SECTION] Decompression code
 // [SECTION] Default font data (ProggyClean.ttf)
+// [SECTION] Default font data (ProggyForever.ttf)
 
 */
 
@@ -83,6 +84,7 @@ Index of this file:
 #pragma GCC diagnostic ignored "-Wstrict-overflow"                  // warning: assuming signed overflow does not occur when simplifying division / ..when changing X +- C1 cmp C2 to X cmp C2 -+ C1
 #pragma GCC diagnostic ignored "-Wclass-memaccess"                  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx' with no trivial copy-assignment; use assignment or value-initialization instead
 #pragma GCC diagnostic ignored "-Wcast-qual"                        // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
+#pragma GCC diagnostic ignored "-Wsign-conversion"                  // warning: conversion to 'xxxx' from 'xxxx' may change the sign of the result
 #endif
 
 //-------------------------------------------------------------------------
@@ -105,6 +107,7 @@ namespace IMGUI_STB_NAMESPACE
 #pragma warning (push)
 #pragma warning (disable: 4456)                             // declaration of 'xx' hides previous local declaration
 #pragma warning (disable: 6011)                             // (stb_rectpack) Dereferencing NULL pointer 'cur->next'.
+#pragma warning (disable: 5262)                             // (stb_truetype) implicit fall-through occurs here; are you missing a break statement? 
 #pragma warning (disable: 6385)                             // (stb_truetype) Reading invalid data from 'buffer':  the readable size is '_Old_3`kernel_width' bytes, but '3' bytes may be read.
 #pragma warning (disable: 28182)                            // (stb_rectpack) Dereferencing NULL pointer. 'cur' contains the same NULL value as 'cur->next' did.
 #endif
@@ -424,11 +427,11 @@ int ImFontAtlasShadowTexConfig::CalcConvexTexHeight() const
 
 ImDrawListSharedData::ImDrawListSharedData()
 {
-    memset(this, 0, sizeof(*this));
+    memset((void*)this, 0, sizeof(*this));
     InitialFringeScale = 1.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(ArcFastVtx); i++)
+    for (int i = 0; i < IM_COUNTOF(ArcFastVtx); i++)
     {
-        const float a = ((float)i * 2 * IM_PI) / (float)IM_ARRAYSIZE(ArcFastVtx);
+        const float a = ((float)i * 2 * IM_PI) / (float)IM_COUNTOF(ArcFastVtx);
         ArcFastVtx[i] = ImVec2(ImCos(a), ImSin(a));
     }
     ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, CircleSegmentMaxError);
@@ -446,7 +449,7 @@ void ImDrawListSharedData::SetCircleTessellationMaxError(float max_error)
 
     IM_ASSERT(max_error > 0.0f);
     CircleSegmentMaxError = max_error;
-    for (int i = 0; i < IM_ARRAYSIZE(CircleSegmentCounts); i++)
+    for (int i = 0; i < IM_COUNTOF(CircleSegmentCounts); i++)
     {
         const float radius = (float)i;
         CircleSegmentCounts[i] = (ImU8)((i > 0) ? IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, CircleSegmentMaxError) : IM_DRAWLIST_ARCFAST_SAMPLE_MAX);
@@ -456,7 +459,7 @@ void ImDrawListSharedData::SetCircleTessellationMaxError(float max_error)
 
 ImDrawList::ImDrawList(ImDrawListSharedData* shared_data)
 {
-    memset(this, 0, sizeof(*this));
+    memset((void*)this, 0, sizeof(*this));
     _SetDrawListSharedData(shared_data);
 }
 
@@ -479,10 +482,13 @@ void ImDrawList::_SetDrawListSharedData(ImDrawListSharedData* data)
 // In the majority of cases, you would want to call PushClipRect() and PushTexture() after this.
 void ImDrawList::_ResetForNewFrame()
 {
-    // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
+    // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory to match ImDrawCmdHeader.
     IM_STATIC_ASSERT(offsetof(ImDrawCmd, ClipRect) == 0);
     IM_STATIC_ASSERT(offsetof(ImDrawCmd, TexRef) == sizeof(ImVec4));
     IM_STATIC_ASSERT(offsetof(ImDrawCmd, VtxOffset) == sizeof(ImVec4) + sizeof(ImTextureRef));
+    IM_STATIC_ASSERT(offsetof(ImDrawCmd, ClipRect) == offsetof(ImDrawCmdHeader, ClipRect));
+    IM_STATIC_ASSERT(offsetof(ImDrawCmd, TexRef) == offsetof(ImDrawCmdHeader, TexRef));
+    IM_STATIC_ASSERT(offsetof(ImDrawCmd, VtxOffset) == offsetof(ImDrawCmdHeader, VtxOffset));
     if (_Splitter._Count > 1)
         _Splitter.Merge(this);
 
@@ -678,7 +684,7 @@ int ImDrawList::_CalcCircleAutoSegmentCount(float radius) const
 {
     // Automatic segment count
     const int radius_idx = (int)(radius + 0.999999f); // ceil to never reduce accuracy
-    if (radius_idx >= 0 && radius_idx < IM_ARRAYSIZE(_Data->CircleSegmentCounts))
+    if (radius_idx >= 0 && radius_idx < IM_COUNTOF(_Data->CircleSegmentCounts))
         return _Data->CircleSegmentCounts[radius_idx]; // Use cached value
     else
         return IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, _Data->CircleSegmentMaxError);
@@ -3164,10 +3170,11 @@ void ImGui::ShadeVertsTransformPos(ImDrawList* draw_list, int vert_start_idx, in
 // FIXME-NEWATLAS: Oversample specification could be more dynamic. For now, favoring automatic selection.
 ImFontConfig::ImFontConfig()
 {
-    memset(this, 0, sizeof(*this));
+    memset((void*)this, 0, sizeof(*this));
     FontDataOwnedByAtlas = true;
     OversampleH = 0; // Auto == 1 or 2 depending on size
     OversampleV = 0; // Auto == 1
+    ExtraSizeScale = 1.0f;
     GlyphMaxAdvanceX = FLT_MAX;
     RasterizerMultiply = 1.0f;
     RasterizerDensity = 1.0f;
@@ -3266,6 +3273,8 @@ void ImTextureData::DestroyPixels()
 //-----------------------------------------------------------------------------
 // - ImFontAtlas::AddFont()
 // - ImFontAtlas::AddFontDefault()
+// - ImFontAtlas::AddFontDefaultBitmap()
+// - ImFontAtlas::AddFontDefaultVector()
 // - ImFontAtlas::AddFontFromFileTTF()
 // - ImFontAtlas::AddFontFromMemoryTTF()
 // - ImFontAtlas::AddFontFromMemoryCompressedTTF()
@@ -3385,7 +3394,7 @@ static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3
 
 ImFontAtlas::ImFontAtlas()
 {
-    memset(this, 0, sizeof(*this));
+    memset((void*)this, 0, sizeof(*this));
     TexDesiredFormat = ImTextureFormat_RGBA32;
     TexGlyphPadding = 1;
     TexMinWidth = 512;
@@ -3788,6 +3797,7 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg_in)
         ImFontAtlasBuildInit(this);
 
     // Create new font
+    const bool is_first_font = (Fonts.Size == 0);
     ImFont* font;
     if (!font_cfg_in->MergeMode)
     {
@@ -3800,8 +3810,9 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg_in)
     }
     else
     {
-        IM_ASSERT(Fonts.Size > 0 && "Cannot use MergeMode for the first font"); // When using MergeMode make sure that a font has already been added before. You can use ImGui::GetIO().Fonts->AddFontDefault() to add the default imgui font.
+        IM_ASSERT(Fonts.Size > 0 && "Cannot use MergeMode for the first font"); // When using MergeMode make sure that a font has already been added before.
         font = font_cfg_in->DstFont ? font_cfg_in->DstFont : Fonts.back();
+        ImFontAtlasFontDiscardBakes(this, font, 0); // Need to discard bakes if the font was already used, because baked->FontLoaderDatas[] will change size. (#9162)
     }
 
     // Add to list
@@ -3811,12 +3822,6 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg_in)
         font_cfg->DstFont = font;
     font->Sources.push_back(font_cfg);
     ImFontAtlasBuildUpdatePointers(this); // Pointers to Sources are otherwise dangling after we called Sources.push_back().
-
-    if (font_cfg->FontDataOwnedByAtlas == false)
-    {
-        font_cfg->FontDataOwnedByAtlas = true;
-        font_cfg->FontData = ImMemdup(font_cfg->FontData, (size_t)font_cfg->FontDataSize);
-    }
 
     // Sanity check
     // We don't round cfg.SizePixels yet as relative size of merged fonts are used afterwards.
@@ -3850,6 +3855,8 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg_in)
     }
     ImFontAtlasFontSourceAddToFont(this, font, font_cfg);
 
+    if (is_first_font)
+        ImFontAtlasBuildNotifySetFont(this, NULL, font);
     return font;
 }
 
@@ -3868,32 +3875,72 @@ static void         Decode85(const unsigned char* src, unsigned char* dst)
     }
 }
 #ifndef IMGUI_DISABLE_DEFAULT_FONT
-static const char* GetDefaultCompressedFontDataTTF(int* out_size);
+static const char* GetDefaultCompressedFontDataProggyClean(int* out_size);
+static const char* GetDefaultCompressedFontDataProggyForever(int* out_size);
 #endif
 
-// Load embedded ProggyClean.ttf at size 13, disable oversampling
-// If you want a similar font which may be better scaled, consider using ProggyVector from the same author!
-ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
+// This duplicates some of the logic in UpdateFontsNewFrame() which is a bit chicken-and-eggy/tricky to extract due to variety of codepaths and possible initialization ordering.
+static float GetExpectedContextFontSize(ImGuiContext* ctx)
+{
+    return ((ctx->Style.FontSizeBase > 0.0f) ? ctx->Style.FontSizeBase : 13.0f) * ctx->Style.FontScaleMain * ctx->Style.FontScaleDpi;
+}
+
+// Legacy function with heuristic to select Pixel or Vector font.
+// The selection is based on (style.FontSizeBase * style.FontScaleMain * style.FontScaleDpi) reaching a small threshold at the time of adding the default font.
+// Prefer calling AddFontDefaultVector() or AddFontDefaultBitmap() based on your own logic.
+ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg)
+{
+    if (OwnerContext == NULL || GetExpectedContextFontSize(OwnerContext) >= 15.0f)
+        return AddFontDefaultVector(font_cfg);
+    else
+        return AddFontDefaultBitmap(font_cfg);
+}
+
+// Load embedded ProggyClean.ttf. Default size 13, disable oversampling.
+// If you want a similar font which may be better scaled, consider using AddFontDefaultVector().
+ImFont* ImFontAtlas::AddFontDefaultBitmap(const ImFontConfig* font_cfg_template)
 {
 #ifndef IMGUI_DISABLE_DEFAULT_FONT
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     if (!font_cfg_template)
-    {
-        font_cfg.OversampleH = font_cfg.OversampleV = 1;
-        font_cfg.PixelSnapH = true;
-    }
+        font_cfg.PixelSnapH = true; // Prevents sub-integer scaling factors at lower-level layers.
     if (font_cfg.SizePixels <= 0.0f)
-        font_cfg.SizePixels = 13.0f * 1.0f;
+        font_cfg.SizePixels = 13.0f; // This only serves (1) as a reference for GlyphOffset.y setting and (2) as a default for pre-1.92 backend.
     if (font_cfg.Name[0] == '\0')
-        ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "ProggyClean.ttf");
+        ImFormatString(font_cfg.Name, IM_COUNTOF(font_cfg.Name), "ProggyClean.ttf");
     font_cfg.EllipsisChar = (ImWchar)0x0085;
-    font_cfg.GlyphOffset.y += 1.0f * IM_TRUNC(font_cfg.SizePixels / 13.0f);  // Add +1 offset per 13 units
+    font_cfg.GlyphOffset.y += 1.0f * (font_cfg.SizePixels / 13.0f); // Add +1 offset per 13 units
 
     int ttf_compressed_size = 0;
-    const char* ttf_compressed = GetDefaultCompressedFontDataTTF(&ttf_compressed_size);
+    const char* ttf_compressed = GetDefaultCompressedFontDataProggyClean(&ttf_compressed_size);
     return AddFontFromMemoryCompressedTTF(ttf_compressed, ttf_compressed_size, font_cfg.SizePixels, &font_cfg);
 #else
-    IM_ASSERT(0 && "AddFontDefault() disabled in this build.");
+    IM_ASSERT(0 && "Function is disabled in this build.");
+    IM_UNUSED(font_cfg_template);
+    return NULL;
+#endif // #ifndef IMGUI_DISABLE_DEFAULT_FONT
+}
+
+// Load a minimal version of ProggyForever, designed to match our good old ProggyClean, but nicely scalable.
+// (See build script in https://github.com/ocornut/proggyforever for details)
+ImFont* ImFontAtlas::AddFontDefaultVector(const ImFontConfig* font_cfg_template)
+{
+#ifndef IMGUI_DISABLE_DEFAULT_FONT
+    ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
+    if (!font_cfg_template)
+        font_cfg.PixelSnapH = true; // Precisely match ProggyClean, but prevents sub-integer scaling factors at lower-level layers.
+    if (font_cfg.SizePixels <= 0.0f)
+        font_cfg.SizePixels = 13.0f;
+    if (font_cfg.Name[0] == '\0')
+        ImFormatString(font_cfg.Name, IM_COUNTOF(font_cfg.Name), "ProggyForever.ttf");
+    font_cfg.ExtraSizeScale *= 1.015f; // Match ProggyClean
+    font_cfg.GlyphOffset.y += 0.5f * (font_cfg.SizePixels / 16.0f); // Closer match ProggyClean + avoid descenders going too high (with current code).
+
+    int ttf_compressed_size = 0;
+    const char* ttf_compressed = GetDefaultCompressedFontDataProggyForever(&ttf_compressed_size);
+    return AddFontFromMemoryCompressedTTF(ttf_compressed, ttf_compressed_size, font_cfg.SizePixels, &font_cfg);
+#else
+    IM_ASSERT(0 && "Function is disabled in this build.");
     IM_UNUSED(font_cfg_template);
     return NULL;
 #endif // #ifndef IMGUI_DISABLE_DEFAULT_FONT
@@ -3916,15 +3963,15 @@ ImFont* ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels,
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     if (font_cfg.Name[0] == '\0')
     {
-        // Store a short copy of filename into into the font name for convenience
+        // Store a short copy of filename into the font name for convenience
         const char* p;
         for (p = filename + ImStrlen(filename); p > filename && p[-1] != '/' && p[-1] != '\\'; p--) {}
-        ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "%s", p);
+        ImFormatString(font_cfg.Name, IM_COUNTOF(font_cfg.Name), "%s", p);
     }
     return AddFontFromMemoryTTF(data, (int)data_size, size_pixels, &font_cfg, glyph_ranges);
 }
 
-// NB: Transfer ownership of 'ttf_data' to ImFontAtlas, unless font_cfg_template->FontDataOwnedByAtlas == false. Owned TTF buffer will be deleted after Build().
+// NB: Transfer ownership of 'font_data' to ImFontAtlas, unless font_cfg_template->FontDataOwnedByAtlas == false. Owned TTF buffer will be deleted after Build().
 ImFont* ImFontAtlas::AddFontFromMemoryTTF(void* font_data, int font_data_size, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
 {
     IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas!");
@@ -3971,6 +4018,9 @@ void ImFontAtlasBuildNotifySetFont(ImFontAtlas* atlas, ImFont* old_font, ImFont*
             shared_data->Font = new_font;
         if (ImGuiContext* ctx = shared_data->Context)
         {
+            if (ctx->FrameCount == 0 && old_font == NULL) // While this should work either way, we save ourselves the bother / debugging confusion of running ImGui code so early when it is not needed. 
+                continue;
+
             if (ctx->IO.FontDefault == old_font)
                 ctx->IO.FontDefault = new_font;
             if (ctx->Font == old_font)
@@ -3993,7 +4043,6 @@ void ImFontAtlasBuildNotifySetFont(ImFontAtlas* atlas, ImFont* old_font, ImFont*
 void ImFontAtlas::RemoveFont(ImFont* font)
 {
     IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas!");
-    font->ClearOutputData();
 
     ImFontAtlasFontDestroyOutput(this, font);
     for (ImFontConfig* src : font->Sources)
@@ -4156,6 +4205,7 @@ void ImFontAtlasBuildMain(ImFontAtlas* atlas)
 
 void ImFontAtlasBuildGetOversampleFactors(ImFontConfig* src, ImFontBaked* baked, int* out_oversample_h, int* out_oversample_v)
 {
+    // (Only used by stb_truetype builder)
     // Automatically disable horizontal oversampling over size 36
     const float raster_size = baked->Size * baked->RasterizerDensity * src->RasterizerDensity;
     *out_oversample_h = (src->OversampleH != 0) ? src->OversampleH : (raster_size > 36.0f || src->PixelSnapH) ? 1 : 2;
@@ -4372,6 +4422,12 @@ void ImFontAtlasFontDestroyOutput(ImFontAtlas* atlas, ImFont* font)
     }
 }
 
+void ImFontAtlasFontRebuildOutput(ImFontAtlas* atlas, ImFont* font)
+{
+    ImFontAtlasFontDestroyOutput(atlas, font);
+    ImFontAtlasFontInitOutput(atlas, font);
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------
 
 bool ImFontAtlasFontSourceInit(ImFontAtlas* atlas, ImFontConfig* src)
@@ -4400,7 +4456,7 @@ void ImFontAtlasFontDestroySourceData(ImFontAtlas* atlas, ImFontConfig* src)
     IM_UNUSED(atlas);
     // IF YOU GET A CRASH IN THE IM_FREE() CALL HERE AND USED AddFontFromMemoryTTF():
     // - DUE TO LEGACY REASON AddFontFromMemoryTTF() TRANSFERS MEMORY OWNERSHIP BY DEFAULT.
-    // - IT WILL THEREFORE CRASH WHEN PASSED DATA WHICH MAY NOT BE FREEED BY IMGUI.
+    // - IT WILL THEREFORE CRASH WHEN PASSED DATA WHICH MAY NOT BE FREED BY IMGUI.
     // - USE `ImFontConfig font_cfg; font_cfg.FontDataOwnedByAtlas = false; io.Fonts->AddFontFromMemoryTTF(....., &cfg);` to disable passing ownership/
     // WE WILL ADDRESS THIS IN A FUTURE REWORK OF THE API.
     if (src->FontDataOwnedByAtlas)
@@ -4771,7 +4827,7 @@ static void ImFontAtlasDebugWriteTexToDisk(ImTextureData* tex, const char* descr
 {
     ImGuiContext& g = *GImGui;
     char buf[128];
-    ImFormatString(buf, IM_ARRAYSIZE(buf), "[%05d] Texture #%03d - %s.png", g.FrameCount, tex->UniqueID, description);
+    ImFormatString(buf, IM_COUNTOF(buf), "[%05d] Texture #%03d - %s.png", g.FrameCount, tex->UniqueID, description);
     stbi_write_png(buf, tex->Width, tex->Height, tex->BytesPerPixel, tex->Pixels, tex->GetPitch()); // tex->BytesPerPixel is technically not component, but ok for the formats we support.
 }
 #endif
@@ -5255,6 +5311,10 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
     ImFontAtlasUpdateDrawListsSharedData(atlas);
 
     //atlas->TexIsBuilt = true;
+
+    // Lazily initialize char/text classifier
+    // FIXME: This could be practically anywhere, and should eventually be parameters to CalcTextSize/word-wrapping code, but there's no obvious spot now.
+    ImTextInitClassifiers();
 }
 
 // Destroy builder and all cached glyphs. Do not destroy actual fonts.
@@ -5561,16 +5621,16 @@ void ImFontAtlasDebugLogTextureRequests(ImFontAtlas* atlas)
         if (tex->Status == ImTextureStatus_WantCreate)
             IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: create %dx%d\n", tex->UniqueID, tex->Width, tex->Height);
         else if (tex->Status == ImTextureStatus_WantDestroy)
-            IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: destroy %dx%d, texid=0x%" IM_PRIX64 ", backend_data=%p\n", tex->UniqueID, tex->Width, tex->Height, IM_TEXTUREID_TO_U64(tex->TexID), tex->BackendUserData);
+            IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: destroy %dx%d, texid=0x%" IM_PRIX64 ", backend_data=%p\n", tex->UniqueID, tex->Width, tex->Height, ImGui::DebugTextureIDToU64(tex->TexID), tex->BackendUserData);
         else if (tex->Status == ImTextureStatus_WantUpdates)
         {
-            IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: update %d regions, texid=0x%" IM_PRIX64 ", backend_data=0x%" IM_PRIX64 "\n", tex->UniqueID, tex->Updates.Size, IM_TEXTUREID_TO_U64(tex->TexID), (ImU64)(intptr_t)tex->BackendUserData);
+            IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: update %d regions, texid=0x%" IM_PRIX64 ", backend_data=0x%" IM_PRIX64 "\n", tex->UniqueID, tex->Updates.Size, ImGui::DebugTextureIDToU64(tex->TexID), (ImU64)(intptr_t)tex->BackendUserData);
             for (const ImTextureRect& r : tex->Updates)
             {
                 IM_UNUSED(r);
                 IM_ASSERT(r.x >= 0 && r.y >= 0);
                 IM_ASSERT(r.x + r.w <= tex->Width && r.y + r.h <= tex->Height); // In theory should subtract PackPadding but it's currently part of atlas and mid-frame change would wreck assert.
-                //IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: update (% 4d..%-4d)->(% 4d..%-4d), texid=0x%" IM_PRIX64 ", backend_data=0x%" IM_PRIX64 "\n", tex->UniqueID, r.x, r.y, r.x + r.w, r.y + r.h, IM_TEXTUREID_TO_U64(tex->TexID), (ImU64)(intptr_t)tex->BackendUserData);
+                //IMGUI_DEBUG_LOG_FONT("[font] Texture #%03d: update (% 4d..%-4d)->(% 4d..%-4d), texid=0x%" IM_PRIX64 ", backend_data=0x%" IM_PRIX64 "\n", tex->UniqueID, r.x, r.y, r.x + r.w, r.y + r.h, ImGui::DebugTextureIDToU64(tex->TexID), (ImU64)(intptr_t)tex->BackendUserData);
             }
         }
     }
@@ -5600,14 +5660,14 @@ static bool ImGui_ImplStbTrueType_FontSrcInit(ImFontAtlas* atlas, ImFontConfig* 
     IM_ASSERT(src->FontLoaderData == NULL);
 
     // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
-    const int font_offset = stbtt_GetFontOffsetForIndex((unsigned char*)src->FontData, src->FontNo);
+    const int font_offset = stbtt_GetFontOffsetForIndex((const unsigned char*)src->FontData, src->FontNo);
     if (font_offset < 0)
     {
         IM_DELETE(bd_font_data);
         IM_ASSERT_USER_ERROR(0, "stbtt_GetFontOffsetForIndex(): FontData is incorrect, or FontNo cannot be found.");
         return false;
     }
-    if (!stbtt_InitFont(&bd_font_data->FontInfo, (unsigned char*)src->FontData, font_offset))
+    if (!stbtt_InitFont(&bd_font_data->FontInfo, (const unsigned char*)src->FontData, font_offset))
     {
         IM_DELETE(bd_font_data);
         IM_ASSERT_USER_ERROR(0, "stbtt_InitFont(): failed to parse FontData. It is correct and complete? Check FontDataSize.");
@@ -5619,12 +5679,10 @@ static bool ImGui_ImplStbTrueType_FontSrcInit(ImFontAtlas* atlas, ImFontConfig* 
     if (src->MergeMode && src->SizePixels == 0.0f)
         src->SizePixels = ref_size;
 
-    if (src->SizePixels >= 0.0f)
-        bd_font_data->ScaleFactor = stbtt_ScaleForPixelHeight(&bd_font_data->FontInfo, 1.0f);
-    else
-        bd_font_data->ScaleFactor = stbtt_ScaleForMappingEmToPixels(&bd_font_data->FontInfo, 1.0f);
+    bd_font_data->ScaleFactor = stbtt_ScaleForPixelHeight(&bd_font_data->FontInfo, 1.0f);
     if (src->MergeMode && src->SizePixels != 0.0f && ref_size != 0.0f)
         bd_font_data->ScaleFactor *= src->SizePixels / ref_size; // FIXME-NEWATLAS: Should tidy up that a bit
+    bd_font_data->ScaleFactor *= src->ExtraSizeScale;
 
     return true;
 }
@@ -5657,7 +5715,7 @@ static bool ImGui_ImplStbTrueType_FontBakedInit(ImFontAtlas* atlas, ImFontConfig
     {
         // FIXME-NEWFONTS: reevaluate how to use sizing metrics
         // FIXME-NEWFONTS: make use of line gap value
-        float scale_for_layout = bd_font_data->ScaleFactor * baked->Size;
+        const float scale_for_layout = bd_font_data->ScaleFactor * baked->Size / src->ExtraSizeScale;
         int unscaled_ascent, unscaled_descent, unscaled_line_gap;
         stbtt_GetFontVMetrics(&bd_font_data->FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap);
         baked->Ascent = ImCeil(unscaled_ascent * scale_for_layout);
@@ -5732,12 +5790,8 @@ static bool ImGui_ImplStbTrueType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontC
 
         const float ref_size = baked->OwnerFont->Sources[0]->SizePixels;
         const float offsets_scale = (ref_size != 0.0f) ? (baked->Size / ref_size) : 1.0f;
-        float font_off_x = (src->GlyphOffset.x * offsets_scale);
-        float font_off_y = (src->GlyphOffset.y * offsets_scale);
-        if (src->PixelSnapH) // Snap scaled offset. This is to mitigate backward compatibility issues for GlyphOffset, but a better design would be welcome.
-            font_off_x = IM_ROUND(font_off_x);
-        if (src->PixelSnapV)
-            font_off_y = IM_ROUND(font_off_y);
+        float font_off_x = ImFloor(src->GlyphOffset.x * offsets_scale + 0.5f); // Snap scaled offset.
+        float font_off_y = ImFloor(src->GlyphOffset.y * offsets_scale + 0.5f);
         font_off_x += sub_x;
         font_off_y += sub_y + IM_ROUND(baked->Ascent);
         float recip_h = 1.0f / (oversample_h * rasterizer_density);
@@ -5909,11 +5963,11 @@ const ImWchar*  ImFontAtlas::GetGlyphRangesChineseSimplifiedCommon()
         0xFF00, 0xFFEF, // Half-width characters
         0xFFFD, 0xFFFD  // Invalid
     };
-    static ImWchar full_ranges[IM_ARRAYSIZE(base_ranges) + IM_ARRAYSIZE(accumulative_offsets_from_0x4E00) * 2 + 1] = { 0 };
+    static ImWchar full_ranges[IM_COUNTOF(base_ranges) + IM_COUNTOF(accumulative_offsets_from_0x4E00) * 2 + 1] = { 0 };
     if (!full_ranges[0])
     {
         memcpy(full_ranges, base_ranges, sizeof(base_ranges));
-        UnpackAccumulativeOffsetsIntoRanges(0x4E00, accumulative_offsets_from_0x4E00, IM_ARRAYSIZE(accumulative_offsets_from_0x4E00), full_ranges + IM_ARRAYSIZE(base_ranges));
+        UnpackAccumulativeOffsetsIntoRanges(0x4E00, accumulative_offsets_from_0x4E00, IM_COUNTOF(accumulative_offsets_from_0x4E00), full_ranges + IM_COUNTOF(base_ranges));
     }
     return &full_ranges[0];
 }
@@ -5999,11 +6053,11 @@ const ImWchar*  ImFontAtlas::GetGlyphRangesJapanese()
         0xFF00, 0xFFEF, // Half-width characters
         0xFFFD, 0xFFFD  // Invalid
     };
-    static ImWchar full_ranges[IM_ARRAYSIZE(base_ranges) + IM_ARRAYSIZE(accumulative_offsets_from_0x4E00)*2 + 1] = { 0 };
+    static ImWchar full_ranges[IM_COUNTOF(base_ranges) + IM_COUNTOF(accumulative_offsets_from_0x4E00)*2 + 1] = { 0 };
     if (!full_ranges[0])
     {
         memcpy(full_ranges, base_ranges, sizeof(base_ranges));
-        UnpackAccumulativeOffsetsIntoRanges(0x4E00, accumulative_offsets_from_0x4E00, IM_ARRAYSIZE(accumulative_offsets_from_0x4E00), full_ranges + IM_ARRAYSIZE(base_ranges));
+        UnpackAccumulativeOffsetsIntoRanges(0x4E00, accumulative_offsets_from_0x4E00, IM_COUNTOF(accumulative_offsets_from_0x4E00), full_ranges + IM_COUNTOF(base_ranges));
     }
     return &full_ranges[0];
 }
@@ -6092,12 +6146,12 @@ void ImFontGlyphRangesBuilder::BuildRanges(ImVector<ImWchar>* out_ranges)
 }
 
 //-----------------------------------------------------------------------------
-// [SECTION] ImFont
+// [SECTION] ImFontBaked, ImFont
 //-----------------------------------------------------------------------------
 
 ImFontBaked::ImFontBaked()
 {
-    memset(this, 0, sizeof(*this));
+    memset((void*)this, 0, sizeof(*this));
     FallbackGlyphIndex = -1;
 }
 
@@ -6114,7 +6168,7 @@ void ImFontBaked::ClearOutputData()
 
 ImFont::ImFont()
 {
-    memset(this, 0, sizeof(*this));
+    memset((void*)this, 0, sizeof(*this));
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     Scale = 1.0f;
 #endif
@@ -6129,7 +6183,7 @@ void ImFont::ClearOutputData()
 {
     if (ImFontAtlas* atlas = OwnerAtlas)
         ImFontAtlasFontDiscardBakes(atlas, this, 0);
-    FallbackChar = EllipsisChar = 0;
+    //FallbackChar = EllipsisChar = 0;
     memset(Used8kPagesMap, 0, sizeof(Used8kPagesMap));
     LastBaked = NULL;
 }
@@ -6390,21 +6444,68 @@ const char* ImTextCalcWordWrapNextLineStart(const char* text, const char* text_e
     if ((flags & ImDrawTextFlags_WrapKeepBlanks) == 0)
         while (text < text_end && ImCharIsBlankA(*text))
             text++;
-    if (*text == '\n')
+    if (text < text_end && *text == '\n')
         text++;
     return text;
 }
 
+void ImTextClassifierClear(ImU32* bits, unsigned int codepoint_min, unsigned int codepoint_end, ImWcharClass char_class)
+{
+    for (unsigned int c = codepoint_min; c < codepoint_end; c++)
+        ImTextClassifierSetCharClass(bits, codepoint_min, codepoint_end, char_class, c);
+}
+
+void ImTextClassifierSetCharClass(ImU32* bits, unsigned int codepoint_min, unsigned int codepoint_end, ImWcharClass char_class, unsigned int c)
+{
+    IM_ASSERT(c >= codepoint_min && c < codepoint_end);
+    IM_UNUSED(codepoint_end);
+    c -= codepoint_min;
+    const ImU32 shift = (c & 15) << 1;
+    bits[c >> 4] = (bits[c >> 4] & ~(0x03 << shift)) | (char_class << shift);
+}
+
+void ImTextClassifierSetCharClassFromStr(ImU32* bits, unsigned int codepoint_min, unsigned int codepoint_end, ImWcharClass char_class, const char* s)
+{
+    const char* s_end = s + strlen(s);
+    while (*s)
+    {
+        unsigned int c;
+        s += ImTextCharFromUtf8(&c, s, s_end);
+        ImTextClassifierSetCharClass(bits, codepoint_min, codepoint_end, char_class, c);
+    }
+}
+
+#define ImTextClassifierGet(_BITS, _CHAR_OFFSET)    ((_BITS[(_CHAR_OFFSET) >> 4] >> (((_CHAR_OFFSET) & 15) << 1)) & 0x03)
+
+// 2-bit per character
+static ImU32 g_CharClassifierIsSeparator_0000_007f[128 / 16] = {};
+static ImU32 g_CharClassifierIsSeparator_3000_300f[ 16 / 16] = {};
+
+void ImTextInitClassifiers()
+{
+    if (ImTextClassifierGet(g_CharClassifierIsSeparator_0000_007f, ',') != 0)
+        return;
+
+    // List of hardcoded separators: .,;!?'"
+    // Making this dynamic given known ranges is trivial BUT requires us to standardize where you pass them as parameters. (#3002, #8503)
+    ImTextClassifierClear(g_CharClassifierIsSeparator_0000_007f, 0, 128, ImWcharClass_Other);
+    ImTextClassifierSetCharClassFromStr(g_CharClassifierIsSeparator_0000_007f, 0, 128, ImWcharClass_Blank, " \t");
+    ImTextClassifierSetCharClassFromStr(g_CharClassifierIsSeparator_0000_007f, 0, 128, ImWcharClass_Punct, ".,;!?\"");
+
+    ImTextClassifierClear(g_CharClassifierIsSeparator_3000_300f, 0x3000, 0x300F, ImWcharClass_Other);
+    ImTextClassifierSetCharClass(g_CharClassifierIsSeparator_3000_300f, 0x3000, 0x300F, ImWcharClass_Blank, 0x3000);
+    ImTextClassifierSetCharClass(g_CharClassifierIsSeparator_3000_300f, 0x3000, 0x300F, ImWcharClass_Punct, 0x3001);
+    ImTextClassifierSetCharClass(g_CharClassifierIsSeparator_3000_300f, 0x3000, 0x300F, ImWcharClass_Punct, 0x3002);
+}
+
 // Simple word-wrapping for English, not full-featured. Please submit failing cases!
 // This will return the next location to wrap from. If no wrapping if necessary, this will fast-forward to e.g. text_end.
-// FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
+// Refer to imgui_test_suite's "drawlist_text_wordwrap_1" for tests.
 const char* ImFontCalcWordWrapPositionEx(ImFont* font, float size, const char* text, const char* text_end, float wrap_width, ImDrawTextFlags flags)
 {
     // For references, possible wrap point marked with ^
     //  "aaa bbb, ccc,ddd. eee   fff. ggg!"
     //      ^    ^    ^   ^   ^__    ^    ^
-
-    // List of hardcoded separators: .,;!?'"
 
     // Skip extra blanks after a line returns (that includes not counting them in width computation)
     // e.g. "Hello    world" --> "Hello" "World"
@@ -6416,16 +6517,20 @@ const char* ImFontCalcWordWrapPositionEx(ImFont* font, float size, const char* t
     const float scale = size / baked->Size;
 
     float line_width = 0.0f;
-    float word_width = 0.0f;
     float blank_width = 0.0f;
     wrap_width /= scale; // We work with unscaled widths to avoid scaling every characters
 
-    const char* word_end = text;
-    const char* prev_word_end = NULL;
-    bool inside_word = true;
-
     const char* s = text;
     IM_ASSERT(text_end != NULL);
+
+    int prev_type = ImWcharClass_Other;
+    const bool keep_blanks = (flags & ImDrawTextFlags_WrapKeepBlanks) != 0;
+
+    // Find next wrapping point
+    //const char* span_begin = s;
+    const char* span_end = s;
+    float span_width = 0.0f;
+
     while (s < text_end)
     {
         unsigned int c = (unsigned int)*s;
@@ -6441,7 +6546,7 @@ const char* ImFontCalcWordWrapPositionEx(ImFont* font, float size, const char* t
                 return s; // Direct return, skip "Wrap_width is too small to fit anything" path.
             if (c == '\r')
             {
-                s = next_s;
+                s = next_s; // Fast-skip
                 continue;
             }
         }
@@ -6451,46 +6556,56 @@ const char* ImFontCalcWordWrapPositionEx(ImFont* font, float size, const char* t
         if (char_width < 0.0f)
             char_width = BuildLoadGlyphGetAdvanceOrFallback(baked, c);
 
-        if (ImCharIsBlankW(c))
+        // Classify current character
+        int curr_type;
+        if (c < 128)
+            curr_type = ImTextClassifierGet(g_CharClassifierIsSeparator_0000_007f, c);
+        else if (c >= 0x3000 && c < 0x3010)
+            curr_type = ImTextClassifierGet(g_CharClassifierIsSeparator_3000_300f, c & 15); //-V578
+        else
+            curr_type = ImWcharClass_Other;
+
+        if (curr_type == ImWcharClass_Blank)
         {
-            if (inside_word)
+            // End span: 'A ' or '. '
+            if (prev_type != ImWcharClass_Blank && !keep_blanks)
             {
-                line_width += blank_width;
-                blank_width = 0.0f;
-                word_end = s;
+                span_end = s;
+                line_width += span_width;
+                span_width = 0.0f;
             }
             blank_width += char_width;
-            inside_word = false;
         }
         else
         {
-            word_width += char_width;
-            if (inside_word)
+            // End span: '.X' unless X is a digit
+            if (prev_type == ImWcharClass_Punct && curr_type != ImWcharClass_Punct && !(c >= '0' && c <= '9')) // FIXME: Digit checks might be removed if allow custom separators (#8503)
             {
-                word_end = next_s;
+                span_end = s;
+                line_width += span_width + blank_width;
+                span_width = blank_width = 0.0f;
             }
-            else
+            // End span: 'A ' or '. '
+            else if (prev_type == ImWcharClass_Blank && keep_blanks)
             {
-                prev_word_end = word_end;
-                line_width += word_width + blank_width;
-                if ((flags & ImDrawTextFlags_WrapKeepBlanks) && line_width <= wrap_width)
-                    prev_word_end = s;
-                word_width = blank_width = 0.0f;
+                span_end = s;
+                line_width += span_width + blank_width;
+                span_width = blank_width = 0.0f;
             }
-
-            // Allow wrapping after punctuation.
-            inside_word = (c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '\"' && c != 0x3001 && c != 0x3002);
+            span_width += char_width;
         }
 
-        // We ignore blank width at the end of the line (they can be skipped)
-        if (line_width + word_width > wrap_width)
+        if (span_width + blank_width + line_width > wrap_width)
         {
-            // Words that cannot possibly fit within an entire line will be cut anywhere.
-            if (word_width < wrap_width)
-                s = prev_word_end ? prev_word_end : word_end;
-            break;
+            if (span_width + blank_width > wrap_width)
+                break;
+            // FIXME: Narrow wrapping e.g. "A quick brown" -> "Quic|k br|own", would require knowing if span is going to be longer than wrap_width.
+            //if (span_width > wrap_width && !is_blank && !was_blank)
+            //    return s;
+            return span_end;
         }
 
+        prev_type = curr_type;
         s = next_s;
     }
 
@@ -6642,7 +6757,7 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-// DO NOT CALL DIRECTLY THIS WILL CHANGE WILDLY IN 2025-2025. Use ImDrawList::AddText().
+// DO NOT CALL DIRECTLY THIS WILL CHANGE WILDLY IN 2026. Use ImDrawList::AddText().
 void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, ImDrawTextFlags flags)
 {
     // Align to be pixel perfect
@@ -6880,7 +6995,7 @@ begin:
 // - RenderCheckMark()
 // - RenderArrowDockMenu()
 // - RenderArrowPointingAt()
-// - RenderRectFilledRangeH()
+// - RenderRectFilledInRangeH()
 // - RenderRectFilledWithHole()
 //-----------------------------------------------------------------------------
 // Function in need of a redesign (legacy mess)
@@ -6971,15 +7086,15 @@ static inline float ImAcos01(float x)
 }
 
 // FIXME: Cleanup and move code to ImDrawList.
-void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding)
+// - Before 2025-12-04: RenderRectFilledRangeH()   with 'float x_start_norm, float x_end_norm` <- normalized
+// - After  2025-12-04: RenderRectFilledInRangeH() with 'float x1, float x2'                   <- absolute coords!!
+void ImGui::RenderRectFilledInRangeH(ImDrawList* draw_list, const ImRect& rect, ImU32 col, float fill_x0, float fill_x1, float rounding)
 {
-    if (x_end_norm == x_start_norm)
+    if (fill_x0 > fill_x1)
         return;
-    if (x_start_norm > x_end_norm)
-        ImSwap(x_start_norm, x_end_norm);
 
-    ImVec2 p0 = ImVec2(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
-    ImVec2 p1 = ImVec2(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
+    ImVec2 p0 = ImVec2(fill_x0, rect.Min.y);
+    ImVec2 p1 = ImVec2(fill_x1, rect.Max.y);
     if (rounding == 0.0f)
     {
         draw_list->AddRectFilled(p0, p1, col, 0.0f);
@@ -7221,11 +7336,8 @@ static unsigned int stb_decompress(unsigned char *output, const unsigned char *i
 //-----------------------------------------------------------------------------
 // [SECTION] Default font data (ProggyClean.ttf)
 //-----------------------------------------------------------------------------
-// ProggyClean.ttf
-// Copyright (c) 2004, 2005 Tristan Grimmer
-// MIT license (see License.txt in http://www.proggyfonts.net/index.php?menu=download)
-// Download and more information at http://www.proggyfonts.net or http://upperboundsinteractive.com/fonts.php
-// If you want a similar font which may be better scaled, consider using ProggyVector from the same author!
+// MIT License / Copyright (c) 2004, 2005 Tristan Grimmer
+// Download and more information at https://github.com/bluescan/proggyfonts
 //-----------------------------------------------------------------------------
 
 #ifndef IMGUI_DISABLE_DEFAULT_FONT
@@ -7403,11 +7515,274 @@ static const unsigned char proggy_clean_ttf_compressed_data[9583] =
     239,32,57,141,239,32,57,141,239,32,57,141,239,32,57,141,239,32,57,141,239,35,57,102,0,0,5,250,72,249,98,247,
 };
 
-static const char* GetDefaultCompressedFontDataTTF(int* out_size)
+static const char* GetDefaultCompressedFontDataProggyClean(int* out_size)
 {
     *out_size = proggy_clean_ttf_compressed_size;
     return (const char*)proggy_clean_ttf_compressed_data;
 }
+
+//-----------------------------------------------------------------------------
+// [SECTION] Default font data (ProggyForever-Regular-minimal.ttf)
+//-----------------------------------------------------------------------------
+// Based on ProggyForever: https://github.com/ocornut/proggyforever
+// MIT license / Copyright (c) 2026 Disco Hello, Copyright (c) 2019,2023 Tristan Grimmer
+//-----------------------------------------------------------------------------
+
+// File: 'output/ProggyForever-Regular-minimal.ttf' (18556 bytes)
+// Exported using binary_to_compressed_c.exe -u8 "output/ProggyForever-Regular-minimal.ttf" proggy_forever_minimal_ttf
+static const unsigned int proggy_forever_minimal_ttf_compressed_size = 14562;
+static const unsigned char proggy_forever_minimal_ttf_compressed_data[14562] =
+{
+    87,188,0,0,0,0,0,0,0,0,72,124,0,4,0,0,55,0,1,0,0,0,14,0,128,0,3,0,96,70,70,84,77,176,111,174,190,0,0,72,96,130,21,40,28,71,68,69,70,0,136,0,105,130,15,32,64,130,15,44,30,79,83,47,50,
+    104,97,19,194,0,0,1,104,130,15,44,96,99,109,97,112,177,173,221,139,0,0,3,80,130,19,44,114,99,118,116,32,0,33,2,121,0,0,4,196,130,31,38,4,103,97,115,112,255,255,130,89,34,0,72,56,130,
+    15,56,8,103,108,121,102,239,245,108,207,0,0,6,76,0,0,62,224,104,101,97,100,44,57,58,3,130,27,32,236,130,3,33,54,104,130,16,35,4,62,0,230,130,75,32,36,130,15,39,36,104,109,116,120,24,
+    22,19,130,95,33,1,200,130,19,40,136,108,111,99,97,80,9,64,114,130,95,131,15,39,130,109,97,120,112,1,7,0,131,31,32,72,130,47,44,32,110,97,109,101,10,160,159,151,0,0,69,44,130,47,44,
+    68,112,111,115,116,70,77,175,253,0,0,70,112,130,15,32,197,132,235,32,1,130,9,42,224,136,151,95,15,60,245,0,11,3,232,130,55,36,0,229,175,187,66,132,7,42,178,59,232,255,225,255,68,1,
+    215,2,176,130,15,34,8,0,2,130,5,131,2,130,51,39,2,131,255,71,0,0,1,184,130,31,34,226,1,215,132,73,131,25,135,3,32,4,132,17,37,192,0,90,0,5,0,131,0,33,2,0,130,44,132,19,34,64,0,46,130,
+    11,38,0,0,4,1,184,1,144,131,29,35,2,138,2,187,130,17,32,140,133,7,38,1,223,0,49,1,2,0,138,0,37,128,0,0,7,16,0,136,123,33,0,88,130,0,37,0,64,0,32,32,172,133,131,34,2,175,0,131,63,33,
+    3,0,130,0,35,1,133,2,6,130,6,38,32,0,1,1,184,0,33,130,9,130,161,32,0,132,3,39,0,166,0,116,255,249,0,49,130,113,36,4,0,185,0,135,130,1,38,27,0,22,0,154,0,53,130,25,40,39,0,41,0,79,0,
+    50,0,45,130,17,32,49,130,11,33,46,0,131,17,36,166,0,143,0,24,132,1,34,48,255,225,130,55,34,38,0,47,130,23,44,52,0,58,0,35,0,42,0,66,0,65,0,19,130,79,32,19,130,47,38,35,0,44,0,13,0,
+    38,130,21,38,9,0,37,0,13,255,250,130,121,36,5,0,33,0,104,130,47,40,104,0,37,255,242,0,124,0,48,130,95,32,59,130,3,34,37,0,40,130,5,36,62,0,139,0,100,130,57,36,133,0,20,0,62,130,55,
+    32,50,130,19,40,69,0,69,0,87,0,54,0,29,130,167,32,20,130,107,36,64,0,63,0,188,130,3,36,22,0,21,0,159,130,7,36,40,0,55,0,5,130,17,34,64,0,109,130,33,34,92,0,50,130,5,42,109,0,101,0,
+    24,0,115,0,109,0,131,130,121,32,48,130,39,36,143,0,114,0,83,130,77,32,19,130,157,34,18,0,73,130,49,32,5,136,3,32,2,130,85,33,52,0,133,1,33,66,0,133,1,32,17,130,125,32,35,130,209,131,
+    3,36,46,0,1,0,46,132,1,32,47,130,51,32,42,130,25,32,38,130,213,135,3,34,5,0,59,130,99,32,37,132,3,34,51,0,68,132,1,32,42,130,189,33,43,0,135,1,36,24,0,12,0,61,134,1,32,26,130,131,38,
+    26,0,30,0,0,0,3,134,3,32,28,130,93,130,10,35,0,108,0,3,132,9,36,28,0,4,0,80,130,16,34,16,0,16,132,35,46,126,0,133,0,171,0,210,0,211,0,255,32,172,255,255,130,25,32,32,130,17,34,161,
+    0,174,130,17,32,212,131,17,45,255,227,255,221,255,194,255,192,255,95,255,191,224,19,132,67,130,36,139,2,34,1,6,0,136,22,35,1,2,0,0,66,53,9,32,0,133,0,32,1,130,142,8,148,4,5,6,7,8,9,
+    10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,
+    70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,0,132,133,135,137,145,149,155,160,159,161,163,162,164,166,168,167,169,170,172,171,173,174,176,178,
+    177,179,181,180,185,184,186,187,0,112,100,101,105,0,118,158,110,107,0,116,106,0,134,151,0,113,0,0,103,117,132,158,38,108,122,0,165,183,127,99,132,11,38,109,123,0,0,128,131,148,132,
+    11,130,4,37,182,0,190,60,0,191,130,8,34,0,0,119,130,5,47,130,138,129,139,136,141,142,143,140,50,147,0,146,153,154,152,130,18,32,111,130,3,32,120,130,3,130,2,34,33,2,121,130,5,33,42,
+    0,133,1,9,155,68,0,86,0,134,0,210,1,14,1,104,1,116,1,148,1,180,1,212,1,232,2,6,2,20,2,38,2,54,2,100,2,122,2,172,2,232,3,2,3,60,3,116,3,134,3,210,4,10,4,40,4,82,4,102,4,122,4,142,4,
+    204,5,36,5,60,5,118,5,158,5,184,5,208,5,228,6,24,6,44,6,68,6,94,6,118,6,134,6,160,6,182,6,224,7,14,7,64,7,106,7,182,7,200,7,238,8,0,8,28,8,52,8,72,8,96,8,114,8,130,8,148,8,166,8,180,
+    8,194,9,12,9,58,9,92,9,140,9,182,9,214,10,14,10,44,10,74,10,110,10,134,10,150,10,198,10,230,11,4,11,50,11,96,11,130,11,188,11,216,11,250,12,14,12,42,12,66,12,114,12,142,12,198,12,210,
+    13,10,13,62,13,126,13,152,13,198,13,238,14,34,14,72,14,90,14,198,14,232,15,32,15,106,15,134,15,200,15,214,15,244,16,16,16,56,16,114,16,128,16,182,16,212,16,230,17,2,17,22,17,60,17,
+    86,17,132,17,194,18,20,18,76,18,108,18,140,18,176,18,228,19,24,19,74,19,110,19,168,19,198,19,228,20,6,20,56,20,86,20,116,20,150,20,200,20,252,21,44,21,92,21,144,21,212,22,24,22,50,
+    22,112,22,148,22,186,22,226,23,28,23,56,23,90,23,160,23,246,24,76,24,164,25,18,25,124,25,226,26,94,26,150,26,198,26,248,27,44,27,114,27,144,27,174,27,208,28,2,28,74,28,136,28,174,28,
+    212,28,254,29,60,29,118,29,172,29,230,30,16,30,58,30,104,30,166,30,206,30,244,31,48,31,112,0,0,0,2,0,33,0,0,1,42,2,154,0,3,0,7,0,46,177,1,0,47,60,178,7,4,0,237,50,177,6,5,220,60,178,
+    3,2,130,10,34,0,177,3,131,22,32,5,131,22,39,178,7,6,1,252,60,178,1,131,23,52,51,17,33,17,39,51,17,35,33,1,9,232,199,199,2,154,253,102,33,2,88,131,83,38,166,255,254,1,18,2,35,130,81,
+    61,13,0,0,54,50,22,20,6,34,38,52,55,35,3,55,51,21,198,44,32,32,44,32,85,59,14,1,83,105,31,131,11,36,122,1,4,91,91,130,135,38,116,1,70,1,68,2,7,132,135,37,0,1,35,53,51,7,130,3,8,40,
+    1,67,64,64,142,65,65,1,70,192,192,192,0,2,255,248,0,3,1,191,2,3,0,3,0,31,0,0,63,1,35,7,37,35,7,51,21,35,7,35,55,132,3,34,53,51,55,130,51,35,55,51,7,51,131,3,53,254,30,92,30,1,29,104,
+    31,92,106,38,59,38,92,38,58,38,96,110,31,98,112,134,11,34,90,201,115,130,0,33,54,143,130,0,35,54,115,54,144,130,0,32,0,130,85,8,37,49,255,241,1,135,2,22,0,6,0,11,0,52,0,0,55,62,1,53,
+    52,38,47,1,53,6,21,20,23,30,3,21,20,7,21,35,53,46,1,130,16,8,109,30,2,23,53,46,3,53,52,54,55,53,51,21,30,1,31,1,21,38,39,21,50,249,32,41,36,37,60,72,137,22,40,46,28,141,60,36,67,15,
+    15,6,21,69,37,31,44,43,22,75,65,60,25,55,15,15,43,67,3,81,7,37,31,30,32,10,73,135,12,61,44,30,4,15,28,50,33,114,15,44,43,1,14,6,6,63,4,11,22,3,162,6,15,26,42,29,53,67,9,45,42,2,11,
+    5,5,62,29,4,150,0,5,130,1,36,11,1,178,1,250,130,161,52,11,0,19,0,27,0,35,0,0,1,51,1,35,36,50,54,52,38,34,6,20,65,97,7,34,2,20,22,132,17,65,111,5,53,54,50,1,74,71,254,222,71,1,16,41,
+    30,30,41,29,7,84,60,60,84,59,174,130,9,34,29,41,122,130,9,51,59,84,1,249,254,21,47,27,39,27,27,39,115,56,79,56,56,79,1,26,131,11,33,27,7,131,11,8,59,56,0,0,0,3,0,4,255,246,1,179,2,
+    21,0,9,0,28,0,62,0,0,55,50,55,46,1,39,6,21,20,22,3,28,2,30,5,23,62,1,53,52,38,35,34,6,1,23,35,38,39,6,35,34,38,53,52,54,55,46,2,130,5,8,101,51,50,22,21,20,14,2,7,22,23,54,53,55,20,
+    206,52,37,25,110,24,65,80,41,1,2,3,6,8,12,7,37,37,31,23,24,35,1,2,67,72,13,21,60,89,72,104,52,44,22,19,15,63,60,61,51,15,32,25,24,89,58,36,61,44,36,28,131,28,54,59,48,62,1,125,1,7,
+    3,7,5,10,9,13,16,9,25,40,24,21,25,32,254,143,79,15,24,49,96,66,50,74,33,25,130,17,56,41,69,55,49,20,36,34,20,17,107,69,65,72,1,108,0,1,0,185,1,70,0,255,2,8,130,189,42,0,19,35,53,51,
+    254,68,68,1,71,193,130,23,8,59,135,255,193,1,49,2,62,0,17,0,0,1,14,1,20,22,23,35,46,4,52,62,2,63,1,1,49,43,55,55,43,60,4,15,38,29,24,23,32,33,11,11,2,61,60,177,161,177,60,6,21,68,70,
+    103,97,102,75,61,16,16,130,50,32,0,138,63,34,19,30,4,130,220,40,15,1,35,62,1,52,38,39,195,137,57,32,60,131,73,44,2,61,6,22,68,71,103,97,101,75,60,16,16,132,73,32,0,131,63,38,27,0,69,
+    1,157,1,199,132,127,8,41,7,23,7,39,21,35,53,7,39,55,39,55,23,53,51,21,55,1,157,131,131,33,128,64,129,32,131,131,32,129,64,128,1,77,71,71,50,70,142,142,70,50,134,7,49,0,1,0,22,0,74,
+    1,162,1,185,0,11,0,0,19,51,21,35,130,62,130,221,37,53,51,251,166,166,62,130,2,38,1,31,59,154,154,59,154,130,39,39,154,255,129,1,30,0,107,0,130,180,32,54,65,133,5,8,37,15,1,39,54,55,
+    46,1,53,52,209,45,31,21,31,30,11,11,26,55,10,17,25,107,32,22,32,61,40,32,7,7,37,48,41,1,31,21,22,131,163,54,53,0,227,1,131,1,32,0,3,0,0,37,33,53,33,1,131,254,178,1,78,228,60,132,191,
+    40,166,255,255,1,18,0,105,0,7,67,209,9,67,203,5,37,105,31,44,31,31,44,132,35,38,39,255,222,1,144,2,39,131,63,49,9,1,35,1,1,144,254,221,69,1,34,2,39,253,184,2,72,0,130,21,8,73,41,255,
+    247,1,143,2,14,0,10,0,21,0,27,0,0,55,50,62,3,53,52,39,7,22,19,34,14,3,21,20,23,55,38,39,50,16,35,34,16,220,17,28,30,21,14,4,190,27,57,17,28,31,20,14,4,189,26,57,178,178,178,51,7,26,
+    44,78,53,40,34,230,52,1,161,8,131,10,39,39,33,229,52,58,253,234,2,130,186,41,0,1,0,79,0,0,1,104,2,7,130,91,40,0,19,39,55,51,17,51,21,33,130,5,50,81,1,106,68,105,254,233,1,105,1,103,
+    81,78,254,55,61,61,1,122,130,43,32,50,130,43,37,134,2,17,0,31,0,130,43,49,62,2,51,50,30,2,21,20,6,15,1,33,21,33,53,52,55,54,67,247,5,8,58,35,34,6,7,55,1,8,29,81,37,48,72,36,17,44,59,
+    147,1,1,254,173,13,1,165,37,40,58,45,26,75,24,1,159,65,5,16,27,30,48,46,21,40,78,58,146,61,46,14,12,1,165,38,80,33,33,47,27,13,0,130,94,41,0,45,255,246,1,139,2,16,0,41,130,12,32,22,
+    130,93,38,35,34,38,47,1,53,30,130,108,40,54,53,52,38,43,1,53,51,50,131,8,130,101,37,15,1,53,54,51,50,131,35,8,62,1,26,112,107,85,34,78,22,23,7,25,80,41,57,65,65,49,64,64,46,56,55,45,
+    33,72,20,20,74,68,78,98,51,1,22,30,109,65,84,13,7,6,69,4,12,19,51,49,46,52,58,45,38,37,43,14,7,7,64,23,74,59,50,55,130,119,34,2,0,22,130,111,45,162,2,7,0,2,0,13,0,0,37,17,3,59,1,66,
+    44,6,54,19,51,1,16,179,237,88,88,67,241,208,100,181,1,18,254,238,58,123,123,73,1,66,130,46,33,0,49,130,171,32,135,130,51,37,40,0,0,19,17,33,130,47,130,143,37,30,3,21,20,14,2,137,181,
+    36,62,2,53,52,46,130,15,8,68,6,7,72,1,33,221,24,41,25,48,51,38,24,35,61,67,38,43,70,14,14,7,24,76,38,21,39,39,23,23,40,44,25,28,56,14,1,2,1,4,59,127,11,10,25,38,63,40,49,72,38,18,11,
+    6,5,71,4,11,19,11,25,48,33,33,48,25,12,13,7,130,157,55,41,255,248,1,143,2,8,0,9,0,37,0,0,55,50,53,52,35,34,6,21,20,22,19,65,139,5,130,119,42,53,52,62,2,51,50,22,31,1,21,38,131,26,8,
+    58,54,224,101,101,41,59,59,51,31,56,49,29,91,82,87,98,36,63,79,48,24,46,11,10,31,59,69,89,36,48,119,121,57,64,63,56,1,39,20,40,68,43,90,89,114,136,73,110,63,31,8,4,3,66,25,95,98,72,
+    0,130,0,38,1,0,46,0,0,1,138,130,227,32,6,130,227,8,42,53,33,21,3,35,19,46,1,91,197,78,190,1,203,59,29,254,23,1,202,0,0,3,0,39,255,246,1,145,2,17,0,15,0,31,0,52,0,0,54,50,62,2,130,243,
+    38,34,14,2,20,30,1,18,132,6,32,2,132,18,35,1,23,30,1,65,210,5,35,53,52,55,38,68,239,7,8,50,199,42,32,32,18,18,33,32,40,32,33,18,18,32,72,37,29,29,16,17,29,28,36,28,30,16,16,29,33,48,
+    52,104,76,77,104,99,84,95,71,70,96,45,7,20,42,63,42,19,7,7,19,130,6,43,20,1,166,6,17,37,53,37,16,6,6,16,130,6,59,17,191,16,72,52,69,78,77,70,107,33,30,91,62,69,70,61,90,0,2,0,41,0,
+    0,1,143,2,16,65,43,5,43,19,34,21,20,51,50,54,53,52,38,3,34,69,108,11,65,170,5,32,22,131,26,8,44,6,215,100,100,42,59,60,51,30,57,48,29,91,82,86,99,36,64,79,47,24,46,11,11,32,59,68,89,
+    35,1,216,120,120,56,64,64,56,254,217,20,39,68,44,89,90,65,44,6,35,3,4,65,24,65,44,5,55,2,0,166,0,81,1,18,1,171,0,7,0,15,0,0,18,34,38,52,54,50,22,20,6,71,199,6,38,242,44,32,32,44,32,
+    76,132,5,39,1,65,31,44,31,31,44,165,132,5,32,0,130,0,36,2,0,143,255,209,134,59,32,24,140,59,35,21,20,14,2,68,137,8,37,243,45,31,31,45,31,130,67,41,22,30,31,11,10,27,55,10,17,25,135,
+    74,37,32,22,33,60,41,31,68,150,10,8,37,0,1,0,24,0,84,1,160,1,176,0,6,0,0,19,37,21,13,1,21,37,24,1,135,254,200,1,56,254,121,1,30,145,62,111,112,62,145,132,123,38,24,0,152,1,159,1,114,
+    72,67,5,34,37,33,53,132,1,33,1,159,130,37,32,135,131,3,35,153,59,99,59,130,39,141,79,37,5,21,5,53,45,1,131,79,32,121,130,79,36,200,1,176,145,57,131,81,132,79,42,48,0,0,1,135,2,31,0,
+    34,0,42,130,121,33,50,22,130,195,44,3,29,1,35,53,52,62,4,53,52,38,35,34,132,209,34,62,4,16,65,25,6,58,226,83,82,29,42,42,29,70,21,33,38,33,22,52,43,25,45,29,22,4,5,52,2,10,34,38,61,
+    132,239,8,33,2,31,68,52,28,47,33,30,33,17,41,41,22,39,28,29,23,31,16,30,33,16,23,23,8,8,34,4,14,35,26,22,254,75,65,71,9,47,255,225,255,233,1,215,2,32,0,7,0,64,0,0,54,50,71,233,5,39,
+    5,23,14,4,35,34,46,3,71,98,10,46,21,35,53,6,35,34,38,52,54,51,50,22,31,1,50,132,151,8,122,6,21,20,30,2,51,50,62,3,214,60,43,43,60,43,1,5,38,2,11,38,43,71,37,63,103,67,46,20,141,105,
+    105,128,15,24,21,10,55,36,43,55,79,80,55,28,49,10,11,45,84,70,81,118,39,61,75,39,35,64,40,30,14,168,56,79,57,57,79,120,46,4,11,27,21,17,33,55,74,79,42,120,163,78,67,24,35,17,7,1,198,
+    19,31,93,131,94,26,13,13,28,34,57,124,104,53,87,55,30,13,20,20,13,0,0,0,2,0,5,0,0,1,178,2,7,130,9,8,38,10,0,0,55,51,3,55,19,35,39,35,7,35,19,141,158,79,45,169,77,41,193,40,77,169,192,
+    1,9,61,253,250,136,136,2,6,0,3,0,38,130,47,32,146,130,47,36,8,0,17,0,39,130,49,32,50,69,22,5,36,21,17,21,22,55,131,10,42,35,23,30,4,21,20,14,2,43,1,17,69,159,6,8,61,220,65,52,62,45,
+    121,71,39,84,49,42,77,12,23,34,25,18,30,50,57,31,194,177,43,62,32,15,49,58,47,52,47,43,189,1,147,156,1,2,4,76,42,33,183,3,7,20,27,48,31,38,57,32,14,2,5,25,43,46,24,42,55,130,110,47,
+    0,47,255,248,1,137,2,18,0,26,0,0,37,21,6,35,67,62,7,58,23,21,38,35,34,14,2,21,20,30,1,51,50,1,136,49,79,56,86,50,24,112,104,77,51,51,77,130,65,55,15,26,66,50,77,93,73,28,42,74,95,58,
+    117,151,32,71,45,33,59,74,46,62,91,59,130,233,130,183,33,1,144,130,195,34,6,0,13,131,193,33,53,52,130,172,58,19,50,17,16,35,7,17,199,125,125,84,84,201,200,160,58,202,201,254,109,1,
+    204,254,253,254,254,1,130,247,34,1,0,52,130,136,32,131,130,51,8,34,11,0,0,19,33,21,33,23,51,21,35,21,33,21,33,53,1,77,254,253,1,227,228,1,4,254,178,2,6,59,153,59,188,59,0,130,0,38,
+    1,0,58,0,0,1,126,130,47,32,9,132,47,34,35,31,1,130,47,40,35,58,1,67,249,1,181,182,74,130,41,35,158,1,59,241,130,34,33,0,35,130,219,32,148,130,219,32,36,130,219,38,39,35,53,51,21,14,
+    4,149,224,47,62,1,1,78,1,99,170,2,7,27,32,54,30,56,85,51,130,233,33,78,50,132,233,47,14,25,66,50,27,42,11,67,141,58,223,2,7,18,13,11,143,241,37,11,7,0,1,0,42,130,108,32,141,133,191,
+    57,51,17,51,21,51,53,51,17,35,53,35,21,43,75,204,75,75,204,2,6,212,212,253,250,247,246,130,39,32,66,130,39,32,117,133,39,36,19,53,33,21,35,130,43,55,5,53,55,17,67,1,50,116,116,254,
+    206,115,1,203,59,59,254,112,58,1,57,1,1,145,132,231,36,65,255,249,1,118,130,47,32,13,130,231,8,33,51,17,20,6,35,7,53,51,50,54,53,17,35,158,216,66,78,164,147,48,37,140,2,6,254,158,80,
+    90,1,57,48,58,1,47,130,50,39,0,1,0,19,0,0,1,165,137,139,59,55,51,7,19,35,3,7,21,19,75,233,85,212,221,90,180,57,2,6,230,230,212,254,206,1,4,57,202,130,48,34,1,0,49,130,47,32,135,130,
+    47,50,5,0,0,55,17,51,17,33,21,49,75,1,10,1,2,5,254,53,58,132,31,131,79,32,164,130,31,56,12,0,0,51,17,51,23,55,51,17,7,17,3,35,3,17,20,100,99,101,100,65,107,57,106,130,130,42,254,253,
+    251,1,1,197,254,239,1,19,254,130,52,34,1,0,41,130,83,32,142,65,159,5,35,51,3,51,19,130,86,130,48,38,45,3,98,186,72,95,186,130,46,55,90,1,166,253,250,1,166,254,90,0,0,2,0,35,255,250,
+    1,149,2,18,0,5,0,25,130,229,63,50,16,35,34,16,18,50,62,3,52,46,3,34,14,3,20,30,2,220,184,184,184,167,34,27,30,20,13,13,20,30,27,131,8,33,14,14,130,22,50,17,253,234,2,22,254,37,8,26,
+    43,78,106,78,44,26,8,8,26,44,130,8,33,43,26,130,179,38,2,0,44,255,255,1,139,132,179,32,30,131,83,71,166,5,45,43,1,21,55,50,22,21,20,6,43,1,28,1,30,130,3,8,47,49,35,17,50,206,32,46,
+    22,10,10,21,42,30,93,99,85,91,85,84,108,1,1,75,174,1,10,19,31,31,17,17,31,31,18,195,252,80,70,71,89,5,21,55,48,50,29,2,6,130,90,45,0,2,0,13,255,184,1,171,2,15,0,12,0,32,131,91,39,17,
+    20,7,23,21,35,39,6,143,182,39,198,184,40,84,48,82,40,58,147,187,40,14,254,245,123,67,97,44,91,27,149,193,38,2,0,38,0,0,1,145,130,191,34,9,0,24,130,99,34,35,21,22,73,125,5,35,15,1,35,
+    17,73,20,5,8,45,7,23,35,39,38,213,99,68,39,34,51,53,139,3,72,179,79,83,57,44,122,79,111,97,1,205,184,1,2,2,46,45,43,47,242,218,2,5,89,69,45,69,16,229,217,1,130,184,42,1,0,42,255,246,
+    1,141,2,17,0,54,130,91,44,21,46,2,35,34,6,21,20,30,7,23,30,3,73,135,16,32,39,69,75,6,8,95,30,2,23,1,109,6,21,67,35,62,61,6,14,11,25,12,31,9,33,1,23,42,48,29,101,89,43,78,18,18,7,27,
+    86,45,45,66,61,69,34,48,47,24,103,87,18,40,32,27,8,1,245,71,4,13,21,41,48,11,18,15,11,10,5,7,3,5,1,4,17,33,58,39,78,74,16,9,8,73,5,16,27,46,45,46,37,14,6,17,31,50,34,72,82,5,8,9,84,
+    93,5,32,9,130,143,32,175,130,235,32,7,130,233,56,53,33,21,35,17,7,17,10,1,164,172,75,1,203,59,59,254,54,1,1,203,0,1,0,37,130,187,32,147,130,35,32,24,66,163,5,32,20,74,49,5,8,50,17,
+    51,17,20,14,3,34,46,3,37,76,6,19,43,32,67,48,75,6,22,38,68,95,70,38,22,7,166,1,96,254,153,26,35,34,18,54,67,1,95,254,173,33,48,53,33,22,21,32,50,44,130,75,32,13,130,111,32,171,130,
+    75,8,32,6,0,0,51,3,51,27,1,51,3,174,161,73,134,134,72,161,2,6,254,58,1,198,253,250,0,1,255,249,0,0,1,190,130,35,32,12,135,35,131,38,47,35,11,1,75,81,63,58,63,83,64,57,64,81,73,72,73,
+    130,47,44,99,1,157,254,98,1,158,253,250,1,184,254,72,130,55,32,255,130,55,32,185,67,123,5,8,33,19,39,51,23,55,51,7,19,35,39,7,35,184,160,80,121,123,81,165,177,80,141,141,80,1,19,243,
+    195,195,243,254,237,218,218,130,139,32,5,130,47,32,178,130,47,36,8,0,0,55,3,131,47,50,3,21,35,182,176,79,135,134,80,177,75,234,1,28,228,228,254,227,233,130,34,33,0,33,130,4,32,151,
+    130,39,32,9,65,35,5,60,1,33,21,5,53,1,41,1,102,254,224,1,40,254,138,1,24,1,203,59,53,254,106,58,1,56,1,147,0,130,42,41,0,104,255,189,1,80,2,73,0,7,130,12,55,39,17,51,21,35,17,51,1,
+    79,162,162,231,231,2,18,1,253,226,56,2,140,0,1,0,76,151,10,41,19,1,35,1,109,1,35,70,254,222,76,150,7,130,31,138,67,52,19,51,17,35,53,51,17,7,104,231,231,163,163,2,73,253,116,56,2,30,
+    1,130,90,37,0,37,1,63,1,147,65,75,5,33,19,23,131,233,45,55,252,150,82,100,101,82,150,2,6,198,141,141,198,131,139,55,255,241,255,190,1,199,255,247,0,3,0,0,5,33,53,33,1,198,254,44,1,
+    212,66,56,131,27,39,0,124,1,160,1,60,2,57,131,27,131,63,39,207,108,82,109,2,57,153,153,130,27,8,175,2,0,48,255,246,1,136,1,143,0,17,0,54,0,0,55,50,62,3,53,34,35,38,14,4,21,20,22,39,
+    52,62,3,23,48,60,1,46,6,35,7,53,50,54,51,21,50,30,2,21,7,35,54,39,6,35,34,38,204,32,48,23,13,2,10,21,24,45,39,32,22,13,51,118,28,50,69,81,45,2,3,7,9,15,18,26,16,122,18,58,34,38,58,
+    52,29,1,61,2,2,38,99,64,79,44,26,33,49,27,17,1,2,3,10,18,28,20,37,35,72,36,51,28,16,1,1,14,7,17,10,16,10,12,7,5,2,54,2,1,12,33,65,47,241,25,27,61,63,0,0,2,0,50,255,247,1,134,2,49,0,
+    9,0,30,0,0,54,50,54,53,52,38,34,6,21,20,39,62,4,67,150,5,130,127,8,57,47,1,7,35,17,51,172,112,50,51,110,52,3,1,5,18,23,42,25,71,87,88,59,32,62,16,15,7,61,68,45,82,68,67,83,83,67,68,
+    212,3,8,20,16,12,102,101,98,106,29,15,15,49,2,47,0,1,0,59,130,91,32,125,130,239,35,20,0,0,1,131,84,36,22,51,50,55,21,72,197,7,8,34,23,21,38,1,13,65,72,72,65,62,49,47,78,85,110,110,
+    85,78,47,49,1,89,74,76,76,74,43,65,32,106,196,106,32,65,43,139,159,32,7,133,159,133,158,38,19,51,17,35,39,14,4,130,155,8,35,53,52,54,51,50,30,2,31,1,122,200,48,104,48,200,68,62,6,3,
+    8,26,27,41,20,59,88,87,70,25,42,24,17,3,4,45,150,131,158,51,1,109,253,209,49,3,7,21,15,13,106,98,101,102,12,17,17,6,7,0,130,0,34,2,0,37,130,163,32,147,130,163,37,5,0,26,0,0,19,130,
+    165,35,51,52,7,20,130,168,32,54,133,169,132,95,8,42,22,29,1,32,227,47,69,224,227,62,67,42,62,46,70,82,89,109,105,79,91,90,254,218,1,89,68,48,116,165,56,79,18,21,64,29,109,95,93,110,
+    97,73,48,130,83,42,1,0,40,0,3,1,144,2,36,0,19,132,247,37,29,1,51,21,35,17,130,1,33,53,51,130,77,61,59,1,21,1,40,35,31,125,125,68,122,122,65,64,108,1,237,25,37,75,57,254,217,1,39,57,
+    52,78,62,55,133,147,36,50,255,70,1,134,130,147,32,9,73,49,5,77,51,8,44,51,17,20,6,43,1,53,51,50,62,2,61,1,137,254,8,60,22,23,222,99,99,53,51,51,159,61,90,81,130,136,28,42,23,10,1,5,
+    18,24,42,25,71,91,91,60,48,52,28,53,142,150,82,68,65,77,1,80,254,110,86,86,58,22,36,37,18,59,2,6,16,12,10,101,100,98,101,20,29,130,162,41,0,62,0,1,1,122,2,49,0,18,74,253,5,8,45,17,
+    35,53,52,38,35,34,6,29,1,35,17,51,21,54,253,53,72,68,40,37,47,56,68,68,37,1,146,78,67,255,0,250,45,48,61,59,223,2,47,218,60,0,2,0,139,130,59,38,45,2,30,0,11,0,17,130,74,8,40,35,34,
+    61,1,52,59,1,50,29,1,20,7,53,51,17,35,17,1,35,56,10,10,56,9,161,161,68,1,202,10,64,9,9,64,10,127,59,254,123,1,74,130,232,34,2,0,100,130,231,32,84,130,59,34,12,0,24,130,121,130,47,32,
+    20,132,221,35,54,53,17,55,138,72,39,165,174,127,112,105,29,37,59,132,72,43,1,76,58,254,98,161,59,52,50,1,100,126,133,79,39,0,1,0,41,0,2,1,142,132,131,38,0,55,23,35,39,7,21,130,183,
+    53,17,55,51,210,188,81,154,51,70,70,181,80,245,243,201,45,156,2,27,254,201,161,130,118,130,47,32,133,130,179,36,51,2,8,0,5,130,117,131,164,41,35,133,173,69,104,2,7,253,250,1,72,63,
+    5,46,20,255,254,1,164,1,143,0,30,0,0,1,50,22,21,130,198,36,52,35,34,6,7,138,7,48,51,21,54,51,50,23,62,1,1,68,43,52,61,52,26,26,3,132,4,52,62,62,31,42,52,26,13,48,1,143,69,53,254,234,
+    1,5,84,34,37,254,238,130,6,42,33,36,254,236,1,133,18,29,49,22,27,130,128,32,1,65,111,5,33,1,147,65,111,20,32,23,65,111,9,33,64,4,65,112,12,35,1,133,48,60,66,31,5,42,42,255,247,1,141,
+    1,144,0,9,0,17,67,179,11,32,18,130,171,8,40,20,32,53,52,174,92,58,59,90,59,21,166,94,254,158,44,72,80,80,70,70,80,80,1,28,102,102,205,205,102,0,2,0,50,255,78,1,134,1,136,0,67,79,6,
+    38,54,53,52,34,21,20,19,131,57,8,62,6,35,34,46,2,47,1,21,35,17,51,23,62,4,176,103,48,199,107,66,89,87,71,25,41,24,18,3,3,68,61,7,1,6,20,25,41,38,82,67,148,148,67,1,16,105,99,101,103,
+    12,18,17,6,6,221,2,48,49,2,8,20,16,13,152,91,35,51,17,35,53,67,171,13,38,160,104,48,200,216,62,68,66,165,5,41,70,87,89,66,23,41,26,19,4,4,134,91,44,6,253,208,221,2,8,21,15,13,103,101,
+    99,105,132,99,36,0,0,1,0,69,130,4,36,115,1,142,0,19,130,7,35,50,22,31,1,71,239,5,33,29,1,130,173,8,36,7,62,1,1,12,29,52,11,11,4,16,56,31,56,71,68,68,2,17,69,1,142,15,7,8,65,5,12,20,
+    60,35,245,1,133,53,27,35,130,54,46,0,69,255,254,1,115,1,151,0,38,0,0,55,30,1,130,250,34,39,46,1,80,126,9,39,46,2,35,34,21,20,22,23,79,243,7,8,78,47,1,69,53,109,71,91,83,57,14,32,65,
+    44,33,62,14,15,6,19,63,33,90,36,57,70,69,88,73,31,70,20,20,88,27,14,32,35,49,15,15,53,44,22,38,36,20,11,6,6,62,4,11,17,57,25,29,8,11,46,55,57,66,12,6,6,0,0,0,1,0,87,0,6,1,97,2,4,0,
+    17,130,115,41,51,21,35,34,46,3,53,17,51,21,130,9,57,21,20,216,136,125,25,33,41,24,16,68,162,162,65,58,3,15,26,50,34,1,124,118,58,204,70,132,55,40,54,255,246,1,130,1,133,0,21,130,55,
+    33,53,51,80,10,5,34,55,51,19,65,74,6,8,32,54,68,86,44,62,3,68,1,64,1,3,17,23,45,27,79,73,145,244,241,102,53,39,251,254,124,42,2,7,19,13,12,74,132,67,32,29,130,128,32,155,130,67,53,
+    6,0,0,1,51,3,35,3,51,19,1,84,70,148,86,147,71,120,1,133,254,123,130,3,32,186,130,38,39,0,1,255,248,255,255,1,192,130,39,33,12,0,132,39,33,39,7,131,42,48,55,51,23,1,124,67,97,63,68,
+    65,65,97,68,68,53,76,60,130,47,34,123,215,215,130,5,34,208,192,192,132,55,33,0,20,130,55,32,163,130,55,35,11,0,0,37,71,43,5,57,39,51,23,55,51,1,1,162,78,122,120,78,162,149,76,110,109,
+    76,203,203,155,155,204,185,141,141,77,151,5,38,68,1,137,1,134,0,31,130,12,32,18,77,244,5,44,53,51,50,62,4,53,52,53,35,34,38,53,19,130,230,59,22,51,23,3,1,134,3,12,24,47,32,195,176,
+    16,23,13,8,3,1,133,71,72,1,68,29,41,137,1,130,122,56,135,48,17,47,52,36,59,12,24,22,34,17,14,4,2,78,49,1,6,229,49,50,1,1,73,132,239,32,64,130,143,32,119,130,95,8,41,14,0,0,55,51,23,
+    33,53,62,3,39,35,53,33,21,2,137,237,1,254,202,15,50,105,69,1,229,1,45,238,52,52,59,17,58,122,82,1,50,60,254,235,130,54,8,32,0,1,0,63,255,178,1,120,2,84,0,41,0,0,1,21,20,7,22,29,1,20,
+    22,59,1,21,34,35,34,46,3,61,1,83,197,7,130,9,33,62,3,130,22,8,61,35,34,6,1,11,72,72,38,42,29,31,13,38,54,27,14,3,38,43,51,51,43,38,3,14,27,54,38,44,29,42,38,1,215,100,95,17,17,96,99,
+    34,29,62,20,26,44,30,23,86,43,32,66,32,42,87,23,30,44,26,19,62,29,130,98,53,0,188,255,200,0,252,2,63,0,3,0,0,23,35,17,51,252,64,64,55,2,117,141,135,32,19,84,60,5,36,50,51,50,30,3,134,
+    142,130,119,130,9,33,14,3,69,35,5,130,141,55,55,38,172,37,42,29,30,14,37,54,27,15,2,38,44,51,51,44,38,2,15,27,54,37,130,132,41,37,72,72,1,115,100,33,29,62,19,131,129,33,87,42,130,129,
+    45,43,86,24,29,44,26,20,62,29,33,100,96,17,16,130,248,42,1,0,22,0,177,1,161,1,93,0,33,130,148,34,23,14,4,131,238,39,7,14,1,15,1,39,62,4,131,119,54,55,62,1,55,1,103,58,5,5,17,21,40,
+    25,25,43,30,28,31,16,20,25,3,3,143,16,62,1,66,13,21,21,45,24,20,26,35,36,21,2,3,45,21,21,13,21,22,44,24,21,26,36,35,22,3,3,45,20,130,229,32,21,130,95,45,163,0,106,0,15,0,31,0,47,0,
+    0,55,50,22,130,200,36,6,43,1,34,38,130,197,34,54,59,1,157,15,43,51,104,5,7,7,5,71,4,8,8,4,222,131,9,32,70,131,4,32,221,136,9,35,105,7,5,81,131,12,150,4,42,0,0,2,0,159,255,235,1,25,
+    2,9,90,167,5,33,18,34,82,231,5,59,7,51,23,7,35,53,245,50,35,35,50,35,84,46,29,1,101,1,145,35,49,35,35,49,105,196,155,155,130,51,42,63,255,147,1,121,1,242,0,5,0,28,130,177,48,17,14,
+    1,21,20,19,17,54,55,21,6,7,21,35,53,46,1,90,19,6,8,62,22,23,21,38,243,50,58,146,57,39,45,51,38,78,102,100,80,38,61,35,40,49,1,38,6,73,67,134,1,25,254,215,2,25,59,21,3,100,101,6,107,
+    92,95,104,4,97,98,5,20,60,25,0,1,0,40,255,255,1,144,2,16,0,27,130,89,38,51,21,33,53,51,53,35,130,3,81,218,6,32,21,71,122,5,8,39,51,21,35,202,197,254,153,87,73,73,82,79,33,52,9,10,48,
+    42,50,50,136,136,59,59,59,161,50,82,88,88,10,5,5,64,30,53,63,88,50,0,131,223,38,55,0,63,1,128,1,125,130,223,35,31,0,0,54,82,67,6,8,41,54,20,7,23,7,39,6,34,39,7,39,55,38,52,55,39,55,
+    23,54,50,23,55,23,7,187,65,46,46,65,46,204,22,60,34,62,31,73,31,62,34,60,22,137,10,49,148,44,61,43,43,61,67,73,30,57,35,60,19,19,60,35,57,30,137,10,75,219,10,36,24,0,0,1,7,130,160,
+    33,7,21,88,161,9,32,39,130,194,8,37,39,51,23,55,1,178,120,91,115,33,148,148,75,148,148,33,115,91,119,79,135,134,2,6,194,39,53,11,39,182,182,39,11,53,39,194,228,228,130,178,41,0,2,0,
+    188,255,206,0,252,2,57,83,195,5,36,23,35,17,51,53,67,9,5,40,64,64,50,1,8,92,1,7,0,130,35,59,64,255,188,1,119,2,16,0,15,0,75,0,0,37,62,1,53,52,38,39,38,39,14,1,21,20,22,23,69,167,11,
+    33,53,22,85,40,5,130,28,35,46,4,53,52,89,5,5,32,54,86,84,10,133,47,8,53,4,21,20,6,1,10,21,28,48,46,25,22,22,27,48,45,25,61,25,21,69,72,25,57,16,16,58,51,36,42,37,47,8,3,28,25,39,17,
+    14,38,33,25,21,68,74,24,54,14,14,51,51,37,40,36,130,22,33,29,24,131,22,42,142,12,35,15,26,44,25,14,13,12,36,132,7,63,37,18,34,23,44,66,10,5,5,57,26,32,25,20,30,26,4,2,16,14,28,23,34,
+    19,28,50,16,18,34,24,43,59,131,25,33,27,26,133,25,39,15,15,28,23,33,20,28,50,133,251,42,109,1,212,1,75,2,27,0,11,0,23,73,51,13,33,43,1,73,63,9,39,1,66,58,9,9,58,9,155,131,5,37,8,1,
+    213,9,52,9,136,2,48,0,0,3,255,248,0,40,1,192,1,218,0,7,0,15,0,36,65,245,9,33,18,50,92,21,5,33,22,52,130,255,35,23,21,38,35,75,119,11,8,53,142,156,111,111,156,111,95,188,133,133,188,
+    134,92,78,62,57,30,43,34,47,52,52,47,46,31,36,51,61,79,105,147,105,105,147,1,34,127,179,127,127,179,152,126,66,15,38,21,48,49,49,47,18,36,17,131,179,8,41,3,0,92,0,162,1,91,2,18,0,3,
+    0,18,0,53,0,0,37,35,53,51,39,34,35,34,14,4,21,20,22,51,50,54,7,52,62,2,23,60,1,46,2,88,232,5,8,122,62,6,51,50,22,29,1,35,39,6,35,34,38,1,91,247,247,55,5,8,25,24,37,19,20,8,36,22,49,
+    41,201,37,58,70,33,8,15,32,22,26,50,11,12,2,18,7,17,12,17,18,9,57,73,45,8,39,54,47,59,163,43,178,1,3,6,11,18,13,24,24,61,16,33,43,14,7,4,8,10,22,14,11,11,6,6,44,1,6,2,6,2,3,1,57,64,
+    159,38,45,44,0,2,0,50,0,49,1,134,1,112,0,6,0,13,0,0,1,21,7,23,21,39,53,55,133,5,50,1,134,112,112,174,7,111,111,173,173,1,112,67,93,93,66,145,28,79,132,5,35,146,0,0,4,65,59,8,56,9,0,
+    27,0,35,0,43,0,0,19,22,62,2,53,52,38,43,1,23,30,1,23,35,38,39,130,9,32,21,130,224,36,50,21,20,14,1,67,78,6,65,88,7,54,175,21,36,27,15,29,21,49,86,14,25,46,52,30,17,21,24,27,47,92,103,
+    34,147,65,89,10,53,1,13,1,2,6,18,15,19,20,102,5,33,72,44,26,33,103,242,74,21,32,172,65,94,11,130,172,41,0,109,1,183,1,75,1,235,0,3,130,12,130,106,38,1,74,220,220,1,183,51,66,31,5,45,
+    101,1,50,1,82,2,16,0,7,0,15,0,0,18,93,253,14,56,190,59,42,42,59,41,22,98,69,69,98,69,1,94,39,55,39,39,55,138,65,91,65,65,91,133,59,40,24,255,255,1,159,1,151,0,11,131,59,92,65,11,56,
+    19,33,53,33,251,164,164,62,165,165,62,164,254,121,1,135,1,36,59,115,115,59,114,254,105,87,43,5,40,115,1,133,1,69,2,173,0,24,130,143,130,245,37,7,51,21,35,53,54,85,161,5,8,47,34,6,15,
+    1,53,54,51,50,22,1,66,17,62,70,152,210,77,32,42,37,28,17,42,12,13,39,51,57,58,2,94,20,33,64,61,39,38,72,29,40,36,18,25,11,6,6,41,20,130,197,32,1,130,223,38,130,1,75,2,176,0,39,131,
+    79,32,6,88,180,10,91,20,23,8,51,7,22,1,75,68,55,21,49,15,14,50,42,26,48,43,31,31,31,29,36,30,27,21,44,12,12,47,44,49,63,33,30,71,1,214,37,47,7,4,4,42,18,26,25,25,27,38,22,21,18,22,
+    8,130,13,38,13,42,33,28,29,7,13,130,252,39,1,0,131,1,181,1,53,2,79,123,5,41,51,7,35,235,73,120,56,2,57,131,130,26,51,0,1,0,37,255,107,1,146,1,132,0,36,0,0,37,50,54,63,1,21,133,147,
+    33,14,4,130,154,36,39,21,35,17,51,66,199,5,8,63,53,55,51,16,21,20,1,120,7,12,4,3,27,29,19,26,4,3,1,4,16,22,42,27,26,47,11,60,64,45,37,43,59,3,65,49,4,2,2,52,15,26,13,13,2,7,18,14,11,
+    28,26,192,2,24,241,48,53,53,38,251,254,226,24,29,130,108,42,1,0,48,255,185,1,136,2,7,0,16,76,95,7,47,16,21,6,34,47,1,17,34,38,52,54,216,175,52,70,1,130,60,8,34,69,99,99,2,6,253,182,
+    2,32,253,229,5,2,1,1,1,39,85,121,85,0,0,1,0,159,0,198,1,25,1,63,0,7,0,0,66,114,7,39,195,50,35,35,50,35,1,63,130,4,33,35,50,131,35,36,143,255,119,1,41,130,43,130,95,35,33,22,21,20,65,
+    92,8,52,39,48,58,1,1,0,40,91,14,31,8,8,24,27,91,73,21,22,41,37,59,130,173,34,46,11,94,132,151,40,114,1,132,1,70,2,167,0,10,131,151,37,21,35,53,51,53,7,130,239,56,250,75,204,76,83,85,
+    51,1,171,38,38,212,14,40,13,0,3,0,83,0,162,1,101,2,16,130,9,37,13,0,21,0,0,37,130,41,8,47,2,34,6,21,20,22,50,54,53,52,22,32,53,52,54,50,22,21,1,86,249,249,88,69,46,45,71,45,56,254,
+    239,73,127,73,163,43,1,25,47,54,54,49,49,54,54,197,143,71,130,0,130,114,67,163,15,33,55,21,130,112,35,39,53,51,23,132,7,48,223,173,111,111,166,174,174,112,112,222,28,145,66,93,93,67,
+    146,132,6,41,0,4,0,19,255,162,1,165,2,64,130,127,36,6,0,17,0,28,130,242,38,23,5,39,23,51,53,55,70,111,8,33,55,3,130,72,32,51,131,14,8,44,53,51,1,155,9,254,120,9,198,102,51,43,43,50,
+    144,134,187,82,87,48,75,203,75,1,47,37,91,37,203,144,43,188,37,65,65,42,183,1,86,14,39,13,252,39,39,130,81,137,91,34,28,0,39,133,89,32,5,66,236,15,34,39,54,51,130,224,34,20,6,1,143,
+    100,34,1,73,86,66,254,7,42,41,13,12,1,39,51,57,59,28,254,252,138,113,52,190,77,39,39,71,30,39,36,19,25,12,6,6,42,19,51,27,23,45,1,226,134,123,34,4,0,18,132,215,32,70,134,215,32,56,
+    133,125,34,23,51,39,138,215,33,39,20,67,43,10,67,42,26,132,243,34,202,102,1,130,244,8,32,49,145,134,45,72,55,21,48,13,13,41,46,36,42,38,34,33,30,31,37,33,25,24,45,10,10,46,44,50,62,
+    33,30,72,65,11,13,8,68,168,36,47,7,4,4,41,18,29,47,28,37,23,21,20,20,8,4,4,42,12,41,32,29,29,8,14,0,0,2,0,73,255,247,1,111,2,27,0,30,0,38,0,0,55,50,54,63,1,21,14,2,35,34,38,53,52,62,
+    4,61,1,51,21,20,14,3,21,20,22,73,68,7,8,56,235,29,66,18,19,7,24,69,34,82,78,19,29,34,29,19,71,26,37,38,26,47,71,44,32,32,44,32,48,24,11,12,65,5,12,21,65,54,24,43,30,30,24,31,17,69,
+    61,30,48,34,31,39,21,31,36,1,129,91,1,6,45,3,0,5,0,0,1,179,2,131,0,3,0,6,0,130,128,36,1,35,39,51,3,90,85,9,37,1,9,56,84,68,52,90,90,9,46,2,38,92,254,61,1,10,61,253,250,135,135,2,6,
+    0,130,53,143,63,34,7,35,55,139,63,36,59,84,56,72,106,132,63,39,40,193,41,77,169,2,130,92,140,64,36,3,0,5,255,255,132,127,32,6,79,77,5,32,19,130,63,34,51,23,35,138,66,38,220,61,51,78,
+    69,78,51,90,223,5,133,68,33,101,62,130,69,32,151,138,134,131,135,33,255,254,130,71,61,123,0,20,0,23,0,31,0,0,19,34,6,21,35,52,54,51,50,22,51,50,54,53,55,51,20,6,35,34,38,138,85,49,
+    169,12,12,47,36,34,26,62,15,11,13,1,46,34,36,28,58,45,138,164,45,81,19,16,33,43,34,17,9,8,25,51,35,254,109,139,103,32,4,136,175,38,2,0,10,0,22,0,34,91,131,12,81,53,11,72,74,11,138,
+    187,32,147,72,84,9,33,9,190,136,89,32,56,72,93,13,32,0,136,207,38,149,0,2,0,14,0,30,132,101,52,39,20,22,23,51,62,1,53,52,38,34,6,23,19,35,39,35,7,35,19,38,68,11,5,32,20,130,97,52,56,
+    18,16,44,16,19,33,47,34,112,159,77,40,193,41,77,159,47,60,84,60,130,98,55,110,17,26,6,6,26,17,21,31,31,101,254,25,135,135,1,231,28,51,40,55,55,40,51,130,89,38,2,255,255,1,182,2,7,130,
+    109,32,19,130,97,40,17,35,3,55,21,51,21,35,53,131,88,8,40,37,7,35,23,55,7,235,37,75,186,128,202,127,37,68,150,1,23,1,122,1,111,1,190,1,13,254,244,55,188,59,134,133,2,5,2,61,153,1,60,
+    0,78,87,5,38,119,1,137,2,16,0,40,130,12,91,224,8,49,55,21,6,7,22,21,20,6,35,34,39,53,22,51,50,53,52,39,88,3,6,8,66,23,21,38,1,8,38,57,32,14,25,66,50,77,51,37,56,33,45,38,45,25,24,31,
+    46,26,54,81,48,23,112,104,77,51,51,1,213,32,60,74,46,62,91,59,46,73,21,5,36,32,31,30,9,45,11,31,22,32,3,42,74,93,56,117,151,32,71,45,130,187,38,52,0,3,1,132,2,135,71,103,5,8,41,55,
+    33,21,33,17,33,21,35,31,1,21,35,19,35,39,51,127,1,4,254,178,1,71,253,1,241,242,142,57,84,68,63,59,2,6,59,153,1,59,1,48,93,130,175,36,2,0,52,0,4,150,59,34,7,35,55,138,59,36,173,84,56,
+    72,64,135,59,33,140,93,130,60,135,59,32,136,130,119,34,18,0,0,140,119,66,185,5,138,62,38,86,61,52,78,70,78,52,136,65,33,110,62,131,66,33,0,3,130,127,32,0,130,127,32,133,130,67,34,23,
+    0,35,74,129,25,32,3,134,213,35,23,51,21,35,74,141,11,33,9,58,137,222,39,2,63,8,52,9,9,52,8,133,5,33,253,252,132,173,42,59,0,2,0,66,255,254,1,118,2,131,65,31,5,8,49,1,35,17,23,21,33,
+    53,51,17,35,53,33,39,35,39,51,1,117,115,115,254,206,116,116,1,50,106,56,84,68,1,202,254,111,1,57,59,1,144,59,33,92,0,0,0,2,0,66,0,3,130,59,65,91,6,130,59,32,51,132,59,32,39,130,59,
+    130,227,56,1,117,116,116,254,206,115,115,1,50,60,84,56,72,1,207,254,112,59,57,1,145,1,59,125,65,31,5,133,59,65,31,6,143,59,34,51,23,35,137,62,32,148,65,30,5,137,65,32,95,65,31,7,137,
+    187,65,31,28,34,23,35,17,131,153,32,55,131,213,65,31,12,32,188,135,161,33,2,61,67,88,11,32,115,132,170,34,1,145,59,131,227,45,17,0,4,1,167,2,11,0,18,0,37,0,0,55,92,29,5,8,79,43,1,21,
+    51,21,35,21,50,19,50,30,3,20,14,3,43,1,53,35,53,51,53,50,200,19,36,42,30,20,20,30,42,36,19,62,99,99,62,1,31,56,61,45,29,29,45,61,56,30,139,46,46,138,62,9,27,42,75,98,75,42,27,8,162,
+    53,188,1,205,12,35,55,95,125,96,54,35,11,245,53,220,131,103,42,42,0,0,1,142,2,130,0,20,0,30,68,149,22,36,23,51,17,35,3,130,2,33,51,19,68,148,16,41,140,72,95,186,71,4,98,186,2,88,68,
+    145,10,32,82,92,232,5,37,2,6,254,90,0,3,92,235,6,38,135,0,5,0,9,0,29,92,237,7,35,55,35,39,51,92,241,16,37,238,57,84,68,3,33,92,245,5,34,29,28,34,133,8,42,31,2,17,253,234,2,22,25,93,
+    253,175,92,247,19,135,95,32,136,130,95,32,12,92,157,5,36,16,35,34,16,55,66,235,5,32,2,93,84,15,32,184,65,210,5,32,77,150,101,37,88,62,93,93,254,11,151,103,42,251,1,149,2,129,0,20,0,
+    26,0,46,65,41,14,33,55,53,69,191,5,33,23,50,93,202,16,38,169,11,13,47,36,35,25,69,199,6,39,35,29,58,34,184,184,184,168,145,127,32,87,65,64,10,32,70,131,241,44,254,37,8,26,44,78,105,
+    78,44,27,7,7,27,132,8,36,26,0,0,0,4,65,79,6,131,239,36,17,0,29,0,49,65,81,7,32,37,87,16,10,69,218,11,65,101,16,33,1,30,69,225,10,32,19,145,136,32,17,131,124,32,49,66,150,11,33,253,
+    244,65,17,17,8,32,1,0,46,0,65,1,137,1,137,0,11,0,0,1,7,23,7,39,7,39,55,39,55,23,55,1,137,129,129,45,128,129,45,130,5,38,129,128,1,94,121,121,42,135,2,47,0,3,0,1,255,234,1,183,2,34,
+    0,10,0,21,0,39,103,247,10,46,39,20,23,55,38,35,34,14,3,37,7,22,21,16,35,80,146,5,51,53,16,51,50,23,55,220,17,27,30,20,13,7,184,26,49,7,185,26,59,132,12,40,1,70,65,30,184,83,46,54,36,
+    133,6,32,54,131,157,54,53,56,42,248,58,208,56,42,249,58,8,26,44,78,205,88,65,105,254,245,56,72,25,130,7,48,1,11,56,72,0,0,2,0,46,255,246,1,138,2,131,0,17,130,123,40,0,1,51,17,20,35,
+    34,53,17,130,6,8,44,22,51,50,62,2,53,3,35,39,51,1,62,75,170,176,75,39,61,30,40,19,7,43,57,84,69,2,6,254,160,176,189,1,83,254,160,67,52,18,33,36,25,1,135,92,161,71,34,7,35,55,139,71,
+    35,12,84,57,72,144,71,35,227,92,92,0,130,0,139,147,33,24,0,146,147,66,196,5,139,78,32,98,66,191,5,139,81,33,17,34,130,153,33,198,62,130,82,34,3,0,47,136,227,34,29,0,41,146,81,32,19,
+    66,36,22,44,1,62,76,171,176,75,40,61,30,39,19,7,5,66,30,10,144,103,32,158,72,7,15,32,2,72,111,6,35,130,0,8,0,86,29,5,38,21,35,55,3,51,23,19,130,187,44,1,98,80,177,75,1,177,79,135,90,
+    84,57,73,130,74,39,227,233,234,1,28,229,1,97,130,170,41,0,2,0,42,255,255,1,142,2,6,130,55,32,21,99,245,10,8,41,55,50,22,21,20,43,1,21,35,17,51,21,50,210,49,61,63,47,93,103,83,95,178,
+    103,75,75,103,186,43,48,47,42,180,240,75,74,150,127,2,6,92,0,130,222,130,67,32,242,130,67,8,127,28,0,48,0,0,19,20,30,3,21,20,14,1,38,39,53,22,51,50,54,53,52,46,3,53,52,62,2,63,1,38,
+    54,46,2,35,34,6,21,17,35,17,52,54,51,50,21,34,6,234,34,48,48,33,51,78,88,38,49,51,41,45,33,47,47,33,24,35,34,12,12,1,3,10,14,38,27,46,41,68,73,82,155,47,72,1,50,20,33,27,32,53,35,43,
+    57,20,5,16,56,21,36,29,24,37,25,27,45,30,28,44,24,15,2,2,1,15,23,22,16,48,50,254,123,1,133,77,74,152,44,130,138,41,0,3,0,38,255,245,1,146,2,69,130,9,34,18,0,61,130,156,49,35,39,51,
+    19,50,62,2,39,48,42,1,35,14,1,21,20,22,55,130,3,50,31,1,35,38,39,14,1,35,34,38,53,52,54,59,1,60,2,46,5,81,15,9,8,99,1,12,57,118,72,24,36,52,26,10,1,36,47,11,60,52,51,225,10,5,5,68,
+    9,7,21,76,38,65,80,91,91,92,2,6,8,15,20,30,18,38,71,16,17,3,25,11,24,17,24,26,13,168,1,194,131,253,230,29,47,50,26,2,32,44,38,36,183,116,25,55,15,15,22,37,32,37,64,60,62,70,1,15,9,
+    18,13,16,11,10,5,18,10,9,63,1,9,3,8,3,4,2,149,171,35,7,35,55,3,131,171,33,42,2,167,170,37,84,118,57,103,80,37,131,170,33,1,35,167,171,34,2,69,131,176,172,65,87,9,39,6,0,21,0,64,0,0,
+    19,130,171,34,51,23,35,132,174,65,90,41,39,220,66,52,90,56,90,52,97,65,92,45,38,2,26,88,131,131,254,105,65,94,20,33,63,69,65,94,20,135,175,46,51,0,24,0,39,0,82,0,0,1,34,46,2,35,34,
+    75,234,5,42,30,1,51,50,54,61,1,51,20,14,2,174,191,53,1,13,21,31,16,23,11,26,45,36,37,21,34,30,13,12,13,46,5,13,30,101,173,205,50,1,209,17,20,17,54,43,55,27,26,26,13,14,15,29,33,21,
+    254,90,148,217,66,56,24,32,4,66,227,6,40,29,0,11,0,23,0,38,0,81,74,25,25,32,19,66,77,45,32,63,68,115,10,32,6,66,85,46,33,1,214,68,147,11,33,254,85,181,211,52,114,0,7,0,15,0,58,0,73,
+    0,0,18,34,6,20,22,50,54,52,6,34,88,7,5,32,19,67,183,31,67,58,12,44,240,46,33,33,46,33,14,84,60,60,84,60,63,67,191,33,32,194,139,237,46,2,70,31,44,31,31,44,118,56,80,56,56,80,254,249,
+    67,204,32,33,254,155,136,236,67,215,5,55,5,255,245,1,179,1,143,0,8,0,19,0,89,0,0,1,34,6,23,51,54,39,46,1,130,161,33,1,39,85,233,5,40,37,21,35,28,2,30,5,51,22,79,184,7,34,46,2,47,96,
+    42,8,32,59,113,200,6,83,206,5,8,164,30,2,31,1,62,4,51,50,22,23,30,1,21,1,56,31,31,3,121,1,2,3,27,217,26,26,14,1,28,53,44,37,1,75,182,2,4,6,10,14,21,12,34,52,9,10,5,15,48,25,25,42,22,
+    16,2,3,1,4,16,21,36,22,57,60,70,68,50,42,30,19,46,13,14,44,65,19,30,18,12,2,2,1,3,14,19,36,22,58,48,8,2,1,1,90,54,64,23,22,35,38,254,209,18,59,59,32,38,35,31,136,1,1,28,10,28,13,23,
+    11,14,6,1,17,9,10,60,3,10,16,11,17,16,6,5,2,7,19,15,12,60,56,57,65,28,50,39,14,8,7,58,24,9,13,13,4,5,2,6,15,11,10,59,76,18,42,12,130,248,42,1,0,59,255,119,1,125,1,142,0,37,132,243,
+    42,21,20,22,51,50,55,21,14,1,15,1,77,223,14,130,222,34,54,51,50,98,88,10,35,14,43,15,15,77,222,8,33,82,106,98,99,5,56,88,74,76,76,74,43,65,11,15,2,2,36,32,31,30,8,46,12,32,22,31,3,
+    105,96,98,98,114,5,41,0,3,0,37,255,247,1,147,2,69,130,9,34,9,0,30,69,235,5,32,23,98,25,22,42,21,23,32,1,19,57,118,72,55,46,70,98,30,12,40,92,89,1,254,217,1,194,131,236,98,33,17,145,
+    95,35,7,35,55,7,154,95,36,93,119,56,102,49,147,95,34,2,69,131,147,96,33,0,0,138,195,36,6,0,12,0,33,69,87,8,154,102,39,225,67,52,90,57,90,52,64,148,104,36,26,88,131,131,105,145,202,
+    33,0,4,65,43,6,68,51,5,34,29,0,50,68,51,25,65,65,27,44,69,57,9,9,57,9,155,58,9,9,58,9,39,147,128,68,5,13,32,125,146,137,8,58,0,0,2,0,51,255,252,1,117,2,59,0,13,0,17,0,0,37,51,21,34,
+    35,34,38,61,1,35,53,51,21,20,17,35,39,51,1,37,80,24,71,54,65,90,158,57,119,73,51,54,78,63,201,50,251,86,1,132,131,0,130,0,34,2,0,68,130,59,32,116,149,59,48,19,7,35,55,1,37,79,23,72,
+    53,66,90,158,106,119,57,103,135,60,34,2,7,131,130,61,135,59,36,69,0,6,0,20,65,105,8,32,19,140,126,39,186,66,52,90,56,90,51,40,134,68,70,121,5,32,113,134,131,130,127,32,3,134,127,38,
+    26,0,11,0,23,0,37,65,69,25,141,86,33,1,44,65,56,5,132,5,32,130,134,92,33,1,212,69,49,12,32,95,135,101,54,2,0,42,255,244,1,142,2,27,0,14,0,47,0,0,55,50,54,53,52,38,47,1,90,34,6,38,19,
+    20,30,6,21,20,6,72,186,5,8,96,23,46,1,47,1,7,39,55,39,51,23,55,23,7,22,220,45,60,20,10,10,18,50,43,59,60,145,20,6,19,8,13,6,5,89,88,88,89,107,100,5,27,10,11,103,12,88,67,81,47,106,
+    13,93,36,42,70,71,38,67,15,14,9,69,73,73,69,1,89,1,27,10,29,19,33,29,38,19,86,107,107,94,93,102,8,8,31,12,11,31,34,27,69,49,32,34,28,34,65,115,5,32,62,130,231,44,122,2,32,0,18,0,43,
+    0,0,19,50,22,21,100,121,12,34,23,54,55,71,88,17,54,35,34,46,2,253,53,72,68,39,38,47,56,68,64,4,37,3,26,45,36,37,20,35,71,51,5,40,14,29,21,21,31,17,22,1,145,100,165,9,51,1,132,47,60,
+    99,54,44,54,27,26,26,14,13,15,29,33,21,17,20,17,130,124,40,3,0,43,255,244,1,141,2,69,86,227,7,36,1,35,39,51,18,102,253,8,99,73,7,37,1,15,56,119,73,5,99,78,9,37,1,194,131,253,229,71,
+    99,82,9,35,204,204,102,0,130,65,143,75,35,7,35,55,2,145,75,36,86,118,57,103,96,137,75,34,2,69,131,145,76,137,151,36,6,0,16,0,24,66,77,8,145,78,72,242,6,32,112,138,80,37,26,88,131,131,
+    254,104,143,158,136,159,32,32,130,79,34,34,0,42,72,179,24,145,99,53,1,15,20,32,16,22,12,25,46,36,38,20,35,29,14,12,13,46,5,14,30,118,137,113,36,1,190,17,20,17,65,92,11,33,254,108,142,
+    125,32,4,65,103,6,66,215,5,34,33,0,41,66,217,25,146,126,93,1,10,33,9,11,138,118,66,224,13,32,86,142,115,32,3,130,231,36,49,1,159,1,136,130,249,42,19,0,35,0,0,37,33,53,33,39,35,96,108,
+    13,32,3,142,15,48,1,159,254,121,1,135,161,70,4,7,7,4,70,5,6,6,5,136,9,37,192,59,56,6,5,63,131,18,130,4,33,254,255,130,11,131,35,130,11,32,0,130,0,44,3,0,12,255,222,1,172,1,166,0,7,
+    0,15,131,107,39,55,50,54,53,52,39,7,22,78,242,6,37,6,37,7,22,21,20,78,241,7,8,65,52,54,51,50,23,55,22,222,47,57,10,169,27,56,9,168,27,46,45,59,1,54,61,33,178,75,44,57,34,62,29,94,83,
+    71,46,55,34,43,72,80,42,32,189,37,152,42,31,189,33,70,121,68,52,81,204,40,63,26,70,50,81,102,102,39,63,27,67,55,5,51,61,255,246,1,123,2,59,0,3,0,26,0,0,1,35,39,51,23,51,17,105,15,6,
+    38,61,1,51,21,20,22,51,130,133,8,41,1,13,57,119,73,144,68,63,6,2,5,20,23,38,21,77,61,67,38,43,44,53,1,184,131,182,254,124,57,2,10,23,18,14,72,82,244,240,52,52,59,50,130,84,33,2,0,141,
+    83,34,7,35,55,148,83,36,83,119,56,102,44,143,83,34,2,59,131,147,84,135,83,36,69,0,6,0,29,66,201,8,32,23,145,169,32,55,66,203,6,32,92,139,171,41,42,45,53,2,2,26,88,131,131,61,143,174,
+    32,235,130,175,32,3,134,175,95,67,5,32,46,66,85,25,148,197,35,63,58,8,8,95,89,6,33,9,128,140,205,130,117,95,106,13,32,80,143,125,42,0,0,2,0,26,255,107,1,158,2,59,80,107,7,34,2,7,14,
+    99,148,6,8,49,55,3,51,27,1,7,35,55,1,86,72,140,39,14,32,36,25,18,54,46,30,32,22,160,72,123,105,119,56,102,1,133,254,175,98,35,44,18,5,54,46,54,1,127,254,208,1,230,131,131,130,203,34,
+    2,0,50,130,79,39,134,2,32,0,9,0,23,0,107,131,10,33,19,50,66,59,5,53,21,35,17,51,21,54,174,89,55,57,86,56,99,80,91,171,67,32,68,68,31,42,66,245,11,37,65,202,2,180,208,61,130,75,32,3,
+    134,155,32,17,130,155,38,29,0,41,0,0,1,51,142,157,80,34,23,144,177,32,100,71,147,10,144,185,32,118,80,40,14,42,1,0,30,255,249,1,153,2,20,0,43,130,115,40,34,7,51,7,35,6,21,20,21,130,
+    6,35,30,3,51,50,107,75,6,38,39,35,55,51,38,52,55,130,5,8,76,62,1,51,50,23,21,46,1,1,44,110,20,178,18,163,1,132,17,111,6,27,38,37,23,20,61,27,47,61,88,103,14,65,18,44,2,2,62,18,47,14,
+    103,83,65,48,28,61,1,220,144,36,30,4,17,15,37,44,60,29,10,19,24,71,28,104,95,37,29,9,28,36,95,105,29,72,24,21,130,246,130,2,36,14,0,174,0,1,130,7,131,2,34,1,0,4,134,11,32,1,130,7,32,
+    10,134,11,32,2,130,7,32,16,134,11,36,3,0,29,0,78,134,11,131,43,32,112,134,11,36,5,0,9,0,134,134,11,32,6,130,7,44,148,0,3,0,1,4,9,0,0,0,2,0,0,134,11,32,1,130,11,32,6,134,11,32,2,130,
+    11,32,12,134,11,36,3,0,58,0,18,134,11,32,4,130,23,32,108,134,11,32,5,130,21,32,114,134,11,32,6,130,23,35,144,0,46,0,143,2,39,70,0,111,0,110,0,116,0,131,7,40,114,0,103,0,101,0,32,0,
+    50,130,36,32,48,130,7,32,58,130,3,32,46,134,7,36,49,0,49,0,45,130,25,131,3,32,48,130,7,51,54,0,0,70,111,110,116,70,111,114,103,101,32,50,46,48,32,58,32,46,130,3,39,49,49,45,50,45,50,
+    48,50,130,30,133,107,32,86,130,81,36,114,0,115,0,105,132,103,32,32,130,89,40,0,86,101,114,115,105,111,110,32,136,140,33,2,0,139,0,65,75,7,137,19,32,192,130,10,131,251,60,3,0,4,0,5,
+    0,6,0,7,0,8,0,9,0,10,0,11,0,12,0,13,0,14,0,15,0,16,0,17,130,235,8,50,19,0,20,0,21,0,22,0,23,0,24,0,25,0,26,0,27,0,28,0,29,0,30,0,31,0,32,0,33,0,34,0,35,0,36,0,37,0,38,0,39,0,40,0,41,
+    0,42,0,43,0,44,130,211,36,46,0,47,0,48,130,221,9,48,50,0,51,0,52,0,53,0,54,0,55,0,56,0,57,0,58,0,59,0,60,0,61,0,62,0,63,0,64,0,65,0,66,0,67,0,68,0,69,0,70,0,71,0,72,0,73,0,74,0,75,
+    0,76,0,77,0,78,0,79,0,80,0,81,0,82,0,83,0,84,0,85,0,86,0,87,0,88,0,89,0,90,0,91,0,92,0,93,0,94,1,2,0,96,0,97,1,3,0,163,0,132,0,133,0,189,0,150,0,232,0,134,0,142,0,139,0,157,0,169,0,
+    138,1,4,0,131,0,147,0,242,0,243,0,141,0,151,0,136,0,195,0,222,0,241,0,158,0,170,0,245,0,244,0,246,0,162,0,173,0,201,0,199,0,174,0,98,0,99,0,144,0,100,0,203,0,101,0,200,0,202,0,207,
+    0,204,0,205,0,206,0,233,0,102,0,211,0,209,0,175,0,103,0,240,0,145,0,214,0,212,0,213,0,104,0,235,0,237,0,137,0,106,0,105,0,107,0,109,0,108,0,110,0,160,0,111,0,113,0,112,0,114,0,115,
+    0,117,0,116,0,118,0,119,0,234,0,120,0,122,0,121,0,123,0,125,0,124,0,184,0,161,0,127,0,126,0,128,0,129,0,236,0,238,0,186,1,5,11,118,101,114,116,105,99,97,108,98,97,114,7,117,110,105,
+    48,48,56,53,9,111,130,20,42,115,99,111,114,101,4,69,117,114,111,0,132,0,38,1,255,255,0,2,0,1,130,11,32,12,130,3,32,22,130,3,131,13,32,98,130,183,34,1,0,4,132,13,130,4,130,2,32,1,130,
+    3,36,0,229,13,183,147,132,7,42,175,187,66,0,0,0,0,229,178,59,232,5,250,48,120,202,241,
+};
+
+static const char* GetDefaultCompressedFontDataProggyForever(int* out_size)
+{
+    *out_size = proggy_forever_minimal_ttf_compressed_size;
+    return (const char*)proggy_forever_minimal_ttf_compressed_data;
+}
+
 #endif // #ifndef IMGUI_DISABLE_DEFAULT_FONT
 
 #endif // #ifndef IMGUI_DISABLE

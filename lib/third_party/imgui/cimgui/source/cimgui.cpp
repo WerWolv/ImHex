@@ -3469,10 +3469,6 @@ CIMGUI_API void ImRect_ClipWithFull(ImRect* self,const ImRect r)
 {
     return self->ClipWithFull(r);
 }
-CIMGUI_API void ImRect_Floor(ImRect* self)
-{
-    return self->Floor();
-}
 CIMGUI_API bool ImRect_IsInverted(ImRect* self)
 {
     return self->IsInverted();
@@ -5597,10 +5593,6 @@ CIMGUI_API void igRenderArrowDockMenu(ImDrawList* draw_list,ImVec2 p_min,float s
 {
     return ImGui::RenderArrowDockMenu(draw_list,p_min,sz,col);
 }
-CIMGUI_API void igRenderRectFilledRangeH(ImDrawList* draw_list,const ImRect rect,ImU32 col,float x_start_norm,float x_end_norm,float rounding)
-{
-    return ImGui::RenderRectFilledRangeH(draw_list,rect,col,x_start_norm,x_end_norm,rounding);
-}
 CIMGUI_API void igRenderRectFilledWithHole(ImDrawList* draw_list,const ImRect outer,const ImRect inner,ImU32 col,float rounding)
 {
     return ImGui::RenderRectFilledWithHole(draw_list,outer,inner,col,rounding);
@@ -5937,10 +5929,6 @@ CIMGUI_API void igDebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_li
 CIMGUI_API void igDebugNodeFont(ImFont* font)
 {
     return ImGui::DebugNodeFont(font);
-}
-CIMGUI_API void igDebugNodeFontGlyphesForSrcMask(ImFont* font,ImFontBaked* baked,int src_mask)
-{
-    return ImGui::DebugNodeFontGlyphesForSrcMask(font,baked,src_mask);
 }
 CIMGUI_API void igDebugNodeFontGlyph(ImFont* font,const ImFontGlyph* glyph)
 {

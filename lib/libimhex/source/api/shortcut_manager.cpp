@@ -367,10 +367,16 @@ namespace hex {
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        const auto inheritedShortcutsView = currentView->getMenuItemInheritView();
-        if (!runShortcut(pressedShortcut, currentView)) {
-            if (inheritedShortcutsView != nullptr)
-                runShortcut(pressedShortcut, inheritedShortcutsView);
+        std::set<const View*> processedViews;
+        while (true) {
+            if (runShortcut(pressedShortcut, currentView)) {
+                break;
+            }
+
+            processedViews.insert(currentView);
+            currentView = currentView->getMenuItemInheritView();
+            if (currentView == nullptr || processedViews.contains(currentView))
+                break;
         }
     }
 
