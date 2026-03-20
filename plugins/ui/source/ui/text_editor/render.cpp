@@ -1146,10 +1146,6 @@ namespace hex::ui {
             m_scroll = ImVec2(scrollX, scrollY);
         }
 
-        if (m_lines.m_setTopRow)
-            m_lines.setFirstRow();
-        else
-            m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
         m_topLineNumber = getTopLineNumber();
         float maxDisplayedRow = m_lines.getMaxDisplayedRow();
         float lineIndex = m_topLineNumber;
@@ -1207,6 +1203,10 @@ namespace hex::ui {
 
                 row = row + 1.0F;
             }
+            if (m_lines.m_setTopRow)
+                m_lines.setFirstRow();
+            else
+                m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
         } else {
             m_lines.m_rowToLineIndex[0] = 1;
             m_topLineNumber = 1;
@@ -1662,6 +1662,8 @@ namespace hex::ui {
                     m_shiftedScrollY = oldScrollY - pixelCount;
                 ImGui::SetScrollY(m_shiftedScrollY);
                 m_lines.m_topMargin = m_newTopMargin;
+
+                m_lines.ensureCursorVisible();
             }
         }
     }
