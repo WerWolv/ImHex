@@ -1909,8 +1909,10 @@ namespace hex::plugin::builtin {
 
         if (peek(tkn::ValueType::Any))
             typeStr = Token::getTypeName(*getValue<Token::ValueType>(0));
-        else if (peek(tkn::Literal::Identifier))
-            typeStr = getValue<Token::Identifier>(0)->get();
+        else if (peek(tkn::Literal::Identifier)) {
+            std::vector<Identifier *> identifiers;
+            getQualifiedName(typeStr, identifiers, true, false);
+        }
 
         m_curr = curr;
         return typeStr;
