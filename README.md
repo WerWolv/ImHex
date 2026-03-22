@@ -1,4 +1,6 @@
 <a href="https://imhex.werwolv.net">
+
+[![gitcgr](https://gitcgr.com/badge/WerWolv/ImHex.svg)](https://gitcgr.com/WerWolv/ImHex)
   <h1 align="center">
     <picture>
       <img height="300px" style="margin: 0; padding: 0" src="./resources/dist/common/logo/ImHexLogoSVGBG.svg">
