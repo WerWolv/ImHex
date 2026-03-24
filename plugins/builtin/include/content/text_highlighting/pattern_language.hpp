@@ -1,31 +1,63 @@
 #pragma once
 #include <pl/core/token.hpp>
 #include <pl/core/preprocessor.hpp>
-#include <pl/pattern_language.hpp>
 #include <pl/helpers/safe_iterator.hpp>
 #include <ui/text_editor.hpp>
 #include <hex/helpers/types.hpp>
-#include <hex/helpers/logger.hpp>
-
+#include <utility>
 
 namespace hex::plugin::builtin {
     class ViewPatternEditor;
     class TextHighlighter  {
     public:
-        class Interval;
+        /// Intervals are the sets finite contiguous non-negative integer that
+        /// are described by their endpoints. The sets must have the following
+        /// properties:
+        /// 1. Any two elements of the set can either have an empty intersection or
+        /// 2. their intersection is equal to one of the two sets (i.e. one is
+        /// a subset of the other).
+        /// An interval is defined to be smaller than another if:
+        /// 1. The interval lies entirely to the left of the other interval or
+        /// 2. The interval is a proper subset of the other interval.
+        /// Two intervals are equal if they have identical start and end values.
+        /// This ordering is used for things like code blocks or the token
+        /// ranges that are defined by the blocks.
+
+        class TokenInterval {
+        public:
+            friend class TextHighlighter;
+            TokenInterval() : m_start(0), m_end(0) {}
+            TokenInterval(i32 start, i32 end);
+            bool operator<(const TokenInterval &other) const;
+            bool operator>(const TokenInterval &other) const;
+            bool operator==(const TokenInterval &other) const;
+            bool operator!=(const TokenInterval &other) const;
+            bool operator<=(const TokenInterval &other) const;
+            bool operator>=(const TokenInterval &other) const;
+            [[nodiscard]] bool contains(const TokenInterval &other) const;
+            [[nodiscard]] bool contains(i32 value) const;
+            [[nodiscard]] bool contiguous(const TokenInterval &other) const;
+        private:
+            i32 m_start;
+            i32 m_end;
+        };
+
+        using Coordinates           = ui::TextEditor::Coordinates;
+        using TokenInterval         = TextHighlighter::TokenInterval;
         using Token                 = pl::core::Token;
         using ASTNode               = pl::core::ast::ASTNode;
         using CompileError          = pl::core::err::CompileError;
         using Identifier            = Token::Identifier;
         using IdentifierType        = Identifier::IdentifierType;
-        using UnorderedBlocks       = std::map<std::string,Interval>;
-        using OrderedBlocks         = std::map<Interval,std::string>;
-        using Scopes                = std::set<Interval>;
+        using UnorderedBlocks       = std::map<std::string,TokenInterval>;
+        using OrderedBlocks         = std::map<TokenInterval,std::string>;
+        using Scopes                = std::set<TokenInterval>;
         using Location              = pl::core::Location;
-        using VectorString          = std::vector<std::string>;
-        using TokenIter             = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
+        using StringVector          = std::vector<std::string>;
+        using StringSet             = std::set<std::string>;
+        using SafeTokenIterator     = pl::hlp::SafeIterator<std::vector<Token>::const_iterator>;
         using VariableScopes        = std::map<std::string,Scopes>;
-        using Inheritances          = std::map<std::string,VectorString>;
+        using Inheritances          = std::map<std::string,StringSet>;
         using IdentifierTypeColor   = std::map<Identifier::IdentifierType,ui::TextEditor::PaletteIndex>;
         using TokenTypeColor        = std::map<Token::Type,ui::TextEditor::PaletteIndex>;
         using TokenColor            = std::map<i32, ui::TextEditor::PaletteIndex>;
@@ -35,16 +67,18 @@ namespace hex::plugin::builtin {
         using CompileErrors         = std::vector<CompileError>;
         using TokenSequence         = std::vector<Token>;
         using TokenIdVector         = std::vector<i32>;
+        using TokenIdSet            = std::set<i32>;
         using Instances             = std::map<std::string,std::vector<i32>>;
+        using CodeFoldBlocks        = ui::TextEditor::CodeFoldBlocks;
 
         struct ParentDefinition;
         struct Definition {
             Definition()= default;
-            Definition(IdentifierType identifierType, std::string typeStr,i32 tokenId, Location location) : idType(identifierType), typeStr(typeStr), tokenIndex(tokenId),location(location) {}
-            IdentifierType idType;
+            Definition(IdentifierType identifierType, std::string typeStr,i32 tokenId, Location location) : idType(identifierType), typeStr(std::move(typeStr)), tokenIndex(tokenId),location(location) {}
+            IdentifierType idType{};
             std::string typeStr;
-            i32 tokenIndex;
-            Location location;
+            i32 tokenIndex{};
+            Location location{};
         };
 
         struct ParentDefinition {
@@ -60,13 +94,13 @@ namespace hex::plugin::builtin {
         private:
             TextHighlighter *m_textHighlighter;
             Types definedTypes;
-            VectorString usedNamespaces;
+            StringVector usedNamespaces;
             ParsedImports parsedImports;
             Str2StrMap importedHeaders;
             TokenSequence fullTokens;
             std::string editedText;
             CompileErrors compileErrors;
-            VectorString linesOfColors;
+            StringVector linesOfColors;
         public:
             RequiredInputs() : m_textHighlighter(nullptr) {};
             explicit RequiredInputs(TextHighlighter *textHighlighter) : m_textHighlighter(textHighlighter) {}
@@ -83,11 +117,12 @@ namespace hex::plugin::builtin {
         using Variables   = std::map<std::string,std::vector<Definition>>;
         /// to define UDT and function variables
         using VariableMap = std::map<std::string,Variables>;
+        inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
     private:
 
-        VectorString m_lines;
+        StringVector m_lines;
         TokenIdVector m_firstTokenIdOfLine;
-        ViewPatternEditor *m_viewPatternEditor;
+        ViewPatternEditor *m_viewPatternEditor{};
 
 
         TokenColor m_tokenColors;
@@ -111,52 +146,25 @@ namespace hex::plugin::builtin {
         Str2StrMap m_typeDefMap;
         Str2StrMap m_typeDefInvMap;
 
-        VectorString m_UDTs;
-        std::set<i32> m_taggedIdentifiers;
-        std::set<i32> m_memberChains;
-        std::set<i32> m_scopeChains;
+        StringVector m_UDTs;
+        TokenIdSet m_taggedIdentifiers;
+        TokenIdSet m_memberChains;
+        TokenIdSet m_scopeChains;
+        TokenIdSet m_identifierTokenIds;
         RequiredInputs  m_requiredInputs;
 
-        TokenIter m_curr;
-        TokenIter m_startToken, m_originalPosition, m_partOriginalPosition;
+        SafeTokenIterator m_curr;
+        SafeTokenIterator m_startToken, m_originalPosition, m_partOriginalPosition;
 
         VariableScopes m_UDTBlocks;
         VariableScopes m_functionBlocks;
         Scopes m_globalBlocks;
+        CodeFoldBlocks m_foldEndPoints;
         Inheritances m_inheritances;
         const static IdentifierTypeColor m_identifierTypeColor;
         const static TokenTypeColor m_tokenTypeColor;
 
     public:
-
-        /// Intervals are the sets finite contiguous non-negative integer that
-        /// are described by their endpoints. The sets must have the following
-        /// properties:
-        /// 1. Any two elements of the set can either have an empty intersection or
-        /// 2. their intersection is equal to one of the two sets (i.e. one is
-        /// a subset of the other).
-        /// An interval is defined to be smaller than another if:
-        /// 1. The interval lies entirely to the left of the other interval or
-        /// 2. The interval is a proper subset of the other interval.
-        /// Two intervals are equal if they have identical start and end values.
-        /// This ordering is used for things like code blocks or the token
-        /// ranges that are defined by the blocks.
-        class Interval {
-        public:
-            i32 start;
-            i32 end;
-            Interval() : start(0), end(0) {}
-            Interval(i32 start, i32 end);
-            bool operator<(const Interval &other) const;
-            bool operator>(const Interval &other) const;
-            bool operator==(const Interval &other) const;
-            bool operator!=(const Interval &other) const;
-            bool operator<=(const Interval &other) const;
-            bool operator>=(const Interval &other) const;
-            bool contains(const Interval &other) const;
-            bool contains(i32 value) const ;
-            bool contiguous(const Interval &other) const;
-        };
         constexpr static u32 Normal = 0;
         constexpr static u32 Not    = 1;
 
@@ -166,6 +174,7 @@ namespace hex::plugin::builtin {
         ViewPatternEditor* getViewPatternEditor();
         void setViewPatternEditor(ViewPatternEditor *viewPatternEditor);
 
+        void setTokenIds();
         TextHighlighter();
         ~TextHighlighter();
         explicit TextHighlighter(ViewPatternEditor *viewPatternEditor) : m_viewPatternEditor(viewPatternEditor) {}
@@ -202,6 +211,7 @@ namespace hex::plugin::builtin {
         /// A token range is the set of token indices of a definition. The namespace token
         /// ranges are obtained first because they are needed to obtain unique identifiers.
         void getTokenRanges(IdentifierType identifierTypeToSearch);
+        std::vector<TokenInterval> searchRangeForBlocks(TokenInterval interval);
         /// The global scope is the complement of the union of all the function and UDT token ranges
         void getGlobalTokenRanges();
         /// If the current token is a function or UDT, creates a map entry from the name to the token range. These are ordered alphabetically by name.
@@ -253,7 +263,7 @@ namespace hex::plugin::builtin {
         /// If context is empty search for the variable, if it isnt use the variable map.
         bool findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap);
         /// Search for instances inside some block
-        void setBlockInstancesColor(const std::string &name, const Definition &definition, const Interval &block);
+        void setBlockInstancesColor(const std::string &name, const Definition &definition, const TokenInterval &block);
         /// Convenience functions.
         void skipAttribute();
         void skipArray(i32 maxSkipCount, bool forward = true);
@@ -264,8 +274,8 @@ namespace hex::plugin::builtin {
         bool findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName = "",  std::string optionalName = "", bool optional = false);
         /// To deal with the Parent keyword
         std::optional<Definition> setChildrenTypes();
-        bool findParentTypes(VectorString &parentTypes, const std::string &optionalName="");
-        bool findAllParentTypes(VectorString &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName);
+        bool findParentTypes(StringVector &parentTypes, const std::string &optionalName="");
+        bool findAllParentTypes(StringVector &parentTypes, std::vector<Identifier *> &identifiers, std::string &optionalFullName);
         bool tryParentType(const std::string &parentType, std::string &variableName, std::optional<Definition> &result, std::vector<Identifier *> &identifiers);
         /// Convenience function
         bool isTokenIdValid(i32 tokenId);
@@ -278,6 +288,8 @@ namespace hex::plugin::builtin {
         pl::core::Location getLocation(i32 tokenId);
         /// Calculate the token index of a source code, line and column numbers
         i32 getTokenId(pl::core::Location location);
+        i32 getTokenId(SafeTokenIterator tokenIterator);
+        i32 getTokenId();
         /// Calculate the function or template argument position from token indices
         i32  getArgumentNumber(i32 start,i32 arg);
         /// Calculate the token index of a function or template argument position
@@ -288,18 +300,18 @@ namespace hex::plugin::builtin {
 
         /// The following functions were copied from the parser and some were modified
 
-        template<typename T> T *getValue(const i32 index);
+        template<typename T> T *getValue(i32 index);
         void next(i32 count = 1);
         bool begin();
         void partBegin();
         void reset();
         void partReset();
-        bool resetIfFailed(const bool value) ;
+        bool resetIfFailed(bool value);
         template<auto S = Normal> bool sequenceImpl();
         template<auto S = Normal> bool matchOne(const Token &token);
         template<auto S = Normal> bool sequenceImpl(const auto &... args);
         template<auto S = Normal> bool sequence(const Token &token, const auto &... args);
         bool isValid();
-        bool peek(const Token &token, const i32 index = 0);
+        bool peek(const Token &token, i32 index = 0);
     };
 }
