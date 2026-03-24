@@ -540,17 +540,16 @@ namespace hex::ui {
         m_codeFolds.clear();
         m_rowToFoldSymbol.clear();
 
-        for (auto [key, isOpen]: m_codeFoldState){
-            auto index = m_codeFoldKeys.find(key);
-            if (index->m_start != key.m_start || index->m_end != key.m_end)
-                m_codeFoldState.erase(key);
-        }
+        std::erase_if(m_codeFoldState, [this](const auto& entry) {
+            auto index = m_codeFoldKeys.find(entry.first);
+            return (index->m_start != entry.first.m_start || index->m_end != entry.first.m_end);
+        });
+
+        std::erase_if(m_codeFoldKeys, [](const auto& entry) {
+            return (entry.m_start >= entry.m_end);
+        });
 
         for (auto key : m_codeFoldKeys) {
-            if (key.m_start >= key.m_end) {
-                m_codeFoldKeys.erase(key);
-                continue;
-            }
             auto rowStart = lineIndexToRow(key.m_start.m_line);
             auto rowEnd = lineIndexToRow(key.m_end.m_line);
 
