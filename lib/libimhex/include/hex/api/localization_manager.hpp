@@ -40,7 +40,7 @@ EXPORT_MODULE namespace hex {
         void addLanguages(const std::string_view &languageList, std::function<std::string_view(const std::string &path)> callback);
         void setLanguage(const LanguageId &languageId);
         [[nodiscard]] const LanguageId& getSelectedLanguageId();
-        [[nodiscard]] const wolv::util::Locale& getSelectedLocale();
+        [[nodiscard]] wolv::util::Locale getSelectedLocale();
         [[nodiscard]] const std::string& get(const LanguageId& languageId, const UnlocalizedString &unlocalizedString);
         [[nodiscard]] const std::map<LanguageId, LanguageDefinition>& getLanguageDefinitions();
         [[nodiscard]] const LanguageDefinition& getLanguageDefinition(const LanguageId &languageId);

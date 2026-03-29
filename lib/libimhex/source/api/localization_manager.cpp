@@ -173,7 +173,7 @@ namespace hex {
             return *s_selectedLanguageId;
         }
 
-        [[nodiscard]] const wolv::util::Locale& getSelectedLocale() {
+        [[nodiscard]] wolv::util::Locale getSelectedLocale() {
             std::shared_lock lock(s_localeLock);
             return s_locale;
         }
