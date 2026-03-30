@@ -722,6 +722,7 @@ namespace hex {
                                               provider->write(offset, buffer, size);
                                       }
                 );
+                runtime.setLocale(hex::LocalizationManager::getSelectedLocale());
             }
 
             runtime.setIncludePaths(paths::PatternsInclude.read() | paths::Patterns.read());
