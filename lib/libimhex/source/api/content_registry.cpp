@@ -698,6 +698,13 @@ namespace hex {
                 runtime.setOnCreateCallback([](prv::Provider *provider, pl::PatternLanguage &runtime) {
                     configureRuntime(runtime, provider);
                 });
+
+                // Handle language change
+                ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue&) {
+                    for (auto &pl : runtime.all()) {
+                        pl.setLocale(hex::LocalizationManager::getSelectedLocale());
+                    }
+                });
             };
 
             return *runtime;
@@ -712,6 +719,8 @@ namespace hex {
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
             runtime.reset();
 
+            runtime.setLocale(hex::LocalizationManager::getSelectedLocale());
+
             if (provider != nullptr) {
                 runtime.setDataSource(provider->getBaseAddress(), provider->getActualSize(),
                                       [provider](u64 offset, u8 *buffer, size_t size) {
@@ -722,8 +731,8 @@ namespace hex {
                                               provider->write(offset, buffer, size);
                                       }
                 );
-                runtime.setLocale(hex::LocalizationManager::getSelectedLocale());
             }
+
 
             runtime.setIncludePaths(paths::PatternsInclude.read() | paths::Patterns.read());
 
