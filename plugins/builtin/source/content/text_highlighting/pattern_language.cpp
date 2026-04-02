@@ -2515,7 +2515,6 @@ namespace hex::plugin::builtin {
             m_viewPatternEditor->setChangesWereColored(!m_viewPatternEditor->interrupted());
         };
         try {
-            m_viewPatternEditor->incrementRunningHighlighters(1);
             clearVariables();
             if (!m_UDTs.empty())
                 m_UDTs.clear();
