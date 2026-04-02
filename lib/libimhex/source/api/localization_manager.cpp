@@ -19,7 +19,7 @@ namespace hex {
 
         namespace {
             std::shared_mutex s_localeLock;
-            wolv::util::Locale s_locale;
+            wolv::util::Locale s_locale(FallbackLanguageId);
             void setSelectedLocale(const LanguageId &languageId);
         }
 
