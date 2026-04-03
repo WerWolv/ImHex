@@ -851,7 +851,6 @@ for (const auto &path : m_paths) {
             {
                 std::vector<std::string> languageNames;
                 std::vector<nlohmann::json> languageCodes;
-                std::vector<std::string> languageCodesAsStrings;
 
                 {
                     const auto osLanguage = hex::getOSLanguage();
@@ -868,7 +867,6 @@ for (const auto &path : m_paths) {
 
                     languageNames.emplace_back(fmt::format("{} ({}) {}", definition.nativeName, definition.name, definition.hidden ? "[WORK IN PROGRESS]" : ""));
                     languageCodes.emplace_back(languageCode);
-                    languageCodesAsStrings.emplace_back(languageCode);
                 }
 
                 ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
