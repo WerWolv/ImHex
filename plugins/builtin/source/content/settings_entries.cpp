@@ -888,7 +888,6 @@ for (const auto &path : m_paths) {
                                 "en-US"
                                 );
 
-
                     ContentRegistry::Settings::write(
                         "hex.builtin.setting.interface",
                         "hex.builtin.setting.interface.date_time_locale",
@@ -898,7 +897,7 @@ for (const auto &path : m_paths) {
             }
 
             ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
-        
+
             ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
 
             #if defined (OS_LINUX)

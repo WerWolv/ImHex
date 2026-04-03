@@ -20,7 +20,6 @@ namespace hex {
         namespace {
             std::shared_mutex s_localeLock;
             wolv::util::Locale s_locale;
-            void setSelectedLocale(const LanguageId &languageId);
         }
 
         namespace {
@@ -153,7 +152,7 @@ namespace hex {
             s_selectedLanguageId = languageId;
 
             populateLocalization(languageId, s_localizations);
-
+/*
 #if defined(OS_WINDOWS)
             setSelectedLocale(languageId);
 #elif defined(OS_LINUX)
@@ -167,6 +166,7 @@ namespace hex {
             hs.append(".UTF-8");
             setSelectedLocale(osLangId);
 #endif
+*/
         }
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
@@ -178,11 +178,9 @@ namespace hex {
             return s_locale;
         }
 
-        namespace {
-            void setSelectedLocale(const LanguageId &languageId) {
-                std::unique_lock lock(s_localeLock);
-                s_locale.set(languageId);
-            }
+        void setSelectedLocale(const LanguageId &languageId) {
+            std::unique_lock lock(s_localeLock);
+            s_locale.set(languageId);
         }
 
         [[nodiscard]] const std::string& get(const LanguageId &languageId, const UnlocalizedString &unlocalizedString) {

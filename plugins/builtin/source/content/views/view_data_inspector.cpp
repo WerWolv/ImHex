@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
 
     ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
         // Handle language change
-         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [this](const ContentRegistry::Settings::SettingsValue&) {
+         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.date_time_locale", [this](const ContentRegistry::Settings::SettingsValue&) {
             // Invalidate inspector rows
             m_shouldInvalidate = true;
          });
