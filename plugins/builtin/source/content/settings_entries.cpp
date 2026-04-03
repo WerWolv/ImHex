@@ -20,6 +20,7 @@
 
 #include <wolv/literals.hpp>
 #include <wolv/utils/string.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -850,6 +851,7 @@ for (const auto &path : m_paths) {
             {
                 std::vector<std::string> languageNames;
                 std::vector<nlohmann::json> languageCodes;
+                std::vector<std::string> languageCodesAsStrings;
 
                 {
                     const auto osLanguage = hex::getOSLanguage();
@@ -866,9 +868,14 @@ for (const auto &path : m_paths) {
 
                     languageNames.emplace_back(fmt::format("{} ({}) {}", definition.nativeName, definition.name, definition.hidden ? "[WORK IN PROGRESS]" : ""));
                     languageCodes.emplace_back(languageCode);
+                    languageCodesAsStrings.emplace_back(languageCode);
                 }
 
                 ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+
+                auto installedLocales = wolv::util::enumLocales();
+                std::vector<nlohmann::json> installedLocalesJSON(installedLocales.begin(), installedLocales.end());
+                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.date_time_locale", installedLocales, installedLocalesJSON, "en-US");
             }
 
             ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
