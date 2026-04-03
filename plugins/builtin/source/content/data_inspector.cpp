@@ -801,15 +801,15 @@ namespace hex::plugin::builtin {
         });
 
         struct DOSDate {
-            unsigned day   : 5;
-            unsigned month : 4;
-            unsigned year  : 7;
+            u16 day   : 5;
+            u16 month : 4;
+            u16 year  : 7;
         };
 
         struct DOSTime {
-            unsigned seconds : 5;
-            unsigned minutes : 6;
-            unsigned hours   : 5;
+            u16 seconds : 5;
+            u16 minutes : 6;
+            u16 hours   : 5;
         };
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.dos_date", sizeof(DOSDate), [](auto buffer, auto endian, auto style) {
