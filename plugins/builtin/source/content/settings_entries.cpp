@@ -888,6 +888,10 @@ for (const auto &path : m_paths) {
                                 "en-US"
                                 );
 
+                    if (val== "native") {
+                        val = getOSLanguage().value_or("en-US");
+                    }
+
                     ContentRegistry::Settings::write(
                         "hex.builtin.setting.interface",
                         "hex.builtin.setting.interface.date_time_locale",
