@@ -872,8 +872,20 @@ for (const auto &path : m_paths) {
                 auto &itfLang = ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
 
                 auto installedLocales = wolv::util::enumLocales();
+                std::vector<std::string> localeNames;
+                for (const std::string &lc : installedLocales) {
+                    std::string english = wolv::util::localeName(lc);
+                    std::string native = wolv::util::localeName(lc, false); // Native
+                    if (native == english) {
+                        english = "";
+                    }
+                    else {
+                        english = " [" + english + "]";
+                    }
+                    localeNames.push_back(fmt::format("{}{} - {}", native, english, lc));
+                }
                 std::vector<nlohmann::json> installedLocalesJSON(installedLocales.begin(), installedLocales.end());
-                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.date_time_locale", installedLocales, installedLocalesJSON, "en-US");
+                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.date_time_locale", localeNames, installedLocalesJSON, "en-US");
 
                 itfLang.setChangedCallback([](auto &) {
                     static bool firstTime = true;
