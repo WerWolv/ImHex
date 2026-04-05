@@ -769,7 +769,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             using wolv::util::DTOpts;
-            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT | DTOpts::LongDate);
+            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT);
             if (optval) {
                 value = optval.value();
             }
@@ -789,7 +789,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             using wolv::util::DTOpts;
-            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT | DTOpts::LongDate);
+            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT);
             if (optval) {
                 value = optval.value();
             }
@@ -836,7 +836,7 @@ namespace hex::plugin::builtin {
                     const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
 
                     using wolv::util::DTOpts;
-                    auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D | DTOpts::LongDate);
+                    auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D);
                     if (optval) {
                         value = optval.value();
                         ok = true;
