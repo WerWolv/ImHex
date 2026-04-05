@@ -9,6 +9,7 @@
 #include <jthread.hpp>
 #include <hex/helpers/debugging.hpp>
 #include <hex/trace/exceptions.hpp>
+#include <wolv/utils/string.hpp>
 #include <utility>
 
 #if defined(OS_WINDOWS)
@@ -534,7 +535,8 @@ namespace hex {
 
     void TaskManager::setCurrentThreadName(const std::string &name) {
         std::ranges::fill(s_currentThreadName, '\0');
-        std::ranges::copy(name | std::views::take(255), s_currentThreadName.begin());
+        auto truncatedName = wolv::util::truncateUtf8(name, s_currentThreadName.size()-1);
+        std::ranges::copy(truncatedName, s_currentThreadName.begin());
 
         #if defined(OS_WINDOWS)
             using SetThreadDescriptionFunc =  HRESULT(WINAPI*)(HANDLE hThread, PCWSTR lpThreadDescription);
