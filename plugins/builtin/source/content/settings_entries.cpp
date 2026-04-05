@@ -885,7 +885,7 @@ for (const auto &path : m_paths) {
                     localeNames.push_back(fmt::format("{}{} - {}", native, english, lc));
                 }
                 std::vector<nlohmann::json> installedLocalesJSON(installedLocales.begin(), installedLocales.end());
-                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.date_time_locale", localeNames, installedLocalesJSON, "en-US");
+                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.locale", localeNames, installedLocalesJSON, "en-US");
 
                 itfLang.setChangedCallback([](auto &) {
                     static bool firstTime = true;
@@ -906,11 +906,13 @@ for (const auto &path : m_paths) {
 
                     ContentRegistry::Settings::write(
                         "hex.builtin.setting.interface",
-                        "hex.builtin.setting.interface.date_time_locale",
+                        "hex.builtin.setting.interface.locale",
                         val
                     );
                 });
             }
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.longdate", false);
 
             ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
 

@@ -83,20 +83,6 @@ namespace hex {
                 }
             }
 
-            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
-                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
-                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
-                        for (const auto &[id, callback] : nameIt->second) {
-                            try {
-                                callback(value);
-                            } catch (const nlohmann::json::exception &e) {
-                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-                            }
-                        }
-                    }
-                }
-            }
-
             static AutoReset<nlohmann::json> s_settings;
             const nlohmann::json& getSettingsData() {
                 return s_settings;
@@ -286,6 +272,20 @@ namespace hex {
             const auto category = insertOrGetEntry(*impl::s_categories, unlocalizedCategory);
 
             category->unlocalizedDescription = unlocalizedDescription;
+        }
+
+        void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
+            if (auto categoryIt = impl::s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != impl::s_onChangeCallbacks->end()) {
+                if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
+                    for (const auto &[id, callback] : nameIt->second) {
+                        try {
+                            callback(value);
+                        } catch (const nlohmann::json::exception &e) {
+                            log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                        }
+                    }
+                }
+            }
         }
 
         u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback) {

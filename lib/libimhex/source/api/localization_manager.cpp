@@ -152,21 +152,6 @@ namespace hex {
             s_selectedLanguageId = languageId;
 
             populateLocalization(languageId, s_localizations);
-/*
-#if defined(OS_WINDOWS)
-            setSelectedLocale(languageId);
-#elif defined(OS_LINUX)
-            std::string osLangId(languageId);
-            std::replace(osLangId.begin(), osLangId.end(), '-', '_');
-            osLangId.append(".utf8");
-            setSelectedLocale(osLangId);
-#elif defined(OS_MAC)
-            std::string osLangId(languageId);
-            std::replace(osLangId.begin(), osLangId.end(), '-', '_');
-            hs.append(".UTF-8");
-            setSelectedLocale(osLangId);
-#endif
-*/
         }
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
@@ -178,9 +163,9 @@ namespace hex {
             return s_locale;
         }
 
-        void setSelectedLocale(const LanguageId &languageId) {
+        void setSelectedLocale(const LanguageId &languageId, bool longDate) {
             std::unique_lock lock(s_localeLock);
-            s_locale.set(languageId);
+            s_locale.set(languageId, longDate);
         }
 
         [[nodiscard]] const std::string& get(const LanguageId &languageId, const UnlocalizedString &unlocalizedString) {
