@@ -875,7 +875,7 @@ for (const auto &path : m_paths) {
                 std::vector<std::string> localeNames;
                 for (const std::string &lc : installedLocales) {
                     std::string english = wolv::util::localeName(lc);
-                    std::string native = wolv::util::localeName(lc, false); // Native
+                    std::string native = wolv::util::localeName(lc, false);
                     if (native == english) {
                         english = "";
                     }
