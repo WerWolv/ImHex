@@ -874,15 +874,8 @@ for (const auto &path : m_paths) {
                 auto installedLocales = wolv::util::enumLocales();
                 std::vector<std::string> localeNames;
                 for (const std::string &lc : installedLocales) {
-                    std::string english = wolv::util::localeName(lc);
-                    std::string native = wolv::util::localeName(lc, false);
-                    if (native == english) {
-                        english = "";
-                    }
-                    else {
-                        english = " [" + english + "]";
-                    }
-                    localeNames.push_back(fmt::format("{}{} - {}", native, english, lc));
+                    wolv::util::LocaleName name(lc);
+                    localeNames.push_back(fmt::format("{} - {}", name.displayName(), lc));
                 }
                 std::vector<nlohmann::json> installedLocalesJSON(installedLocales.begin(), installedLocales.end());
                 ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.locale", localeNames, installedLocalesJSON, "en-US");
