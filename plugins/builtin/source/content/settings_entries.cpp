@@ -905,7 +905,9 @@ for (const auto &path : m_paths) {
                 });
             }
 
+#if defined(OS_WINDOWS)
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.longdate", false);
+#endif
 
             ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
 

@@ -661,15 +661,19 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.locale", [](const ContentRegistry::Settings::SettingsValue &value) {
             auto language = value.get<std::string>("en-US");
 
-            auto longDate = ContentRegistry::Settings::read<bool>(
-                            "hex.builtin.setting.interface",
-                            "hex.builtin.setting.interface.longdate",
-                            "en-US"
-                            );
+            bool longDate = false;
+#if defined(OS_WINDOWS)
+            longDate = ContentRegistry::Settings::read<bool>(
+                        "hex.builtin.setting.interface",
+                        "hex.builtin.setting.interface.longdate",
+                        "en-US"
+                        );
+#endif
 
             LocalizationManager::setSelectedLocale(language, longDate);
         });
 
+#if defined(OS_WINDOWS)
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.longdate", [](const ContentRegistry::Settings::SettingsValue &) {
             // We consider this part of the locale
             auto loc = ContentRegistry::Settings::read<std::string>(
@@ -679,6 +683,7 @@ namespace hex::plugin::builtin {
                             );
             ContentRegistry::Settings::runOnChangeHandlers("hex.builtin.setting.interface", "hex.builtin.setting.interface.locale", loc);
         });
+#endif
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", [](const ContentRegistry::Settings::SettingsValue &value) {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
