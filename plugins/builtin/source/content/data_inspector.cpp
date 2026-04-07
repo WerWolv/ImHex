@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <string>
+#include <ctime>
 
 #include <imgui_internal.h>
 #include <fonts/vscode_icons.hpp>
@@ -21,6 +22,8 @@
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <popups/popup_file_chooser.hpp>
+#include <wolv/utils/date_time_format.hpp>
+#include <hex/api/localization_manager.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -32,6 +35,9 @@ namespace hex::plugin::builtin {
         u16 data3;
         u8 data4[8];
     };
+
+    const std::string s_invalid         = "Invalid";
+    const std::string s_canNotFormat    = "Can not format";
 
     template<std::unsigned_integral T, size_t Size = sizeof(T)>
     static ContentRegistry::DataInspector::impl::EditingFunction stringToUnsigned() requires(sizeof(T) <= sizeof(u64)) {
@@ -754,82 +760,56 @@ namespace hex::plugin::builtin {
             };
         });
 
-#if defined(OS_WINDOWS)
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(i32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u32 *>(buffer.data()), endian);
+            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<i32 *>(buffer.data()), endian);
+
+            const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
 
             std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (fmt::format_error &) {
-                value = "Invalid";
+            using wolv::util::DTOpts;
+            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT32 | DTOpts::DandT);
+            if (optval) {
+                value = optval.value();
+            }
+            else {
+                value = s_canNotFormat;
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(u64), [](auto buffer, auto endian, auto style) {
-            std::ignore = style;
-
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<u64 *>(buffer.data()), endian);
-
-            std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (fmt::format_error &) {
-                value = "Invalid";
-            }
-
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
-
-#else
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
             time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
+            const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
+
             std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (const fmt::format_error &e) {
-                value = "Invalid";
+            using wolv::util::DTOpts;
+            auto optval = wolv::util::formatTT(lc, endianAdjustedTime, DTOpts::TT64 | DTOpts::DandT);
+            if (optval) {
+                value = optval.value();
+            }
+            else {
+                value = s_canNotFormat;
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-#endif
-
         struct DOSDate {
-            unsigned day   : 5;
-            unsigned month : 4;
-            unsigned year  : 7;
+            u16 day   : 5;
+            u16 month : 4;
+            u16 year  : 7;
         };
 
         struct DOSTime {
-            unsigned seconds : 5;
-            unsigned minutes : 6;
-            unsigned hours   : 5;
+            u16 seconds : 5;
+            u16 minutes : 6;
+            u16 hours   : 5;
         };
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.dos_date", sizeof(DOSDate), [](auto buffer, auto endian, auto style) {
@@ -839,7 +819,33 @@ namespace hex::plugin::builtin {
             std::memcpy(&date, buffer.data(), sizeof(DOSDate));
             date = hex::changeEndianness(date, endian);
 
-            auto value = fmt::format("{}/{}/{}", u8(date.day), u8(date.month), u8(date.year) + 1980);
+            bool ok = false;
+            std::string value;
+            if ( (date.day>=1 && date.day<=31) && (date.month>=1 && date.month<=12) ) {
+                std::tm tm{};
+                tm.tm_year = date.year + 80;
+                tm.tm_mon  = date.month - 1;
+                tm.tm_mday = date.day;
+
+#if defined(OS_WINDOWS)
+                time_t tt = _mkgmtime(&tm);
+#else
+                time_t tt = timegm(&tm);
+#endif
+                if (tt != -1) {
+                    const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
+
+                    using wolv::util::DTOpts;
+                    auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::D);
+                    if (optval) {
+                        value = optval.value();
+                        ok = true;
+                    }
+                }
+            }
+            if (!ok) {
+                value = s_invalid;
+            }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -851,7 +857,26 @@ namespace hex::plugin::builtin {
             std::memcpy(&time, buffer.data(), sizeof(DOSTime));
             time = hex::changeEndianness(time, endian);
 
-            auto value = fmt::format("{:02}:{:02}:{:02}", u8(time.hours), u8(time.minutes), u8(time.seconds) * 2);
+            bool ok = false;
+            std::string value;
+            if ( (time.hours>=0 && time.hours<=23)     &&
+                 (time.minutes>=0 && time.minutes<=59) &&
+                 (time.seconds>=0 && time.seconds<=29)  )
+            {
+                time_t tt = time.hours*60*60 + time.minutes*60 + time.seconds*2;
+
+                const wolv::util::Locale &lc = LocalizationManager::getSelectedLocale();
+
+                using wolv::util::DTOpts;
+                auto optval = wolv::util::formatTT(lc, tt, DTOpts::TT64 | DTOpts::T);
+                if (optval) {
+                    value = optval.value();
+                    ok = true;
+                }
+            }
+            if (!ok) {
+                    value = s_invalid;
+            }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });

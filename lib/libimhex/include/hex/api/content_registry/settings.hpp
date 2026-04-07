@@ -278,8 +278,6 @@ EXPORT_MODULE namespace hex {
             Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
 
             void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception &e);
-
-            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
         }
 
         template<std::derived_from<Widgets::Widget> T>
@@ -316,6 +314,8 @@ EXPORT_MODULE namespace hex {
             nlohmann::json m_value;
         };
 
+        void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
+
         template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T defaultValue) {
             auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
@@ -337,7 +337,7 @@ EXPORT_MODULE namespace hex {
         template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T value) {
             impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
-            impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
+            runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
 
             impl::store();
         }
