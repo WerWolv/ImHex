@@ -192,8 +192,6 @@ namespace hex::plugin::builtin {
             static std::optional<Segment> colTile;
             static ImGuiDir direction;
             static auto rng = std::mt19937(std::random_device{}());
-            static bool over = true;
-            (void)over; // TODO: REMOVE ME!
             static i32 overCounter = 0;
             static u32 spaceCount = 0;
 
@@ -205,7 +203,6 @@ namespace hex::plugin::builtin {
                     segments = { { 10, 10 }, { 10, 11 }, { 10, 12 } };
                     direction = ImGuiDir_Right;
                     colTile.reset();
-                    over = false;
                     s_snakeActive = true;
                 }
             }
@@ -246,7 +243,6 @@ namespace hex::plugin::builtin {
                 );
             };
 
-            // TODO: copied from below. Wrong place!
             for (u32 x = 0; x < u32(tileCount.x+0.5); x += 1) {
                 for (u32 y = 0; y < u32(tileCount.y+0.5); y += 1) {
                     if (life.get(x, y)) {
@@ -263,14 +259,14 @@ namespace hex::plugin::builtin {
                 drawTile(x, y);
             }
 
-            /*if (overCounter != 0) {
+            if (s_snakeActive && overCounter != 0) {
                 for (u32 x = 0; x < u32(tileCount.x); x += 1) {
                     for (u32 y = 0; y < u32(tileCount.y); y += 1) {
                         if ((x + y) % 2 == u32(overCounter % 2))
                             drawTile(x, y);
                     }
                 }
-            }*/
+            }
 
             static double lastTick = 0;
             double tick = ImGui::GetTime();
@@ -286,7 +282,7 @@ namespace hex::plugin::builtin {
                     default: break;
                 }
 
-                if (true/*overCounter == 0*/) {
+                if (overCounter == 0) {
                     for (const auto &segment : segments) {
                         if (segment == nextSegment) overCounter = 5;
                         if (segment.x < 0 || segment.y < 0) overCounter = 5;
@@ -302,8 +298,9 @@ namespace hex::plugin::builtin {
                     }
                 } else {
                     overCounter -= 1;
-                    if (overCounter <= 0)
-                      over = true;
+                    if (overCounter <= 0) {
+                        s_snakeActive = false;
+                    }
                 }
 
                 lastTick = tick;
