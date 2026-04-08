@@ -299,7 +299,7 @@ namespace hex::plugin::builtin {
                         if (colTile.has_value() && nextSegment != *colTile) {
                             segments.pop_back();
                         } else {
-                            colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.x)) };
+                            colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.y)) };
                         }
                     } else {
                         overCounter -= 1;
