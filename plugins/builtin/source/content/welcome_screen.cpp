@@ -41,6 +41,7 @@
 
 #include <string>
 #include <random>
+#include <cmath>
 #include <banners/banner_button.hpp>
 #include <banners/banner_icon.hpp>
 #include <fonts/fonts.hpp>
@@ -186,14 +187,6 @@ namespace hex::plugin::builtin {
             static i32 overCounter = 0;
             static u32 spaceCount = 0;
 
-            // TODO: DOES NOT support windows resizing!
-            static bool firstTime = true;
-            static Life life(tileCount.x, tileCount.y);
-            if (firstTime) {
-                firstTime = false;
-                life.parse("ob3o$o4bo$obobo$bo2bo!", 35, 20);
-            }
-
             if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
                 spaceCount += 1;
 
@@ -203,6 +196,23 @@ namespace hex::plugin::builtin {
                     direction = ImGuiDir_Right;
                     colTile.reset();
                     over = false;
+                }
+            }
+
+            // For Conway's Game of Life easter egg
+            static Life life(std::ceil(tileCount.x), std::ceil(tileCount.y));
+            int intTileCountX = std::ceil(tileCount.x);
+            int intTileCountY = std::ceil(tileCount.y);
+            if (intTileCountX>life.width() || intTileCountY>life.height()) {
+                life.resize(intTileCountX, intTileCountY);
+            }
+            static u32 leftAtlCount = 0;
+            if (ImGui::IsKeyPressed(ImGuiKey_LeftAlt, false)) {
+                leftAtlCount += 1;
+
+                if (leftAtlCount >= 5) {
+                    leftAtlCount = 0;
+                    life.parse("ob3o$o4bo$obobo$bo2bo!", 35, 20);
                 }
             }
 
@@ -224,8 +234,8 @@ namespace hex::plugin::builtin {
             };
 
             // TODO: copied from below. Wrong place!
-            for (u32 x = 0; x < u32(tileCount.x); x += 1) {
-                for (u32 y = 0; y < u32(tileCount.y); y += 1) {
+            for (u32 x = 0; x < u32(tileCount.x+0.5); x += 1) {
+                for (u32 y = 0; y < u32(tileCount.y+0.5); y += 1) {
                     if (life.get(x, y)) {
                         drawTile(x, y);
                     }                        
@@ -240,14 +250,14 @@ namespace hex::plugin::builtin {
                 drawTile(x, y);
             }
 
-            if (overCounter != 0) {
+            /*if (overCounter != 0) {
                 for (u32 x = 0; x < u32(tileCount.x); x += 1) {
                     for (u32 y = 0; y < u32(tileCount.y); y += 1) {
                         if ((x + y) % 2 == u32(overCounter % 2))
                             drawTile(x, y);
                     }
                 }
-            }
+            }*/
 
             static double lastTick = 0;
             double tick = ImGui::GetTime();
@@ -263,7 +273,7 @@ namespace hex::plugin::builtin {
                     default: break;
                 }
 
-                if (overCounter == 0) {
+                if (true/*overCounter == 0*/) {
                     for (const auto &segment : segments) {
                         if (segment == nextSegment) overCounter = 5;
                         if (segment.x < 0 || segment.y < 0) overCounter = 5;
