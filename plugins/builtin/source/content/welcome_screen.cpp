@@ -172,6 +172,15 @@ namespace hex::plugin::builtin {
                 });
         }
 
+        namespace {
+            static bool s_snakeActive = false;
+            static bool s_lifeActive = false;
+
+            bool isEaster() {
+                return s_snakeActive || s_lifeActive;
+            }
+        }
+
         void drawTiles(ImDrawList *drawList, ImVec2 position, ImVec2 size, float lineDistance) {
             const auto tileCount = size / lineDistance;
 
@@ -184,6 +193,7 @@ namespace hex::plugin::builtin {
             static ImGuiDir direction;
             static auto rng = std::mt19937(std::random_device{}());
             static bool over = true;
+            (void)over; // TODO: REMOVE ME!
             static i32 overCounter = 0;
             static u32 spaceCount = 0;
 
@@ -196,6 +206,7 @@ namespace hex::plugin::builtin {
                     direction = ImGuiDir_Right;
                     colTile.reset();
                     over = false;
+                    s_snakeActive = true;
                 }
             }
 
@@ -212,12 +223,14 @@ namespace hex::plugin::builtin {
 
                 if (leftAtlCount >= 5) {
                     leftAtlCount = 0;
-                    life.load("ob3o$o4bo$obobo$bo2bo!", 35, 20);
+                    life.load("ob3o$o4bo$obobo$bo2bo!", 45, 25);
+                    s_lifeActive = true;
                 }
             }
 
-            if (over)
+            if (!isEaster()) {
                 return;
+            }
             ImHexApi::System::unlockFrameRate();
 
             const auto drawTile = [&](u32 x, u32 y) {
@@ -555,10 +568,17 @@ namespace hex::plugin::builtin {
                             } else {
                                 drawWelcomeScreenBackground();
 
+                                bool pushedAlpha = false;
+                                if (isEaster()) {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+                                    pushedAlpha = true;
+                                }
                                 if (s_simplifiedWelcomeScreen)
                                     drawWelcomeScreenContentSimplified();
                                 else
                                     drawWelcomeScreenContentFull();
+                                if (pushedAlpha)
+                                    ImGui::PopStyleVar();
 
                                 static bool hovered = false;
                                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
