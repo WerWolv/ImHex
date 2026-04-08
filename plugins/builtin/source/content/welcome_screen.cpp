@@ -51,6 +51,13 @@
 namespace hex::plugin::builtin {
 
     namespace {
+        bool s_snakeActive = false;
+        bool s_lifeActive = false;
+
+        bool isEaster() {
+            return s_snakeActive || s_lifeActive;
+        }
+
         AutoReset<ImGuiExt::Texture> s_bannerTexture, s_nightlyTexture, s_backdropTexture, s_infoBannerTexture;
 
         std::string s_tipOfTheDay;
@@ -170,15 +177,6 @@ namespace hex::plugin::builtin {
                 [](const auto &entry) {
                     return entry.second->getWindowOpenState();
                 });
-        }
-
-        namespace {
-            bool s_snakeActive = false;
-            bool s_lifeActive = false;
-
-            bool isEaster() {
-                return s_snakeActive || s_lifeActive;
-            }
         }
 
         void drawTiles(ImDrawList *drawList, ImVec2 position, ImVec2 size, float lineDistance) {
