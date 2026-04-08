@@ -6,6 +6,7 @@
 #include <content/life.hpp>
 #include <cstring>
 #include <charconv>
+#include <utility>
 #include <algorithm>
 
 namespace hex::plugin::builtin {
@@ -13,10 +14,26 @@ namespace hex::plugin::builtin {
 Life::Life(int width, int height) :
     m_width(width), m_height(height),
     m_currentBuffer(0),
-    m_otherBuffer(width* height),
-    m_secondBuffer(width* height),
-    m_world(width* height * 2)
+    m_otherBuffer(width * height),
+    m_world(width * height * 2)
 {
+}
+
+void Life::resize(int width, int height) {
+    std::vector<int> resized(width*height*2);
+
+    const size_t other = width*height;
+    for (int y=0; y<std::min(height, m_height); ++y) {
+        for (int x=0; x<std::min(width, m_width); ++x) {
+            resized[x + y*width] = m_world[m_currentBuffer + x + y*m_width];
+        }
+    }
+
+    m_width = width;
+    m_height = height;
+    m_currentBuffer = 0;
+    m_otherBuffer = other;
+    m_world = std::move(resized);
 }
 
 void Life::parse(std::string_view s, int x, int y) {

@@ -14,7 +14,16 @@ class Life {
 public:
     Life(int width, int height);
 
+    void resize(int width, int height);
     void parse(std::string_view s, int x, int y);
+
+    int width() const {
+        return m_width;
+    }
+
+    int height() const {
+        return m_height;
+    }
 
     bool get(int x, int y) {
         if ((x >= 0 && x < m_width) && (y >= 0 && y < m_height)) {
@@ -35,7 +44,6 @@ private:
     int m_height;
     size_t m_currentBuffer;
     size_t m_otherBuffer;
-    size_t m_secondBuffer;
     std::vector<int> m_world;
 };
 
