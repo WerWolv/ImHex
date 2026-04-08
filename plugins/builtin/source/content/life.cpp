@@ -36,9 +36,13 @@ void Life::resize(int width, int height) {
     m_world = std::move(resized);
 }
 
-void Life::parse(std::string_view s, int x, int y) {
+void Life::load(std::string_view s, int x, int y, bool erase) {
     int xx = x;
     int yy = y;
+
+    if (erase) {
+        memset(&m_world[m_currentBuffer], 0, sizeof(int) * m_width * m_height);
+    }
 
     for (size_t i = 0; i < s.size(); ++i) {
         int reps = 1;

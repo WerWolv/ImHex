@@ -15,7 +15,7 @@ public:
     Life(int width, int height);
 
     void resize(int width, int height);
-    void parse(std::string_view s, int x, int y);
+    void load(std::string_view s, int x, int y, bool erase=true);
 
     int width() const {
         return m_width;

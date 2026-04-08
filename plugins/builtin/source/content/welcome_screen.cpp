@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
 
                 if (leftAtlCount >= 5) {
                     leftAtlCount = 0;
-                    life.parse("ob3o$o4bo$obobo$bo2bo!", 35, 20);
+                    life.load("ob3o$o4bo$obobo$bo2bo!", 35, 20);
                 }
             }
 
