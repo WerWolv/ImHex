@@ -173,8 +173,8 @@ namespace hex::plugin::builtin {
         }
 
         namespace {
-            static bool s_snakeActive = false;
-            static bool s_lifeActive = false;
+            bool s_snakeActive = false;
+            bool s_lifeActive = false;
 
             bool isEaster() {
                 return s_snakeActive || s_lifeActive;
