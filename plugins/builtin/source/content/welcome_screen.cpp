@@ -45,6 +45,8 @@
 #include <banners/banner_icon.hpp>
 #include <fonts/fonts.hpp>
 
+#include <content/life.hpp> // Conway's Game of Life
+
 namespace hex::plugin::builtin {
 
     namespace {
@@ -184,6 +186,14 @@ namespace hex::plugin::builtin {
             static i32 overCounter = 0;
             static u32 spaceCount = 0;
 
+            // TODO: DOES NOT support windows resizing!
+            static bool firstTime = true;
+            static Life life(tileCount.x, tileCount.y);
+            if (firstTime) {
+                firstTime = false;
+                life.parse("ob3o$o4bo$obobo$bo2bo!", 35, 20);
+            }
+
             if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
                 spaceCount += 1;
 
@@ -198,7 +208,6 @@ namespace hex::plugin::builtin {
 
             if (over)
                 return;
-
             ImHexApi::System::unlockFrameRate();
 
             const auto drawTile = [&](u32 x, u32 y) {
@@ -213,6 +222,15 @@ namespace hex::plugin::builtin {
                     }, ImGui::GetColorU32(ImGuiCol_Text, 0.1F)
                 );
             };
+
+            // TODO: copied from below. Wrong place!
+            for (u32 x = 0; x < u32(tileCount.x); x += 1) {
+                for (u32 y = 0; y < u32(tileCount.y); y += 1) {
+                    if (life.get(x, y)) {
+                        drawTile(x, y);
+                    }                        
+                }
+            }
 
             if (colTile.has_value()) {
                 drawTile(colTile->x, colTile->y);
@@ -234,6 +252,8 @@ namespace hex::plugin::builtin {
             static double lastTick = 0;
             double tick = ImGui::GetTime();
             if (lastTick + 0.2 < tick) {
+                life.tick(); // TODO: wrong place!
+
                 Segment nextSegment = segments.front();
                 switch (direction) {
                     case ImGuiDir_Up:       nextSegment.y -= 1; break;
