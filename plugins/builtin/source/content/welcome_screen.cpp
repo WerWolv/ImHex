@@ -213,7 +213,7 @@ namespace hex::plugin::builtin {
                 life.resize(intTileCountX, intTileCountY);
             }
             static u32 leftAtlCount = 0;
-            if (ImGui::IsKeyPressed(ImGuiKey_LeftAlt, false)) {
+            if (ImGui::IsKeyPressed(ImGuiKey_Tab, false)) {
                 leftAtlCount += 1;
 
                 if (leftAtlCount >= 5) {
@@ -241,27 +241,31 @@ namespace hex::plugin::builtin {
                 );
             };
 
-            for (u32 x = 0; x < u32(tileCount.x+0.5); x += 1) {
-                for (u32 y = 0; y < u32(tileCount.y+0.5); y += 1) {
-                    if (life.get(x, y)) {
-                        drawTile(x, y);
-                    }                        
+            if (s_lifeActive) {
+                for (u32 x = 0; x < u32(tileCount.x+0.5); x += 1) {
+                    for (u32 y = 0; y < u32(tileCount.y+0.5); y += 1) {
+                        if (life.get(x, y)) {
+                            drawTile(x, y);
+                        }                        
+                    }
                 }
             }
 
-            if (colTile.has_value()) {
-                drawTile(colTile->x, colTile->y);
-            }
+            if (s_snakeActive) {
+                if (colTile.has_value()) {
+                    drawTile(colTile->x, colTile->y);
+                }
 
-            for (const auto &[x, y] : segments) {
-                drawTile(x, y);
-            }
+                for (const auto &[x, y] : segments) {
+                    drawTile(x, y);
+                }
 
-            if (s_snakeActive && overCounter != 0) {
-                for (u32 x = 0; x < u32(tileCount.x); x += 1) {
-                    for (u32 y = 0; y < u32(tileCount.y); y += 1) {
-                        if ((x + y) % 2 == u32(overCounter % 2))
-                            drawTile(x, y);
+                if (s_snakeActive && overCounter != 0) {
+                    for (u32 x = 0; x < u32(tileCount.x); x += 1) {
+                        for (u32 y = 0; y < u32(tileCount.y); y += 1) {
+                            if ((x + y) % 2 == u32(overCounter % 2))
+                                drawTile(x, y);
+                        }
                     }
                 }
             }
@@ -269,35 +273,39 @@ namespace hex::plugin::builtin {
             static double lastTick = 0;
             double tick = ImGui::GetTime();
             if (lastTick + 0.2 < tick) {
-                life.tick(); // TODO: wrong place!
-
-                Segment nextSegment = segments.front();
-                switch (direction) {
-                    case ImGuiDir_Up:       nextSegment.y -= 1; break;
-                    case ImGuiDir_Down:     nextSegment.y += 1; break;
-                    case ImGuiDir_Left:     nextSegment.x -= 1; break;
-                    case ImGuiDir_Right:    nextSegment.x += 1; break;
-                    default: break;
+                if (s_lifeActive) {
+                    life.tick();
                 }
 
-                if (overCounter == 0) {
-                    for (const auto &segment : segments) {
-                        if (segment == nextSegment) overCounter = 5;
-                        if (segment.x < 0 || segment.y < 0) overCounter = 5;
-                        if (segment.x > i32(tileCount.x) || segment.y > i32(tileCount.y)) overCounter = 5;
+                if (s_snakeActive) {
+                    Segment nextSegment = segments.front();
+                    switch (direction) {
+                        case ImGuiDir_Up:       nextSegment.y -= 1; break;
+                        case ImGuiDir_Down:     nextSegment.y += 1; break;
+                        case ImGuiDir_Left:     nextSegment.x -= 1; break;
+                        case ImGuiDir_Right:    nextSegment.x += 1; break;
+                        default: break;
                     }
 
-                    segments.push_front(nextSegment);
+                    if (overCounter == 0) {
+                        for (const auto &segment : segments) {
+                            if (segment == nextSegment) overCounter = 5;
+                            if (segment.x < 0 || segment.y < 0) overCounter = 5;
+                            if (segment.x > i32(tileCount.x) || segment.y > i32(tileCount.y)) overCounter = 5;
+                        }
 
-                    if (colTile.has_value() && nextSegment != *colTile) {
-                        segments.pop_back();
+                        segments.push_front(nextSegment);
+
+                        if (colTile.has_value() && nextSegment != *colTile) {
+                            segments.pop_back();
+                        } else {
+                            colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.x)) };
+                        }
                     } else {
-                        colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.x)) };
-                    }
-                } else {
-                    overCounter -= 1;
-                    if (overCounter <= 0) {
-                        s_snakeActive = false;
+                        overCounter -= 1;
+                        if (overCounter <= 0) {
+                            s_snakeActive = false;
+                        }
                     }
                 }
 
