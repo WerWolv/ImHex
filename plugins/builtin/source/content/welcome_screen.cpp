@@ -206,9 +206,9 @@ namespace hex::plugin::builtin {
             }
 
             // For Conway's Game of Life easter egg
-            static Life life(std::ceil(tileCount.x), std::ceil(tileCount.y));
-            int intTileCountX = std::ceil(tileCount.x);
-            int intTileCountY = std::ceil(tileCount.y);
+            static Life life(std::floor(tileCount.x), std::floor(tileCount.y));
+            int intTileCountX = std::floor(tileCount.x);
+            int intTileCountY = std::floor(tileCount.y);
             if (intTileCountX>life.width() || intTileCountY>life.height()) {
                 life.resize(intTileCountX, intTileCountY);
             }
@@ -218,7 +218,7 @@ namespace hex::plugin::builtin {
 
                 if (leftAtlCount >= 5) {
                     leftAtlCount = 0;
-                    life.load("ob3o$o4bo$obobo$bo2bo!", 45, 25);
+                    life.load("ob3o$o4bo$obobo$bo2bo!", 22, 25);
                     s_lifeActive = true;
                 }
             }
@@ -288,10 +288,13 @@ namespace hex::plugin::builtin {
                     }
 
                     if (overCounter == 0) {
-                        for (const auto &segment : segments) {
-                            if (segment == nextSegment) overCounter = 5;
-                            if (segment.x < 0 || segment.y < 0) overCounter = 5;
-                            if (segment.x > i32(tileCount.x) || segment.y > i32(tileCount.y)) overCounter = 5;
+                        if (nextSegment.x < 0 || nextSegment.y < 0)
+                            overCounter = 5;
+                        else if (nextSegment.x >= i32(tileCount.x) || nextSegment.y >= i32(tileCount.y))
+                            overCounter = 5;
+                        else {
+                            for (const auto &segment : segments)
+                                if (segment == nextSegment) overCounter = 5;
                         }
 
                         segments.push_front(nextSegment);
