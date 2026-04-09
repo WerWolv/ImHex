@@ -220,7 +220,8 @@ namespace hex::plugin::builtin {
                 if (leftAtlCount >= 5) {
                     leftAtlCount = 0;
                     //life.load("ob3o$o4bo$obobo$bo2bo!", 22, 25);
-                    life.load(life::getPattern(0), 10, 7);
+                    //life.load(life::getPattern(0), 10, 7);
+                    life.load(life::getPattern(1), 35, 3);
                     s_lifeActive = true;
                 }
             }
