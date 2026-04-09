@@ -115,11 +115,10 @@ void Life::tick() {
 }
 
 void Life::_set(int x, int y, int diff, size_t buffer) {
-    int xmin = std::max(0, x - 1);
-    int xmax = std::min(m_width - 1, x + 1);
-
-    int ymin = std::max(0, y - 1);
-    int ymax = std::min(m_height - 1, y + 1);
+    const int xmin = std::max(0, x - 1);
+    const int xmax = std::min(m_width - 1, x + 1);
+    const int ymin = std::max(0, y - 1);
+    const int ymax = std::min(m_height - 1, y + 1);
 
     for (int yy = ymin; yy <= ymax; ++yy) {
         for (int xx = xmin; xx <= xmax; ++xx) {

@@ -584,7 +584,12 @@ namespace hex::plugin::builtin {
                                     ImGui::PopStyleVar();
 
                                 static bool hovered = false;
-                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                if (isEaster()) {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+                                }
+                                else {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                }
                                 {
                                     const auto &quickSettings = ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles();
                                     if (!quickSettings.empty()) {
