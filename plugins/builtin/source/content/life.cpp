@@ -9,7 +9,7 @@
 #include <utility>
 #include <algorithm>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::builtin::life  {
 
 Life::Life(int width, int height) :
     m_width(width), m_height(height),
@@ -73,6 +73,9 @@ void Life::load(std::string_view s, int x, int y, bool erase) {
 
         case '!':
             return;
+
+        case '\n':
+            break;
 
         default:
             return; // illegal char

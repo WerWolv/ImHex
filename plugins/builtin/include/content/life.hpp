@@ -8,7 +8,7 @@
 #include <vector>
 #include <string_view>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::builtin::life  {
 
 class Life {
 public:

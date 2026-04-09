@@ -34,6 +34,7 @@ add_imhex_plugin(
         source/content/main_menu_items.cpp
         source/content/welcome_screen.cpp
         source/content/life.cpp
+        source/content/life_patterns.cpp
         source/content/data_visualizers.cpp
         source/content/events.cpp
         source/content/global_actions.cpp

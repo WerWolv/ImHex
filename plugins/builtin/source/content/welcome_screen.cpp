@@ -47,6 +47,7 @@
 #include <fonts/fonts.hpp>
 
 #include <content/life.hpp> // Conway's Game of Life
+#include <content/life_patterns.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -206,10 +207,10 @@ namespace hex::plugin::builtin {
             }
 
             // For Conway's Game of Life easter egg
-            static Life life(std::floor(tileCount.x), std::floor(tileCount.y));
+            static life::Life life(std::floor(tileCount.x), std::floor(tileCount.y));
             int intTileCountX = std::floor(tileCount.x);
             int intTileCountY = std::floor(tileCount.y);
-            if (intTileCountX>life.width() || intTileCountY>life.height()) {
+            if (intTileCountX!=life.width() || intTileCountY!=life.height()) {
                 life.resize(intTileCountX, intTileCountY);
             }
             static u32 leftAtlCount = 0;
@@ -218,7 +219,8 @@ namespace hex::plugin::builtin {
 
                 if (leftAtlCount >= 5) {
                     leftAtlCount = 0;
-                    life.load("ob3o$o4bo$obobo$bo2bo!", 22, 25);
+                    //life.load("ob3o$o4bo$obobo$bo2bo!", 22, 25);
+                    life.load(life::getPattern(0), 10, 7);
                     s_lifeActive = true;
                 }
             }
