@@ -49,6 +49,9 @@ void Life::load(std::string_view s, int x, int y, bool erase) {
         auto [ptr, ec] = std::from_chars(s.data() + i, s.data() + s.size(), reps);
         if (ec == std::errc{}) {
             i = ptr - s.data();
+            if (i >= s.size()) {
+                return; // rle count with nothing after it
+            }
         }
 
         char ch = *ptr;
@@ -65,7 +68,7 @@ void Life::load(std::string_view s, int x, int y, bool erase) {
 
         case '$':
             xx = x;
-            ++yy;
+            yy += reps;
             break;
 
         case '!':
