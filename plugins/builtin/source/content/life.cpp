@@ -15,17 +15,17 @@ Life::Life(int width, int height) :
     m_width(width), m_height(height),
     m_currentBuffer(0),
     m_otherBuffer(width * height),
-    m_world(width * height * 2)
+    m_petriDish(width * height * 2)
 {
 }
 
 void Life::resize(int width, int height) {
-    std::vector<int> resized(width*height*2);
+    PetriDishType resized(width*height*2);
 
     const size_t other = width*height;
     for (int y=0; y<std::min(height, m_height); ++y) {
         for (int x=0; x<std::min(width, m_width); ++x) {
-            resized[x + y*width] = m_world[m_currentBuffer + x + y*m_width];
+            resized[x + y*width] = m_petriDish[m_currentBuffer + x + y*m_width];
         }
     }
 
@@ -33,7 +33,7 @@ void Life::resize(int width, int height) {
     m_height = height;
     m_currentBuffer = 0;
     m_otherBuffer = other;
-    m_world = std::move(resized);
+    m_petriDish = std::move(resized);
 }
 
 void Life::load(std::string_view s, int x, int y, bool erase) {
@@ -41,7 +41,7 @@ void Life::load(std::string_view s, int x, int y, bool erase) {
     int yy = y;
 
     if (erase) {
-        memset(&m_world[m_currentBuffer], 0, sizeof(int) * m_width * m_height);
+        memset(&m_petriDish[m_currentBuffer], 0, sizeof(CellType) * m_width * m_height);
     }
 
     for (size_t i = 0; i < s.size(); ++i) {
@@ -95,7 +95,7 @@ void Life::death(int x, int y) {
 void Life::tick() {
     for (int y = 0; y < m_height; ++y) {
         for (int x = 0; x < m_width; ++x) {
-            int cell = m_world[m_currentBuffer + x + y * m_width];
+            int cell = m_petriDish[m_currentBuffer + x + y * m_width];
             int neighbours = cell & 0x7f;
 
             if (cell & 0x80) {
@@ -113,7 +113,7 @@ void Life::tick() {
         }
     }
 
-    memset(&m_world[m_currentBuffer], 0, sizeof(int) * m_width * m_height);
+    memset(&m_petriDish[m_currentBuffer], 0, sizeof(CellType) * m_width * m_height);
     std::swap(m_currentBuffer, m_otherBuffer);
 }
 
@@ -125,11 +125,11 @@ void Life::_set(int x, int y, int diff, size_t buffer) {
 
     for (int yy = ymin; yy <= ymax; ++yy) {
         for (int xx = xmin; xx <= xmax; ++xx) {
-            m_world[buffer + xx + yy * m_width] += diff;
+            m_petriDish[buffer + xx + yy * m_width] += diff;
         }
     }
 
-    int& cell = m_world[buffer + x + y * m_width];
+    CellType &cell = m_petriDish[buffer + x + y * m_width];
     cell = (cell & 0x7f) | (diff == 1 ? 0x80 : 0x00);
 }
 

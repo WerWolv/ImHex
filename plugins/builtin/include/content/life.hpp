@@ -27,7 +27,7 @@ public:
 
     bool get(int x, int y) {
         if ((x >= 0 && x < m_width) && (y >= 0 && y < m_height)) {
-            return m_world[m_currentBuffer + x + y*m_width] & 0x80;
+            return m_petriDish[m_currentBuffer + x + y*m_width] & 0x80;
         }
 
         return false;
@@ -44,7 +44,10 @@ private:
     int m_height;
     size_t m_currentBuffer;
     size_t m_otherBuffer;
-    std::vector<int> m_world;
+
+    using CellType = unsigned char;
+    using PetriDishType = std::vector<CellType>;
+    PetriDishType m_petriDish;
 };
 
 }
