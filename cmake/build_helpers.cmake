@@ -530,6 +530,10 @@ function(configureProject)
             message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
+
+    if (APPLE)
+        addCCXXFlag("-Wno-#warnings")
+    endif()
 endfunction()
 
 macro(setDefaultBuiltTypeIfUnset)
@@ -782,7 +786,6 @@ macro(setupCompilerFlags target)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND APPLE)
         addCCXXFlag("-Wno-unknown-warning-option" ${target})
-        addCCXXFlag("-Wno-#warnings" ${target})
 
         # On macOS, when using clang from Homebrew, properly setup the libc++ library path so
         # it's using the one from Homebrew instead of the system one.
