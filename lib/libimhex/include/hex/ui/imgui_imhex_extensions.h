@@ -178,8 +178,15 @@ namespace ImGuiExt {
         } styles;
     };
 
+    struct ImGuiExColorMod {
+        ImGuiCol    Col;
+        ImVec4      BackupValue;
+    };
+
     struct ImGuiExtContext {
         ImHexCustomData Data;
+
+        ImVector<ImGuiExColorMod> ColorStack;
     };
 
     inline ImGuiExtContext& GetContext() {
@@ -196,7 +203,7 @@ namespace ImGuiExt {
 
     void PushCustomColor(ImGuiCustomCol idx, ImU32 col);
     void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col);
-    void PopCustomColor(int count);
+    void PopCustomColor(int count = 1);
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);

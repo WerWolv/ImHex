@@ -685,15 +685,37 @@ namespace ImGuiExt {
     }
 
     void PushCustomColor(ImGuiCustomCol idx, ImU32 col) {
-        (void)idx; (void)col;
+        ImGuiExtContext &g = GetContext();
+        ImGuiExColorMod backup;
+        backup.Col = idx;
+        backup.BackupValue = g.Data.Colors[idx];
+        g.ColorStack.push_back(backup);
+        g.Data.Colors[idx] = ColorConvertU32ToFloat4(col);
     }
 
     void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col) {
-        (void)idx; (void)col;
+        ImGuiExtContext &g = GetContext();
+        ImGuiExColorMod backup;
+        backup.Col = idx;
+        backup.BackupValue = g.Data.Colors[idx];
+        g.ColorStack.push_back(backup);
+        g.Data.Colors[idx] = col;
     }
 
     void PopCustomColor(int count) {
-        (void)count;
+         ImGuiExtContext &g = GetContext();
+        if (g.ColorStack.Size < count)
+        {
+            IM_ASSERT_USER_ERROR(0, "Calling ImGUiExt::PopCustomColor() too many times!");
+            count = g.ColorStack.Size;
+        }
+        while (count > 0)
+        {
+            ImGuiExColorMod &backup = g.ColorStack.back();
+            g.Data.Colors[backup.Col] = backup.BackupValue;
+            g.ColorStack.pop_back();
+            count--;
+        }
     }
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
