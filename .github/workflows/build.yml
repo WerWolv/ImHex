@@ -430,7 +430,7 @@ jobs:
         # Make brew not display useless errors
         HOMEBREW_TESTS: 1
       run: |
-        brew install llvm@21 automake
+        brew install llvm automake
         sudo -E port install mbedtls3 nlohmann-json ccache freetype libmagic pkgconfig curl glfw ninja zlib xz bzip2 zstd libssh2 md4c
 
     - name: ⬇️ Install .NET
@@ -444,15 +444,15 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=$(brew --prefix llvm@21)/bin/clang                                                       \
-        CXX=$(brew --prefix llvm@21)/bin/clang++                                                    \
-        OBJC=$(brew --prefix llvm@21)/bin/clang                                                     \
-        OBJCXX=$(brew --prefix llvm@21)/bin/clang++                                                 \
+        CC=$(brew --prefix llvm)/bin/clang                                                          \
+        CXX=$(brew --prefix llvm)/bin/clang++                                                       \
+        OBJC=$(brew --prefix llvm)/bin/clang                                                        \
+        OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15                                                       \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
-          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm@21)/lib;$(brew --prefix llvm@21)/lib/unwind;$(brew --prefix llvm@21)/lib/c++;$(brew --prefix)/lib" \
+          -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
