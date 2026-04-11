@@ -15,6 +15,10 @@ const char* patterns[] = {
     "bo16b3o$o5bo10b5o$o5bo9b2ob3o$5obo10b2o2$4b2o8bo$2bo4bo5bo$bo11bo4bo$b"
     "o5bo5b5o$b6o7$3bo$bo3bo$o$o4bo9b6o$5o10bo5b2o$15bo5bob2o$5b2o9bo3bo$5b"
     "2o11bo$17b2o$6b2o8b4o$4bo4bo5b2ob2o$3bo12b2o$3bo5bo$3b6o!"
+    ,
+    // Glider gun
+    "25bo$22b4o4bo$13bo7b4o5bo$12bobo6bo2bo9b2o$11bo3b2o4b4o9b2o$2o9bo3b2o"
+    "5b4o$2o9bo3b2o8bo$12bobo$13bo!"
 };
 
 } // namespace {

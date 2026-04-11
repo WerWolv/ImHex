@@ -221,7 +221,8 @@ namespace hex::plugin::builtin {
                     leftAtlCount = 0;
                     //life.load("ob3o$o4bo$obobo$bo2bo!", 22, 25);
                     //life.load(life::getPattern(0), 10, 7);
-                    life.load(life::getPattern(1), 35, 3);
+                    //life.load(life::getPattern(1), 35, 3);
+                    life.load(life::getPattern(2), 0, 10);
                     s_lifeActive = true;
                 }
             }
