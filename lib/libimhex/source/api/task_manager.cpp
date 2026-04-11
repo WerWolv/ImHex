@@ -332,6 +332,7 @@ namespace hex {
                         }
                     } catch (const Task::TaskInterruptor &) {
                         // Handle the task being interrupted by user request
+                        log::debug("Task '{}' was interrupted", task->m_unlocalizedName.get());
                         task->interruption();
                     } catch (const std::exception &e) {
                         log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());

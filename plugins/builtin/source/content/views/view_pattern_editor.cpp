@@ -1402,29 +1402,33 @@ namespace hex::plugin::builtin {
             *m_executionDone = true;
         }
 
-        if (m_shouldAnalyze) {
-            m_shouldAnalyze = false;
+        if (m_shouldAnalyze.get(provider)) {
 
-            m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](Task &task) {
-                if (!m_suggestSupportedPatterns)
-                    return;
+            if (m_analysisTask.isRunning())
+                m_analysisTask.interrupt();
+            else {
+                m_shouldAnalyze.get(provider) = false;
+                m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](Task &task) {
+                    if (!m_suggestSupportedPatterns)
+                        return;
 
-                auto foundPatterns = magic::findViablePatterns(provider, &task);
+                    auto foundPatterns = magic::findViablePatterns(provider, &task);
 
-                if (!foundPatterns.empty()) {
-                    std::scoped_lock lock(m_possiblePatternFilesMutex);
+                    if (!foundPatterns.empty()) {
+                        std::scoped_lock lock(m_possiblePatternFilesMutex);
 
-                    auto &possiblePatterns = m_possiblePatternFiles.get(provider);
+                        auto &possiblePatterns = m_possiblePatternFiles.get(provider);
 
-                    possiblePatterns = std::move(foundPatterns);
+                        possiblePatterns = std::move(foundPatterns);
 
-                    if (m_autoApplyPatterns && possiblePatterns.size() == 1) {
-                        loadPatternFile(possiblePatterns.front().patternFilePath, provider, false);
-                    } else {
-                        PopupAcceptPattern::open(this);
+                        if (m_autoApplyPatterns && possiblePatterns.size() == 1) {
+                            loadPatternFile(possiblePatterns.front().patternFilePath, provider, false);
+                        } else {
+                            PopupAcceptPattern::open(this);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         {
@@ -1459,6 +1463,7 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
+                    m_runningParsers += 1;
                     m_hasUnevaluatedChanges.get(provider) = false;
             }
 
@@ -1470,8 +1475,16 @@ namespace hex::plugin::builtin {
                 interrupt();
             else if (m_runningHighlighters == 0 && m_changesWereParsed && !m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setViewPatternEditor(this);
+                bool restoreInterruptState = false;
+                if (interrupted()) {
+                    restoreInterruptState = true;
+                    resetInterrupt();
+                }
                 m_textHighlighter.get(provider).updateRequiredInputs();
+                if (restoreInterruptState)
+                    interrupt();
                 TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_textHighlighter.get(provider).highlightSourceCode(); });
+                m_runningHighlighters += 1;
             } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_textHighlighter.get(provider).setRequestedIdentifierColors();
                 m_allStepsCompleted = true;
@@ -1649,7 +1662,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code, prv::Provider *provider) {
-        m_runningParsers += 1;
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
         const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
