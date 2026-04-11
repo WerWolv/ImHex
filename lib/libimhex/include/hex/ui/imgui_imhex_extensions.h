@@ -172,17 +172,35 @@ namespace ImGuiExt {
 
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
-        float Styles[ImGuiCustomStyle_COUNT] = {};
+        
+        struct Styles_ {
+            float WindowBlur = 0.0F;
+            float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
+        } Styles;
+    };
+
+     enum class StyleType {
+            Float,
+            ImVec2
+        };
+
+    struct StyleTypeRef {
+        StyleType StyleType;
+        size_t Size;
+        size_t Offset;
+    };
+
+    struct ImGuiExStyleMod {
+        StyleTypeRef Ref;
+        union {
+            float FloatValue;
+            ImVec2 ImVec2Value;
+        } Backup;
     };
 
     struct ImGuiExColorMod {
         ImGuiCol    Col;
         ImVec4      BackupValue;
-    };
-
-    struct ImGuiExStyleMod {
-        ImGuiCustomStyle    Style;
-        float               BackupValue;
     };
 
     struct ImGuiExtContext {

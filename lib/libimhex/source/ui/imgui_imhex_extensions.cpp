@@ -18,6 +18,7 @@
 #include <string>
 #include <algorithm>
 #include <numbers>
+#include <type_traits>
 
 #include <hex/api/imhex_api/system.hpp>
 
@@ -30,6 +31,24 @@ namespace ImGuiExt {
     using namespace ImGui;
 
     namespace {
+
+        template <class T>
+        inline constexpr bool always_false = false;
+
+        template <typename Class, typename Member>
+        constexpr StyleTypeRef toStyleRef(Member Class::*member)
+        {
+            const size_t off = reinterpret_cast<size_t>(&(reinterpret_cast<Class const volatile*>(0)->*member));
+            if constexpr (std::is_same_v<Member, float>) return {StyleType::Float, sizeof(Member), off};
+            else if constexpr (std::is_same_v<Member, ImVec2>) return {StyleType::ImVec2, sizeof(Member), off};
+            else
+                static_assert(always_false<Member>, "Unsupported type");
+        };
+
+        const StyleTypeRef s_StyleLocations[] = {
+            toStyleRef(&ImHexCustomData::Styles_::WindowBlur),
+            toStyleRef(&ImHexCustomData::Styles_::PopupWindowAlpha)
+        };
 
         bool isOpenGLExtensionSupported(const char *name) {
             static std::set<std::string> extensions;
@@ -721,8 +740,12 @@ namespace ImGuiExt {
     void PushStyle(ImGuiCustomStyle idx, float val) {
         ImGuiExtContext &g = GetContext();
         ImGuiExStyleMod backup;
-        backup.Style = idx;
-        backup.BackupValue = g.Data.Styles[idx];
+        backup.Ref = s_StyleLocations[idx];
+        if (backup.Ref.StyleType != StyleType::Float) {
+            assert(!"ImGuiExt::PushStyle: idx is not a float style");
+            return;
+        }
+        backup.Backup.FloatValue = val;
         g.StyleStack.push_back(backup);
         g.Data.Styles[idx] = val;
     }
@@ -737,7 +760,7 @@ namespace ImGuiExt {
         while (count > 0)
         {
             ImGuiExStyleMod &backup = g.StyleStack.back();
-            g.Data.Styles[backup.Style] = backup.BackupValue;
+            memcpy(&g.Data.Styles, &backup.Backup, backup.Ref.Size);
             g.StyleStack.pop_back();
             count--;
         }
