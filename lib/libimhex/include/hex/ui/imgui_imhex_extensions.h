@@ -178,14 +178,28 @@ namespace ImGuiExt {
         } styles;
     };
 
-    ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
-    ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
+    struct ImGuiExtContext {
+        ImHexCustomData Data;
+    };
+
+    inline ImGuiExtContext& GetContext() {
+        return *static_cast<ImGuiExtContext *>(ImGui::GetIO().UserData);
+    }
+
+    inline ImHexCustomData& GetCustomData() {
+        return GetContext().Data;
+    }
 
     inline ImHexCustomData::Styles& GetCustomStyle() {
-        auto &customData = *static_cast<ImHexCustomData *>(ImGui::GetIO().UserData);
-
-        return customData.styles;
+        return GetCustomData().styles;
     }
+
+    void PushCustomColor(ImGuiCustomCol idx, ImU32 col);
+    void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col);
+    void PopCustomColor(int count);
+
+    ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
+    ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
     float GetCustomStyleFloat(ImGuiCustomStyle idx);
     ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx);
