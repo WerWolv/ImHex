@@ -396,10 +396,9 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto &style = ImGuiExt::GetCustomStyle();
                 const static ThemeManager::StyleMap ImHexStyleMap = {
-                        { "window-blur",    { .value=&style.WindowBlur,    .min=0.0F,   .max=1.0F,   .needsScaling=true } },
-                        { "popup-alpha",            { .value=&style.PopupWindowAlpha,          .min=0.0F,   .max=1.0F,    .needsScaling=false } },
+                        { "window-blur",    { .value=&ImGuiExt::GetCustomStyle(ImGuiCustomStyle_WindowBlur), .min=0.0F,  .max=1.0F, .needsScaling=true } },
+                        { "popup-alpha",    { .value=&ImGuiExt::GetCustomStyle(ImGuiCustomStyle_PopupWindowAlpha), .min=0.0F, .max=1.0F, .needsScaling=false } },
                 };
 
                 ThemeManager::addStyleHandler("imhex", ImHexStyleMap);

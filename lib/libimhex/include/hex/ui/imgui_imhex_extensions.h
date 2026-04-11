@@ -63,6 +63,7 @@ enum ImGuiCustomCol : int {
 
 enum ImGuiCustomStyle {
     ImGuiCustomStyle_WindowBlur,
+    ImGuiCustomStyle_PopupWindowAlpha,
 
     ImGuiCustomStyle_COUNT
 };
@@ -171,11 +172,7 @@ namespace ImGuiExt {
 
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
-
-        struct Styles {
-            float WindowBlur = 0.0F;
-            float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
-        } styles;
+        float Styles[ImGuiCustomStyle_COUNT] = {};
     };
 
     struct ImGuiExColorMod {
@@ -183,10 +180,17 @@ namespace ImGuiExt {
         ImVec4      BackupValue;
     };
 
+    struct ImGuiExStyleMod {
+        ImGuiCustomStyle    Style;
+        float               BackupValue;
+    };
+
     struct ImGuiExtContext {
         ImHexCustomData Data;
 
+        // Stacks
         ImVector<ImGuiExColorMod> ColorStack;
+        ImVector<ImGuiExStyleMod> StyleStack;
     };
 
     inline ImGuiExtContext& GetContext() {
@@ -197,19 +201,17 @@ namespace ImGuiExt {
         return GetContext().Data;
     }
 
-    inline ImHexCustomData::Styles& GetCustomStyle() {
-        return GetCustomData().styles;
-    }
-
     void PushCustomColor(ImGuiCustomCol idx, ImU32 col);
     void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col);
     void PopCustomColor(int count = 1);
 
+    void PushStyle(ImGuiCustomCol idx, float val);
+    void PopStyle(int count = 1);
+
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
-    float GetCustomStyleFloat(ImGuiCustomStyle idx);
-    ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx);
+    float& GetCustomStyle(ImGuiCustomStyle idx);
 
     void StyleCustomColorsDark();
     void StyleCustomColorsLight();

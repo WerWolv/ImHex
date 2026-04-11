@@ -703,7 +703,7 @@ namespace ImGuiExt {
     }
 
     void PopCustomColor(int count) {
-         ImGuiExtContext &g = GetContext();
+        ImGuiExtContext &g = GetContext();
         if (g.ColorStack.Size < count)
         {
             IM_ASSERT_USER_ERROR(0, "Calling ImGUiExt::PopCustomColor() too many times!");
@@ -714,6 +714,31 @@ namespace ImGuiExt {
             ImGuiExColorMod &backup = g.ColorStack.back();
             g.Data.Colors[backup.Col] = backup.BackupValue;
             g.ColorStack.pop_back();
+            count--;
+        }
+    }
+
+    void PushStyle(ImGuiCustomStyle idx, float val) {
+        ImGuiExtContext &g = GetContext();
+        ImGuiExStyleMod backup;
+        backup.Style = idx;
+        backup.BackupValue = g.Data.Styles[idx];
+        g.StyleStack.push_back(backup);
+        g.Data.Styles[idx] = val;
+    }
+
+    void PopStyle(int count) {
+        ImGuiExtContext &g = GetContext();
+        if (g.StyleStack.Size < count)
+        {
+            IM_ASSERT_USER_ERROR(0, "Calling ImGUiExt::PopStyle() too many times!");
+            count = g.StyleStack.Size;
+        }
+        while (count > 0)
+        {
+            ImGuiExStyleMod &backup = g.StyleStack.back();
+            g.Data.Styles[backup.Style] = backup.BackupValue;
+            g.StyleStack.pop_back();
             count--;
         }
     }
@@ -732,20 +757,9 @@ namespace ImGuiExt {
         return c;
     }
 
-    float GetCustomStyleFloat(ImGuiCustomStyle idx) {
+    float& GetCustomStyle(ImGuiCustomStyle idx) {
         auto &customData = GetCustomData();
-
-        switch (idx) {
-            case ImGuiCustomStyle_WindowBlur:
-                return customData.styles.WindowBlur;
-            default:
-                return 0.0F;
-        }
-    }
-
-    ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
-        std::ignore = idx;
-        return {};
+        return customData.Styles[idx];
     }
 
     void StyleCustomColorsDark() {

@@ -618,7 +618,7 @@ namespace hex {
                     );
 
                 if (setWindowCompositionAttribute != nullptr) {
-                    ACCENTPOLICY policy = { ImGuiExt::GetCustomStyle().WindowBlur > 0.5F ? 4U : 0U, 0, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_BlurBackground), 0 };
+                    ACCENTPOLICY policy = { ImGuiExt::GetCustomStyle(ImGuiCustomStyle_WindowBlur) > 0.5F ? 4U : 0U, 0, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_BlurBackground), 0 };
                     WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) };
                     setWindowCompositionAttribute(hwnd, &data);
                 }
