@@ -530,6 +530,10 @@ function(configureProject)
             message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
+
+    if (APPLE)
+        addCCXXFlag("-Wno-#warnings")
+    endif()
 endfunction()
 
 macro(setDefaultBuiltTypeIfUnset)
