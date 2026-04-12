@@ -645,12 +645,20 @@ namespace hex::ui {
                 ImGui::TableSetupScrollFreeze(0, 2);
 
                 // Row address column
+                u64 maxAddress = m_provider->getActualSize();
+                if (maxAddress > 0)
+                    maxAddress--;
+                if ((m_scrollPosition + m_visibleRowCount) * bytesPerRow < maxAddress)
+                    maxAddress = (m_scrollPosition + m_visibleRowCount) * bytesPerRow;
+
+                if (maxAddress + m_provider->getCurrentPageAddress() < std::numeric_limits<u64>::max() - m_provider->getBaseAddress())
+                    maxAddress += m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                else
+                    maxAddress = std::numeric_limits<u64>::max();
+
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
-                    CharacterSize.x * std::max(
-                        fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress()),
-                        m_separatorStride == 0 ? 0 : fmt::formatted_size("{} {}", "hex.ui.common.segment"_lang, (m_scrollPosition + m_visibleRowCount) * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() / m_separatorStride)
-                    )
+                    CharacterSize.x * std::max(fmt::formatted_size("{:08X}: ", maxAddress),m_separatorStride == 0 ? 0 : fmt::formatted_size("{} {}", "hex.ui.common.segment"_lang, maxAddress / m_separatorStride))
                 );
                 ImGui::TableSetupColumn("");
 
