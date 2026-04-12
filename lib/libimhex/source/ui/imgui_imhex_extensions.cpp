@@ -25,6 +25,7 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <wolv/utils/variant_type_index.hpp>
 
 namespace ImGuiExt {
 
@@ -32,23 +33,29 @@ namespace ImGuiExt {
 
     namespace {
 
-        template <class T>
-        inline constexpr bool always_false = false;
-
         template <typename Class, typename Member>
         constexpr StyleTypeRef toStyleRef(Member Class::*member)
         {
             const size_t off = reinterpret_cast<size_t>(&(reinterpret_cast<Class const volatile*>(0)->*member));
-            if constexpr (std::is_same_v<Member, float>) return {StyleType::Float, sizeof(Member), off};
-            else if constexpr (std::is_same_v<Member, ImVec2>) return {StyleType::ImVec2, sizeof(Member), off};
-            else
-                static_assert(always_false<Member>, "Unsupported type");
+            return {wolv::util::VariantTypeIndex<Member, StyleVariantType>, off};
         };
 
         const StyleTypeRef s_StyleLocations[] = {
             toStyleRef(&ImHexCustomData::Styles_::WindowBlur),
             toStyleRef(&ImHexCustomData::Styles_::PopupWindowAlpha)
         };
+
+        template <typename V>
+        inline V& getStyleValue(ImGuiExtContext &g, const StyleTypeRef &ref) {
+            V &value = *reinterpret_cast<V*>(reinterpret_cast<char*>(&g.Data.Styles)+ref.Offset);
+            return value;
+        }
+
+        template <typename V>
+        inline void writeStyleValue(ImGuiExtContext &g, const StyleTypeRef &ref, const V &val) {
+            V &value = getStyleValue<V>(g, ref);
+            value = val;
+        }
 
         bool isOpenGLExtensionSupported(const char *name) {
             static std::set<std::string> extensions;
@@ -741,13 +748,26 @@ namespace ImGuiExt {
         ImGuiExtContext &g = GetContext();
         ImGuiExStyleMod backup;
         backup.Ref = s_StyleLocations[idx];
-        if (backup.Ref.StyleType != StyleType::Float) {
+        if (backup.Ref.VariantIndex != wolv::util::VariantTypeIndex<float, StyleVariantType>) {
             assert(!"ImGuiExt::PushStyle: idx is not a float style");
             return;
         }
-        backup.Backup.FloatValue = val;
+        backup.BackupValue = getStyleValue<float>(g, backup.Ref);
         g.StyleStack.push_back(backup);
-        g.Data.Styles[idx] = val;
+        writeStyleValue(g, backup.Ref, val);
+    }
+
+    void PushStyle(ImGuiCustomStyle idx, const ImVec2 &val) {
+        ImGuiExtContext &g = GetContext();
+        ImGuiExStyleMod backup;
+        backup.Ref = s_StyleLocations[idx];
+        if (backup.Ref.VariantIndex != wolv::util::VariantTypeIndex<ImVec2, StyleVariantType>) {
+            assert(!"ImGuiExt::PushStyle: idx is not an ImVec2 style");
+            return;
+        }
+        backup.BackupValue = getStyleValue<ImVec2>(g, backup.Ref);
+        g.StyleStack.push_back(backup);
+        writeStyleValue(g, backup.Ref, val);
     }
 
     void PopStyle(int count) {
@@ -760,7 +780,7 @@ namespace ImGuiExt {
         while (count > 0)
         {
             ImGuiExStyleMod &backup = g.StyleStack.back();
-            memcpy(&g.Data.Styles, &backup.Backup, backup.Ref.Size);
+            writeStyleValue(g, backup.Ref, std::get<float>(backup.BackupValue));
             g.StyleStack.pop_back();
             count--;
         }
@@ -781,8 +801,8 @@ namespace ImGuiExt {
     }
 
     float& GetCustomStyle(ImGuiCustomStyle idx) {
-        auto &customData = GetCustomData();
-        return customData.Styles[idx];
+        ImGuiExtContext &g = GetContext();
+        return getStyleValue<float>(g, s_StyleLocations[idx]);
     }
 
     void StyleCustomColorsDark() {

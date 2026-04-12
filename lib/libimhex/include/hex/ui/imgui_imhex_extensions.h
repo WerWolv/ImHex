@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <string>
 #include <span>
+#include <variant>
 
 #include <imgui.h>
 
@@ -179,23 +180,16 @@ namespace ImGuiExt {
         } Styles;
     };
 
-     enum class StyleType {
-            Float,
-            ImVec2
-        };
+    using StyleVariantType = std::variant<float, ImVec2>;
 
     struct StyleTypeRef {
-        StyleType StyleType;
-        size_t Size;
+        size_t VariantIndex;
         size_t Offset;
     };
 
     struct ImGuiExStyleMod {
         StyleTypeRef Ref;
-        union {
-            float FloatValue;
-            ImVec2 ImVec2Value;
-        } Backup;
+        StyleVariantType BackupValue;
     };
 
     struct ImGuiExColorMod {
@@ -223,7 +217,8 @@ namespace ImGuiExt {
     void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col);
     void PopCustomColor(int count = 1);
 
-    void PushStyle(ImGuiCustomCol idx, float val);
+    void PushStyle(ImGuiCustomStyle idx, float val);
+    void PushStyle(ImGuiCustomStyle idx, const ImVec2 &val);
     void PopStyle(int count = 1);
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
