@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
         bool open = true;
 
         ImGui::SetNextWindowPos(ImGui::GetCurrentWindowRead()->ContentRegionRect.Min - ImGui::GetStyle().WindowPadding, ImGuiCond_Once);
-        const auto configuredAlpha = ImGuiExt::GetCustomStyle(ImGuiCustomStyle_PopupWindowAlpha);
+        const auto configuredAlpha = ImGuiExt::GetCustomStyle().PopupWindowAlpha;
         bool alphaIsChanged = false;
         if (m_currPopup != nullptr && !m_currentPopupHover && m_currentPopupHasHovered && m_currentPopupDetached && configuredAlpha < 0.99F && configuredAlpha > 0.01F) {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, configuredAlpha);

@@ -800,7 +800,7 @@ namespace ImGuiExt {
         return c;
     }
 
-    float& GetCustomStyle(ImGuiCustomStyle idx) {
+    float& GetCustomStyleFromId(ImGuiCustomStyle idx) {
         ImGuiExtContext &g = GetContext();
         return getStyleValue<float>(g, s_StyleLocations[idx]);
     }

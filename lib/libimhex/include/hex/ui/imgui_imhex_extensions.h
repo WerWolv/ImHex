@@ -213,6 +213,10 @@ namespace ImGuiExt {
         return GetContext().Data;
     }
 
+    inline ImHexCustomData::Styles_& GetCustomStyle() {
+        return GetCustomData().Styles;   
+    }
+
     void PushCustomColor(ImGuiCustomCol idx, ImU32 col);
     void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col);
     void PopCustomColor(int count = 1);
@@ -224,7 +228,7 @@ namespace ImGuiExt {
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
-    float& GetCustomStyle(ImGuiCustomStyle idx);
+    float& GetCustomStyleFromId(ImGuiCustomStyle idx);
 
     void StyleCustomColorsDark();
     void StyleCustomColorsLight();
