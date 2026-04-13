@@ -1457,6 +1457,15 @@ namespace hex::plugin::builtin {
                     m_allStepsCompleted = false;
                     auto code = m_textEditor.get(provider).getText();
                     EventPatternEditorChanged::post(code);
+                    ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+                        std::ignore = runtime;
+                        auto baseAddress = wolv::util::from_chars<u64>(value);
+                        if (ImHexApi::Provider::isValid()) {
+                            u64 dataSize = ImHexApi::Provider::get()->getActualSize();
+                            return baseAddress.has_value() && (dataSize == 0 || dataSize - 1 <= std::numeric_limits<u64>::max() - baseAddress.value());
+                        }
+                        return false;
+                    });
                     TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
                         this->parsePattern(code, provider);
 
@@ -1657,6 +1666,15 @@ namespace hex::plugin::builtin {
                 m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
                 m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
             }
+            ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+                std::ignore = runtime;
+                auto baseAddress = wolv::util::from_chars<u64>(value);
+                if (ImHexApi::Provider::isValid()) {
+                    u64 dataSize = ImHexApi::Provider::get()->getActualSize();
+                    return baseAddress.has_value() && (dataSize == 0 || dataSize - 1 <= std::numeric_limits<u64>::max() - baseAddress.value());
+                }
+                return false;
+            });
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
@@ -1725,6 +1743,19 @@ namespace hex::plugin::builtin {
         m_accessHistoryIndex = 0;
 
         EventHighlightingChanged::post();
+
+        ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+            auto baseAddress = wolv::util::from_chars<u64>(value);
+            u64 dataSize = runtime.getInternals().evaluator->getDataSize();
+            if (!baseAddress.has_value() || (dataSize > 0 && dataSize - 1 > std::numeric_limits<u64>::max() - baseAddress.value()))
+                return false;
+
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->setBaseAddress(*baseAddress);
+            runtime.setDataBaseAddress(*baseAddress);
+
+            return true;
+        });
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
             // Disable exception tracing to speed up evaluation
