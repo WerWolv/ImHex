@@ -2814,6 +2814,7 @@ namespace hex::plugin::builtin {
             if (isPatternDirty(provider)) {
                 file.writeString(wolv::util::trim(m_textEditor.get(provider).getText()));
                 m_patternFileDirty.get(provider) = false;
+                m_sourceCode.getIgnoreNextChangeEvent(provider) = true;
             }
             return;
         }
