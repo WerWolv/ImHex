@@ -2726,6 +2726,7 @@ namespace hex::plugin::builtin {
         hex::ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this, provider] {
             auto path = m_sourceCode.getTracker(provider).getPath();
             loadPatternFile(path, provider, true);
+        },[this,provider] {
             m_sourceCode.getChangeEventAcknowledgementPending(provider) = false;
         });
     }

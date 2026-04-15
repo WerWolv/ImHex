@@ -425,8 +425,9 @@ namespace hex::plugin::builtin {
             (void)this->open(!m_loadedIntoMemory);
 
             getUndoStack().reapply();
-            m_changeEventAcknowledgementPending = false;
             EventDataChanged::post(this);
+        },[this] {
+            m_changeEventAcknowledgementPending = false;
         });
     }
 
