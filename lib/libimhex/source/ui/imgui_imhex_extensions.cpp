@@ -40,9 +40,9 @@ namespace ImGuiExt {
             return {wolv::util::VariantTypeIndex<Member, StyleVariantType>, off};
         };
 
-        const StyleTypeRef s_StyleLocations[] = {
-            toStyleRef(&ImHexCustomData::Styles_::WindowBlur),
-            toStyleRef(&ImHexCustomData::Styles_::PopupWindowAlpha)
+        const StyleTypeRef s_StyleReferences[] = {
+            toStyleRef(&ImHexCustomData::StyleData::WindowBlur),
+            toStyleRef(&ImHexCustomData::StyleData::PopupWindowAlpha)
         };
 
         template <typename V>
@@ -747,7 +747,7 @@ namespace ImGuiExt {
     void PushStyle(ImGuiCustomStyle idx, float val) {
         ImGuiExtContext &g = GetContext();
         ImGuiExStyleMod backup;
-        backup.Ref = s_StyleLocations[idx];
+        backup.Ref = s_StyleReferences[idx];
         if (backup.Ref.VariantIndex != wolv::util::VariantTypeIndex<float, StyleVariantType>) {
             assert(!"ImGuiExt::PushStyle: idx is not a float style");
             return;
@@ -760,7 +760,7 @@ namespace ImGuiExt {
     void PushStyle(ImGuiCustomStyle idx, const ImVec2 &val) {
         ImGuiExtContext &g = GetContext();
         ImGuiExStyleMod backup;
-        backup.Ref = s_StyleLocations[idx];
+        backup.Ref = s_StyleReferences[idx];
         if (backup.Ref.VariantIndex != wolv::util::VariantTypeIndex<ImVec2, StyleVariantType>) {
             assert(!"ImGuiExt::PushStyle: idx is not an ImVec2 style");
             return;
@@ -800,9 +800,16 @@ namespace ImGuiExt {
         return c;
     }
 
-    float& GetCustomStyleFromId(ImGuiCustomStyle idx) {
+    float GetCustomStyleFloat(ImGuiCustomStyle idx) {
+        assert((s_StyleReferences[idx].VariantIndex == wolv::util::VariantTypeIndex<float, StyleVariantType>));
         ImGuiExtContext &g = GetContext();
-        return getStyleValue<float>(g, s_StyleLocations[idx]);
+        return getStyleValue<float>(g, s_StyleReferences[idx]);
+    }
+
+    ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
+        assert((s_StyleReferences[idx].VariantIndex == wolv::util::VariantTypeIndex<float, StyleVariantType>));
+        ImGuiExtContext &g = GetContext();
+        return getStyleValue<ImVec2>(g, s_StyleReferences[idx]);
     }
 
     void StyleCustomColorsDark() {

@@ -173,8 +173,8 @@ namespace ImGuiExt {
 
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
-        
-        struct Styles_ {
+
+        struct StyleData {
             float WindowBlur = 0.0F;
             float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
         } Styles;
@@ -213,7 +213,7 @@ namespace ImGuiExt {
         return GetContext().Data;
     }
 
-    inline ImHexCustomData::Styles_& GetCustomStyle() {
+    inline ImHexCustomData::StyleData& GetCustomStyle() {
         return GetCustomData().Styles;   
     }
 
@@ -228,7 +228,8 @@ namespace ImGuiExt {
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
-    float& GetCustomStyleFromId(ImGuiCustomStyle idx);
+    float GetCustomStyleFloat(ImGuiCustomStyle idx);
+    ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx);
 
     void StyleCustomColorsDark();
     void StyleCustomColorsLight();
