@@ -9,6 +9,6 @@ if (WIN32)
     add_subdirectory(forwarder)
 endif ()
 
-if (NOT EMSCRIPTEN)
+if (IMHEX_ENABLE_UPDATER AND NOT EMSCRIPTEN)
     add_subdirectory(updater)
 endif ()
