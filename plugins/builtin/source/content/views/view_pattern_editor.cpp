@@ -190,6 +190,43 @@ namespace hex::plugin::builtin {
         return m_perProviderSource.get(provider);
     }
 
+    const wolv::io::ChangeTracker& PatternSourceCode::getTracker(prv::Provider *provider) const {
+        if (m_synced)
+            return m_sharedChangeTracker;
+
+        return m_PPchangeTracker.get(provider);
+    }
+    wolv::io::ChangeTracker& PatternSourceCode::getTracker(prv::Provider *provider) {
+        if (m_synced)
+            return m_sharedChangeTracker;
+
+        return m_PPchangeTracker.get(provider);
+    }
+    const bool& PatternSourceCode::getIgnoreNextChangeEvent(prv::Provider *provider) const {
+        if (m_synced)
+            return m_sharedIgnoreNextChangeEvent;
+
+        return m_PPignoreNextChangeEvent.get(provider);
+    }
+    bool& PatternSourceCode::getIgnoreNextChangeEvent(prv::Provider *provider) {
+        if (m_synced)
+            return m_sharedIgnoreNextChangeEvent;
+
+        return m_PPignoreNextChangeEvent.get(provider);
+    }
+    const bool& PatternSourceCode::getChangeEventAcknowledgementPending(prv::Provider *provider) const {
+        if (m_synced)
+            return m_sharedChangeEventAcknowledgementPending;
+
+        return m_PPchangeEventAcknowledgementPending.get(provider);
+    }
+    bool& PatternSourceCode::getChangeEventAcknowledgementPending(prv::Provider *provider) {
+        if (m_synced)
+            return m_sharedChangeEventAcknowledgementPending;
+
+        return m_PPchangeEventAcknowledgementPending.get(provider);
+    }
+
     bool PatternSourceCode::hasProviderSpecificSource(prv::Provider* provider) const {
         return !m_perProviderSource.get(provider).empty();
     }
@@ -1459,6 +1496,15 @@ namespace hex::plugin::builtin {
                     m_allStepsCompleted = false;
                     auto code = m_textEditor.get(provider).getText();
                     EventPatternEditorChanged::post(code);
+                    ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+                        std::ignore = runtime;
+                        auto baseAddress = wolv::util::from_chars<u64>(value);
+                        if (ImHexApi::Provider::isValid()) {
+                            u64 dataSize = ImHexApi::Provider::get()->getActualSize();
+                            return baseAddress.has_value() && (dataSize == 0 || dataSize - 1 <= std::numeric_limits<u64>::max() - baseAddress.value());
+                        }
+                        return false;
+                    });
                     TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
                         this->parsePattern(code, provider);
 
@@ -1659,9 +1705,18 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).removeHiddenLinesFromPattern();
             m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
             if (trackFile) {
-                m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
-                m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                m_sourceCode.getTracker(provider) = wolv::io::ChangeTracker(file);
+                m_sourceCode.getTracker(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
             }
+            ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+                std::ignore = runtime;
+                auto baseAddress = wolv::util::from_chars<u64>(value);
+                if (ImHexApi::Provider::isValid()) {
+                    u64 dataSize = ImHexApi::Provider::get()->getActualSize();
+                    return baseAddress.has_value() && (dataSize == 0 || dataSize - 1 <= std::numeric_limits<u64>::max() - baseAddress.value());
+                }
+                return false;
+            });
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
@@ -1730,6 +1785,19 @@ namespace hex::plugin::builtin {
         m_accessHistoryIndex = 0;
 
         EventHighlightingChanged::post();
+
+        ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+            auto baseAddress = wolv::util::from_chars<u64>(value);
+            u64 dataSize = runtime.getInternals().evaluator->getDataSize();
+            if (!baseAddress.has_value() || (dataSize > 0 && dataSize - 1 > std::numeric_limits<u64>::max() - baseAddress.value()))
+                return false;
+
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->setBaseAddress(*baseAddress);
+            runtime.setDataBaseAddress(*baseAddress);
+
+            return true;
+        });
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
             // Disable exception tracing to speed up evaluation
@@ -2671,19 +2739,22 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::handleFileChange(prv::Provider *provider) {
-        if (m_ignoreNextChangeEvent.get(provider)) {
-            m_ignoreNextChangeEvent.get(provider) = false;
+        if (m_sourceCode.getIgnoreNextChangeEvent(provider)) {
+            if (!m_sourceCode.isSynced())
+                m_sourceCode.getIgnoreNextChangeEvent(provider) = false;
             return;
         }
 
-        if (m_changeEventAcknowledgementPending.get(provider)) {
+        if (m_sourceCode.getChangeEventAcknowledgementPending(provider)) {
             return;
         }
 
-        m_changeEventAcknowledgementPending.get(provider) = true;
+        m_sourceCode.getChangeEventAcknowledgementPending(provider) = true;
         hex::ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this, provider] {
-            m_changeEventAcknowledgementPending.get(provider) = false;
-            loadPatternFile(m_changeTracker.get(provider).getPath(), provider, true);
+            auto path = m_sourceCode.getTracker(provider).getPath();
+            loadPatternFile(path, provider, true);
+        },[this,provider] {
+            m_sourceCode.getChangeEventAcknowledgementPending(provider) = false;
         });
     }
 
@@ -2748,14 +2819,14 @@ namespace hex::plugin::builtin {
                 wolv::io::File file(path, wolv::io::File::Mode::Create);
                 file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
                 m_patternFileDirty.get(provider) = false;
-                auto loadedPath = m_changeTracker.get(provider).getPath();
+                auto loadedPath = m_sourceCode.getTracker(provider).getPath();
                 if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile) || loadedPath == path)
-                    m_changeTracker.get(provider).stopTracking();
+                    m_sourceCode.getTracker(provider).stopTracking();
 
                 if (trackFile) {
-                    m_changeTracker.get(provider) = wolv::io::ChangeTracker(file);
-                    m_changeTracker.get(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
-                    m_ignoreNextChangeEvent.get(provider) = true;
+                    m_sourceCode.getTracker(provider) = wolv::io::ChangeTracker(file);
+                    m_sourceCode.getTracker(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
+                    m_sourceCode.getIgnoreNextChangeEvent(provider) = true;
                 }
             }
         );
@@ -2765,12 +2836,13 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
-        auto path = m_changeTracker.get(provider).getPath();
+        auto path = m_sourceCode.getTracker(provider).getPath();
         wolv::io::File file(path, wolv::io::File::Mode::Create);
         if (file.isValid() && trackFile) {
             if (isPatternDirty(provider)) {
                 file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
                 m_patternFileDirty.get(provider) = false;
+                m_sourceCode.getIgnoreNextChangeEvent(provider) = true;
             }
             return;
         }

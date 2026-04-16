@@ -21,6 +21,12 @@ namespace hex::plugin::builtin {
     public:
         const std::string& get(prv::Provider *provider) const;
         std::string& get(prv::Provider *provider);
+        const wolv::io::ChangeTracker& getTracker(prv::Provider *provider) const;
+        wolv::io::ChangeTracker& getTracker(prv::Provider *provider);
+        const bool& getIgnoreNextChangeEvent(prv::Provider *provider) const;
+        bool& getIgnoreNextChangeEvent(prv::Provider *provider);
+        const bool& getChangeEventAcknowledgementPending(prv::Provider *provider) const;
+        bool& getChangeEventAcknowledgementPending(prv::Provider *provider);
         [[nodiscard]] bool hasProviderSpecificSource(prv::Provider *provider) const;
 
         [[nodiscard]] bool isSynced() const;
@@ -30,6 +36,12 @@ namespace hex::plugin::builtin {
         bool m_synced = false;
         PerProvider<std::string> m_perProviderSource;
         std::string m_sharedSource;
+        PerProvider<wolv::io::ChangeTracker> m_PPchangeTracker;
+        PerProvider<bool> m_PPignoreNextChangeEvent;
+        PerProvider<bool> m_PPchangeEventAcknowledgementPending;
+        wolv::io::ChangeTracker m_sharedChangeTracker;
+        bool m_sharedIgnoreNextChangeEvent = false;
+        bool m_sharedChangeEventAcknowledgementPending = false;
     };
 
     using TextHighlighter = hex::plugin::builtin::TextHighlighter;
@@ -153,9 +165,6 @@ namespace hex::plugin::builtin {
         bool m_openFindReplacePopUp = false;
         bool m_openGotoLinePopUp = false;
         std::map<std::fs::path, std::string> m_patternNames;
-        PerProvider<wolv::io::ChangeTracker> m_changeTracker;
-        PerProvider<bool> m_ignoreNextChangeEvent;
-        PerProvider<bool> m_changeEventAcknowledgementPending;
         PerProvider<bool> m_patternFileDirty;
         PerProvider<bool> m_patternFileInitialized;
 
