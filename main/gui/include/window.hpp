@@ -64,7 +64,7 @@ namespace hex {
 
         std::set<int> m_pressedKeys;
 
-        ImGuiExt::ImHexCustomData m_imguiCustomData;
+        ImGuiExt::ImGuiExtContext m_imguiExtContext;
 
         bool m_emergencyPopupOpen = false;
         bool m_shouldUnlockFrameRate = false;

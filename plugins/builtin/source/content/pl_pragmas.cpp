@@ -11,11 +11,13 @@ namespace hex::plugin::builtin {
     void registerPatternLanguagePragmas() {
 
         ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
-            auto baseAddress = wolv::util::from_chars<i64>(value);
-            if (!baseAddress.has_value())
+            auto baseAddress = wolv::util::from_chars<u64>(value);
+            u64 dataSize = runtime.getInternals().evaluator->getDataSize();
+            if (!baseAddress.has_value() || (dataSize > 0 && dataSize - 1 > std::numeric_limits<u64>::max() - baseAddress.value()))
                 return false;
 
-            ImHexApi::Provider::get()->setBaseAddress(*baseAddress);
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->setBaseAddress(*baseAddress);
             runtime.setDataBaseAddress(*baseAddress);
 
             return true;

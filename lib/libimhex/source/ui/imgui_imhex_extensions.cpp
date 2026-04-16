@@ -18,18 +18,44 @@
 #include <string>
 #include <algorithm>
 #include <numbers>
+#include <type_traits>
 
 #include <hex/api/imhex_api/system.hpp>
 
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <wolv/utils/variant_type_index.hpp>
 
 namespace ImGuiExt {
 
     using namespace ImGui;
 
     namespace {
+
+        template <typename Class, typename Member>
+        constexpr StyleTypeRef toStyleRef(Member Class::*member)
+        {
+            const size_t off = reinterpret_cast<size_t>(&(reinterpret_cast<Class const volatile*>(0)->*member));
+            return {wolv::util::VariantTypeIndex<Member, StyleVariantType>, off};
+        };
+
+        const StyleTypeRef s_StyleReferences[] = {
+            toStyleRef(&ImHexCustomData::StyleData::WindowBlur),
+            toStyleRef(&ImHexCustomData::StyleData::PopupWindowAlpha)
+        };
+
+        template <typename V>
+        inline V& getStyleValue(ImGuiExtContext &g, const StyleTypeRef &ref) {
+            V &value = *reinterpret_cast<V*>(reinterpret_cast<char*>(&g.Data.Styles)+ref.Offset);
+            return value;
+        }
+
+        template <typename V>
+        inline void writeStyleValue(ImGuiExtContext &g, const StyleTypeRef &ref, const V &val) {
+            V &value = getStyleValue<V>(g, ref);
+            value = val;
+        }
 
         bool isOpenGLExtensionSupported(const char *name) {
             static std::set<std::string> extensions;
@@ -684,38 +710,110 @@ namespace ImGuiExt {
         return result;
     }
 
+    void PushCustomColor(ImGuiCustomCol idx, ImU32 col) {
+        ImGuiExtContext &g = GetContext();
+        ImGuiExColorMod backup;
+        backup.Col = idx;
+        backup.BackupValue = g.Data.Colors[idx];
+        g.ColorStack.push_back(backup);
+        g.Data.Colors[idx] = ColorConvertU32ToFloat4(col);
+    }
+
+    void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col) {
+        ImGuiExtContext &g = GetContext();
+        ImGuiExColorMod backup;
+        backup.Col = idx;
+        backup.BackupValue = g.Data.Colors[idx];
+        g.ColorStack.push_back(backup);
+        g.Data.Colors[idx] = col;
+    }
+
+    void PopCustomColor(int count) {
+        ImGuiExtContext &g = GetContext();
+        if (g.ColorStack.Size < count)
+        {
+            IM_ASSERT_USER_ERROR(0, "Calling ImGUiExt::PopCustomColor() too many times!");
+            count = g.ColorStack.Size;
+        }
+        while (count > 0)
+        {
+            ImGuiExColorMod &backup = g.ColorStack.back();
+            g.Data.Colors[backup.Col] = backup.BackupValue;
+            g.ColorStack.pop_back();
+            count--;
+        }
+    }
+
+    void PushStyle(ImGuiCustomStyle idx, float val) {
+        ImGuiExtContext &g = GetContext();
+        ImGuiExStyleMod backup;
+        backup.Ref = s_StyleReferences[idx];
+        if (backup.Ref.VariantIndex != wolv::util::VariantTypeIndex<float, StyleVariantType>) {
+            assert(!"ImGuiExt::PushStyle: idx is not a float style");
+            return;
+        }
+        backup.BackupValue = getStyleValue<float>(g, backup.Ref);
+        g.StyleStack.push_back(backup);
+        writeStyleValue(g, backup.Ref, val);
+    }
+
+    void PushStyle(ImGuiCustomStyle idx, const ImVec2 &val) {
+        ImGuiExtContext &g = GetContext();
+        ImGuiExStyleMod backup;
+        backup.Ref = s_StyleReferences[idx];
+        if (backup.Ref.VariantIndex != wolv::util::VariantTypeIndex<ImVec2, StyleVariantType>) {
+            assert(!"ImGuiExt::PushStyle: idx is not an ImVec2 style");
+            return;
+        }
+        backup.BackupValue = getStyleValue<ImVec2>(g, backup.Ref);
+        g.StyleStack.push_back(backup);
+        writeStyleValue(g, backup.Ref, val);
+    }
+
+    void PopStyle(int count) {
+        ImGuiExtContext &g = GetContext();
+        if (g.StyleStack.Size < count)
+        {
+            IM_ASSERT_USER_ERROR(0, "Calling ImGUiExt::PopStyle() too many times!");
+            count = g.StyleStack.Size;
+        }
+        while (count > 0)
+        {
+            ImGuiExStyleMod &backup = g.StyleStack.back();
+            writeStyleValue(g, backup.Ref, std::get<float>(backup.BackupValue));
+            g.StyleStack.pop_back();
+            count--;
+        }
+    }
+
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
-        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
+        auto &customData = GetCustomData();
         ImVec4 c         = customData.Colors[idx];
         c.w *= GImGui->Style.Alpha * alpha_mul;
         return ColorConvertFloat4ToU32(c);
     }
 
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul) {
-        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
+        auto &customData = GetCustomData();
         ImVec4 c         = customData.Colors[idx];
         c.w *= GImGui->Style.Alpha * alpha_mul;
         return c;
     }
 
     float GetCustomStyleFloat(ImGuiCustomStyle idx) {
-        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
-
-        switch (idx) {
-            case ImGuiCustomStyle_WindowBlur:
-                return customData.styles.WindowBlur;
-            default:
-                return 0.0F;
-        }
+        assert((s_StyleReferences[idx].VariantIndex == wolv::util::VariantTypeIndex<float, StyleVariantType>));
+        ImGuiExtContext &g = GetContext();
+        return getStyleValue<float>(g, s_StyleReferences[idx]);
     }
 
     ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
-        std::ignore = idx;
-        return {};
+        assert((s_StyleReferences[idx].VariantIndex == wolv::util::VariantTypeIndex<float, StyleVariantType>));
+        ImGuiExtContext &g = GetContext();
+        return getStyleValue<ImVec2>(g, s_StyleReferences[idx]);
     }
 
     void StyleCustomColorsDark() {
-        auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
+        auto &colors = GetCustomData().Colors;
 
         colors[ImGuiCustomCol_DescButton]        = ImColor(20, 20, 20);
         colors[ImGuiCustomCol_DescButtonHovered] = ImColor(40, 40, 40);
@@ -737,7 +835,7 @@ namespace ImGuiExt {
     }
 
     void StyleCustomColorsLight() {
-        auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
+        auto &colors = GetCustomData().Colors;
 
         colors[ImGuiCustomCol_DescButton]        = ImColor(230, 230, 230);
         colors[ImGuiCustomCol_DescButtonHovered] = ImColor(210, 210, 210);
@@ -759,7 +857,7 @@ namespace ImGuiExt {
     }
 
     void StyleCustomColorsClassic() {
-        auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
+        auto &colors = GetCustomData().Colors;
 
         colors[ImGuiCustomCol_DescButton]        = ImColor(40, 40, 80);
         colors[ImGuiCustomCol_DescButtonHovered] = ImColor(60, 60, 100);
