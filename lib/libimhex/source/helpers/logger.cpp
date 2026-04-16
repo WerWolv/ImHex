@@ -8,6 +8,7 @@
 #include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 #include <mutex>
 #include <chrono>
@@ -134,6 +135,11 @@ namespace hex::log {
                 threadName = "???";
             }
 
+            // Example prefix:
+            // [04:24:08] [DEBUG] [builtin | Init Tasks]
+            //                     |<------ tag ------|
+            //                    
+
             constexpr static auto MaxTagLength = 25;
             const auto totalLength = std::min(static_cast<size_t>(MaxTagLength),
                                               projectName.length() + (threadName.empty() ? 0 : 3 + threadName.length()));
@@ -144,11 +150,11 @@ namespace hex::log {
                 now,
                 s_colorOutputEnabled ? fmt::format(ts, "{}", level) : level,
                 projectName.substr(0, std::min(projectName.length(), static_cast<size_t>(MaxTagLength))),
-                threadName.substr(0, remainingSpace),
+                wolv::util::truncateUtf8(threadName, remainingSpace),
                 "",
                 MaxTagLength - totalLength
             );
-        }
+        }   
 
         namespace color {
 
