@@ -71,7 +71,24 @@ namespace hex::init {
             PluginManager::load(dir);
         }
 
-        // Process the arguments
+        // Process our own global flags first
+        {
+            std::vector<std::string> remaining;
+            remaining.reserve(args.size());
+
+            for (size_t i = 0; i < args.size(); i += 1) {
+                const auto &arg = args[i];
+                if (arg == "--readonly" || arg == "-r") {
+                    ImHexApi::System::impl::setReadOnlyMode(true);
+                    continue;
+                }
+                remaining.push_back(arg);
+            }
+
+            args.swap(remaining);
+        }
+
+        // Process the arguments (subcommands) after handling globals
         hex::subcommands::processArguments(args);
 
         // Explicitly don't unload plugins again here.
