@@ -1330,7 +1330,7 @@ namespace hex {
             ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &always;
         }
 
-        io.UserData = &m_imguiCustomData;
+        io.UserData = &m_imguiExtContext;
 
         style.ScaleAllSizes(ImHexApi::System::getGlobalScale());
         auto scale = ImHexApi::System::getNativeScale();

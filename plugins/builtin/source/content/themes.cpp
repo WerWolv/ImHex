@@ -208,11 +208,11 @@ namespace hex::plugin::builtin {
 
                 ThemeManager::addThemeHandler("imhex", ImHexColorMap,
                    [](u32 colorId) -> ImColor {
-                       return static_cast<ImGuiExt::ImHexCustomData *>(ImGui::GetCurrentContext()->IO.UserData)->Colors[colorId];
+                       return ImGuiExt::GetCustomData().Colors[colorId];
 
                    },
                    [](u32 colorId, ImColor color) {
-                       static_cast<ImGuiExt::ImHexCustomData *>(ImGui::GetCurrentContext()->IO.UserData)->Colors[colorId] = color;
+                       ImGuiExt::GetCustomData().Colors[colorId] = color;
                    }
                 );
             }
@@ -396,10 +396,9 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto &style = ImGuiExt::GetCustomStyle();
                 const static ThemeManager::StyleMap ImHexStyleMap = {
-                        { "window-blur",    { .value=&style.WindowBlur,    .min=0.0F,   .max=1.0F,   .needsScaling=true } },
-                        { "popup-alpha",            { .value=&style.PopupWindowAlpha,          .min=0.0F,   .max=1.0F,    .needsScaling=false } },
+                        { "window-blur",    { .value=&ImGuiExt::GetCustomStyle().WindowBlur, .min=0.0F,  .max=1.0F, .needsScaling=true } },
+                        { "popup-alpha",    { .value=&ImGuiExt::GetCustomStyle().PopupWindowAlpha, .min=0.0F, .max=1.0F, .needsScaling=false } },
                 };
 
                 ThemeManager::addStyleHandler("imhex", ImHexStyleMap);

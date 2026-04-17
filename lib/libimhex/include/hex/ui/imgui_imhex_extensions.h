@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <string>
 #include <span>
+#include <variant>
 
 #include <imgui.h>
 
@@ -63,6 +64,7 @@ enum ImGuiCustomCol : int {
 
 enum ImGuiCustomStyle {
     ImGuiCustomStyle_WindowBlur,
+    ImGuiCustomStyle_PopupWindowAlpha,
 
     ImGuiCustomStyle_COUNT
 };
@@ -172,20 +174,59 @@ namespace ImGuiExt {
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
 
-        struct Styles {
+        struct StyleData {
             float WindowBlur = 0.0F;
             float PopupWindowAlpha = 0.0F; // Alpha used by Popup tool windows when the user is not hovering over them
-        } styles;
+        } Styles;
     };
+
+    using StyleVariantType = std::variant<float, ImVec2>;
+
+    struct StyleTypeRef {
+        size_t VariantIndex;
+        size_t Offset;
+    };
+
+    struct ImGuiExStyleMod {
+        StyleTypeRef Ref;
+        StyleVariantType BackupValue;
+    };
+
+    struct ImGuiExColorMod {
+        ImGuiCol    Col;
+        ImVec4      BackupValue;
+    };
+
+    struct ImGuiExtContext {
+        ImHexCustomData Data;
+
+        // Stacks
+        ImVector<ImGuiExColorMod> ColorStack;
+        ImVector<ImGuiExStyleMod> StyleStack;
+    };
+
+    inline ImGuiExtContext& GetContext() {
+        return *static_cast<ImGuiExtContext *>(ImGui::GetIO().UserData);
+    }
+
+    inline ImHexCustomData& GetCustomData() {
+        return GetContext().Data;
+    }
+
+    inline ImHexCustomData::StyleData& GetCustomStyle() {
+        return GetCustomData().Styles;   
+    }
+
+    void PushCustomColor(ImGuiCustomCol idx, ImU32 col);
+    void PushCustomColor(ImGuiCustomCol idx, const ImVec4& col);
+    void PopCustomColor(int count = 1);
+
+    void PushStyle(ImGuiCustomStyle idx, float val);
+    void PushStyle(ImGuiCustomStyle idx, const ImVec2 &val);
+    void PopStyle(int count = 1);
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
-
-    inline ImHexCustomData::Styles& GetCustomStyle() {
-        auto &customData = *static_cast<ImHexCustomData *>(ImGui::GetIO().UserData);
-
-        return customData.styles;
-    }
 
     float GetCustomStyleFloat(ImGuiCustomStyle idx);
     ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx);

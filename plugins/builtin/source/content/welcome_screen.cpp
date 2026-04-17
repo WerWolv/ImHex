@@ -41,13 +41,24 @@
 
 #include <string>
 #include <random>
+#include <cmath>
 #include <banners/banner_button.hpp>
 #include <banners/banner_icon.hpp>
 #include <fonts/fonts.hpp>
 
+#include <content/life.hpp> // Conway's Game of Life
+#include <content/life_patterns.hpp>
+
 namespace hex::plugin::builtin {
 
     namespace {
+        bool s_snakeActive = false;
+        bool s_lifeActive = false;
+
+        bool isEaster() {
+            return s_snakeActive || s_lifeActive;
+        }
+
         AutoReset<ImGuiExt::Texture> s_bannerTexture, s_nightlyTexture, s_backdropTexture, s_infoBannerTexture;
 
         std::string s_tipOfTheDay;
@@ -180,7 +191,6 @@ namespace hex::plugin::builtin {
             static std::optional<Segment> colTile;
             static ImGuiDir direction;
             static auto rng = std::mt19937(std::random_device{}());
-            static bool over = true;
             static i32 overCounter = 0;
             static u32 spaceCount = 0;
 
@@ -192,13 +202,34 @@ namespace hex::plugin::builtin {
                     segments = { { 10, 10 }, { 10, 11 }, { 10, 12 } };
                     direction = ImGuiDir_Right;
                     colTile.reset();
-                    over = false;
+                    s_snakeActive = true;
                 }
             }
 
-            if (over)
-                return;
+            // For Conway's Game of Life easter egg
+            static life::Life life(std::floor(tileCount.x), std::floor(tileCount.y));
+            int intTileCountX = std::floor(tileCount.x);
+            int intTileCountY = std::floor(tileCount.y);
+            if (intTileCountX!=life.width() || intTileCountY!=life.height()) {
+                life.resize(intTileCountX, intTileCountY);
+            }
+            static u32 leftAtlCount = 0;
+            if (ImGui::IsKeyPressed(ImGuiKey_Tab, false)) {
+                leftAtlCount += 1;
 
+                if (leftAtlCount >= 5) {
+                    leftAtlCount = 0;
+                    //life.load("ob3o$o4bo$obobo$bo2bo!", 22, 25);
+                    //life.load(life::getPattern(0), 10, 7);
+                    //life.load(life::getPattern(1), 35, 3);
+                    life.load(life::getPattern(2), 0, 10);
+                    s_lifeActive = true;
+                }
+            }
+
+            if (!isEaster()) {
+                return;
+            }
             ImHexApi::System::unlockFrameRate();
 
             const auto drawTile = [&](u32 x, u32 y) {
@@ -214,19 +245,31 @@ namespace hex::plugin::builtin {
                 );
             };
 
-            if (colTile.has_value()) {
-                drawTile(colTile->x, colTile->y);
-            }
-
-            for (const auto &[x, y] : segments) {
-                drawTile(x, y);
-            }
-
-            if (overCounter != 0) {
-                for (u32 x = 0; x < u32(tileCount.x); x += 1) {
-                    for (u32 y = 0; y < u32(tileCount.y); y += 1) {
-                        if ((x + y) % 2 == u32(overCounter % 2))
+            if (s_lifeActive) {
+                for (u32 x = 0; x < u32(tileCount.x+0.5); x += 1) {
+                    for (u32 y = 0; y < u32(tileCount.y+0.5); y += 1) {
+                        if (life.get(x, y)) {
                             drawTile(x, y);
+                        }                        
+                    }
+                }
+            }
+
+            if (s_snakeActive) {
+                if (colTile.has_value()) {
+                    drawTile(colTile->x, colTile->y);
+                }
+
+                for (const auto &[x, y] : segments) {
+                    drawTile(x, y);
+                }
+
+                if (s_snakeActive && overCounter != 0) {
+                    for (u32 x = 0; x < u32(tileCount.x); x += 1) {
+                        for (u32 y = 0; y < u32(tileCount.y); y += 1) {
+                            if ((x + y) % 2 == u32(overCounter % 2))
+                                drawTile(x, y);
+                        }
                     }
                 }
             }
@@ -234,33 +277,43 @@ namespace hex::plugin::builtin {
             static double lastTick = 0;
             double tick = ImGui::GetTime();
             if (lastTick + 0.2 < tick) {
-                Segment nextSegment = segments.front();
-                switch (direction) {
-                    case ImGuiDir_Up:       nextSegment.y -= 1; break;
-                    case ImGuiDir_Down:     nextSegment.y += 1; break;
-                    case ImGuiDir_Left:     nextSegment.x -= 1; break;
-                    case ImGuiDir_Right:    nextSegment.x += 1; break;
-                    default: break;
+                if (s_lifeActive) {
+                    life.tick();
                 }
 
-                if (overCounter == 0) {
-                    for (const auto &segment : segments) {
-                        if (segment == nextSegment) overCounter = 5;
-                        if (segment.x < 0 || segment.y < 0) overCounter = 5;
-                        if (segment.x > i32(tileCount.x) || segment.y > i32(tileCount.y)) overCounter = 5;
+                if (s_snakeActive) {
+                    Segment nextSegment = segments.front();
+                    switch (direction) {
+                        case ImGuiDir_Up:       nextSegment.y -= 1; break;
+                        case ImGuiDir_Down:     nextSegment.y += 1; break;
+                        case ImGuiDir_Left:     nextSegment.x -= 1; break;
+                        case ImGuiDir_Right:    nextSegment.x += 1; break;
+                        default: break;
                     }
 
-                    segments.push_front(nextSegment);
+                    if (overCounter == 0) {
+                        if (nextSegment.x < 0 || nextSegment.y < 0)
+                            overCounter = 5;
+                        else if (nextSegment.x >= i32(tileCount.x) || nextSegment.y >= i32(tileCount.y))
+                            overCounter = 5;
+                        else {
+                            for (const auto &segment : segments)
+                                if (segment == nextSegment) overCounter = 5;
+                        }
 
-                    if (colTile.has_value() && nextSegment != *colTile) {
-                        segments.pop_back();
+                        segments.push_front(nextSegment);
+
+                        if (colTile.has_value() && nextSegment != *colTile) {
+                            segments.pop_back();
+                        } else {
+                            colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.y)) };
+                        }
                     } else {
-                        colTile = { .x=i32(rng() % u32(tileCount.x)), .y=i32(rng() % u32(tileCount.x)) };
+                        overCounter -= 1;
+                        if (overCounter <= 0) {
+                            s_snakeActive = false;
+                        }
                     }
-                } else {
-                    overCounter -= 1;
-                    if (overCounter <= 0)
-                      over = true;
                 }
 
                 lastTick = tick;
@@ -525,13 +578,25 @@ namespace hex::plugin::builtin {
                             } else {
                                 drawWelcomeScreenBackground();
 
+                                bool pushedAlpha = false;
+                                if (isEaster()) {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+                                    pushedAlpha = true;
+                                }
                                 if (s_simplifiedWelcomeScreen)
                                     drawWelcomeScreenContentSimplified();
                                 else
                                     drawWelcomeScreenContentFull();
+                                if (pushedAlpha)
+                                    ImGui::PopStyleVar();
 
                                 static bool hovered = false;
-                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                if (isEaster()) {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+                                }
+                                else {
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                }
                                 {
                                     const auto &quickSettings = ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles();
                                     if (!quickSettings.empty()) {
