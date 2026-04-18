@@ -626,15 +626,15 @@ namespace hex::ui {
 
     TextEditor::PaletteIndex TextEditor::Lines::getColorIndexFromFlags(Line::Flags flags) {
         auto commentBits = flags.m_value & inComment;
-        if (commentBits == (i32) Line::Comments::Global)
+        if (commentBits == (i32) Line::FlagValues::Global)
             return PaletteIndex::GlobalDocComment;
-        if (commentBits == (i32) Line::Comments::BlockDoc)
+        if (commentBits == (i32) Line::FlagValues::BlockDoc)
             return PaletteIndex::DocBlockComment;
-        if (commentBits == (i32) Line::Comments::Doc)
+        if (commentBits == (i32) Line::FlagValues::Doc)
             return PaletteIndex::DocComment;
-        if (commentBits == (i32) Line::Comments::Block)
+        if (commentBits == (i32) Line::FlagValues::Block)
             return PaletteIndex::BlockComment;
-        if (commentBits == (i32) Line::Comments::Line)
+        if (commentBits == (i32) Line::FlagValues::Line)
             return PaletteIndex::Comment;
         if (flags.m_bits.deactivated)
             return PaletteIndex::PreprocessorDeactivated;

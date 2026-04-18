@@ -22,6 +22,19 @@ namespace hex::ui {
         TextUnformattedColored(color, text);
     }
 
+    inline float PrintWhiteSpacesAt(const ImVec2 &pos, i32 nChars) {
+        float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
+        const auto s = ImGui::GetFontSize();
+        float x = pos.x + spaceSize * 0.5f;
+        const auto y = pos.y + s * 0.5f;
+        auto drawList = ImGui::GetCurrentWindow()->DrawList;
+        for (i32 i = 0; i < nChars; i++) {
+            drawList->AddCircleFilled(ImVec2(x,y), 1.5f, 0x80808080, 4);
+            x = x + spaceSize;
+        }
+        return x;
+    }
+
     void TextEditor::Line::print(i32 lineIndex, i32 maxLineIndex, std::optional<ImVec2> position) {
         u32 idx = 0;
         std::string lineNumberStr = std::to_string(lineIndex + 1);
@@ -340,7 +353,8 @@ namespace hex::ui {
         if (m_handleMouseInputs)
             handleMouseInputs();
 
-        m_lines.colorizeInternal();
+        if (m_lines.m_colorizerEnabled)
+            m_lines.colorizeInternal();
         renderText(textEditorSize);
 
         if (!m_lines.m_ignoreImGuiChild)
@@ -1134,16 +1148,6 @@ namespace hex::ui {
         preRender();
         auto drawList = ImGui::GetWindowDrawList();
         m_lines.m_cursorScreenPosition = ImGui::GetCursorScreenPos();
-        float scrollY;
-
-        if (m_setScroll) {
-            setScroll(m_scroll);
-            scrollY = m_scroll.y;
-        } else {
-            scrollY = ImGui::GetScrollY();
-            float scrollX = ImGui::GetScrollX();
-            m_scroll = ImVec2(scrollX, scrollY);
-        }
 
         m_topLineNumber = getTopLineNumber();
         float maxDisplayedRow = m_lines.getMaxDisplayedRow();
@@ -1186,8 +1190,10 @@ namespace hex::ui {
                     if (!m_lines.m_codeFoldsDisabled)
                         drawCodeFolds(lineIndex, drawList);
 
-                    if (!m_lines.m_ignoreImGuiChild)
+                    if (!m_lines.m_ignoreImGuiChild) {
+                        ImGui::EndChild();
                         ImGui::BeginChild(m_lines.m_title.c_str());
+                    }
                 }
 
                 drawSelection(lineIndex, drawList);
@@ -1202,6 +1208,17 @@ namespace hex::ui {
 
                 row = row + 1.0F;
             }
+
+            float scrollY;
+            if (m_setScroll) {
+                setScroll(m_scroll);
+                scrollY = m_scroll.y;
+            } else {
+                scrollY = ImGui::GetScrollY();
+                float scrollX = ImGui::GetScrollX();
+                m_scroll = ImVec2(scrollX, scrollY);
+            }
+
             if (m_lines.m_setTopRow)
                 m_lines.setFirstRow();
             else
@@ -1562,17 +1579,31 @@ namespace hex::ui {
     void TextEditor::drawText(Coordinates &lineStart, u32 tokenLength, char color) {
         auto row = m_lines.lineIndexToRow(lineStart.m_line);
         auto begin = m_lines.getLineStartScreenPos(0,row);
-
+        i32 renderColor = color;
         Line line = m_lines[lineStart.m_line];
         auto i = line.columnIndex(lineStart.m_column);
+        auto text = line.substr(i, tokenLength);
 
         begin.x += line.textSize(i);
 
-        if (color <= (char) TextEditor::PaletteIndex::Comment && color >= (char) TextEditor::PaletteIndex::DocComment)
+        if (color <= (char) PaletteIndex::Comment && color >= (char) PaletteIndex::DocComment)
             fonts::CodeEditor().pushItalic();
-        TextUnformattedColoredAt(begin, m_palette[(i32) color], line.substr(i, tokenLength).c_str());
-
-        if (color <= (char) TextEditor::PaletteIndex::Comment && color >= (char) TextEditor::PaletteIndex::DocComment)
+        auto index = text.find_first_not_of(' ');
+        if (index == 0)
+            TextUnformattedColoredAt(begin, m_palette[renderColor], text.c_str());
+        else {
+            auto spacesSize = tokenLength;
+            if (index != std::string::npos)
+                spacesSize = index;
+            if (m_showWhitespaces) {
+                begin.x = PrintWhiteSpacesAt(begin, spacesSize);
+            }
+            if (tokenLength > spacesSize) {
+                text = text.substr(spacesSize);
+                TextUnformattedColoredAt(begin, m_palette[renderColor], text.c_str());
+            }
+        }
+        if (color <= (char) PaletteIndex::Comment && color >= (char) PaletteIndex::DocComment)
            fonts::CodeEditor().pop();
 
         ErrorMarkers::iterator errorIt;
@@ -1762,9 +1793,6 @@ namespace hex::ui {
                 }
             }
         }
-
-        if (!m_lines.m_ignoreImGuiChild)
-            ImGui::EndChild();
     }
 
     void TextEditor::renderCodeFolds(i32 row, ImDrawList *drawList, i32 color, FoldSymbol state) {

@@ -14,7 +14,7 @@
 namespace hex::plugin::builtin {
 
     using namespace pl::core;
-    using Coordinates    = TextHighlighter::Coordinates;
+    using Coordinates    = IdentifierHighlighter::Coordinates;
     using Directive      = Token::Directive;
     using Identifier     = Token::Identifier;
     using Keyword        = Token::Keyword;
@@ -24,8 +24,8 @@ namespace hex::plugin::builtin {
     using DocComment     = Token::DocComment;
     using Literal        = Token::Literal;
     using ValueType      = Token::ValueType;
-    using RequiredInputs = TextHighlighter::RequiredInputs;
-    using TokenInterval  = TextHighlighter::TokenInterval;
+    using RequiredInputs = IdentifierHighlighter::RequiredInputs;
+    using TokenInterval  = IdentifierHighlighter::TokenInterval;
 
     TokenInterval::TokenInterval(i32 start, i32 end) : m_start(start), m_end(end) {
         if (m_start > m_end)
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
         return highEndDiff == 0 || highEndDiff == 1 || lowEndDiff == 0 || lowEndDiff == 1;
     }
 
-    void TextHighlighter::next(i32 count) {
+    void IdentifierHighlighter::next(i32 count) {
         if (m_viewPatternEditor->interrupted()) {
             m_viewPatternEditor->resetInterrupt();
             throw std::out_of_range("Highlights were deliberately interrupted");
@@ -86,55 +86,55 @@ namespace hex::plugin::builtin {
         m_curr += maxChange;
     }
 
-    pl::PatternLanguage *TextHighlighter::getPatternLanguage() {
+    pl::PatternLanguage *IdentifierHighlighter::getPatternLanguage() {
         return m_viewPatternEditor->getPatternLanguage()->get();
     }
 
-    void TextHighlighter::RequiredInputs::setTypes() {
-        auto &types = m_textHighlighter->getPatternLanguage()->getInternals().parser->getTypes();
+    void IdentifierHighlighter::RequiredInputs::setTypes() {
+        auto &types = m_identifierHighlighter->getPatternLanguage()->getInternals().parser->getTypes();
         std::ranges::copy(types.begin(), types.end(), std::inserter(definedTypes, definedTypes.begin()));
     }
 
-    void TextHighlighter::RequiredInputs::setNamespaces() {
-        auto &namespaces = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor->getNamespaces();
+    void IdentifierHighlighter::RequiredInputs::setNamespaces() {
+        auto &namespaces = m_identifierHighlighter->getPatternLanguage()->getInternals().preprocessor->getNamespaces();
         usedNamespaces.resize(namespaces.size());
         std::ranges::copy(namespaces, usedNamespaces.begin());
     }
 
-    void TextHighlighter::RequiredInputs::setImports() {
-        auto *preprocessor = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor.get();
+    void IdentifierHighlighter::RequiredInputs::setImports() {
+        auto *preprocessor = m_identifierHighlighter->getPatternLanguage()->getInternals().preprocessor.get();
         std::ranges::copy(preprocessor->getParsedImports().begin(), preprocessor->getParsedImports().end(), std::inserter(parsedImports, parsedImports.begin()));
-        m_textHighlighter->clearVariables();
+        m_identifierHighlighter->clearVariables();
         for (auto &[name, tokens]: parsedImports) {
             importedHeaders[name] = tokens[0].location.source->content;
             if (importedHeaders[name].empty() || importedHeaders[name] == "\n")
                 continue;
             fullTokens = tokens;
             editedText = importedHeaders[name];
-            m_textHighlighter->loadText();
-            m_textHighlighter->processSource();
+            m_identifierHighlighter->loadText();
+            m_identifierHighlighter->processSource();
         }
     }
 
-    void TextHighlighter::RequiredInputs::setText() {
-        ui::TextEditor *editor = m_textHighlighter->m_viewPatternEditor->getTextEditor();
+    void IdentifierHighlighter::RequiredInputs::setText() {
+        ui::TextEditor *editor = m_identifierHighlighter->m_viewPatternEditor->getTextEditor();
         if (editor == nullptr)
             return;
         fullTokens.clear();
-        auto &result = m_textHighlighter->getPatternLanguage()->getInternals().preprocessor->getResult();
+        auto &result = m_identifierHighlighter->getPatternLanguage()->getInternals().preprocessor->getResult();
         std::ranges::copy(result.begin(),result.end(),std::back_inserter(fullTokens));
         editedText = editor->getText();
-        m_textHighlighter->loadText();
+        m_identifierHighlighter->loadText();
 
     }
 
-    void TextHighlighter::RequiredInputs::setCompileErrors() {
-        auto errors = m_textHighlighter->getPatternLanguage()->getCompileErrors();
+    void IdentifierHighlighter::RequiredInputs::setCompileErrors() {
+        auto errors = m_identifierHighlighter->getPatternLanguage()->getCompileErrors();
         compileErrors.resize(errors.size());
         std::ranges::copy(errors, compileErrors.begin());
     }
 
-    void TextHighlighter::RequiredInputs::setRequiredInputs() {
+    void IdentifierHighlighter::RequiredInputs::setRequiredInputs() {
         setTypes();
         setNamespaces();
         setImports();
@@ -142,55 +142,68 @@ namespace hex::plugin::builtin {
         setCompileErrors();
     }
 
-    void TextHighlighter::updateRequiredInputs() {
-        m_requiredInputs.m_textHighlighter = this;
+    void IdentifierHighlighter::RequiredInputs::applyLinesOfColors(bool colorizeIdentifiers) {
+        if (m_identifierHighlighter->getViewPatternEditor() == nullptr)
+            return;
+        ui::TextEditor *editor = m_identifierHighlighter->getViewPatternEditor()->getTextEditor();
+        if (editor == nullptr)
+            return;
+        i32 line = 0;
+        for (const auto &lineOfColors: linesOfColors) {
+            editor->setColorizedLine(line, lineOfColors, false, colorizeIdentifiers);
+            line++;
+        }
+    }
+
+    void IdentifierHighlighter::updateRequiredInputs() {
+        m_requiredInputs.m_identifierHighlighter = this;
         m_requiredInputs.setRequiredInputs();
     }
 
-    RequiredInputs& TextHighlighter::getRequiredInputs() {
+    RequiredInputs& IdentifierHighlighter::getRequiredInputs() {
         return m_requiredInputs;
     }
 
-    ViewPatternEditor* TextHighlighter::getViewPatternEditor() {
+    ViewPatternEditor* IdentifierHighlighter::getViewPatternEditor() {
         return m_viewPatternEditor;
     }
 
     template<typename T>
-    T *TextHighlighter::getValue(const i32 index) {
+    T *IdentifierHighlighter::getValue(const i32 index) {
         return const_cast<T*>(std::get_if<T>(&m_curr[index].value));
     }
 
 
-    void TextHighlighter::setViewPatternEditor(ViewPatternEditor *viewPatternEditor) {
+    void IdentifierHighlighter::setViewPatternEditor(ViewPatternEditor *viewPatternEditor) {
         m_viewPatternEditor = viewPatternEditor;
     }
 
-    bool TextHighlighter::begin() {
+    bool IdentifierHighlighter::begin() {
         m_originalPosition = m_curr;
 
         return true;
     }
 
-    void TextHighlighter::partBegin() {
+    void IdentifierHighlighter::partBegin() {
         m_partOriginalPosition = m_curr;
     }
 
-    void TextHighlighter::reset() {
+    void IdentifierHighlighter::reset() {
         m_curr = m_originalPosition;
     }
 
-    void TextHighlighter::partReset() {
+    void IdentifierHighlighter::partReset() {
         m_curr = m_partOriginalPosition;
     }
 
-    bool TextHighlighter::resetIfFailed(const bool value) {
+    bool IdentifierHighlighter::resetIfFailed(const bool value) {
         if (!value) reset();
 
         return value;
     }
 
     template<auto S>
-    bool TextHighlighter::sequenceImpl() {
+    bool IdentifierHighlighter::sequenceImpl() {
         if constexpr (S == Normal)
             return true;
         else if constexpr (S == Not)
@@ -200,7 +213,7 @@ namespace hex::plugin::builtin {
     }
 
     template<auto S>
-    bool TextHighlighter::matchOne(const Token &token) {
+    bool IdentifierHighlighter::matchOne(const Token &token) {
         if constexpr (S == Normal) {
             if (!peek(token)) {
                 partReset();
@@ -221,17 +234,17 @@ namespace hex::plugin::builtin {
     }
 
     template<auto S>
-    bool TextHighlighter::sequenceImpl(const auto &... args) {
+    bool IdentifierHighlighter::sequenceImpl(const auto &... args) {
         return (matchOne<S>(args) && ...);
     }
 
     template<auto S>
-    bool TextHighlighter::sequence(const Token &token, const auto &... args) {
+    bool IdentifierHighlighter::sequence(const Token &token, const auto &... args) {
         partBegin();
         return sequenceImpl<S>(token, args...);
     }
 
-    bool TextHighlighter::isValid() {
+    bool IdentifierHighlighter::isValid() {
         Token token;
         try {
             token = m_curr[0];
@@ -245,7 +258,7 @@ namespace hex::plugin::builtin {
         return isLocationValid(token.location);
     }
 
-    bool TextHighlighter::peek(const Token &token, const i32 index) {
+    bool IdentifierHighlighter::peek(const Token &token, const i32 index) {
         if (!isValid())
             return false;
         i32 id = getTokenId();
@@ -254,7 +267,7 @@ namespace hex::plugin::builtin {
         return m_curr[index].type == token.type && m_curr[index] == token.value;
     }
 
-    bool TextHighlighter::getIdentifierName(std::string &identifierName, Identifier *identifier) {
+    bool IdentifierHighlighter::getIdentifierName(std::string &identifierName, Identifier *identifier) {
         auto keyword = getValue<Keyword>(0);
         identifier = getValue<Identifier>(0);
 
@@ -277,11 +290,11 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    TextHighlighter::TextHighlighter()  = default;
-    TextHighlighter::~TextHighlighter()  = default;
+    IdentifierHighlighter::IdentifierHighlighter()  = default;
+    IdentifierHighlighter::~IdentifierHighlighter()  = default;
 
 // Returns a chain of identifiers like a.b.c or a::b::c
-    bool TextHighlighter::getFullName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr) {
+    bool IdentifierHighlighter::getFullName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr) {
         Identifier *identifier = nullptr;
 
         if (!peek(tkn::Literal::Identifier) || getTokenId() < 1)
@@ -291,7 +304,7 @@ namespace hex::plugin::builtin {
         return true;
     }
 
-    bool TextHighlighter::forwardIdentifierName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr ) {
+    bool IdentifierHighlighter::forwardIdentifierName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool preserveCurr ) {
         auto curr = m_curr;
         auto *identifier = getValue<Identifier>(0);
         std::string current;
@@ -339,7 +352,7 @@ namespace hex::plugin::builtin {
     }
 
 // Adds namespace if it exists
-    bool TextHighlighter::getQualifiedName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool useDefinitions, bool preserveCurr) {
+    bool IdentifierHighlighter::getQualifiedName(std::string &identifierName, std::vector<Identifier *> &identifiers, bool useDefinitions, bool preserveCurr) {
 
         std::string shortName;
         std::string qualifiedName;
@@ -403,7 +416,7 @@ namespace hex::plugin::builtin {
         return true;
     }
 
-    std::vector<TokenInterval> TextHighlighter::searchRangeForBlocks(TokenInterval interval) {
+    std::vector<TokenInterval> IdentifierHighlighter::searchRangeForBlocks(TokenInterval interval) {
         m_curr = m_startToken + interval.m_start;
         std::vector<TokenInterval> result;
 
@@ -439,7 +452,7 @@ namespace hex::plugin::builtin {
     }
 
 // Finds the token range of a function, namespace or UDT
-    bool TextHighlighter::getTokenRange(std::vector<Token> keywords, UnorderedBlocks &tokenRange,
+    bool IdentifierHighlighter::getTokenRange(std::vector<Token> keywords, UnorderedBlocks &tokenRange,
                                         OrderedBlocks &tokenRangeInv, bool fullName, VariableScopes *blocks) {
 
         bool addArgumentBlock = !fullName;
@@ -511,7 +524,7 @@ namespace hex::plugin::builtin {
     }
 
 // Searches through tokens and loads all the ranges of one kind. First namespaces are searched.
-    void TextHighlighter::getTokenRanges(IdentifierType identifierTypeToSearch) {
+    void IdentifierHighlighter::getTokenRanges(IdentifierType identifierTypeToSearch) {
 
         if (m_requiredInputs.fullTokens.size() == 1)
             return;
@@ -551,7 +564,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::skipDelimiters(i32 maxSkipCount, Token delimiter[2], i8 increment) {
+    void IdentifierHighlighter::skipDelimiters(i32 maxSkipCount, Token delimiter[2], i8 increment) {
         auto curr = m_curr;
         i32 skipCount = 0;
         i32 depth = 0;
@@ -592,7 +605,7 @@ namespace hex::plugin::builtin {
                     else if (peek(tkn::Operator::ScopeResolution,1) && peek(tkn::Literal::Identifier,2))
 
                         m_scopeChains.insert(getTokenId());
-                    else
+                    else if (auto identifier = std::get_if<Identifier>(&m_requiredInputs.fullTokens.at(getTokenId()).value);identifier != nullptr && identifier->getType() == IdentifierType::Unknown)
                         m_taggedIdentifiers.insert(getTokenId());
                 }
                 next(increment);
@@ -602,7 +615,7 @@ namespace hex::plugin::builtin {
         m_curr = curr;
    }
 
-    void TextHighlighter::skipTemplate(i32 maxSkipCount, bool forward) {
+    void IdentifierHighlighter::skipTemplate(i32 maxSkipCount, bool forward) {
         Token delimiters[2];
 
         if (forward) {
@@ -615,7 +628,7 @@ namespace hex::plugin::builtin {
         skipDelimiters(maxSkipCount, delimiters, forward ? 1 : -1);
     }
 
-    void TextHighlighter::skipArray(i32 maxSkipCount, bool forward) {
+    void IdentifierHighlighter::skipArray(i32 maxSkipCount, bool forward) {
         Token delimiters[2];
 
         if (forward) {
@@ -629,13 +642,13 @@ namespace hex::plugin::builtin {
     }
 
 // Used to skip references,pointers,...
-    void TextHighlighter::skipToken(Token token, i8 step) {
+    void IdentifierHighlighter::skipToken(Token token, i8 step) {
 
         if (peek(token, step))
             next(step);
     }
 
-    void TextHighlighter::skipAttribute() {
+    void IdentifierHighlighter::skipAttribute() {
 
         if (sequence(tkn::Separator::LeftBracket, tkn::Separator::LeftBracket)) {
             while (!sequence(tkn::Separator::RightBracket, tkn::Separator::RightBracket))
@@ -644,7 +657,7 @@ namespace hex::plugin::builtin {
     }
 
 // Takes an identifier chain resolves the type of the end from the rest iteratively.
-    bool TextHighlighter::resolveIdentifierType(Definition &result, std::string identifierName) {
+    bool IdentifierHighlighter::resolveIdentifierType(Definition &result, std::string identifierName) {
         std::string separator;
 
         if (identifierName.contains("::"))
@@ -724,7 +737,7 @@ namespace hex::plugin::builtin {
     }
 
 // If contex then find it otherwise check if it belongs in map
-    bool TextHighlighter::findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap) {
+    bool IdentifierHighlighter::findOrContains(std::string &context, UnorderedBlocks tokenRange, VariableMap variableMap) {
 
         if (context.empty())
             return findScope(context, tokenRange);
@@ -732,7 +745,7 @@ namespace hex::plugin::builtin {
             return variableMap.contains(context);
     }
 
-    void TextHighlighter::setBlockInstancesColor(const std::string &name, const Definition &definition, const TokenInterval &block) {
+    void IdentifierHighlighter::setBlockInstancesColor(const std::string &name, const Definition &definition, const TokenInterval &block) {
 
         if (definition.idType == IdentifierType::Unknown)
             return;
@@ -746,7 +759,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    bool TextHighlighter::findIdentifierDefinition( Definition &result, const std::string &optionalIdentifierName, std::string optionalName, bool setInstances) {
+    bool IdentifierHighlighter::findIdentifierDefinition(Definition &result, const std::string &optionalIdentifierName, std::string optionalName, bool setInstances) {
         auto curr = m_curr;
         bool isFunction = false;
         auto tokenId = getTokenId();
@@ -847,9 +860,9 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    using Definition = TextHighlighter::Definition;
+    using Definition = IdentifierHighlighter::Definition;
 
-    bool TextHighlighter::colorOperatorDotChain() {
+    bool IdentifierHighlighter::colorOperatorDotChain() {
         std::vector<Identifier *> identifiers;
         std::string variableName;
         auto tokenCount = m_requiredInputs.fullTokens.size();
@@ -969,13 +982,13 @@ namespace hex::plugin::builtin {
         return true;
     }
 
-    bool TextHighlighter::colorSeparatorScopeChain() {
+    bool IdentifierHighlighter::colorSeparatorScopeChain() {
         if (!colorRealSeparatorScopeChain())
             return colorImplicitSeparatorScopeChain();
         return true;
     }
 
-    bool TextHighlighter::colorImplicitSeparatorScopeChain() {
+    bool IdentifierHighlighter::colorImplicitSeparatorScopeChain() {
         auto identifier = getValue<Identifier>(0);
         if (identifier == nullptr)
             return false;
@@ -995,7 +1008,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    bool TextHighlighter::colorRealSeparatorScopeChain() {
+    bool IdentifierHighlighter::colorRealSeparatorScopeChain() {
         std::vector<Identifier *> identifiers;
         std::string identifierName;
 
@@ -1094,7 +1107,7 @@ namespace hex::plugin::builtin {
     }
 
 // finds the name of the token range that the given or the current token index is in.
-    bool TextHighlighter::findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId) {
+    bool IdentifierHighlighter::findScope(std::string &name, const UnorderedBlocks &map, i32 optionalTokenId) {
         auto tokenId = optionalTokenId ==-1 ? getTokenId() : optionalTokenId;
 
         for (const auto &[scopeName, range]: map) {
@@ -1108,7 +1121,7 @@ namespace hex::plugin::builtin {
     }
 
 // Finds the namespace of the given or the current token index.
-    bool TextHighlighter::findNamespace(std::string &nameSpace, i32 optionalTokenId) {
+    bool IdentifierHighlighter::findNamespace(std::string &nameSpace, i32 optionalTokenId) {
         nameSpace = "";
 
         for (auto [interval, name]: m_namespaceTokenRange) {
@@ -1127,21 +1140,21 @@ namespace hex::plugin::builtin {
     }
 
 //The context is the name of the function or UDT that the variable is in aka its parent.
-    std::string TextHighlighter::findIdentifierTypeStr(const std::string &identifierName, std::string context) {
+    std::string IdentifierHighlighter::findIdentifierTypeStr(const std::string &identifierName, std::string context) {
         Definition result;
         findIdentifierDefinition(result, identifierName, context);
         return result.typeStr;
     }
 
 
-     TextHighlighter::IdentifierType TextHighlighter::findIdentifierType(const std::string &identifierName, std::string context) {
+     IdentifierHighlighter::IdentifierType IdentifierHighlighter::findIdentifierType(const std::string &identifierName, std::string context) {
         Definition result;
         findIdentifierDefinition(result, identifierName, context);
         return result.idType;
     }
 
 // Creates a map from the attribute function to the type of the argument it takes.
-    void TextHighlighter::linkAttribute() {
+    void IdentifierHighlighter::linkAttribute() {
         auto curr = m_curr;
         bool qualifiedAttribute = false;
 
@@ -1242,7 +1255,7 @@ namespace hex::plugin::builtin {
 // This function assumes that the first variable in the link that concatenates sequences including the Parent keyword started with Parent and was removed. Uses a function to find
 // all the parents of a variable, If there are subsequent elements in the link that are Parent then for each parent it finds all the grandparents and puts them in a vector called
 // parentTypes. It stops when a link that's not Parent is found amd only returns the last generation of parents.
-    bool TextHighlighter::findAllParentTypes(std::vector<std::string> &parentTypes,
+    bool IdentifierHighlighter::findAllParentTypes(std::vector<std::string> &parentTypes,
                                              std::vector<Identifier *> &identifiers, std::string &optionalFullName) {
         auto fullName = optionalFullName;
 
@@ -1281,7 +1294,7 @@ namespace hex::plugin::builtin {
 
 // Searches for parents through every custom type,i.e. for structs that have members
 // of the same type as the one being searched and places them in a vector called parentTypes.
-    bool TextHighlighter::findParentTypes(std::vector<std::string> &parentTypes, const std::string &optionalUDTName) {
+    bool IdentifierHighlighter::findParentTypes(std::vector<std::string> &parentTypes, const std::string &optionalUDTName) {
         std::string UDTName;
         std::string functionName;
         bool isFunction = false;
@@ -1338,7 +1351,7 @@ namespace hex::plugin::builtin {
 // and selects its type to colour the variable because the search only occurs pn type declarations which we know
 // the types of. Once the end link is found then all the previous links are also assigned the types that were found
 // for them during the search.
-    bool TextHighlighter::tryParentType(const std::string &parentType, std::string &variableName,
+    bool IdentifierHighlighter::tryParentType(const std::string &parentType, std::string &variableName,
                                                            std::optional<Definition> &result,
                                                            std::vector<Identifier *> &identifiers) {
 
@@ -1387,7 +1400,7 @@ namespace hex::plugin::builtin {
     }
 
 // Handles Parent keyword.
-    std::optional<Definition> TextHighlighter::setChildrenTypes() {
+    std::optional<Definition> IdentifierHighlighter::setChildrenTypes() {
         auto curr = m_curr;
         std::string fullName;
         std::vector<Identifier *> identifiers;
@@ -1433,7 +1446,7 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    const TextHighlighter::IdentifierTypeColor TextHighlighter::m_identifierTypeColor = {
+    const IdentifierHighlighter::IdentifierTypeColor IdentifierHighlighter::m_identifierTypeColor = {
             {Identifier::IdentifierType::Macro,                  ui::TextEditor::PaletteIndex::PreprocIdentifier},
             {Identifier::IdentifierType::UDT,                    ui::TextEditor::PaletteIndex::UserDefinedType},
             {Identifier::IdentifierType::Function,               ui::TextEditor::PaletteIndex::Function},
@@ -1456,7 +1469,7 @@ namespace hex::plugin::builtin {
     };
 
 // Render the compilation errors using squiggly lines
-    void TextHighlighter::renderErrors() {
+    void IdentifierHighlighter::renderErrors() {
         const auto processMessage = [](const auto &message) {
             auto lines = wolv::util::splitString(message, "\n");
 
@@ -1492,7 +1505,7 @@ namespace hex::plugin::builtin {
 
 // creates a map from variable names to a vector of token indices
 // od every instance of the variable name in the code.
-    void TextHighlighter::setInitialColors() {
+    void IdentifierHighlighter::setInitialColors() {
 
         m_startToken = m_originalPosition = m_partOriginalPosition = SafeTokenIterator(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
         for (auto tokenId : m_identifierTokenIds) {
@@ -1505,7 +1518,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::setTokenIds() {
+    void IdentifierHighlighter::setTokenIds() {
         m_identifierTokenIds.clear();
         m_startToken = m_originalPosition = m_partOriginalPosition = SafeTokenIterator(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
         auto endToken = SafeTokenIterator(m_requiredInputs.fullTokens.end(), m_requiredInputs.fullTokens.end());
@@ -1519,7 +1532,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::loadInstances() {
+    void IdentifierHighlighter::loadInstances() {
         std::map<std::string, std::vector<i32>> instances;
         m_startToken = m_originalPosition = m_partOriginalPosition = SafeTokenIterator(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
         for (auto identifierTokenId : m_identifierTokenIds) {
@@ -1624,14 +1637,14 @@ namespace hex::plugin::builtin {
     }
 
 // Get the location of a given token index
-    pl::core::Location TextHighlighter::getLocation(i32 tokenId) {
+    pl::core::Location IdentifierHighlighter::getLocation(i32 tokenId) {
 
         if (tokenId >= (i32) m_requiredInputs.fullTokens.size())
             return Location::Empty();
         return m_requiredInputs.fullTokens.at(tokenId).location;
     }
 
-    i32 TextHighlighter::getTokenId(SafeTokenIterator tokenIterator) {
+    i32 IdentifierHighlighter::getTokenId(SafeTokenIterator tokenIterator) {
         auto start = m_requiredInputs.fullTokens.data();
         auto m_start = &tokenIterator.front();
         auto m_end = &tokenIterator.back();
@@ -1641,7 +1654,7 @@ namespace hex::plugin::builtin {
         return m_start - start;
     }
 
-    i32 TextHighlighter::getTokenId() {
+    i32 IdentifierHighlighter::getTokenId() {
         auto start = m_requiredInputs.fullTokens.data();
         auto m_start = &m_curr.front();
         auto m_end = &m_curr.back();
@@ -1652,7 +1665,7 @@ namespace hex::plugin::builtin {
     }
 
 // Get the token index for a given location.
-    i32 TextHighlighter::getTokenId(pl::core::Location location) {
+    i32 IdentifierHighlighter::getTokenId(pl::core::Location location) {
 
         if (location == m_requiredInputs.fullTokens.at(0).location)
             return 0;
@@ -1683,7 +1696,7 @@ namespace hex::plugin::builtin {
         return -1;
     }
 
-    void TextHighlighter::setIdentifierColor(i32 tokenId, const IdentifierType &type) {
+    void IdentifierHighlighter::setIdentifierColor(i32 tokenId, const IdentifierType &type) {
         const Token *constToken;
 
         if (tokenId == -1) {
@@ -1699,7 +1712,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    void TextHighlighter::setColor(i32 tokenId, const IdentifierType &type) {
+    void IdentifierHighlighter::setColor(i32 tokenId, const IdentifierType &type) {
 
         if (tokenId == -1)
             tokenId = getTokenId();
@@ -1707,7 +1720,7 @@ namespace hex::plugin::builtin {
         setIdentifierColor(tokenId, type);
     }
 
-    void TextHighlighter::colorRemainingIdentifierTokens() {
+    void IdentifierHighlighter::colorRemainingIdentifierTokens() {
         std::vector<i32> taggedIdentifiers;
         for (auto index: m_taggedIdentifiers) {
             taggedIdentifiers.push_back(index);
@@ -1824,7 +1837,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::setRequestedIdentifierColors() {
+    void IdentifierHighlighter::setRequestedIdentifierColors(bool colorizeIdentifiers) {
         if (m_tokenColors.empty() || m_firstTokenIdOfLine.empty() || m_requiredInputs.fullTokens.size() < 2)
             return;
         auto topLine = 0;
@@ -1853,13 +1866,13 @@ namespace hex::plugin::builtin {
             }
             ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
             if (editor != nullptr)
-                editor->setColorizedLine(line, lineOfColors);
+                editor->setColorizedLine(line, lineOfColors, true, colorizeIdentifiers);
             else
                 log::warn("Text editor not found, provider is null");
         }
     }
 
-    void TextHighlighter::recurseInheritances(std::string name) {
+    void IdentifierHighlighter::recurseInheritances(std::string name) {
         if (auto iterator = m_inheritances.find(name); iterator != m_inheritances.end()) {
             auto inheritances = std::move(iterator->second);
             m_inheritances.erase(iterator);
@@ -1886,13 +1899,13 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::appendInheritances() {
+    void IdentifierHighlighter::appendInheritances() {
         for (auto iterator = m_inheritances.begin(); iterator != m_inheritances.end(); iterator = m_inheritances.begin())
             recurseInheritances(iterator->first);
     }
 
 // Get the string of the argument type. This works on function arguments and non-type template arguments.
-    std::string TextHighlighter::getArgumentTypeName(i32 rangeStart, Token delimiter2) {
+    std::string IdentifierHighlighter::getArgumentTypeName(i32 rangeStart, Token delimiter2) {
         auto curr = m_curr;
         i32 parameterIndex = getArgumentNumber(rangeStart, getTokenId());
         Token delimiter;
@@ -1919,11 +1932,11 @@ namespace hex::plugin::builtin {
         return typeStr;
     }
 
-    bool TextHighlighter::isTokenIdValid(i32 tokenId) {
+    bool IdentifierHighlighter::isTokenIdValid(i32 tokenId) {
         return tokenId >= 0 && tokenId < (i32) m_requiredInputs.fullTokens.size();
     }
 
-    bool TextHighlighter::isLocationValid(hex::plugin::builtin::TextHighlighter::Location location) {
+    bool IdentifierHighlighter::isLocationValid(hex::plugin::builtin::IdentifierHighlighter::Location location) {
         const pl::api::Source *source;
         try {
             source = location.source;
@@ -1958,7 +1971,7 @@ namespace hex::plugin::builtin {
 
 // Find the string of the variable type. This works on function variables, views,
 // local variables as well as on calculated pointers and pattern variables.
-    std::string TextHighlighter::getVariableTypeName() {
+    std::string IdentifierHighlighter::getVariableTypeName() {
         auto curr = m_curr;
         auto varTokenId = getTokenId();
 
@@ -2015,7 +2028,7 @@ namespace hex::plugin::builtin {
     }
 
 // Definitions of global variables and placed variables.
-    void TextHighlighter::loadGlobalDefinitions(Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes, Variables &variables) {
+    void IdentifierHighlighter::loadGlobalDefinitions(Scopes tokenRangeSet, std::vector<IdentifierType> identifierTypes, Variables &variables) {
         m_startToken = m_originalPosition = m_partOriginalPosition = SafeTokenIterator(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
 
         for (auto range: tokenRangeSet) {
@@ -2045,9 +2058,9 @@ namespace hex::plugin::builtin {
     }
 
 // Definitions of variables and arguments in functions and user defined types.
-    void TextHighlighter::loadVariableDefinitions(UnorderedBlocks tokenRangeMap, Token delimiter1, Token delimiter2,
-                                                                     std::vector<IdentifierType> identifierTypes,
-                                                                     bool isArgument, VariableMap &variableMap) {
+    void IdentifierHighlighter::loadVariableDefinitions(UnorderedBlocks tokenRangeMap, Token delimiter1, Token delimiter2,
+                                                        std::vector<IdentifierType> identifierTypes,
+                                                        bool isArgument, VariableMap &variableMap) {
         for (const auto &[name, range]: tokenRangeMap) {
             m_curr = m_startToken;
             auto endToken = m_startToken;
@@ -2120,7 +2133,7 @@ namespace hex::plugin::builtin {
     }
 
 // Definitions of user defined types and functions.
-    void TextHighlighter::loadTypeDefinitions( UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types) {
+    void IdentifierHighlighter::loadTypeDefinitions(UnorderedBlocks tokenRangeMap, std::vector<IdentifierType> identifierTypes, Definitions &types) {
         for (const auto &[name, range]: tokenRangeMap) {
 
             m_curr = m_startToken + range.m_start+1;
@@ -2143,7 +2156,7 @@ namespace hex::plugin::builtin {
 
 // Once types are loaded from parsed tokens we can create
 // maps of variable names to their definitions.
-    void TextHighlighter::getDefinitions() {
+    void IdentifierHighlighter::getDefinitions() {
         using IdentifierType::LocalVariable;
         using IdentifierType::PatternVariable;
         using IdentifierType::CalculatedPointer;
@@ -2183,7 +2196,7 @@ namespace hex::plugin::builtin {
 // Load the source code into the text highlighter, splits
 // the text into lines and creates a lookup table for the
 // first token id of each line.
-    void TextHighlighter::loadText() {
+    void IdentifierHighlighter::loadText() {
         u32 tokenCount = m_requiredInputs.fullTokens.size();
         if (tokenCount == 0)
             return;
@@ -2251,7 +2264,7 @@ namespace hex::plugin::builtin {
 
 // Some tokens span many lines and some lines have no tokens. This
 // function helps to find the next line number in loops over tokens.
-    u32 TextHighlighter::nextLine(u32 line) {
+    u32 IdentifierHighlighter::nextLine(u32 line) {
         if (line >= m_firstTokenIdOfLine.size())
             return line;
         auto currentTokenId = m_firstTokenIdOfLine.at(line);
@@ -2262,7 +2275,7 @@ namespace hex::plugin::builtin {
         return i + line;
     }
 
-    u32 TextHighlighter::previousLine(u32 line) {
+    u32 IdentifierHighlighter::previousLine(u32 line) {
         if (line == 0)
             return 0;
         if (line >= m_firstTokenIdOfLine.size())
@@ -2277,7 +2290,7 @@ namespace hex::plugin::builtin {
 
 // global token ranges are the complement (aka inverse) of the union
 // of the UDT and function token ranges
-    void TextHighlighter::invertGlobalTokenRange() {
+    void IdentifierHighlighter::invertGlobalTokenRange() {
         std::set<TokenInterval> ranges;
         auto size = m_globalTokenRange.size();
         auto tokenCount = m_requiredInputs.fullTokens.size();
@@ -2306,7 +2319,7 @@ namespace hex::plugin::builtin {
     }
 
 // 0 for 1st argument, 1 for 2nd argument, etc. Obtained counting commas.
-    i32 TextHighlighter::getArgumentNumber(i32 start, i32 arg) {
+    i32 IdentifierHighlighter::getArgumentNumber(i32 start, i32 arg) {
         i32 count = 0;
         m_curr = m_startToken;
         auto endToken = m_startToken + arg;
@@ -2321,7 +2334,7 @@ namespace hex::plugin::builtin {
     }
 
 // The inverse of getArgumentNumber.
-    void TextHighlighter::getTokenIdForArgument(i32 start, i32 argNumber, Token delimiter) {
+    void IdentifierHighlighter::getTokenIdForArgument(i32 start, i32 argNumber, Token delimiter) {
         m_curr = m_startToken;
         next(start);
         while (!peek(delimiter)) {
@@ -2340,7 +2353,7 @@ namespace hex::plugin::builtin {
     }
 
 // Changes auto type string in definitions to the actual type string.
-    void TextHighlighter::resolveAutos(VariableMap &variableMap, UnorderedBlocks &tokenRange) {
+    void IdentifierHighlighter::resolveAutos(VariableMap &variableMap, UnorderedBlocks &tokenRange) {
         auto curr = m_curr;
         std::string UDTName;
         for (auto &[name, variables]: variableMap) {
@@ -2400,12 +2413,12 @@ namespace hex::plugin::builtin {
         m_curr = curr;
     }
 
-    void TextHighlighter::fixAutos() {
+    void IdentifierHighlighter::fixAutos() {
         resolveAutos(m_functionVariables, m_functionTokenRange);
         resolveAutos(m_UDTVariables, m_UDTTokenRange);
     }
 
-    void TextHighlighter::fixChains() {
+    void IdentifierHighlighter::fixChains() {
 
         if (!m_scopeChains.empty()) {
             for (auto chain: m_scopeChains) {
@@ -2424,7 +2437,7 @@ namespace hex::plugin::builtin {
 
 // Calculates the union of all the UDT and function token ranges
 // and inverts the result.
-    void TextHighlighter::getGlobalTokenRanges() {
+    void IdentifierHighlighter::getGlobalTokenRanges() {
         std::set<TokenInterval> ranges;
         for (const auto &[name, range]: m_UDTTokenRange)
             ranges.insert(range);
@@ -2466,7 +2479,7 @@ namespace hex::plugin::builtin {
 
 // Parser labels global variables that are not placed as
 // function variables.
-    void TextHighlighter::fixGlobalVariables() {
+    void IdentifierHighlighter::fixGlobalVariables() {
         m_startToken = m_originalPosition = m_partOriginalPosition = SafeTokenIterator(m_requiredInputs.fullTokens.begin(), m_requiredInputs.fullTokens.end());
         for (auto range: m_globalTokenRange) {
             auto startToken = SafeTokenIterator(m_requiredInputs.fullTokens.begin() + range.m_start, m_requiredInputs.fullTokens.begin() + range.m_end);
@@ -2495,7 +2508,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void TextHighlighter::clearVariables() {
+    void IdentifierHighlighter::clearVariables() {
         m_inheritances.clear();
         m_globalTokenRange.clear();
         m_namespaceTokenRange.clear();
@@ -2511,7 +2524,7 @@ namespace hex::plugin::builtin {
         m_scopeChains.clear();
         m_tokenColors.clear();
     }
-    void TextHighlighter::processSource() {
+    void IdentifierHighlighter::processSource() {
         m_UDTVariables.clear();
         m_UDTTokenRange.clear();
         setTokenIds();
@@ -2526,7 +2539,7 @@ namespace hex::plugin::builtin {
 
 
 // Only update if needed. Must wait for the parser to finish first.
-    void TextHighlighter::highlightSourceCode() {
+    void IdentifierHighlighter::highlightSourceCode() {
         m_viewPatternEditor->resetInterrupt();
         ON_SCOPE_EXIT {
             m_viewPatternEditor->incrementRunningHighlighters(-1);

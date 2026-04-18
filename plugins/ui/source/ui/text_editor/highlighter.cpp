@@ -7,6 +7,18 @@ namespace hex::ui {
     extern TextEditor::Palette s_paletteBase;
     using Keys = TextEditor::Keys;
 
+    void TextEditor::setEnableHighlighting(bool enable) {
+
+        if (enable && !m_lines.m_colorizerEnabled) {
+            m_lines.m_colorizerEnabled = true;
+            m_lines.colorize();
+            m_lines.colorizeInternal(true);
+        } else if (!enable && m_lines.m_colorizerEnabled) {
+            m_lines.m_colorizerEnabled = false;
+            m_lines.colorizeRange(true);
+        }
+    }
+
     template<class InputIt1, class InputIt2, class BinaryPredicate>
     bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
         for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
@@ -21,7 +33,7 @@ namespace hex::ui {
             m_lines.m_unfoldedLines[line].setNeedsUpdate(needsUpdate);
     }
 
-    void TextEditor::setColorizedLine(i64 line, const std::string &tokens) {
+    void TextEditor::setColorizedLine(i64 line, const std::string &tokens, bool colorsChanged, bool colorizeIdentifiers) {
         if (line < m_lines.size()) {
             auto &lineTokens = m_lines.m_unfoldedLines[line].m_colors;
             if (lineTokens.size() != tokens.size()) {
@@ -30,14 +42,24 @@ namespace hex::ui {
             }
             bool needsUpdate = false;
             for (u64 i = 0; i < tokens.size(); ++i) {
-                if (tokens[i] != 0x00) {
-                    if (tokens[i] != lineTokens[i]) {
+                if (tokens[i] != (char) PaletteIndex::Default && lineTokens[i] != (char) PaletteIndex::PreprocessorDeactivated) {
+                    if (colorizeIdentifiers && tokens[i] != lineTokens[i]) {
                         lineTokens[i] = tokens[i];
-                        needsUpdate = true;
+                        needsUpdate = colorsChanged;
+                    } else if (!colorizeIdentifiers && lineTokens[i] != (char) PaletteIndex::Identifier) {
+                        lineTokens[i] = (char) PaletteIndex::Identifier;
+                        needsUpdate = colorsChanged;
                     }
                 }
             }
             setNeedsUpdate(line, needsUpdate);
+        }
+    }
+
+    void TextEditor::Lines::clearAllHighlighting() {
+        for (auto &line : m_unfoldedLines) {
+            line.m_colors = std::string(line.m_colors.size(), 0);
+            line.m_colorized = false;
         }
     }
 
@@ -50,11 +72,13 @@ namespace hex::ui {
             std::string flags = m_unfoldedLines[i].m_flags;
             if (flags.empty())
                 continue;
-            auto index = flags.find_first_not_of((char)8);
+            auto index = flags.find_first_not_of((char) Line::FlagValues::Deactivated);
             Range currentBlock;
             bool foundStart = false;
             while (index == std::string::npos) {
                 if (!foundStart) {
+                    while (i > 0 && m_unfoldedLines[i-1].m_flags.empty())
+                        i--;
                     currentBlock.m_start.m_line = i;
                     currentBlock.m_start.m_column = 0;
                     foundStart = true;
@@ -66,7 +90,7 @@ namespace hex::ui {
                 if (i >= size())
                     break;
                 flags = m_unfoldedLines[i].m_flags;
-                index = flags.find_first_not_of((char) 8);
+                index = flags.find_first_not_of((char) Line::FlagValues::Deactivated);
             }
             if (currentBlock.m_start.m_line < currentBlock.m_end.m_line) {
                 deactivatedBlocks.push_back(currentBlock);
@@ -80,7 +104,7 @@ namespace hex::ui {
         m_updateFlags = true;
     }
 
-    void TextEditor::Lines::colorizeRange() {
+    void TextEditor::Lines::colorizeRange(bool force) {
 
         if (isEmpty())
             return;
@@ -101,7 +125,7 @@ namespace hex::ui {
                 line.m_colorized = false;
             }
 
-            if (line.m_colorized || line.empty())
+            if ((line.m_colorized || line.empty()) && !force)
                 continue;
 
             auto last = line.end();
@@ -180,14 +204,18 @@ namespace hex::ui {
                         }
                     }
 
-                    if (token_color != PaletteIndex::Identifier || *current.m_colorsIter == static_cast<char>(PaletteIndex::Identifier)) {
+                    if (token_color != PaletteIndex::Identifier || *current.m_colorsIter == static_cast<char>(PaletteIndex::Identifier) ||
+                            (token_color == PaletteIndex::Identifier && *current.m_colorsIter == static_cast<char>(PaletteIndex::Default))) {
                         if (token_offset + token_length >= line.m_colors.size()) {
                             auto colors = line.m_colors;
                             line.m_colors.resize(token_offset + token_length, static_cast<char>(PaletteIndex::Default));
                             std::ranges::copy(colors, line.m_colors.begin());
                         }
                         try {
-                            line.m_colors.replace(token_offset, token_length, token_length, static_cast<char>(token_color));
+                            char colorToSet = static_cast<char>(token_color);
+                            if (token_color != PaletteIndex::Identifier && !m_colorizerEnabled)
+                                colorToSet = static_cast<char>(PaletteIndex::Default);
+                            line.m_colors.replace(token_offset, token_length, token_length, colorToSet);
                         } catch (const std::exception &e) {
                             fmt::print(stderr, "Error replacing color: {}\n", e.what());
                             return;
@@ -200,8 +228,8 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::colorizeInternal() {
-        if (isEmpty() || !m_colorizerEnabled)
+    void TextEditor::Lines::colorizeInternal(bool force) {
+        if (isEmpty())
             return;
 
         if (m_updateFlags) {
@@ -238,15 +266,15 @@ namespace hex::ui {
                 auto setGlyphFlags = [&](i32 index) {
                     Line::Flags flags(0);
                     if (withinComment)
-                        flags.m_value = (i32) Line::Comments::Line;
+                        flags.m_value = (i32) Line::FlagValues::Line;
                     else if (withinDocComment)
-                        flags.m_value = (i32) Line::Comments::Doc;
+                        flags.m_value = (i32) Line::FlagValues::Doc;
                     else if (withinBlockComment)
-                        flags.m_value = (i32) Line::Comments::Block;
+                        flags.m_value = (i32) Line::FlagValues::Block;
                     else if (withinGlobalDocComment)
-                        flags.m_value = (i32) Line::Comments::Global;
+                        flags.m_value = (i32) Line::FlagValues::Global;
                     else if (withinBlockDocComment)
-                        flags.m_value = (i32) Line::Comments::BlockDoc;
+                        flags.m_value = (i32) Line::FlagValues::BlockDoc;
                     flags.m_bits.deactivated = withinNotDef;
                     flags.m_bits.matchedDelimiter = matchedBracket;
                     if (m_unfoldedLines[currentLine].m_flags[index] != flags.m_value) {
@@ -434,7 +462,7 @@ namespace hex::ui {
             }
             m_defines.clear();
         }
-        colorizeRange();
+        colorizeRange(force);
     }
 
     void TextEditor::Lines::setLanguageDefinition(const LanguageDefinition &languageDef) {

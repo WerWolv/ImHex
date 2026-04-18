@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
     class ViewPatternEditor;
-    class TextHighlighter  {
+    class IdentifierHighlighter  {
     public:
         /// Intervals are the sets finite contiguous non-negative integer that
         /// are described by their endpoints. The sets must have the following
@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
 
         class TokenInterval {
         public:
-            friend class TextHighlighter;
+            friend class IdentifierHighlighter;
             TokenInterval() : m_start(0), m_end(0) {}
             TokenInterval(i32 start, i32 end);
             bool operator<(const TokenInterval &other) const;
@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
         };
 
         using Coordinates           = ui::TextEditor::Coordinates;
-        using TokenInterval         = TextHighlighter::TokenInterval;
+        using TokenInterval         = IdentifierHighlighter::TokenInterval;
         using Token                 = pl::core::Token;
         using ASTNode               = pl::core::ast::ASTNode;
         using CompileError          = pl::core::err::CompileError;
@@ -90,9 +90,9 @@ namespace hex::plugin::builtin {
         };
 
         struct RequiredInputs {
-            friend class TextHighlighter;
+            friend class IdentifierHighlighter;
         private:
-            TextHighlighter *m_textHighlighter;
+            IdentifierHighlighter *m_identifierHighlighter;
             Types definedTypes;
             StringVector usedNamespaces;
             ParsedImports parsedImports;
@@ -102,14 +102,15 @@ namespace hex::plugin::builtin {
             CompileErrors compileErrors;
             StringVector linesOfColors;
         public:
-            RequiredInputs() : m_textHighlighter(nullptr) {};
-            explicit RequiredInputs(TextHighlighter *textHighlighter) : m_textHighlighter(textHighlighter) {}
+            RequiredInputs() : m_identifierHighlighter(nullptr) {};
+            explicit RequiredInputs(IdentifierHighlighter *identifierHighlighter) : m_identifierHighlighter(identifierHighlighter) {}
             void setRequiredInputs();
             void setTypes();
             void setNamespaces();
             void setImports();
             void setText();
             void setCompileErrors();
+            void applyLinesOfColors(bool colorizeIdentifiers = true);
         };
         /// to define functions and types
         using Definitions = std::map<std::string,ParentDefinition>;
@@ -175,9 +176,9 @@ namespace hex::plugin::builtin {
         void setViewPatternEditor(ViewPatternEditor *viewPatternEditor);
 
         void setTokenIds();
-        TextHighlighter();
-        ~TextHighlighter();
-        explicit TextHighlighter(ViewPatternEditor *viewPatternEditor) : m_viewPatternEditor(viewPatternEditor) {}
+        IdentifierHighlighter();
+        ~IdentifierHighlighter();
+        explicit IdentifierHighlighter(ViewPatternEditor *viewPatternEditor) : m_viewPatternEditor(viewPatternEditor) {}
         /**
          * @brief Entry point to syntax highlighting
          */
@@ -192,7 +193,8 @@ namespace hex::plugin::builtin {
         /**
         * @brief Create data to pass to text editor
         */
-        void setRequestedIdentifierColors();
+        void setRequestedIdentifierColors(bool colorizeIdentifiers = true);
+
         /**
         * @brief Set the color of a token
         */

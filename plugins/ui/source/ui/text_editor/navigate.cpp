@@ -421,14 +421,13 @@ namespace hex::ui {
     }
 
     void TextEditor::setScroll(ImVec2 scroll) {
-        if (!m_lines.m_withinRender) {
-            m_scroll = scroll;
-            m_setScroll = true;
-            return;
-        } else {
-            m_setScroll = false;
+        if (m_lines.m_withinRender) {
             ImGui::SetScrollX(scroll.x);
             ImGui::SetScrollY(scroll.y);
+            m_setScroll = false;
+        } else {
+            m_scroll = scroll;
+            m_setScroll = true;
         }
     }
 

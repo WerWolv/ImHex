@@ -911,6 +911,13 @@ for (const auto &path : m_paths) {
                                                               pasteBehaviourNames,
                                                               pasteBehaviourValues,
                                                               "none");
+
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.tab_size", 4, 0, 16);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.syntactic_highlighting", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.semantic_highlighting", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.auto_indent", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.disable_folds", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.show_white_spaces", false);
         }
 
         /* Folders */

@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         bool m_sharedChangeEventAcknowledgementPending = false;
     };
 
-    using TextHighlighter = hex::plugin::builtin::TextHighlighter;
+    using IdentifierHighlighter = hex::plugin::builtin::IdentifierHighlighter;
     class ViewPatternEditor : public View::Window {
     public:
         ViewPatternEditor();
@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
         std::chrono::time_point<std::chrono::steady_clock> m_lastEditorChangeTime;
 
         PerProvider<ui::TextEditor> m_textEditor, m_consoleEditor;
-        PerProvider<TextHighlighter> m_textHighlighter;
+        PerProvider<IdentifierHighlighter> m_identifierHighlighter;
         std::atomic<bool> m_consoleNeedsUpdate = false;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
@@ -130,6 +130,12 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns"> m_suggestSupportedPatterns = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns"> m_autoApplyPatterns = false;
+        ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.tab_size"> m_tabSize = 4;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.show_white_spaces"> m_showWhiteSpaces = false;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.disable_folds"> m_codeFoldsDisabled = false;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.syntactic_highlighting"> m_colorizeSyntax = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.semantic_highlighting"> m_colorizeIdentifiers = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.auto_indent"> m_autoIndent = true;
 
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;

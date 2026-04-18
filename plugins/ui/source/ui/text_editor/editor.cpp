@@ -413,7 +413,7 @@ namespace hex::ui {
                             if (index == std::string::npos)
                                 index = line.size() - 1;
                             if (index == 0) continue;
-                            u64 spacesToRemove = (index % m_tabSize) ? (index % m_tabSize) : m_tabSize;
+                            u64 spacesToRemove = (index % (u64) m_tabSize) ? (index % (u64) m_tabSize) : (u64) m_tabSize;
                             spacesToRemove = std::min(spacesToRemove, line.size());
                             line.erase(line.begin(), spacesToRemove);
                             line.m_colorized = false;

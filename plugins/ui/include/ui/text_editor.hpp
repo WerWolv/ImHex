@@ -348,13 +348,16 @@ namespace hex::ui {
         class Line {
         public:
             friend class TextEditor;
-            enum class Comments : u8 {
+            enum class FlagValues : u8 {
                 NoComment = 0,
                 Doc = 0b0001,
                 Block = 0b0010,
                 BlockDoc = 0b0011,
                 Line = 0b0100,
                 Global = 0b0101,
+                Deactivated = 0b1000,
+                Preprocessor = 0b10000,
+                MatchedDelimiter = 0b100000
             };
             struct FlagBits {
                 bool doc: 1;
@@ -535,6 +538,7 @@ namespace hex::ui {
 
             LanguageDefinition() : m_keywords({}), m_identifiers({}), m_preprocIdentifiers({}), m_tokenRegexStrings({}) {}
 
+            void setAutoIndentation(bool autoIndentation) { m_autoIndentation = autoIndentation; }
             static const LanguageDefinition &CPlusPlus();
             static const LanguageDefinition &HLSL();
             static const LanguageDefinition &GLSL();
@@ -614,8 +618,8 @@ namespace hex::ui {
             Line &at(i32 index);
             Line &operator[](i32 index);
             i32 size() const;
-            void colorizeRange();
-            void colorizeInternal();
+            void colorizeRange(bool force = false);
+            void colorizeInternal(bool force = false);
             bool isEmpty();
             void moveToMatchedDelimiter(bool select = false);
             bool isTrueMatchingDelimiter();
@@ -888,6 +892,7 @@ namespace hex::ui {
         void applyCodeFoldStates();
         void removeHiddenLinesFromPattern() { m_lines.removeHiddenLinesFromPattern(); }
         void addHiddenLinesToPattern() { m_lines.addHiddenLinesToPattern(); }
+        void setDisableCodeFolds(bool disable) { m_lines.m_codeFoldsDisabled = disable; }
 // Highlighting
     private:
         void preRender();
@@ -918,8 +923,8 @@ namespace hex::ui {
         static const Palette &getLightPalette();
         static const Palette &getRetroBluePalette();
         void setNeedsUpdate(i32 line, bool needsUpdate);
-        void setColorizedLine(i64 line, const std::string &tokens);
-
+        void setColorizedLine(i64 line, const std::string &tokens, bool colorsChanged, bool setToIdentifier = false);
+        void setEnableHighlighting(bool enable);
 //Editing
     private:
         void enterCharacter(ImWchar character, bool shift);
@@ -955,6 +960,10 @@ namespace hex::ui {
         bool isHandleKeyboardInputsEnabled() const { return m_handleKeyboardInputs; }
         Lines &getLines() { return m_lines; }
         const Lines &getLines() const { return m_lines; }
+        void setAutoIndent(bool value) {
+            LanguageDefinition &langDef = const_cast<LanguageDefinition&>(m_lines.getLanguageDefinition());
+            langDef.setAutoIndentation(value);
+        }
 // Navigating
     private:
         Coordinates lineCoordinates(const Coordinates &value);
@@ -1030,7 +1039,7 @@ namespace hex::ui {
         bool m_overwrite = false;
         u64 m_longestDrawnLineLength = 0;
         float m_topLineNumber = 0.0F;
-        bool m_showWhitespaces = true;
+        bool m_showWhitespaces = false;
         u64 m_longestLineLength = 0;
         bool m_handleKeyboardInputs = true;
         bool m_handleMouseInputs = true;
