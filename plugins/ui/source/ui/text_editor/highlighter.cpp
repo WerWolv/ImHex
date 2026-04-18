@@ -56,13 +56,6 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::clearAllHighlighting() {
-        for (auto &line : m_unfoldedLines) {
-            line.m_colors = std::string(line.m_colors.size(), 0);
-            line.m_colorized = false;
-        }
-    }
-
     Keys TextEditor::Lines::getDeactivatedBlocks() {
         colorizeInternal();
         Keys deactivatedBlocks;
