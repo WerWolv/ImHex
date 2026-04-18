@@ -5,6 +5,19 @@
 
 namespace hex::ui {
     extern TextEditor::Palette s_paletteBase;
+    using Keys = TextEditor::Keys;
+
+    void TextEditor::setEnableHighlighting(bool enable) {
+
+        if (enable && !m_lines.m_colorizerEnabled) {
+            m_lines.m_colorizerEnabled = true;
+            m_lines.colorize();
+            m_lines.colorizeInternal(true);
+        } else if (!enable && m_lines.m_colorizerEnabled) {
+            m_lines.m_colorizerEnabled = false;
+            m_lines.colorizeRange(true);
+        }
+    }
 
     template<class InputIt1, class InputIt2, class BinaryPredicate>
     bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, BinaryPredicate p) {
@@ -16,23 +29,26 @@ namespace hex::ui {
     }
 
     void TextEditor::setNeedsUpdate(i32 line, bool needsUpdate) {
-        if (line < (i32) m_lines.size())
-            m_lines[line].setNeedsUpdate(needsUpdate);
+        if (line < m_lines.size())
+            m_lines.m_unfoldedLines[line].setNeedsUpdate(needsUpdate);
     }
 
-    void TextEditor::setColorizedLine(i64 line, const std::string &tokens) {
-        if (line < (i64)m_lines.size()) {
-            auto &lineTokens = m_lines[line].m_colors;
+    void TextEditor::setColorizedLine(i64 line, const std::string &tokens, bool colorsChanged, bool colorizeIdentifiers) {
+        if (line < m_lines.size()) {
+            auto &lineTokens = m_lines.m_unfoldedLines[line].m_colors;
             if (lineTokens.size() != tokens.size()) {
                 lineTokens.resize(tokens.size());
                 std::ranges::fill(lineTokens, 0x00);
             }
             bool needsUpdate = false;
             for (u64 i = 0; i < tokens.size(); ++i) {
-                if (tokens[i] != 0x00) {
-                    if (tokens[i] != lineTokens[i]) {
+                if (tokens[i] != (char) PaletteIndex::Default && lineTokens[i] != (char) PaletteIndex::PreprocessorDeactivated) {
+                    if (colorizeIdentifiers && tokens[i] != lineTokens[i]) {
                         lineTokens[i] = tokens[i];
-                        needsUpdate = true;
+                        needsUpdate = colorsChanged;
+                    } else if (!colorizeIdentifiers && lineTokens[i] != (char) PaletteIndex::Identifier) {
+                        lineTokens[i] = (char) PaletteIndex::Identifier;
+                        needsUpdate = colorsChanged;
                     }
                 }
             }
@@ -40,25 +56,61 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::colorize() {
+    Keys TextEditor::Lines::getDeactivatedBlocks() {
+        colorizeInternal();
+        Keys deactivatedBlocks;
+        if (isEmpty())
+            return deactivatedBlocks;
+        for (i32 i = 0; i < size(); ++i) {
+            std::string flags = m_unfoldedLines[i].m_flags;
+            if (flags.empty())
+                continue;
+            auto index = flags.find_first_not_of((char) Line::FlagValues::Deactivated);
+            Range currentBlock;
+            bool foundStart = false;
+            while (index == std::string::npos) {
+                if (!foundStart) {
+                    while (i > 0 && m_unfoldedLines[i-1].m_flags.empty())
+                        i--;
+                    currentBlock.m_start.m_line = i;
+                    currentBlock.m_start.m_column = 0;
+                    foundStart = true;
+                } else {
+                    currentBlock.m_end.m_line = i;
+                    currentBlock.m_end.m_column = flags.size() - 1;
+                }
+                i++;
+                if (i >= size())
+                    break;
+                flags = m_unfoldedLines[i].m_flags;
+                index = flags.find_first_not_of((char) Line::FlagValues::Deactivated);
+            }
+            if (currentBlock.m_start.m_line < currentBlock.m_end.m_line) {
+                deactivatedBlocks.push_back(currentBlock);
+            }
+        }
+        return deactivatedBlocks;
+
+    }
+
+    void TextEditor::Lines::colorize() {
         m_updateFlags = true;
     }
 
-    void TextEditor::colorizeRange() {
+    void TextEditor::Lines::colorizeRange(bool force) {
 
         if (isEmpty())
             return;
 
-        std::smatch results;
         std::string id;
         if (m_languageDefinition.m_tokenize == nullptr) {
             m_languageDefinition.m_tokenize = [](strConstIter, strConstIter, strConstIter &, strConstIter &, PaletteIndex &) { return false; };
             log::warn("Syntax highlighting tokenize callback is nullptr");
             return;
         }
-        i32 linesSize = m_lines.size();
+        i32 linesSize = size();
         for (i32 i = 0; i < linesSize; ++i) {
-            auto &line = m_lines[i];
+            auto &line = m_unfoldedLines[i];
             auto size = line.size();
 
             if (line.m_colors.size() != size) {
@@ -66,12 +118,13 @@ namespace hex::ui {
                 line.m_colorized = false;
             }
 
-            if (line.m_colorized || line.empty())
+            if ((line.m_colorized || line.empty()) && !force)
                 continue;
 
             auto last = line.end();
 
             auto first = line.begin();
+            line.m_colorized = true;
             for (auto current = first; (current - first) < (i64)size;) {
                 strConstIter token_begin;
                 strConstIter token_end;
@@ -144,14 +197,18 @@ namespace hex::ui {
                         }
                     }
 
-                    if (token_color != PaletteIndex::Identifier || *current.m_colorsIter == static_cast<char>(PaletteIndex::Identifier)) {
+                    if (token_color != PaletteIndex::Identifier || *current.m_colorsIter == static_cast<char>(PaletteIndex::Identifier) ||
+                            (token_color == PaletteIndex::Identifier && *current.m_colorsIter == static_cast<char>(PaletteIndex::Default))) {
                         if (token_offset + token_length >= line.m_colors.size()) {
                             auto colors = line.m_colors;
                             line.m_colors.resize(token_offset + token_length, static_cast<char>(PaletteIndex::Default));
                             std::ranges::copy(colors, line.m_colors.begin());
                         }
                         try {
-                            line.m_colors.replace(token_offset, token_length, token_length, static_cast<char>(token_color));
+                            char colorToSet = static_cast<char>(token_color);
+                            if (token_color != PaletteIndex::Identifier && !m_colorizerEnabled)
+                                colorToSet = static_cast<char>(PaletteIndex::Default);
+                            line.m_colors.replace(token_offset, token_length, token_length, colorToSet);
                         } catch (const std::exception &e) {
                             fmt::print(stderr, "Error replacing color: {}\n", e.what());
                             return;
@@ -164,12 +221,12 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::colorizeInternal() {
-        if (isEmpty() || !m_colorizerEnabled)
+    void TextEditor::Lines::colorizeInternal(bool force) {
+        if (isEmpty())
             return;
 
         if (m_updateFlags) {
-            auto endLine = m_lines.size();
+            auto endLine = size();
             auto commentStartLine = endLine;
             auto commentStartIndex = 0;
             auto withinGlobalDocComment = false;
@@ -177,7 +234,7 @@ namespace hex::ui {
             auto withinString = false;
             auto withinBlockComment = false;
             auto withinNotDef = false;
-            auto currentLine = endLine;
+            i32 currentLine;
             auto commentLength = 0;
             auto matchedBracket = false;
 
@@ -185,7 +242,7 @@ namespace hex::ui {
             ifDefs.push_back(true);
             m_defines.emplace_back("__IMHEX__");
             for (currentLine = 0; currentLine < endLine; currentLine++) {
-                auto &line = m_lines[currentLine];
+                auto &line = m_unfoldedLines[currentLine];
                 auto lineLength = line.size();
 
                 if (line.m_flags.size() != lineLength) {
@@ -202,20 +259,20 @@ namespace hex::ui {
                 auto setGlyphFlags = [&](i32 index) {
                     Line::Flags flags(0);
                     if (withinComment)
-                        flags.m_value = (i32) Line::Comments::Line;
+                        flags.m_value = (i32) Line::FlagValues::Line;
                     else if (withinDocComment)
-                        flags.m_value = (i32) Line::Comments::Doc;
+                        flags.m_value = (i32) Line::FlagValues::Doc;
                     else if (withinBlockComment)
-                        flags.m_value = (i32) Line::Comments::Block;
+                        flags.m_value = (i32) Line::FlagValues::Block;
                     else if (withinGlobalDocComment)
-                        flags.m_value = (i32) Line::Comments::Global;
+                        flags.m_value = (i32) Line::FlagValues::Global;
                     else if (withinBlockDocComment)
-                        flags.m_value = (i32) Line::Comments::BlockDoc;
+                        flags.m_value = (i32) Line::FlagValues::BlockDoc;
                     flags.m_bits.deactivated = withinNotDef;
                     flags.m_bits.matchedDelimiter = matchedBracket;
-                    if (m_lines[currentLine].m_flags[index] != flags.m_value) {
-                        m_lines[currentLine].m_colorized = false;
-                        m_lines[currentLine].m_flags[index] = flags.m_value;
+                    if (m_unfoldedLines[currentLine].m_flags[index] != flags.m_value) {
+                        m_unfoldedLines[currentLine].m_colorized = false;
+                        m_unfoldedLines[currentLine].m_flags[index] = flags.m_value;
                     }
                 };
 
@@ -227,34 +284,34 @@ namespace hex::ui {
                     char c = line[currentIndex];
 
                     matchedBracket = false;
-                    if (MatchedBracket::s_separators.contains(c) && m_matchedBracket.isActive()) {
-                        if (m_matchedBracket.m_nearCursor == getCharacterCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == getCharacterCoordinates(currentLine, currentIndex))
+                    if (s_separators.contains(c) && m_matchedDelimiter.isActive()) {
+                        if (m_matchedDelimiter.m_nearCursor == lineIndexCoords(currentLine + 1, currentIndex) || m_matchedDelimiter.m_matched == lineIndexCoords(currentLine + 1, currentIndex))
                             matchedBracket = true;
-                    } else if (MatchedBracket::s_operators.contains(c) && m_matchedBracket.isActive()) {
-                        Coordinates current = setCoordinates(currentLine,currentIndex);
+                    } else if (s_operators.contains(c) && m_matchedDelimiter.isActive()) {
+                        Coordinates current = lineCoordinates(currentLine, currentIndex);
                         auto udt = static_cast<char>(PaletteIndex::UserDefinedType);
                         Coordinates cursor = Invalid;
-                        //if (m_matchedBracket.m_nearCursor == setCoordinates(currentLine, currentIndex) || m_matchedBracket.m_matched == setCoordinates(currentLine, currentIndex)) {
-                        if ((c == '<' && m_matchedBracket.m_nearCursor == current) ||  (c == '>' && m_matchedBracket.m_matched == current))
-                            cursor = m_matchedBracket.m_nearCursor;
-                        else if ((c == '>' && m_matchedBracket.m_nearCursor == current) ||  (c == '<' && m_matchedBracket.m_matched == current))
-                            cursor = m_matchedBracket.m_matched;
+
+                        if ((c == '<' && m_matchedDelimiter.m_nearCursor == current) || (c == '>' && m_matchedDelimiter.m_matched == current))
+                            cursor = m_matchedDelimiter.m_nearCursor;
+                        else if ((c == '>' && m_matchedDelimiter.m_nearCursor == current) || (c == '<' && m_matchedDelimiter.m_matched == current))
+                            cursor = m_matchedDelimiter.m_matched;
 
                         if (cursor != Invalid) {
                             if (cursor.m_column == 0 && cursor.m_line > 0) {
                                 cursor.m_line--;
-                                cursor.m_column = m_lines[cursor.m_line].m_colors.size() - 1;
+                                cursor.m_column = m_unfoldedLines[cursor.m_line].m_colors.size() - 1;
                             } else if (cursor.m_column > 0) {
                                 cursor.m_column--;
                             }
-                            while (std::isblank(m_lines[cursor.m_line].m_colors[cursor.m_column]) && (cursor.m_line != 0 || cursor.m_column != 0)) {
+                            while (std::isblank(m_unfoldedLines[cursor.m_line].m_colors[cursor.m_column]) && (cursor.m_line != 0 || cursor.m_column != 0)) {
                                 if (cursor.m_column == 0 && cursor.m_line > 0) {
                                     cursor.m_line--;
-                                    cursor.m_column = m_lines[cursor.m_line].m_colors.size() - 1;
+                                    cursor.m_column = m_unfoldedLines[cursor.m_line].m_colors.size() - 1;
                                 } else
                                     cursor.m_column--;
                             }
-                            if (m_lines[cursor.m_line].m_colors[cursor.m_column] == udt && (cursor.m_line != 0 || cursor.m_column != 0))
+                            if (m_unfoldedLines[cursor.m_line].m_colors[cursor.m_column] == udt && (cursor.m_line != 0 || cursor.m_column != 0))
                                 matchedBracket = true;
                         }
                     }
@@ -379,17 +436,17 @@ namespace hex::ui {
                     }
                     if (currentIndex < line.size()) {
                         Line::Flags flags(0);
-                        flags.m_value = m_lines[currentLine].m_flags[currentIndex];
+                        flags.m_value = m_unfoldedLines[currentLine].m_flags[currentIndex];
                         flags.m_bits.preprocessor = withinPreproc;
-                        m_lines[currentLine].m_flags[currentIndex] = flags.m_value;
+                        m_unfoldedLines[currentLine].m_flags[currentIndex] = flags.m_value;
                     }
                     auto utf8CharLen = utf8CharLength(c);
                     if (utf8CharLen > 1) {
                         Line::Flags flags(0);
-                        flags.m_value = m_lines[currentLine].m_flags[currentIndex];
+                        flags.m_value = m_unfoldedLines[currentLine].m_flags[currentIndex];
                         for (i32 j = 1; j < utf8CharLen; j++) {
                             currentIndex++;
-                            m_lines[currentLine].m_flags[currentIndex] = flags.m_value;
+                            m_unfoldedLines[currentLine].m_flags[currentIndex] = flags.m_value;
                         }
                     }
                     currentIndex++;
@@ -398,10 +455,10 @@ namespace hex::ui {
             }
             m_defines.clear();
         }
-        colorizeRange();
+        colorizeRange(force);
     }
 
-    void TextEditor::setLanguageDefinition(const LanguageDefinition &languageDef) {
+    void TextEditor::Lines::setLanguageDefinition(const LanguageDefinition &languageDef) {
         m_languageDefinition = languageDef;
         m_regexList.clear();
 
