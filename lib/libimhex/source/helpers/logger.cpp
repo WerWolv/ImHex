@@ -3,7 +3,6 @@
 #include <hex/api/task_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/fmt.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
@@ -13,7 +12,6 @@
 #include <mutex>
 #include <chrono>
 #include <fmt/chrono.h>
-#include <hex/helpers/debugging.hpp>
 
 #if defined(OS_WINDOWS)
     #include <Windows.h>
@@ -142,7 +140,7 @@ namespace hex::log {
 
             constexpr static auto MaxTagLength = 25;
             const auto totalLength = std::min(static_cast<size_t>(MaxTagLength),
-                                              projectName.length() + (threadName.empty() ? 0 : 3 + threadName.length()));
+                                              projectName.length() + (threadName.empty() ? 0 : 3 + wolv::util::utf8StringLength(threadName)));
 
             const auto remainingSpace = MaxTagLength - projectName.length() - 3;
 
@@ -150,7 +148,7 @@ namespace hex::log {
                 now,
                 s_colorOutputEnabled ? fmt::format(ts, "{}", level) : level,
                 projectName.substr(0, std::min(projectName.length(), static_cast<size_t>(MaxTagLength))),
-                wolv::util::truncateUtf8(threadName, remainingSpace),
+                wolv::util::utf8Substr(threadName, 0, remainingSpace),
                 "",
                 MaxTagLength - totalLength
             );
