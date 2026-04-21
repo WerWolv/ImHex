@@ -645,16 +645,20 @@ namespace hex::ui {
                 ImGui::TableSetupScrollFreeze(0, 2);
 
                 // Row address column
-                u64 maxAddress = m_provider->getActualSize();
-                if (maxAddress > 0)
-                    maxAddress--;
-                if ((m_scrollPosition + m_visibleRowCount) * bytesPerRow < maxAddress)
-                    maxAddress = (m_scrollPosition + m_visibleRowCount) * bytesPerRow;
+                u64 maxAddress = std::numeric_limits<u64>::max();
+                
+                if (m_provider != nullptr) {
+                    maxAddress = m_provider->getActualSize();
+                    if (maxAddress > 0)
+                        maxAddress--;
+                    if ((m_scrollPosition + m_visibleRowCount) * bytesPerRow < maxAddress)
+                        maxAddress = (m_scrollPosition + m_visibleRowCount) * bytesPerRow;
 
-                if (maxAddress + m_provider->getCurrentPageAddress() < std::numeric_limits<u64>::max() - m_provider->getBaseAddress())
-                    maxAddress += m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
-                else
-                    maxAddress = std::numeric_limits<u64>::max();
+                    if (maxAddress + m_provider->getCurrentPageAddress() < std::numeric_limits<u64>::max() - m_provider->getBaseAddress())
+                        maxAddress += m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                    else
+                        maxAddress = std::numeric_limits<u64>::max();
+                }
 
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
