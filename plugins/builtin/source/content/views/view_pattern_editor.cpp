@@ -2802,7 +2802,7 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
-        const auto basePaths = paths::Patterns.read();
+        const auto basePaths = paths::Patterns.read() | ImHexApi::System::getAdditionalFolderPaths();
         std::vector<std::fs::path> paths;
 
         for (const auto &imhexPath : basePaths) {

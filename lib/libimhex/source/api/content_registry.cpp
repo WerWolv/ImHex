@@ -724,7 +724,7 @@ namespace hex {
                 );
             }
 
-            runtime.setIncludePaths(paths::PatternsInclude.read() | paths::Patterns.read());
+            runtime.setIncludePaths(paths::PatternsInclude.read() | paths::Patterns.read() | ImHexApi::System::getAdditionalFolderPaths());
 
             for (const auto &[ns, name, paramCount, callback, dangerous] : impl::getFunctions()) {
                 if (dangerous)
