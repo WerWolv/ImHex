@@ -603,6 +603,7 @@
     "hex.builtin.task.loading_encoding_file": "Loading encoding file...",
     "hex.builtin.task.filtering_data": "Filtering data...",
     "hex.builtin.task.evaluating_nodes": "Evaluating nodes...",
+    "hex.builtin.task.highlighting_pattern": "Highlighting pattern...",
     "hex.builtin.title_bar_button.debug_build": "Debug build\n\nSHIFT + Click to open Debug Menu",
     "hex.builtin.title_bar_button.feedback": "Leave Feedback",
     "hex.builtin.title_bar_button.interactive_help": "Interactive Help",

@@ -128,30 +128,26 @@ namespace hex::log {
             const auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
             const auto now = *std::localtime(&time);
 
-            auto threadName = TaskManager::getCurrentThreadName();
+            auto threadName = TaskManager::getCurrentThreadName(); // may contain multibyte UTF-8 characters
             if (threadName.empty()) [[unlikely]] {
                 threadName = "???";
             }
 
-            // Example prefix:
+            // Prefix format:
+            // |<-time->| |level|  |<------ tag ----->|
             // [04:24:08] [DEBUG] [builtin | Init Tasks]
-            //                     |<------ tag ------|
-            //                    
+            // |<---------- ASCII --------->||<-UTF8->|
 
             constexpr static auto MaxTagLength = 25;
-            const auto totalLength = std::min(static_cast<size_t>(MaxTagLength),
-                                              projectName.length() + (threadName.empty() ? 0 : 3 + wolv::util::utf8StringLength(threadName)));
 
-            const auto remainingSpace = MaxTagLength - projectName.length() - 3;
-
-            fmt::print(dest, "[{0:%H:%M:%S}] {1} [{2} | {3}] {4: <{5}} ",
-                now,
-                s_colorOutputEnabled ? fmt::format(ts, "{}", level) : level,
-                projectName.substr(0, std::min(projectName.length(), static_cast<size_t>(MaxTagLength))),
-                wolv::util::utf8Substr(threadName, 0, remainingSpace),
-                "",
-                MaxTagLength - totalLength
-            );
+            auto tag = fmt::format("{} | {}", projectName, threadName);
+            auto fixedLengthTag = fmt::format("{:<{}.{}}", tag, MaxTagLength, MaxTagLength);
+            // This step is needed to avoid chopping off closing bracket
+            if (fixedLengthTag.length() > tag.length())
+                tag = fmt::format("[{}]{}  ", tag, fixedLengthTag.substr(tag.length()));
+            else
+                tag = fmt::format("[{}]  ", fixedLengthTag);
+            fmt::print(dest, "[{0:%H:%M:%S}] {1} {2}", now, s_colorOutputEnabled ? fmt::format(ts, "{}", level) : level, tag);
         }   
 
         namespace color {

@@ -1531,7 +1531,7 @@ namespace hex::plugin::builtin {
                 m_identifierHighlighter.get(provider).updateRequiredInputs();
                 if (restoreInterruptState)
                     interrupt();
-                TaskManager::createBackgroundTask("HighlightSourceCode", [this,provider](auto &) { m_identifierHighlighter.get(provider).highlightSourceCode(); });
+                TaskManager::createBackgroundTask("hex.builtin.task.highlighting_pattern", [this,provider](auto &) { m_identifierHighlighter.get(provider).highlightSourceCode(); });
                 m_runningHighlighters += 1;
             } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_identifierHighlighter.get(provider).setRequestedIdentifierColors(m_colorizeIdentifiers);
