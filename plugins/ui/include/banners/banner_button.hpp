@@ -10,8 +10,8 @@ namespace hex::ui {
 
     class BannerButton : public Banner<BannerButton> {
     public:
-        BannerButton(const char *icon, UnlocalizedString message, ImColor color, UnlocalizedString buttonText, std::function<void()> buttonCallback)
-            : Banner(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)) { }
+        BannerButton(const char *icon, UnlocalizedString message, ImColor color, UnlocalizedString buttonText, std::function<void()> buttonCallback, std::function<void()> closeCallback = []{})
+            : Banner(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)), m_closeCallback(std::move(closeCallback)) { }
 
         void drawContent() override {
             const std::string buttonText = fmt::format(" {} ", Lang(m_buttonText).get());
@@ -52,11 +52,16 @@ namespace hex::ui {
             ImGui::PopStyleVar(3);
         }
 
+        void onClose() override {
+            m_closeCallback();
+        }
+
     private:
         const char *m_icon;
         UnlocalizedString m_message;
         UnlocalizedString m_buttonText;
         std::function<void()> m_buttonCallback;
+        std::function<void()> m_closeCallback;
     };
 
 }

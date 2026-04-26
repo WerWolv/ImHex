@@ -52,10 +52,12 @@ namespace hex::init {
 
         // Try to create all default directories
         for (auto path : paths::All) {
-            for (auto &folder : path->all()) {
+            for (auto &folder : path->write()) {
                 try {
-                    if (isSubPathWritable(folder.parent_path()))
-                        wolv::io::fs::createDirectories(folder);
+                    if (isSubPathWritable(folder.parent_path())) {
+                        if (wolv::io::fs::exists(folder) || wolv::io::fs::createDirectories(folder))
+                            break;
+                    }
                 } catch (...) {
                     log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
                     result = false;

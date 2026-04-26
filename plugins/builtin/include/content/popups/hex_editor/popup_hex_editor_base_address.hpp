@@ -10,7 +10,7 @@ namespace hex::plugin::builtin {
         explicit PopupBaseAddress(u64 baseAddress);
         void draw(ViewHexEditor *editor) override;
         [[nodiscard]] UnlocalizedString getTitle() const override;
-
+        [[nodiscard]] bool isValid() const;
     private:
         static void setBaseAddress(u64 baseAddress);
         u64 m_baseAddress;
