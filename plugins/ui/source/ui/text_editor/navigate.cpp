@@ -774,7 +774,7 @@ namespace hex::ui {
                 return true;
             }
         }
-        if (isActive()) {
+        if (isActive() && m_nearCursor.m_line < lines->size() && m_matched.m_line < lines->size()) {
             lines->m_unfoldedLines[m_nearCursor.m_line].m_colorized = false;
             lines->m_unfoldedLines[m_matched.m_line].m_colorized = false;
             m_active = false;
@@ -938,18 +938,18 @@ namespace hex::ui {
         if (result != Invalid) {
             if (result != m_matched || hasChanged()) {
                 m_matched = result;
-                auto mls = (i32) lines->m_unfoldedLines.size();
-                auto mline = m_matched.m_line;
-                auto nline = m_nearCursor.m_line;
-                if (mline < 0 || mline >= mls || nline < 0 || nline >= mls) {
+                auto linesSize = (i32) lines->m_unfoldedLines.size();
+                auto matchedline = m_matched.m_line;
+                auto nearline = m_nearCursor.m_line;
+                if (matchedline < 0 || matchedline >= linesSize || nearline < 0 || nearline >= linesSize) {
                     m_active = false;
                     return;
                 }
-                i32 mcs = lines->m_unfoldedLines[mline].size();
-                i32 ncs = lines->m_unfoldedLines[nline].size();
-                auto mcol = m_matched.m_column;
-                auto ncol = m_nearCursor.m_column;
-                if (mcol < 0 || mcol >= mcs || ncol < 0 || ncol >= ncs) {
+                i32 matchedLineSize = lines->m_unfoldedLines[matchedline].size();
+                i32 nearLineSize = lines->m_unfoldedLines[nearline].size();
+                auto matchedColumn = m_matched.m_column;
+                auto nearColumn = m_nearCursor.m_column;
+                if (matchedColumn < 0 || matchedColumn >= matchedLineSize || nearColumn < 0 || nearColumn >= nearLineSize) {
                     m_active = false;
                     return;
                 }

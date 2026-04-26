@@ -784,6 +784,12 @@ namespace hex::ui {
     bool Lines::isTrueMatchingDelimiter() {
         auto nearCoords = m_matchedDelimiter.m_nearCursor;
         auto matchedCoords = m_matchedDelimiter.m_matched;
+        if (nearCoords.m_line >= size() || matchedCoords.m_line >= size())
+            return false;
+        i32 nearLineSize = m_unfoldedLines[nearCoords.m_line].size();
+        i32 matchedLineSize = m_unfoldedLines[matchedCoords.m_line].size();
+        if (nearCoords.m_column >= nearLineSize || matchedCoords.m_column >= matchedLineSize)
+            return false;
         Line::Flags nearFlag(m_unfoldedLines[nearCoords.m_line].m_flags[nearCoords.m_column]);
         Line::Flags matchedFlag(m_unfoldedLines[matchedCoords.m_line].m_flags[matchedCoords.m_column]);
         return nearFlag.m_bits.matchedDelimiter && matchedFlag.m_bits.matchedDelimiter;
