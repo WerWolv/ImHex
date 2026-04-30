@@ -1710,13 +1710,13 @@ namespace hex::ui {
         auto line = operator[](aFrom.m_line);
         i32 colIndex = lineCoordsIndex(aFrom);
         auto substr1 = line.m_chars.substr(0, colIndex);
-        auto substr2 =line.m_chars.substr(colIndex, line.m_chars.size() - colIndex);
+        auto substr2 = line.m_chars.substr(colIndex, line.m_chars.size() - colIndex);
         if (substr2.size() < substr1.size()) {
-            auto distanceToEnd = line.stringTextSize(substr2.c_str());
+            auto distanceToEnd = line.stringTextSize(substr2);
             line.m_lineMaxColumn = line.lineTextSize();
             return line.m_lineMaxColumn - distanceToEnd;
         }
-        return line.stringTextSize(substr1.c_str());
+        return line.stringTextSize(substr1);
     }
 
     void TextEditor::drawCodeFolds(float lineIndex, ImDrawList *drawList) {

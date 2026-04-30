@@ -668,8 +668,8 @@ namespace hex::ui {
         auto result = lines->lineCoordsIndex(start);
         auto character = line[result];
         auto color = colors[result];
-        if ((s_separators.find(character) != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Separator)) || (static_cast<PaletteIndex>(color) == PaletteIndex::WarningText) ||
-            (s_operators.find(character)  != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Operator))  || (static_cast<PaletteIndex>(color) == PaletteIndex::WarningText)) {
+        if ((s_separators.find(character) != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Separator || static_cast<PaletteIndex>(color) == PaletteIndex::WarningText)) ||
+            (s_operators.find(character)  != std::string::npos && (static_cast<PaletteIndex>(color) == PaletteIndex::Operator || static_cast<PaletteIndex>(color) == PaletteIndex::WarningText))) {
             if (from != lines->lineIndexCoords(lineIndex + 1, result)) {
                 from = lines->lineIndexCoords(lineIndex + 1, result);
                 m_changed = true;

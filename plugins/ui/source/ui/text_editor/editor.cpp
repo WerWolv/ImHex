@@ -938,7 +938,7 @@ namespace hex::ui {
 
         if (!m_removed.empty()) {
             auto start = m_removedRange.m_start;
-            editor->m_lines.insertTextAt(start, m_removed.c_str());
+            editor->m_lines.insertTextAt(start, m_removed);
             editor->m_lines.colorize();
         }
 
@@ -954,7 +954,7 @@ namespace hex::ui {
 
         if (!m_added.empty()) {
             auto start = m_addedRange.m_start;
-            editor->m_lines.insertTextAt(start, m_added.c_str());
+            editor->m_lines.insertTextAt(start, m_added);
             editor->m_lines.colorize();
         }
 
