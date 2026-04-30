@@ -730,10 +730,12 @@ namespace hex::ui {
         auto charCoords = lines->lineIndexCoords(lineIndex + 1, charIndex);
         i32 direction2 = 1;
         if (direction1 == -1 || direction1 == 1) {
-            Coordinates position = lines->lineCoordinates(charCoords.m_line, charCoords.m_column - 1);
-            if (checkPosition(lines, position)) {
-                from = position;
-                return true;
+            if (charCoords.m_column > 0) {
+                Coordinates position = lines->lineCoordinates(charCoords.m_line, charCoords.m_column - 1);
+                if (checkPosition(lines, position)) {
+                    from = position;
+                    return true;
+                }
             }
             if (direction1 == -1)
                 direction2 = 0;
@@ -744,10 +746,12 @@ namespace hex::ui {
                 direction2 = -1;
         }
         if (direction2 != 1) {
-            auto position = lines->lineCoordinates(charCoords.m_line, charCoords.m_column + direction2);
-            if (checkPosition(lines, position)) {
-                from = position;
-                return true;
+            if (charCoords.m_column + direction2 >= 0) {
+                auto position = lines->lineCoordinates(charCoords.m_line, charCoords.m_column + direction2);
+                if (checkPosition(lines, position)) {
+                    from = position;
+                    return true;
+                }
             }
         }
         u64 result;
