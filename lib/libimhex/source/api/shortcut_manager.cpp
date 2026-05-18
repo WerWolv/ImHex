@@ -19,6 +19,7 @@ namespace hex {
         std::optional<Shortcut> s_prevShortcut;
         bool s_macOSMode = false;
         AutoReset<std::optional<UnlocalizedString>> s_lastShortcutMainMenu;
+        std::vector<Shortcut> s_unusedUnassignedShortcuts;
 
     }
 
@@ -90,6 +91,7 @@ namespace hex {
         const auto SHIFT_NAME    = s_macOSMode ? "⇧" : "SHIFT";
         const auto SUPER_NAME    = s_macOSMode ? "⌘" : "SUPER";
         const auto Concatination = s_macOSMode ? " " : " + ";
+        const auto NA_NAME       = s_macOSMode ? "" : "Not Assigned";
 
         auto keys = m_keys;
         if (keys.erase(CTRL) > 0 || (!s_macOSMode && keys.erase(CTRLCMD) > 0)) {
@@ -107,6 +109,10 @@ namespace hex {
         if (keys.erase(SUPER) > 0 || (s_macOSMode && keys.erase(CTRLCMD) > 0)) {
             result += SUPER_NAME;
             result += Concatination;
+        }
+        if (auto idx = std::ranges::find_if(keys, [](const Key &key) { return key >= UnassignedMin && key <= UnassignedMax; }); idx != keys.end()) {
+            keys.erase(*idx);
+            result += NA_NAME;
         }
         keys.erase(CurrentView);
 
@@ -231,6 +237,8 @@ namespace hex {
             result += Concatination;
         }
 
+        if (result.starts_with("Not Assigned"))
+            result = "Not Assigned";
         if (result.ends_with(Concatination))
             result = result.substr(0, result.size() - strlen(Concatination));
 
@@ -277,6 +285,9 @@ namespace hex {
         #endif
     }
 
+    bool Shortcut::isUnassigned() const {
+        return std::ranges::any_of(m_keys, [](const Key &key) { return key >= UnassignedMin && key <= UnassignedMax; });
+    }
 
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::vector<UnlocalizedString> &unlocalizedName, const std::function<void()> &callback, const EnabledCallback &enabledCallback) {
@@ -451,10 +462,24 @@ namespace hex {
         return result;
     }
 
+    std::vector<Shortcut> &ShortcutManager::getUnusedUnassignedShortcuts() {
+        return s_unusedUnassignedShortcuts;
+    }
+
     static bool updateShortcutImpl(const Shortcut &oldShortcut, const Shortcut &newShortcut, std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
         if (shortcuts.contains(oldShortcut)) {
-            if (shortcuts.contains(newShortcut))
+            if (shortcuts.contains(newShortcut) || shortcuts.contains(newShortcut + AllowWhileTyping)) {
+                if (!oldShortcut.isUnassigned()) {
+                    auto shortcut = ShortcutManager::generateUnassignedShortcut();
+                    shortcuts[shortcut] = shortcuts[oldShortcut];
+                    shortcuts[shortcut].shortcut = shortcut;
+                    shortcuts.erase(oldShortcut);
+                }
                 return false;
+            }
+
+            if (oldShortcut.isUnassigned())
+                s_unusedUnassignedShortcuts.push_back(oldShortcut);
 
             shortcuts[newShortcut] = shortcuts[oldShortcut];
             shortcuts[newShortcut].shortcut = newShortcut;
@@ -467,9 +492,6 @@ namespace hex {
     bool ShortcutManager::updateShortcut(const Shortcut &oldShortcut, Shortcut newShortcut, View *view) {
         if (oldShortcut.matches(newShortcut))
             return true;
-
-        if (oldShortcut.has(AllowWhileTyping))
-            newShortcut += AllowWhileTyping;
 
         bool result;
         if (view != nullptr) {
@@ -494,5 +516,18 @@ namespace hex {
         s_macOSMode = true;
     }
 
+    // Generate unique key values for each unassigned shortcut
+    Shortcut ShortcutManager::generateUnassignedShortcut() {
+        static Key nextUnassignedKey = UnassignedMin;
+        std::set<Key> keys = { nextUnassignedKey };
+        Shortcut result(keys);
+        if (!s_unusedUnassignedShortcuts.empty())
+            result = Shortcut({ s_unusedUnassignedShortcuts.back() });
+        else if (nextUnassignedKey.getKeyCode() < UnassignedMax.getKeyCode())
+            nextUnassignedKey = Key(static_cast<Keys>(nextUnassignedKey.getKeyCode() + 1));
+        else
+            log::error("No more unassigned shortcuts available!");
+        return result;
+    }
 
 }

@@ -2150,21 +2150,21 @@ namespace hex::plugin::builtin {
         this);
 
         /* Replace Next */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_next" }, 1550, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_next" }, 1550, ShortcutManager::generateUnassignedShortcut() + AllowWhileTyping, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->replace(&m_textEditor.get(ImHexApi::Provider::get()), true);
         }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getReplaceWord().empty() && m_focusedSubWindowName.contains(TextEditorView); },
         []{ return false; },
         this);
 
         /* Replace Previous */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_previous" }, 1560, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_previous" }, 1560, ShortcutManager::generateUnassignedShortcut() + AllowWhileTyping, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->replace(&m_textEditor.get(ImHexApi::Provider::get()), false);
         }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getReplaceWord().empty() && m_focusedSubWindowName.contains(TextEditorView); },
         []{ return false; },
         this);
 
         /* Replace All */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_all" }, ICON_VS_REPLACE_ALL, 1570, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_all" }, ICON_VS_REPLACE_ALL, 1570, ShortcutManager::generateUnassignedShortcut() + AllowWhileTyping, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->replaceAll(&m_textEditor.get(ImHexApi::Provider::get()));
         }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getReplaceWord().empty() && m_focusedSubWindowName.contains(TextEditorView); },
         this);
@@ -2177,12 +2177,12 @@ namespace hex::plugin::builtin {
         this);
 
         /* Import Pattern */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 5600, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 5600, ShortcutManager::generateUnassignedShortcut() + AllowWhileTyping, [this] {
             openPatternFile(false);
         }, ImHexApi::Provider::isValid);
 
         /* Export Pattern */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, ShortcutManager::generateUnassignedShortcut() + AllowWhileTyping, [this] {
             savePatternAsNewFile(false);
         }, [this] {
             return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor.get(ImHexApi::Provider::get()).getText()).empty();

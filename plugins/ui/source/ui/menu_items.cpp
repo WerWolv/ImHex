@@ -121,8 +121,10 @@ namespace hex::menu {
                 if (s_useNativeMenuBar)
                     return macosMenuItem(label, nullptr, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
-
-            return ImGui::MenuItem(label, shortcut.toString().c_str(), selected, enabled);
+            auto shortcutStr = shortcut.toString();
+            if (shortcutStr == "Not Assigned")
+                shortcutStr = "";
+            return ImGui::MenuItem(label, shortcutStr.c_str(), selected, enabled);
         }
 
         bool menuItem(const char *label, const Shortcut &shortcut, bool *selected, bool enabled) {
@@ -130,8 +132,10 @@ namespace hex::menu {
                 if (s_useNativeMenuBar)
                     return macosMenuItemSelect(label, nullptr, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
-
-            return ImGui::MenuItem(label, shortcut.toString().c_str(), selected, enabled);
+            auto shortcutStr = shortcut.toString();
+            if (shortcutStr == "Not Assigned")
+                shortcutStr = "";
+            return ImGui::MenuItem(label, shortcutStr.c_str(), selected, enabled);
         }
 
         bool menuItemEx(const char *label, const char *icon, const Shortcut &shortcut, bool selected, bool enabled) {
@@ -139,8 +143,10 @@ namespace hex::menu {
                 if (s_useNativeMenuBar)
                     return macosMenuItem(label, icon, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
-
-            return ImGui::MenuItemEx(label, icon, shortcut.toString().c_str(), selected, enabled);
+            auto shortcutStr = shortcut.toString();
+            if (shortcutStr == "Not Assigned")
+                shortcutStr = "";
+            return ImGui::MenuItemEx(label, icon, shortcutStr.c_str(), selected, enabled);
         }
 
         bool menuItemEx(const char *label, const char *icon, const Shortcut &shortcut, bool *selected, bool enabled) {
