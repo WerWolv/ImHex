@@ -154,8 +154,10 @@ namespace hex::menu {
                 if (s_useNativeMenuBar)
                     return macosMenuItemSelect(label, icon, shortcut.toKeyEquivalent(), selected, enabled);
             #endif
-
-            if (ImGui::MenuItemEx(label, icon, shortcut.toString().c_str(), selected != nullptr ? *selected : false, enabled)) {
+            auto shortcutStr = shortcut.toString();
+            if (shortcutStr == "Not Assigned")
+                shortcutStr = "";
+            if (ImGui::MenuItemEx(label, icon, shortcutStr.c_str(), selected != nullptr ? *selected : false, enabled)) {
                 if (selected != nullptr)
                     *selected = !*selected;
                 return true;

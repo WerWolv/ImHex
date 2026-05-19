@@ -91,7 +91,7 @@ namespace hex {
         const auto SHIFT_NAME    = s_macOSMode ? "⇧" : "SHIFT";
         const auto SUPER_NAME    = s_macOSMode ? "⌘" : "SUPER";
         const auto Concatination = s_macOSMode ? " " : " + ";
-        const auto NA_NAME       = s_macOSMode ? "" : "Not Assigned";
+        const auto NA_NAME       = "Not Assigned";
 
         auto keys = m_keys;
         if (keys.erase(CTRL) > 0 || (!s_macOSMode && keys.erase(CTRLCMD) > 0)) {
@@ -237,8 +237,8 @@ namespace hex {
             result += Concatination;
         }
 
-        if (result.starts_with("Not Assigned"))
-            result = "Not Assigned";
+        if (result.contains(NA_NAME))
+            result = NA_NAME;
         if (result.ends_with(Concatination))
             result = result.substr(0, result.size() - strlen(Concatination));
 
