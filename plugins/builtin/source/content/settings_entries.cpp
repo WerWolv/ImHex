@@ -891,8 +891,8 @@ for (const auto &path : m_paths) {
                         itfLang = getOSLanguage().value_or("en-US");
                     }
 
+                    // Filter the locales to those with the selected language
                     const std::string_view itfLangPrefix = itfLang.substr(0, itfLang.find('-'));
-
                     Widgets::DropDown &ddLocale = static_cast<Widgets::DropDown&>(localeWidget.getWidget());
                     ddLocale.filter([&itfLang, &itfLangPrefix](std::string_view, const nlohmann::json &settingValue) {
                         std::string_view sval = std::string(settingValue);
