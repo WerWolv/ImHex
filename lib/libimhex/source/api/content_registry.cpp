@@ -465,6 +465,25 @@ namespace hex {
                 return { m_value[0], m_value[1], m_value[2], m_value[3] };
             }
 
+            DropDown::DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem)
+                : m_items(items.begin(), items.end()), m_settingsValues(settingsValues), m_filterIgnoredItems(items.size()), m_defaultItem(defaultItem) {
+            }
+
+            DropDown::DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem)
+                : m_items(items), m_settingsValues(settingsValues), m_filterIgnoredItems(items.size()), m_defaultItem(defaultItem) {
+            }
+
+            void DropDown::filter(const std::function<bool(std::string_view item, const nlohmann::json &settingsValue)> &callback) {
+                m_filterIgnoredItems.clear();
+                for (size_t idx=0; idx!=m_items.size(); ++idx) {
+                    if (callback(m_items[idx], m_settingsValues[idx])) {
+                        m_filterIgnoredItems.push_back(false);
+                    }
+                    else {
+                        m_filterIgnoredItems.push_back(true);
+                    }
+                }
+            }
 
             bool DropDown::draw(const std::string &name) {
                 auto preview = "";
@@ -473,20 +492,19 @@ namespace hex {
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
-
-                    int index = 0;
-                    for (const auto &item : m_items) {
+                    for (int index=0; index!=static_cast<int>(m_items.size()); ++index) {
+                        if (m_filterIgnoredItems[index] == true) {
+                            continue;
+                        }
+    
                         const bool selected = index == m_value;
-
-                        if (ImGui::Selectable(Lang(item), selected)) {
+                        if (ImGui::Selectable(Lang(m_items[index]), selected)) {
                             m_value = index;
                             changed = true;
                         }
 
                         if (selected)
                             ImGui::SetItemDefaultFocus();
-
-                        index += 1;
                     }
 
                     ImGui::EndCombo();

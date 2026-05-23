@@ -869,7 +869,7 @@ for (const auto &path : m_paths) {
                     languageCodes.emplace_back(languageCode);
                 }
 
-                auto &itfLang = ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+                auto &langDropDown = ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
 
                 auto installedLocales = wolv::util::enumLocales();
                 std::vector<std::string> localeNames;
@@ -878,29 +878,33 @@ for (const auto &path : m_paths) {
                     localeNames.push_back(fmt::format("{} - {}", name.displayName(), lc));
                 }
                 std::vector<nlohmann::json> installedLocalesJSON(installedLocales.begin(), installedLocales.end());
-                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.locale", localeNames, installedLocalesJSON, "en-US");
+                auto &localeWidget = ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.locale", localeNames, installedLocalesJSON, "en-US");
 
-                itfLang.setChangedCallback([](auto &) {
-                    static bool firstTime = true;
-                    if (firstTime) {
-                        firstTime = false;
-                        return;
-                    }
-
-                    auto val = ContentRegistry::Settings::read<std::string>(
+                langDropDown.setChangedCallback([&localeWidget](auto &) {
+                    auto itfLang = ContentRegistry::Settings::read<std::string>(
                                 "hex.builtin.setting.interface",
                                 "hex.builtin.setting.interface.language",
                                 "en-US"
                                 );
 
-                    if (val== "native") {
-                        val = getOSLanguage().value_or("en-US");
+                    if (itfLang== "native") {
+                        itfLang = getOSLanguage().value_or("en-US");
                     }
+
+                    const std::string_view itfLangPrefix = itfLang.substr(0, itfLang.find('-'));
+
+                    Widgets::DropDown &ddLocale = static_cast<Widgets::DropDown&>(localeWidget.getWidget());
+                    ddLocale.filter([&itfLang, &itfLangPrefix](std::string_view, const nlohmann::json &settingValue) {
+                        std::string_view sval = std::string(settingValue);
+                        std::string_view prefix = sval.substr(0, itfLang.find('-'));
+                        bool crap = (itfLangPrefix == prefix);
+                        return crap;
+                    });
 
                     ContentRegistry::Settings::write(
                         "hex.builtin.setting.interface",
                         "hex.builtin.setting.interface.locale",
-                        val
+                        itfLang
                     );
                 });
             }
