@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
             [[nodiscard]] bool isPinned() const { return m_isPinned; }
             void setPinned(const bool pinned) { m_isPinned = pinned; }
 
-            [[nodiscard]] virtual ImGuiWindowFlags getFlags() const { return ImGuiWindowFlags_AlwaysAutoResize; }
+            [[nodiscard]] virtual ImGuiWindowFlags getFlags() const { return ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse; }
 
         private:
             bool m_isPinned = false;

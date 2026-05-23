@@ -20,6 +20,7 @@ namespace hex {
 
             virtual void draw() { drawContent(); }
             virtual void drawContent() = 0;
+            virtual void onClose() {};
 
             [[nodiscard]] static std::list<std::unique_ptr<BannerBase>> &getOpenBanners();
 
@@ -27,7 +28,7 @@ namespace hex {
                 return m_color;
             }
 
-            void close() { m_shouldClose = true; }
+            void close() { onClose(); m_shouldClose = true; }
             [[nodiscard]] bool shouldClose() const { return m_shouldClose; }
 
         protected:
