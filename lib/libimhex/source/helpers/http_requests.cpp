@@ -2,6 +2,7 @@
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/fmt.hpp>
+#include "boost/regex.hpp"
 
 namespace hex {
 
@@ -52,6 +53,11 @@ namespace hex {
                 i += 2;
             }
         }
+        return result;
+    }
+
+    std::string HttpRequest::curlify(const std::string &input) {
+        std::string result = boost::regex_replace(input, boost::regex(" "), "%20");
         return result;
     }
 
