@@ -83,14 +83,9 @@ namespace hex::plugin::builtin {
                 return;
             }
 
-            ui::TextEditor const *editor = m_view->getTextEditor();
-            if (editor != nullptr) {
-                if (m_view->m_sourceCode.hasProviderSpecificSource(provider)) {
-                    this->close();
-                    return;
-                }
-            } else {
-                log::warn("Text editor not found, provider is null");
+            if (m_view->m_sourceCode.hasProviderSpecificSource(provider)) {
+                this->close();
+                return;
             }
 
             ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
@@ -1462,7 +1457,7 @@ namespace hex::plugin::builtin {
 
                         if (m_autoApplyPatterns && possiblePatterns.size() == 1) {
                             loadPatternFile(possiblePatterns.front().patternFilePath, provider, false);
-                        } else {
+                        } else if (!possiblePatterns.empty() && !m_sourceCode.hasProviderSpecificSource(provider)) {
                             PopupAcceptPattern::open(this);
                         }
                     }

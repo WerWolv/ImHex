@@ -117,6 +117,8 @@ namespace hex {
 
         static std::string urlDecode(const std::string &input);
 
+        static std::string curlify(const std::string &input);
+
         void setProgress(float progress) { m_progress = progress; }
         bool isCanceled() const { return m_canceled; }
 
