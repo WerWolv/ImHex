@@ -255,7 +255,7 @@ namespace hex::plugin::builtin {
                         if (entry.contains("name") && entry.contains("desc") && entry.contains("authors") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
 
                             // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false, false };
+                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], HttpRequest::curlify(entry["url"]), entry["hash"], entry["folder"], false, false, false, false };
 
                             updateEntryMetadata(storeEntry, category);
                             category.entries.push_back(storeEntry);
