@@ -20,6 +20,7 @@
 
 #include <wolv/literals.hpp>
 #include <wolv/utils/string.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -868,10 +869,51 @@ for (const auto &path : m_paths) {
                     languageCodes.emplace_back(languageCode);
                 }
 
-                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+                auto &langDropDown = ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+
+                auto installedLocales = wolv::util::enumLocales();
+                std::vector<std::string> localeNames;
+                for (const std::string &lc : installedLocales) {
+                    wolv::util::LocaleName name(lc);
+                    localeNames.push_back(fmt::format("{} - {}", name.displayName(), lc));
+                }
+                std::vector<nlohmann::json> installedLocalesJSON(installedLocales.begin(), installedLocales.end());
+                auto &localeWidget = ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.locale", localeNames, installedLocalesJSON, "en-US");
+
+                langDropDown.setChangedCallback([&localeWidget](auto &) {
+                    auto itfLang = ContentRegistry::Settings::read<std::string>(
+                                "hex.builtin.setting.interface",
+                                "hex.builtin.setting.interface.language",
+                                "en-US"
+                                );
+
+                    if (itfLang== "native") {
+                        itfLang = getOSLanguage().value_or("en-US");
+                    }
+
+                    // Filter the locales to those with the selected language
+                    const std::string itfLangPrefix = itfLang.substr(0, itfLang.find('-'));
+                    Widgets::DropDown &ddLocale = static_cast<Widgets::DropDown&>(localeWidget.getWidget());
+                    ddLocale.filter([&itfLang, &itfLangPrefix](std::string_view, const nlohmann::json &settingValue) {
+                        const std::string sval(settingValue);
+                        const std::string prefix = sval.substr(0, sval.find('-'));
+                        return (itfLangPrefix == prefix);
+                    });
+
+                    ContentRegistry::Settings::write(
+                        "hex.builtin.setting.interface",
+                        "hex.builtin.setting.interface.locale",
+                        itfLang
+                    );
+                });
             }
 
+#if defined(OS_WINDOWS)
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.longdate", false);
+#endif
+
             ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
+
             ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
 
             #if defined (OS_LINUX)

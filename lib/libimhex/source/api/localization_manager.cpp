@@ -7,13 +7,20 @@
 #include <nlohmann/json.hpp>
 
 #include <mutex>
+#include <shared_mutex>
 #include <hex/helpers/debugging.hpp>
+#include <wolv/utils/date_time_format.hpp>
 
 namespace hex {
 
     namespace LocalizationManager {
 
         constexpr static auto FallbackLanguageId = "en-US";
+
+        namespace {
+            std::shared_mutex s_localeLock;
+            wolv::util::Locale s_locale;
+        }
 
         namespace {
 
@@ -133,7 +140,8 @@ namespace hex {
         void setLanguage(const LanguageId &languageId) {
             if (languageId == "native") {
                 setLanguage(hex::getOSLanguage().value_or(FallbackLanguageId));
-                s_selectedLanguageId = languageId;
+                // s_selectedLanguageId = languageId;
+                //  /\-- Was this a bug, or have I made one?
                 return;
             }
 
@@ -148,6 +156,16 @@ namespace hex {
 
         [[nodiscard]] const std::string& getSelectedLanguageId() {
             return *s_selectedLanguageId;
+        }
+
+        [[nodiscard]] wolv::util::Locale getSelectedLocale() {
+            std::shared_lock lock(s_localeLock);
+            return s_locale;
+        }
+
+        void setSelectedLocale(const LanguageId &languageId, bool longDate) {
+            std::unique_lock lock(s_localeLock);
+            s_locale.set(languageId, longDate);
         }
 
         [[nodiscard]] const std::string& get(const LanguageId &languageId, const UnlocalizedString &unlocalizedString) {

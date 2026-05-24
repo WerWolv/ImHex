@@ -181,8 +181,10 @@ EXPORT_MODULE namespace hex {
 
             class DropDown : public Widget {
             public:
-                explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items.begin(), items.end()), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
-                explicit DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
+                explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem);
+                explicit DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem);
+
+                void filter(const std::function<bool(std::string_view item, const nlohmann::json &settingsValue)> &callback);
 
                 bool draw(const std::string &name) override;
 
@@ -195,6 +197,7 @@ EXPORT_MODULE namespace hex {
             protected:
                 std::vector<UnlocalizedString> m_items;
                 std::vector<nlohmann::json> m_settingsValues;
+                std::vector<bool> m_filterIgnoredItems;
                 nlohmann::json m_defaultItem;
 
                 int m_value = -1;
@@ -278,8 +281,6 @@ EXPORT_MODULE namespace hex {
             Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
 
             void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception &e);
-
-            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
         }
 
         template<std::derived_from<Widgets::Widget> T>
@@ -316,6 +317,8 @@ EXPORT_MODULE namespace hex {
             nlohmann::json m_value;
         };
 
+        void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
+
         template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T defaultValue) {
             auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
@@ -337,7 +340,7 @@ EXPORT_MODULE namespace hex {
         template<typename T> requires (!(std::is_reference_v<T> || std::is_const_v<T>))
         void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, T value) {
             impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
-            impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
+            runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
 
             impl::store();
         }

@@ -83,20 +83,6 @@ namespace hex {
                 }
             }
 
-            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
-                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
-                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
-                        for (const auto &[id, callback] : nameIt->second) {
-                            try {
-                                callback(value);
-                            } catch (const nlohmann::json::exception &e) {
-                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
-                            }
-                        }
-                    }
-                }
-            }
-
             static AutoReset<nlohmann::json> s_settings;
             const nlohmann::json& getSettingsData() {
                 return s_settings;
@@ -288,6 +274,20 @@ namespace hex {
             category->unlocalizedDescription = unlocalizedDescription;
         }
 
+        void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
+            if (auto categoryIt = impl::s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != impl::s_onChangeCallbacks->end()) {
+                if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
+                    for (const auto &[id, callback] : nameIt->second) {
+                        try {
+                            callback(value);
+                        } catch (const nlohmann::json::exception &e) {
+                            log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                        }
+                    }
+                }
+            }
+        }
+
         u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback) {
             static u64 id = 1;
             (*impl::s_onChangeCallbacks)[unlocalizedCategory][unlocalizedName].emplace_back(id, callback);
@@ -465,6 +465,25 @@ namespace hex {
                 return { m_value[0], m_value[1], m_value[2], m_value[3] };
             }
 
+            DropDown::DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem)
+                : m_items(items.begin(), items.end()), m_settingsValues(settingsValues), m_filterIgnoredItems(items.size()), m_defaultItem(defaultItem) {
+            }
+
+            DropDown::DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem)
+                : m_items(items), m_settingsValues(settingsValues), m_filterIgnoredItems(items.size()), m_defaultItem(defaultItem) {
+            }
+
+            void DropDown::filter(const std::function<bool(std::string_view item, const nlohmann::json &settingsValue)> &callback) {
+                m_filterIgnoredItems.clear();
+                for (size_t idx=0; idx!=m_items.size(); ++idx) {
+                    if (callback(m_items[idx], m_settingsValues[idx])) {
+                        m_filterIgnoredItems.push_back(false);
+                    }
+                    else {
+                        m_filterIgnoredItems.push_back(true);
+                    }
+                }
+            }
 
             bool DropDown::draw(const std::string &name) {
                 auto preview = "";
@@ -473,20 +492,19 @@ namespace hex {
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
-
-                    int index = 0;
-                    for (const auto &item : m_items) {
-                        const bool selected = index == m_value;
-
-                        if (ImGui::Selectable(Lang(item), selected)) {
+                    for (int index=0; index!=static_cast<int>(m_items.size()); ++index) {
+                        if (m_filterIgnoredItems[index] == true) {
+                            continue;
+                        }
+    
+                        const bool selected = (index == m_value);
+                        if (ImGui::Selectable(Lang(m_items[index]), selected)) {
                             m_value = index;
                             changed = true;
                         }
 
                         if (selected)
                             ImGui::SetItemDefaultFocus();
-
-                        index += 1;
                     }
 
                     ImGui::EndCombo();
@@ -698,6 +716,13 @@ namespace hex {
                 runtime.setOnCreateCallback([](prv::Provider *provider, pl::PatternLanguage &runtime) {
                     configureRuntime(runtime, provider);
                 });
+
+                // Handle language change
+                ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue&) {
+                    for (auto &pl : runtime.all()) {
+                        pl.setLocale(hex::LocalizationManager::getSelectedLocale());
+                    }
+                });
             };
 
             return *runtime;
@@ -712,6 +737,8 @@ namespace hex {
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
             runtime.reset();
 
+            runtime.setLocale(hex::LocalizationManager::getSelectedLocale());
+
             if (provider != nullptr) {
                 runtime.setDataSource(provider->getBaseAddress(), provider->getActualSize(),
                                       [provider](u64 offset, u8 *buffer, size_t size) {
@@ -723,6 +750,7 @@ namespace hex {
                                       }
                 );
             }
+
 
             runtime.setIncludePaths(paths::PatternsInclude.read() | paths::Patterns.read());
 
