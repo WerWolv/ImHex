@@ -892,13 +892,12 @@ for (const auto &path : m_paths) {
                     }
 
                     // Filter the locales to those with the selected language
-                    const std::string_view itfLangPrefix = itfLang.substr(0, itfLang.find('-'));
+                    const std::string itfLangPrefix = itfLang.substr(0, itfLang.find('-'));
                     Widgets::DropDown &ddLocale = static_cast<Widgets::DropDown&>(localeWidget.getWidget());
                     ddLocale.filter([&itfLang, &itfLangPrefix](std::string_view, const nlohmann::json &settingValue) {
-                        std::string_view sval = std::string(settingValue);
-                        std::string_view prefix = sval.substr(0, itfLang.find('-'));
-                        bool crap = (itfLangPrefix == prefix);
-                        return crap;
+                        const std::string sval(settingValue);
+                        const std::string prefix = sval.substr(0, sval.find('-'));
+                        return (itfLangPrefix == prefix);
                     });
 
                     ContentRegistry::Settings::write(

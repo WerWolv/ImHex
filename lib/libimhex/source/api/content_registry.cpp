@@ -497,7 +497,7 @@ namespace hex {
                             continue;
                         }
     
-                        const bool selected = index == m_value;
+                        const bool selected = (index == m_value);
                         if (ImGui::Selectable(Lang(m_items[index]), selected)) {
                             m_value = index;
                             changed = true;
