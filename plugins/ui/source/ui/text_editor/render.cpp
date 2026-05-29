@@ -547,6 +547,16 @@ namespace hex::ui {
         return lineStartScreenPos + ImVec2(line.stringTextSize(text), 0);
     }
 
+    void TextEditor::Lines::updateLinesSize() {
+        m_lineIndexToScreen.clear();
+        m_leadingLineSpaces.clear();
+        m_leadingLineSpaces.resize(size(), 0);
+        for (i32 i = 0; i < size(); i++) {
+            m_lineIndexToScreen[i] = foldedCoordsToScreen(lineCoordinates(i, 0));
+            m_leadingLineSpaces[i] = skipSpaces(lineCoordinates(i, 0));
+        }
+    }
+
     void TextEditor::Lines::initializeCodeFolds() {
 
         m_codeFoldKeyMap.clear();
@@ -599,14 +609,7 @@ namespace hex::ui {
             }
         }
 
-        m_lineIndexToScreen.clear();
-        m_leadingLineSpaces.clear();
-        m_leadingLineSpaces.resize(size(), 0);
-        for (i32 i = 0; i < size(); i++) {
-            m_lineIndexToScreen[i] = foldedCoordsToScreen(lineCoordinates(i, 0));
-            m_leadingLineSpaces[i] = skipSpaces(lineCoordinates( i, 0));
-        }
-
+        updateLinesSize();
 
         if (m_useSavedFoldStatesRequested) {
             applyCodeFoldStates();
@@ -1243,10 +1246,10 @@ namespace hex::ui {
             ImGui::Dummy(m_lines.m_charAdvance);
         }
 
+        postRender(lineIndex, "##lineNumbers");
         if (m_lines.m_scrollToCursor)
             m_lines.ensureCursorVisible();
         m_lines.m_withinRender = false;
-        postRender(lineIndex, "##lineNumbers");
     }
 
     i64 TextEditor::drawColoredText(i32 lineIndex, const ImVec2 &textEditorSize) {
@@ -1598,6 +1601,8 @@ namespace hex::ui {
                 spacesSize = index;
             if (m_showWhitespaces) {
                 begin.x = PrintWhiteSpacesAt(begin, spacesSize);
+            } else {
+                begin.x += line.textSize(spacesSize);
             }
             if (tokenLength > spacesSize) {
                 text = text.substr(spacesSize);
