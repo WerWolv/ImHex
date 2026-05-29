@@ -697,6 +697,7 @@ namespace hex::ui {
             void setImGuiChildIgnored(bool value) { m_ignoreImGuiChild = value; }
             bool isImGuiChildIgnored() const { return m_ignoreImGuiChild; }
             ImVec2 lineIndexToScreen(i32 lineIndex, Interval stringIndices);
+            void updateLinesSize();
             void printCodeFold(const Range &key);
             void resetCursorBlinkTime();
             void setUnfoldIfNeeded(bool unfoldIfNeeded) {m_unfoldIfNeeded = unfoldIfNeeded;}

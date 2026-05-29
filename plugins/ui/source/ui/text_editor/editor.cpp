@@ -474,6 +474,7 @@ namespace hex::ui {
 
         if (character == '\n') {
             m_lines.insertLine(coord.m_line + 1);
+            m_lines.updateLinesSize();
             auto &line = m_lines.m_unfoldedLines[coord.m_line];
             auto &newLine = m_lines.m_unfoldedLines[coord.m_line + 1];
 
