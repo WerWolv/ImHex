@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Query cache version
         id: version
@@ -40,7 +40,7 @@ jobs:
           version: ${{ steps.version.outputs.version }}
 
       - name: Upload cached folder as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cache-artifact
           path: |
