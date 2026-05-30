@@ -4,6 +4,13 @@
 
 
 namespace hex::ui {
+    using Coordinates       = TextEditor::Coordinates;
+    using Range             = TextEditor::Range;
+    using Line              = TextEditor::Line;
+    using Lines             = TextEditor::Lines;
+    using MatchedDelimiter  = TextEditor::MatchedDelimiter;
+
+
     static bool isWordChar(char c) {
         auto asUChar = static_cast<u8>(c);
         return std::isalnum(asUChar) || c == '_' || asUChar > 0x7F;
@@ -30,7 +37,7 @@ namespace hex::ui {
         m_lines.moveToMatchedDelimiter(select);
     }
 
-    TextEditor::Coordinates TextEditor::Lines::rfind( const std::string &text, const Coordinates &from) {
+    Coordinates Lines::rfind( const std::string &text, const Coordinates &from) {
         Coordinates result = Invalid;
         if (text.empty() || isEmpty() || from.m_line >= size() || from.m_line < 0)
             return result;
@@ -46,7 +53,7 @@ namespace hex::ui {
     }
 
 
-    TextEditor::Coordinates TextEditor::Lines::find(const std::string &text, const Coordinates &from) {
+    Coordinates Lines::find(const std::string &text, const Coordinates &from) {
         Coordinates result = Invalid;
         if (text.empty() || isEmpty() || from.m_line >= size() || from.m_line < 0)
             return result;
@@ -62,7 +69,40 @@ namespace hex::ui {
         return result;
     }
 
-    void TextEditor::Lines::moveToMatchedDelimiter(bool select) {
+    void Lines::resetInteractiveSelection() {
+        m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
+    }
+
+    void Lines::selectUsingStart(bool select, const Coordinates &oldPos) {
+        if (select) {
+            if (oldPos == m_interactiveSelection.m_end)
+                m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            else if (oldPos == m_interactiveSelection.m_start)
+                m_interactiveSelection.m_start = m_state.m_cursorPosition;
+            else {
+                m_interactiveSelection.m_start = oldPos;
+                m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            }
+        } else
+            resetInteractiveSelection();
+    }
+
+
+    void Lines::selectUsingEnd(bool select, const Coordinates &oldPos) {
+        if (select) {
+            if (oldPos == m_interactiveSelection.m_start)
+                m_interactiveSelection.m_start = m_state.m_cursorPosition;
+            else if (oldPos == m_interactiveSelection.m_end)
+                m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            else {
+                m_interactiveSelection.m_start = m_state.m_cursorPosition;
+                m_interactiveSelection.m_end = oldPos;
+            }
+        } else
+            resetInteractiveSelection();
+    }
+
+    void Lines::moveToMatchedDelimiter(bool select) {
         resetCursorBlinkTime();
         if (m_matchedDelimiter.coordinatesNearDelimiter(this, m_state.m_cursorPosition)) {
             auto oldPos = m_matchedDelimiter.m_nearCursor;
@@ -96,7 +136,7 @@ namespace hex::ui {
         m_lines.ensureCursorVisible();
     }
 
-    void TextEditor::Lines::moveUp(i32 amount, bool select) {
+    void Lines::moveUp(i32 amount, bool select) {
         auto oldPos = m_state.m_cursorPosition;
         if (amount < 0) {
             m_scrollYIncrement = -1.0;
@@ -117,19 +157,8 @@ namespace hex::ui {
             m_state.m_cursorPosition.m_line = rowToLineIndex(row);
         }
 
-        if (oldPos != m_state.m_cursorPosition) {
-            if (select) {
-                if (oldPos == m_interactiveSelection.m_start)
-                    m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                else if (oldPos == m_interactiveSelection.m_end)
-                    m_interactiveSelection.m_end = m_state.m_cursorPosition;
-                else {
-                    m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                    m_interactiveSelection.m_end = oldPos;
-                }
-            } else
-                m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
-        }
+        if (oldPos != m_state.m_cursorPosition)
+            selectUsingEnd(select, oldPos);
     }
 
     void TextEditor::moveDown(i32 amount, bool select) {
@@ -140,7 +169,7 @@ namespace hex::ui {
         m_lines.ensureCursorVisible();
     }
 
-    void TextEditor::Lines::moveDown(i32 amount, bool select) {
+    void Lines::moveDown(i32 amount, bool select) {
         auto oldPos = m_state.m_cursorPosition;
         if (amount < 0) {
             m_scrollYIncrement = 1.0;
@@ -170,20 +199,8 @@ namespace hex::ui {
             m_state.m_cursorPosition.m_line = rowToLineIndex(row);
         }
 
-
-        if (m_state.m_cursorPosition != oldPos) {
-            if (select) {
-                if (oldPos == m_interactiveSelection.m_end)
-                    m_interactiveSelection.m_end = m_state.m_cursorPosition;
-                else if (oldPos == m_interactiveSelection.m_start)
-                    m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                else {
-                    m_interactiveSelection.m_start = oldPos;
-                    m_interactiveSelection.m_end = m_state.m_cursorPosition;
-                }
-            } else
-                m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
-        }
+        if (m_state.m_cursorPosition != oldPos)
+            selectUsingStart(select, oldPos);
     }
 
     void TextEditor::moveLeft(i32 amount, bool select, bool wordMode) {
@@ -193,7 +210,7 @@ namespace hex::ui {
         m_lines.ensureCursorVisible();
     }
 
-    void TextEditor::Lines::moveLeft(i32 amount, bool select, bool wordMode) {
+    void Lines::moveLeft(i32 amount, bool select, bool wordMode) {
         auto oldPos = m_state.m_cursorPosition;
         auto foldedPos = unfoldedToFoldedCoords(oldPos);
 
@@ -201,9 +218,8 @@ namespace hex::ui {
             return;
 
         auto lindex = foldedPos.m_line;
-        auto line = operator[](lindex);
-        auto lineMaxColumn = line.maxColumn();
-        auto column = std::min(foldedPos.m_column, lineMaxColumn);
+        auto lineMaxCol = lineMaxColumn(lindex);
+        auto column = std::min(foldedPos.m_column, lineMaxCol);
         auto row = lineIndexToRow(lindex);
 
         while (amount-- > 0) {
@@ -219,17 +235,7 @@ namespace hex::ui {
                 m_state.m_cursorPosition = foldedToUnfoldedCoords(Coordinates( lindex, column - 1));
         }
 
-        if (select) {
-            if (oldPos == m_interactiveSelection.m_start)
-                m_interactiveSelection.m_start = m_state.m_cursorPosition;
-            else if (oldPos == m_interactiveSelection.m_end)
-                m_interactiveSelection.m_end = m_state.m_cursorPosition;
-            else {
-                m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                m_interactiveSelection.m_end = oldPos;
-            }
-        } else
-            m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
+        selectUsingEnd(select, oldPos);
     }
 
     void TextEditor::moveRight(i32 amount, bool select, bool wordMode) {
@@ -239,7 +245,7 @@ namespace hex::ui {
         m_lines.ensureCursorVisible();
     }
 
-    void TextEditor::Lines::moveRight(i32 amount, bool select, bool wordMode) {
+    void Lines::moveRight(i32 amount, bool select, bool wordMode) {
         auto oldPos = m_state.m_cursorPosition;
         auto foldedPos = unfoldedToFoldedCoords(oldPos);
 
@@ -265,17 +271,7 @@ namespace hex::ui {
                 m_state.m_cursorPosition = foldedToUnfoldedCoords(Coordinates(lindex, column + 1));
         }
 
-        if (select) {
-            if (oldPos == m_interactiveSelection.m_end)
-                m_interactiveSelection.m_end = m_state.m_cursorPosition;
-            else if (oldPos == m_interactiveSelection.m_start)
-                m_interactiveSelection.m_start = m_state.m_cursorPosition;
-            else {
-                m_interactiveSelection.m_start = oldPos;
-                m_interactiveSelection.m_end = m_state.m_cursorPosition;
-            }
-        } else
-            m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
+        selectUsingStart(select, oldPos);
     }
 
     void TextEditor::moveTop(bool select) {
@@ -310,7 +306,7 @@ namespace hex::ui {
         setSelection(m_lines.m_interactiveSelection);
     }
 
-    void TextEditor::Lines::moveHome(bool select) {
+    void Lines::moveHome(bool select) {
         auto oldPos = m_state.m_cursorPosition;
         Coordinates foldedPos = oldPos;
         auto row = lineIndexToRow(oldPos.m_line);
@@ -360,19 +356,9 @@ namespace hex::ui {
             setCursorPosition(foldedToUnfoldedCoords(Coordinates(foldedPos.m_line, home)));
         } else
             setCursorPosition(Coordinates(m_state.m_cursorPosition.m_line, home));
-        if (m_state.m_cursorPosition != oldPos) {
-            if (select) {
-                if (oldPos == m_interactiveSelection.m_start)
-                    m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                else if (oldPos == m_interactiveSelection.m_end)
-                    m_interactiveSelection.m_end = m_state.m_cursorPosition;
-                else {
-                    m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                    m_interactiveSelection.m_end = oldPos;
-                }
-            } else
-                m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
-        }
+
+        if (m_state.m_cursorPosition != oldPos)
+            selectUsingEnd(select, oldPos);
     }
 
     void TextEditor::moveEnd(bool select) {
@@ -381,7 +367,7 @@ namespace hex::ui {
         setSelection(m_lines.m_interactiveSelection);
     }
 
-    void TextEditor::Lines::moveEnd(bool select) {
+    void Lines::moveEnd(bool select) {
         auto oldPos = m_state.m_cursorPosition;
         auto row = lineIndexToRow(oldPos.m_line);
         if (isMultiLineRow(row)) {
@@ -394,22 +380,12 @@ namespace hex::ui {
             setCursorPosition(lineCoordinates(m_state.m_cursorPosition.m_line, lineMaxColumn(oldPos.m_line)));
         }
 
-        if (m_state.m_cursorPosition != oldPos) {
-            if (select) {
-                if (oldPos == m_interactiveSelection.m_end)
-                    m_interactiveSelection.m_end = m_state.m_cursorPosition;
-                else if (oldPos == m_interactiveSelection.m_start)
-                    m_interactiveSelection.m_start = m_state.m_cursorPosition;
-                else {
-                    m_interactiveSelection.m_start = oldPos;
-                    m_interactiveSelection.m_end = m_state.m_cursorPosition;
-                }
-            } else
-                m_interactiveSelection.m_start = m_interactiveSelection.m_end = m_state.m_cursorPosition;
-        }
+        if (m_state.m_cursorPosition != oldPos)
+            selectUsingStart(select, oldPos);
+
     }
 
-    void TextEditor::Lines::setScrollY() {
+    void Lines::setScrollY() {
         if (!m_withinRender) {
             m_setScrollY = true;
             return;
@@ -435,16 +411,17 @@ namespace hex::ui {
         m_lines.setFocusAtCoords(m_lines.m_state.m_cursorPosition, scrollToCursor);
     }
 
-    void TextEditor::Lines::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
+    void Lines::setFocusAtCoords(const Coordinates &coords, bool scrollToCursor) {
         m_focusAtCoords = coords;
         m_state.m_cursorPosition = coords;
         m_updateFocus = true;
         m_scrollToCursor = scrollToCursor;
     }
 
-    void TextEditor::Lines::setCursorPosition(const Coordinates &position, bool unfoldIfNeeded, bool scrollToCursor) {
-        if (m_state.m_cursorPosition != position)
-            m_state.m_cursorPosition = lineCoordinates(position);
+    void Lines::setCursorPosition(const Coordinates &position, bool unfoldIfNeeded, bool scrollToCursor) {
+        auto positionCoordinates = lineCoordinates(position);
+        if (m_state.m_cursorPosition != positionCoordinates)
+            m_state.m_cursorPosition = positionCoordinates;
 
         m_unfoldIfNeeded = unfoldIfNeeded;
         m_focusAtCoords = m_state.m_cursorPosition;
@@ -453,11 +430,18 @@ namespace hex::ui {
             ensureCursorVisible();
     }
 
-    void TextEditor::Lines::setCursorPosition() {
+    void Lines::setCursorPosition() {
         setCursorPosition(m_state.m_selection.m_end);
     }
 
-    bool TextEditor::Coordinates::isValid(Lines &lines) {
+    void Lines::setEditorState(const Coordinates &coordinates, bool setInteractiveStart) {
+        m_state.m_cursorPosition = m_interactiveSelection.m_end  =  coordinates;
+        if (setInteractiveStart)
+            m_interactiveSelection.m_start = coordinates;
+        setSelection(m_interactiveSelection);
+    }
+
+    bool Coordinates::isValid(Lines &lines) {
 
         auto maxLine = lines.size();
         if (std::abs(m_line) > maxLine)
@@ -466,7 +450,7 @@ namespace hex::ui {
         return std::abs(m_column) <= maxColumn;
     }
 
-    TextEditor::Coordinates TextEditor::Coordinates::sanitize(Lines &lines) {
+    Coordinates Coordinates::sanitize(Lines &lines) {
 
         i32 lineCount = lines.size();
         if (m_line < 0) {
@@ -486,11 +470,11 @@ namespace hex::ui {
         return *this;
     }
 
-    TextEditor::Range::Coordinates TextEditor::lineCoordinates(i32 lineIndex, i32 column)  {
+    Coordinates TextEditor::lineCoordinates(i32 lineIndex, i32 column)  {
         return m_lines.lineCoordinates(lineIndex, column);
     }
 
-    TextEditor::Range::Coordinates TextEditor::Lines::lineCoordinates(i32 lineIndex, i32 column)  {
+    Coordinates Lines::lineCoordinates(i32 lineIndex, i32 column)  {
         if (isEmpty())
             return {0, 0};
         Coordinates result(lineIndex, column);
@@ -498,21 +482,21 @@ namespace hex::ui {
         return result.sanitize(*this);
     }
 
-    TextEditor::Coordinates TextEditor::lineCoordinates(const Coordinates &value)  {
+    Coordinates TextEditor::lineCoordinates(const Coordinates &value)  {
         return m_lines.lineCoordinates(value);
     }
 
-    TextEditor::Coordinates TextEditor::Lines::lineCoordinates(const Coordinates &value)  {
+    Coordinates Lines::lineCoordinates(const Coordinates &value)  {
         auto result = value;
 
         return result.sanitize(*this);
     }
 
-    TextEditor::Range TextEditor::lineCoordinates(const Range &value) {
+    Range TextEditor::lineCoordinates(const Range &value) {
         return m_lines.lineCoordinates(value);
     }
 
-    TextEditor::Range TextEditor::Lines::lineCoordinates(const Range &value) {
+    Range TextEditor::Lines::lineCoordinates(const Range &value) {
         auto start = lineCoordinates(value.m_start);
         auto end = lineCoordinates(value.m_end);
         if (start == Invalid || end == Invalid)
@@ -540,7 +524,7 @@ namespace hex::ui {
         coordinates.m_column += incr;
     }
 
-    TextEditor::Coordinates TextEditor::findWordStart(const Coordinates &from) {
+    Coordinates TextEditor::findWordStart(const Coordinates &from) {
         Coordinates at = m_lines.lineCoordinates(from);
         if (at.m_line >= m_lines.size())
             return at;
@@ -562,7 +546,7 @@ namespace hex::ui {
         return m_lines.lineIndexCoords(at.m_line + 1, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::findWordEnd(const Coordinates &from) {
+    Coordinates TextEditor::findWordEnd(const Coordinates &from) {
         Coordinates at = m_lines.lineCoordinates(from);
         if (at.m_line >= m_lines.size())
             return at;
@@ -585,7 +569,7 @@ namespace hex::ui {
         return m_lines.lineIndexCoords(at.m_line + 1, charIndex);
     }
 
-    TextEditor::Coordinates TextEditor::Lines::findNextWord(const Coordinates &from) {
+    Coordinates Lines::findNextWord(const Coordinates &from) {
         Coordinates at = unfoldedToFoldedCoords(from);
         if (at.m_line >= size())
             return from;
@@ -606,7 +590,7 @@ namespace hex::ui {
         return foldedToUnfoldedCoords(lineIndexCoords(at.m_line + 1, charIndex));
     }
 
-    TextEditor::Coordinates TextEditor::Lines::findPreviousWord(const Coordinates &from) {
+    Coordinates Lines::findPreviousWord(const Coordinates &from) {
         Coordinates at = unfoldedToFoldedCoords(from);
         if (at.m_line >= size())
             return from;
@@ -628,13 +612,13 @@ namespace hex::ui {
         return foldedToUnfoldedCoords(lineIndexCoords(at.m_line + 1, charIndex));
     }
 
-    u32 TextEditor::Line::skipSpaces(i32 charIndex) {
+    u32 Line::skipSpaces(i32 charIndex) {
         u32 s;
         for (s = 0; charIndex < (i32) m_chars.size() && m_chars[charIndex] == ' ' && m_flags[charIndex] == 0x00; ++s, ++charIndex);
         return s;
     }
 
-    u32 TextEditor::Lines::skipSpaces(const Coordinates &from) {
+    u32 Lines::skipSpaces(const Coordinates &from) {
         auto lineIndex = from.m_line;
         if (lineIndex >= (i64) size())
             return 0;
@@ -643,7 +627,7 @@ namespace hex::ui {
         return line.skipSpaces(charIndex);
     }
 
-    bool TextEditor::MatchedDelimiter::setNearCursor(Lines *lines,const Coordinates &from) {
+    bool MatchedDelimiter::setNearCursor(Lines *lines,const Coordinates &from) {
         Coordinates fromCopy = from;
         if (fromCopy.m_line >= lines->size())
             return false;
@@ -658,7 +642,7 @@ namespace hex::ui {
         return false;
     }
 
-    bool TextEditor::MatchedDelimiter::checkPosition(Lines *lines, Coordinates &from) {
+    bool MatchedDelimiter::checkPosition(Lines *lines, Coordinates &from) {
         auto start = lines->lineCoordinates(from);
         auto lineIndex = start.m_line;
         auto line = lines->m_unfoldedLines[lineIndex].m_chars;
@@ -680,7 +664,7 @@ namespace hex::ui {
         return false;
     }
 
-    i32 TextEditor::MatchedDelimiter::detectDirection(Lines *lines, const Coordinates &from) {
+    i32 MatchedDelimiter::detectDirection(Lines *lines, const Coordinates &from) {
         auto start = lines->lineCoordinates(from);
         std::string delimiters = "()[]{}<>";
         i32 result = -2; // dont check either
@@ -715,7 +699,7 @@ namespace hex::ui {
         return result;
     }
 
-    bool TextEditor::MatchedDelimiter::coordinatesNearDelimiter(Lines *lines, Coordinates &from) {
+    bool MatchedDelimiter::coordinatesNearDelimiter(Lines *lines, Coordinates &from) {
         auto start = lines->lineCoordinates(from);
         if (lines->isEmpty())
             return false;
@@ -787,7 +771,7 @@ namespace hex::ui {
         return false;
     }
 
-    TextEditor::Coordinates TextEditor::MatchedDelimiter::findMatchingDelimiter(Lines *lines, Coordinates &from, bool folded) {
+    Coordinates MatchedDelimiter::findMatchingDelimiter(Lines *lines, Coordinates &from, bool folded) {
         Coordinates start;
         Coordinates result = Invalid;
         if (!folded)
@@ -936,7 +920,7 @@ namespace hex::ui {
         return result;
     }
 
-    void TextEditor::MatchedDelimiter::findMatchingDelimiter(Lines *lines, bool folded) {
+    void MatchedDelimiter::findMatchingDelimiter(Lines *lines, bool folded) {
         Coordinates from = m_nearCursor;
         Coordinates result = findMatchingDelimiter(lines, from, folded);
         if (result != Invalid) {

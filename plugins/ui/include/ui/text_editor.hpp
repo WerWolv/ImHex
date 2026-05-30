@@ -676,6 +676,9 @@ namespace hex::ui {
             Keys getDeactivatedBlocks();
             std::string getSelectedText();
             void deleteSelection();
+            void selectUsingEnd(bool select, const Coordinates &oldPos);
+            void selectUsingStart(bool select, const Coordinates &oldPos);
+            void resetInteractiveSelection();
             void setTextChanged(bool value) { m_textChanged = value; }
             bool isTextChanged() { return m_textChanged; }
             void setLanguageDefinition(const LanguageDefinition &aLanguageDef);
@@ -723,6 +726,7 @@ namespace hex::ui {
             float textDistanceToLineStart(const Coordinates &from);
             std::string getText(bool addHiddenLines = false);
             void setCursorPosition();
+            void setEditorState(const Coordinates &coordinates, bool setInteractiveStart = true);
             void ensureSelectionNotFolded();
             bool hasSelection();
             i32 insertTextAtCursor(const std::string &value);
@@ -1003,6 +1007,7 @@ namespace hex::ui {
         void setSelection(const Range &selection);
         Range getSelection() const;
         void selectWordUnderCursor();
+        void selectLineUnderCursor();
         void selectAll();
         bool hasSelection() { return m_lines.hasSelection(); }
         std::string getSelectedText() { return m_lines.getSelectedText(); }

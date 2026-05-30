@@ -586,7 +586,7 @@ namespace hex::ui {
         return m_selection == o.m_selection && m_cursorPosition == o.m_cursorPosition;
     }
 
-    void TextEditor::Lines::setSelection(const Range &selection) {
+    void Lines::setSelection(const Range &selection) {
         m_state.m_selection = lineCoordinates(const_cast<Range &>(selection));
     }
 
@@ -594,7 +594,7 @@ namespace hex::ui {
         m_lines.setSelection(selection);
     }
 
-    Range TextEditor::Lines::getSelection() const {
+    Range Lines::getSelection() const {
         return m_state.m_selection;
     }
 
@@ -607,15 +607,24 @@ namespace hex::ui {
         setSelection(Range(wordStart, findWordEnd(wordStart)));
     }
 
+    void TextEditor::selectLineUnderCursor() {
+        auto coordinates = m_lines.m_state.m_cursorPosition;
+        auto lineIndex = rowToLineIndex(lineIndexToRow(coordinates.m_line));
+        auto maxColumn = m_lines.lineMaxColumn(lineIndex);
+        m_lines.m_state.m_selection.m_start = m_lines.foldedToUnfoldedCoords(Coordinates(lineIndex, 0));
+        m_lines.m_state.m_selection.m_end = m_lines.foldedToUnfoldedCoords(Coordinates(lineIndex, maxColumn));
+        m_lines.resetInteractiveSelection();
+    }
+
     void TextEditor::selectAll() {
         setSelection(Range(m_lines.lineCoordinates(0, 0), m_lines.lineCoordinates(-1, -1)));
     }
 
-    bool TextEditor::Lines::hasSelection()  {
+    bool Lines::hasSelection()  {
         return !isEmpty() && m_state.m_selection.m_end > m_state.m_selection.m_start;
     }
 
-    void TextEditor::Lines::addUndo(std::vector<UndoRecord> value) {
+    void Lines::addUndo(std::vector<UndoRecord> value) {
         if (m_readOnly)
             return;
 
@@ -624,7 +633,7 @@ namespace hex::ui {
         m_undoIndex++;
     }
 
-    TextEditor::PaletteIndex TextEditor::Lines::getColorIndexFromFlags(Line::Flags flags) {
+    TextEditor::PaletteIndex Lines::getColorIndexFromFlags(Line::Flags flags) {
         auto commentBits = flags.m_value & inComment;
         if (commentBits == (i32) Line::FlagValues::Global)
             return PaletteIndex::GlobalDocComment;
@@ -695,83 +704,62 @@ namespace hex::ui {
                 Left mouse button triple click
                 */
 
+                auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
+                if (coordinates == Invalid)
+                    return;
+
                 if (tripleClick) {
-                    auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
-                    if (coordinates == Invalid)
-                        return;
                     if (!ctrl) {
                         m_lines.m_state.m_cursorPosition = coordinates;
-                        auto lineIndex = rowToLineIndex(lineIndexToRow(coordinates.m_line));
-                        auto line = m_lines[lineIndex];
-                        m_lines.m_state.m_selection.m_start = m_lines.foldedToUnfoldedCoords(Coordinates(lineIndex, 0));
-                        m_lines.m_state.m_selection.m_end = m_lines.foldedToUnfoldedCoords(Coordinates(lineIndex, line.maxColumn()));
+                        selectLineUnderCursor();
                     }
 
                     m_lastClick = -1.0f;
                     resetBlinking = true;
                 }
 
-                    /*
-                    Left mouse button double click
-                    */
-
+                /*
+                Left mouse button double click
+                */
                 else if (doubleClick) {
-                    auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
-                    if (coordinates == Invalid)
-                        return;
                     if (!ctrl) {
-                        m_lines.m_state.m_cursorPosition = coordinates;
-                        m_lines.m_state.m_selection.m_start = findWordStart(m_lines.m_state.m_cursorPosition);
-                        m_lines.m_state.m_selection.m_end = findWordEnd(m_lines.m_state.m_cursorPosition);
+                        m_lines.setEditorState(coordinates);
+                        selectWordUnderCursor();
                     }
 
                     m_lastClick = (float) ImGui::GetTime();
                     resetBlinking = true;
                 }
 
-                    /*
-                    Left mouse button click
-                    */
+                /*
+                Left mouse button click
+                */
                 else if (click) {
-                    auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
-                    if (coordinates == Invalid)
-                        return;
                     if (ctrl) {
-                        m_lines.m_state.m_cursorPosition = m_lines.m_interactiveSelection.m_start = m_lines.m_interactiveSelection.m_end = coordinates;
+                        m_lines.setEditorState(coordinates);
                         selectWordUnderCursor();
-                    } else if (shift) {
-                        m_lines.m_state.m_cursorPosition = m_lines.m_interactiveSelection.m_end = coordinates;
-                        setSelection(m_lines.m_interactiveSelection);
-                    } else {
-                        m_lines.m_state.m_cursorPosition = m_lines.m_interactiveSelection.m_end  = m_lines.m_interactiveSelection.m_start = coordinates;
-                        setSelection(m_lines.m_interactiveSelection);
-                    }
-                    m_lines.resetCursorBlinkTime();
+                    } else if (shift)
+                        m_lines.setEditorState(coordinates, false);
+                    else
+                        m_lines.setEditorState(coordinates);
 
+                    m_lines.resetCursorBlinkTime();
                     m_lines.ensureCursorVisible();
                     m_lastClick = (float) ImGui::GetTime();
                 } else if (rightClick) {
-                    auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
-                    if (coordinates == Invalid)
-                        return;
                     auto cursorPosition = coordinates;
 
-                    if (!m_lines.hasSelection() || m_lines.m_state.m_selection.m_start > cursorPosition || cursorPosition > m_lines.m_state.m_selection.m_end) {
-                        m_lines.m_state.m_cursorPosition = m_lines.m_interactiveSelection.m_start = m_lines.m_interactiveSelection.m_end = cursorPosition;
-                        setSelection(m_lines.m_interactiveSelection);
-                    }
-                    m_lines.resetCursorBlinkTime();
+                    if (!m_lines.hasSelection() || !m_lines.m_state.m_selection.contains(cursorPosition,Range::EndsInclusive::Both))
+                        m_lines.setEditorState(cursorPosition);
+
+                    resetBlinking = true;
                     m_raiseContextMenu = true;
                     ImGui::SetWindowFocus();
                 }
-                    // Mouse left button dragging (=> update selection)
+                // Mouse left button dragging (=> update selection)
                 else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0)) {
-                    auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
-                    if (coordinates == Invalid)
-                        return;
                     io.WantCaptureMouse = true;
-                    m_lines.m_state.m_cursorPosition = m_lines.m_interactiveSelection.m_end = coordinates;
-                    setSelection(m_lines.m_interactiveSelection);
+                    m_lines.setEditorState(coordinates, false);
                     m_lines.ensureCursorVisible();
                     resetBlinking = true;
                 }
@@ -1181,7 +1169,7 @@ namespace hex::ui {
         return true;
     }
 
-    ImRect TextEditor::Lines::getBoxForRow(u32 row) {
+    ImRect Lines::getBoxForRow(u32 row) {
         auto boxSize = m_charAdvance.x + (((u32) m_charAdvance.x % 2) ? 2.0f : 1.0f);
         auto lineStartScreenPos = getLineStartScreenPos(0,row);
         ImVec2 lineNumberStartScreenPos = ImVec2(m_lineNumbersStartPos.x + m_lineNumberFieldWidth, lineStartScreenPos.y);
@@ -1279,7 +1267,7 @@ namespace hex::ui {
         return m_lines.size();
     }
 
-    void TextEditor::Lines::setAllCodeFolds() {
+    void Lines::setAllCodeFolds() {
         initializeCodeFolds();
         CodeFoldBlocks intervals = foldPointsFromSource();
         m_codeFoldKeys.clear();
@@ -1321,7 +1309,7 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::removeHiddenLinesFromPattern() {
+    void Lines::removeHiddenLinesFromPattern() {
         i32 lineIndex = 0;
         const auto totalLines = (i32)m_unfoldedLines.size();
         while (lineIndex < totalLines && m_unfoldedLines[lineIndex].m_chars.starts_with("//+-"))
@@ -1339,7 +1327,7 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::addHiddenLinesToPattern() {
+    void Lines::addHiddenLinesToPattern() {
         if (m_hiddenLines.empty())
             return;
         for (const auto &hiddenLine : m_hiddenLines) {
@@ -1409,11 +1397,11 @@ namespace hex::ui {
             }
         }
     }
-    bool TextEditor::Lines::isTokenIdValid(i32 tokenId) {
+    bool Lines::isTokenIdValid(i32 tokenId) {
         return tokenId >= 0 && tokenId < (i32) m_tokens.size();
     }
 
-    bool TextEditor::Lines::isLocationValid(Location location) {
+    bool Lines::isLocationValid(Location location) {
         const pl::api::Source *source;
         try {
             source = location.source;
@@ -1426,7 +1414,7 @@ namespace hex::ui {
         return location > m_tokens.front().location && location < m_tokens.back().location;
     }
 
-    void TextEditor::Lines::loadFirstTokenIdOfLine() {
+    void Lines::loadFirstTokenIdOfLine() {
         const u32 tokenCount = m_tokens.size();
         m_firstTokenIdOfLine.clear();
         u32 tokenId = 0;
@@ -1473,14 +1461,14 @@ namespace hex::ui {
 
     }
 
-    pl::core::Location TextEditor::Lines::getLocation(i32 tokenId) {
+    pl::core::Location Lines::getLocation(i32 tokenId) {
 
         if (tokenId >= (i32) m_tokens.size())
             return Location::Empty();
         return m_tokens[tokenId].location;
     }
 
-    i32 TextEditor::Lines::getTokenId(hex::ui::TextEditor::SafeTokenIterator tokenIterator) {
+    i32 Lines::getTokenId(TextEditor::SafeTokenIterator tokenIterator) {
             auto start = m_tokens.data();
             auto m_start = &tokenIterator.front();
             auto m_end = &tokenIterator.back();
@@ -1490,7 +1478,7 @@ namespace hex::ui {
             return m_start - start;
     }
 
-    i32 TextEditor::Lines::getTokenId() {
+    i32 Lines::getTokenId() {
         auto start = m_tokens.data();
         auto m_start = &m_curr.front();
         auto m_end = &m_curr.back();
@@ -1501,7 +1489,7 @@ namespace hex::ui {
     }
 
 // Get the token index for a given location.
-    i32 TextEditor::Lines::getTokenId(pl::core::Location location) {
+    i32 Lines::getTokenId(pl::core::Location location) {
         if (location == m_tokens.at(0).location)
             return 0;
         if (location == m_tokens.back().location)
@@ -1531,7 +1519,7 @@ namespace hex::ui {
         return -1;
     }
 
-    i32 TextEditor::Lines::nextLineIndex(i32 lineIndex) {
+    i32 Lines::nextLineIndex(i32 lineIndex) {
         if (lineIndex < 0 || lineIndex >= size())
             return -1;
         auto currentTokenId = m_firstTokenIdOfLine[lineIndex];

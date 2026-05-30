@@ -14,8 +14,10 @@ namespace hex::ui {
     using Coordinates           = TextEditor::Coordinates;
     using RangeFromCoordinates  = TextEditor::RangeFromCoordinates;
     using CodeFoldState         = TextEditor::CodeFoldState;
+    using Lines                 = TextEditor::Lines;
+    using CodeFoldBlocks        = TextEditor::CodeFoldBlocks;
 
-    void TextEditor::Lines::skipAttribute() {
+    void Lines::skipAttribute() {
 
         if (sequence(tkn::Separator::LeftBracket, tkn::Separator::LeftBracket)) {
             while (!sequence(tkn::Separator::RightBracket, tkn::Separator::RightBracket))
@@ -23,7 +25,7 @@ namespace hex::ui {
         }
     }
 
-    Interval TextEditor::Lines::findBlockInRange(Interval interval) {
+    Interval Lines::findBlockInRange(Interval interval) {
         Interval result = NotValid;
         auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
 
@@ -98,7 +100,7 @@ namespace hex::ui {
         return NotValid;
     }
 
-    Coordinates TextEditor::Lines::findCommentEndCoord(i32 tokenId) {
+    Coordinates Lines::findCommentEndCoord(i32 tokenId) {
         Coordinates result = Invalid;
         auto save = m_curr;
         m_curr = SafeTokenIterator(m_tokens.begin(), m_tokens.end()) + tokenId;
@@ -135,7 +137,7 @@ namespace hex::ui {
     }
 
 //comments imports and includes
-    void TextEditor::Lines::nonDelimitedFolds() {
+    void Lines::nonDelimitedFolds() {
         auto size = m_tokens.size();
         if (size > 0) {
             Interval block = {0,static_cast<i32>(size-1)};
@@ -162,7 +164,7 @@ namespace hex::ui {
         }
     }
 
-    RangeFromCoordinates TextEditor::Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
+    RangeFromCoordinates Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
         RangeFromCoordinates result = {Invalid, Invalid};
         Coordinates first = Invalid;
         auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
@@ -240,7 +242,7 @@ namespace hex::ui {
         return result;
     }
 
-    void TextEditor::Lines::advanceToNextLine(i32 &lineIndex, i32 &currentTokenId, Location &location) {
+    void Lines::advanceToNextLine(i32 &lineIndex, i32 &currentTokenId, Location &location) {
         i32 tempLineIndex;
         if (tempLineIndex = nextLineIndex(lineIndex); lineIndex == tempLineIndex) {
             lineIndex++;
@@ -254,14 +256,14 @@ namespace hex::ui {
         location = m_curr->location;
     }
 
-    void TextEditor::Lines::incrementTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
+    void Lines::incrementTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
         currentTokenId++;
         m_curr = m_startToken + currentTokenId;
         location = m_curr->location;
         lineIndex = location.line - 1;
     }
 
-    void TextEditor::Lines::moveToStringIndex(i32 stringIndex, i32 &currentTokenId, Location &location) {
+    void Lines::moveToStringIndex(i32 stringIndex, i32 &currentTokenId, Location &location) {
         auto curr = m_curr;
         i32 tempTokenId;
         auto &line = operator[](location.line - 1);
@@ -280,13 +282,13 @@ namespace hex::ui {
 
     }
 
-    void TextEditor::Lines::resetToTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
+    void Lines::resetToTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location) {
         m_curr = m_startToken + currentTokenId;
         location = m_curr->location;
         lineIndex = location.line - 1;
     }
 
-    i32 TextEditor::Lines::findNextDelimiter(bool openOnly) {
+    i32 Lines::findNextDelimiter(bool openOnly) {
         while (!peek(tkn::Separator::EndOfProgram)) {
 
             if (peek(tkn::Separator::LeftBrace) || peek(tkn::Separator::LeftBracket) || peek(tkn::Separator::LeftParenthesis) || peek(tkn::Operator::BoolLessThan))
@@ -300,7 +302,7 @@ namespace hex::ui {
         return getTokenId();
     }
 
-    TextEditor::CodeFoldBlocks TextEditor::Lines::foldPointsFromSource() {
+    CodeFoldBlocks Lines::foldPointsFromSource() {
         auto code = getText();
         if (code.empty())
             return m_foldPoints;
@@ -380,7 +382,7 @@ namespace hex::ui {
     }
 
 
-    std::pair<i32, char> TextEditor::Lines::findMatchingDelimiter(i32 from) {
+    std::pair<i32, char> Lines::findMatchingDelimiter(i32 from) {
         std::string blockDelimiters = "{}[]()<>";
         std::pair<i32, char> result = std::make_pair(-1, '\0');
         auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
@@ -466,7 +468,7 @@ namespace hex::ui {
         m_lines.saveCodeFoldStates();
     }
 
-    void TextEditor::Lines::saveCodeFoldStates() {
+    void Lines::saveCodeFoldStates() {
         i32 codeFoldIndex = 0;
         Indices closedFoldIncrements;
         for (auto key: m_codeFoldKeys) {
@@ -494,22 +496,22 @@ namespace hex::ui {
         m_lines.applyCodeFoldStates();
     }
 
-    void TextEditor::Lines::setCodeFoldState(CodeFoldState state) {
+    void Lines::setCodeFoldState(CodeFoldState state) {
         m_codeFoldState = state;
         saveCodeFoldStates();
     }
 
-    CodeFoldState TextEditor::Lines::getCodeFoldState() const {
+    CodeFoldState Lines::getCodeFoldState() const {
         return m_codeFoldState;
     }
 
-    void TextEditor::Lines::resetCodeFoldStates() {
+    void Lines::resetCodeFoldStates() {
         m_codeFoldState.clear();
         for (auto key: m_codeFoldKeys)
             m_codeFoldState[key] = true;
     }
 
-    void TextEditor::Lines::applyCodeFoldStates() {
+    void Lines::applyCodeFoldStates() {
 
         std::string commentLine;
         for (const auto& line: m_hiddenLines) {
@@ -552,7 +554,7 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::closeCodeFold(const Range &key, bool userTriggered) {
+    void Lines::closeCodeFold(const Range &key, bool userTriggered) {
         float topRow = 0.0f;
 
         if (userTriggered) {
@@ -684,7 +686,7 @@ namespace hex::ui {
         m_foldedLines[currentFoldedLine.m_row].loadSegments();
     }
 
-    void TextEditor::Lines::openCodeFold(const Range &key) {
+    void Lines::openCodeFold(const Range &key) {
         for (const auto& foldedLine : m_foldedLines) {
             for (auto foldKey : foldedLine.second.m_keys) {
                 if (foldKey.contains(key) && foldKey != key) {
@@ -754,11 +756,11 @@ namespace hex::ui {
     }
 
     template<typename T>
-    T *TextEditor::Lines::getValue(const i32 index) {
+    T *Lines::getValue(const i32 index) {
         return const_cast<T*>(std::get_if<T>(&m_curr[index].value));
     }
 
-    void TextEditor::Lines::next(i32 count) {
+    void Lines::next(i32 count) {
         if (count == 0)
             return;
         i32 id = getTokenId();
@@ -771,32 +773,32 @@ namespace hex::ui {
     }
     enum : u32 { Normal = 0, Not = 1 };
 
-    bool TextEditor::Lines::begin() {
+    bool Lines::begin() {
         m_originalPosition = m_curr;
 
         return true;
     }
 
-    void TextEditor::Lines::partBegin() {
+    void Lines::partBegin() {
         m_partOriginalPosition = m_curr;
     }
 
-    void TextEditor::Lines::reset() {
+    void Lines::reset() {
         m_curr = m_originalPosition;
     }
 
-    void TextEditor::Lines::partReset() {
+    void Lines::partReset() {
         m_curr = m_partOriginalPosition;
     }
 
-    bool TextEditor::Lines::resetIfFailed(const bool value) {
+    bool Lines::resetIfFailed(const bool value) {
         if (!value) reset();
 
         return value;
     }
 
     template<auto S>
-    bool TextEditor::Lines::sequenceImpl() {
+    bool Lines::sequenceImpl() {
         if constexpr (S == Normal)
             return true;
         else if constexpr (S == Not)
@@ -806,7 +808,7 @@ namespace hex::ui {
     }
 
     template<auto S>
-    bool TextEditor::Lines::matchOne(const Token &token) {
+    bool Lines::matchOne(const Token &token) {
         if constexpr (S == Normal) {
             if (!peek(token)) {
                 partReset();
@@ -827,19 +829,19 @@ namespace hex::ui {
     }
 
     template<auto S>
-    bool TextEditor::Lines::sequenceImpl(const auto &... args) {
+    bool Lines::sequenceImpl(const auto &... args) {
         return (matchOne<S>(args) && ...);
     }
 
 
     template<auto S>
-    bool TextEditor::Lines::sequence(const Token &token, const auto &... args) {
+    bool Lines::sequence(const Token &token, const auto &... args) {
         partBegin();
         return sequenceImpl<S>(token, args...);
     }
 
 
-    bool TextEditor::Lines::isValid() {
+    bool Lines::isValid() {
         Token token;
         try {
             token = m_curr[0];
@@ -853,7 +855,7 @@ namespace hex::ui {
         return isLocationValid(token.location);
     }
 
-    bool TextEditor::Lines::peek(const Token &token, const i32 index) {
+    bool Lines::peek(const Token &token, const i32 index) {
         if (!isValid())
             return false;
         i32 id = getTokenId();
