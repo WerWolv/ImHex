@@ -630,6 +630,7 @@ namespace hex::ui {
 
         if (m_state.m_selection.m_end == m_state.m_selection.m_start)
             return;
+        m_interactiveSelection = m_state.m_selection;
 
         deleteRange(m_interactiveSelection);
         m_interactiveSelection.m_end = m_interactiveSelection.m_start;
