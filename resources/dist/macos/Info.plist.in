@@ -15,6 +15,39 @@
 	    <dict>
             <key>CFBundleTypeExtensions</key>
             <array>
+              <string>hexpat</string>
+              <string>pat</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>NSDocumentClass</key>
+            <string>HexDocument</string>
+            <key>CFBundleTypeName</key>
+            <string>ImHex Pattern File</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>net.werwolv.imhex.pattern</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+              <string>hexproj</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>NSDocumentClass</key>
+            <string>HexDocument</string>
+            <key>CFBundleTypeName</key>
+            <string>ImHex Project File</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>net.werwolv.imhex.project</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
               <string>*</string>
             </array>
             <key>CFBundleTypeRole</key>
@@ -23,6 +56,46 @@
             <string>HexDocument</string>
             <key>CFBundleTypeName</key>
             <string>All Files</string>
+        </dict>
+    </array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+	    <dict>
+            <key>UTTypeIdentifier</key>
+            <string>net.werwolv.imhex.pattern</string>
+            <key>UTTypeDescription</key>
+            <string>ImHex Pattern File</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+                <string>public.content</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>hexpat</string>
+                    <string>pat</string>
+                </array>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>net.werwolv.imhex.project</string>
+            <key>UTTypeDescription</key>
+            <string>ImHex Project File</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+                <string>public.content</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>hexproj</string>
+                </array>
+            </dict>
         </dict>
     </array>
 	<key>CFBundleIdentifier</key>
