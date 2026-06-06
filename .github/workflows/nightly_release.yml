@@ -69,7 +69,11 @@ jobs:
         run: |
           mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
           mv "Windows Portable arm64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-arm64.zip
-          mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
+          if [ -f "Windows Portable NoGPU x86_64.zip" ]; then
+            mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
+          else
+            echo "Optional artifact missing: Windows Portable NoGPU x86_64.zip"
+          fi
           mv "ImHex Web.zip" imhex-${{ env.IMHEX_VERSION }}-Web.zip
           rm artifact.tar || true
 
