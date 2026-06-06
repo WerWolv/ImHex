@@ -1500,13 +1500,13 @@ namespace hex::plugin::builtin {
                         }
                         return false;
                     });
+                    m_runningParsers += 1;
                     TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code = std::move(code), provider](auto &){
                         this->parsePattern(code, provider);
 
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
-                    m_runningParsers += 1;
                     m_hasUnevaluatedChanges.get(provider) = false;
             }
 
@@ -1526,8 +1526,8 @@ namespace hex::plugin::builtin {
                 m_identifierHighlighter.get(provider).updateRequiredInputs();
                 if (restoreInterruptState)
                     interrupt();
-                TaskManager::createBackgroundTask("hex.builtin.task.highlighting_pattern", [this,provider](auto &) { m_identifierHighlighter.get(provider).highlightSourceCode(); });
                 m_runningHighlighters += 1;
+                TaskManager::createBackgroundTask("hex.builtin.task.highlighting_pattern", [this,provider](auto &) { m_identifierHighlighter.get(provider).highlightSourceCode(); });
             } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_identifierHighlighter.get(provider).setRequestedIdentifierColors(m_colorizeIdentifiers);
                 m_textEditor.get(provider).getLines().setAllCodeFolds();
@@ -1712,6 +1712,7 @@ namespace hex::plugin::builtin {
                 }
                 return false;
             });
+            m_runningParsers += 1;
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
@@ -1755,7 +1756,8 @@ namespace hex::plugin::builtin {
         m_changesWereParsed = true;
         m_changesWereColored = false;
         m_allStepsCompleted = false;
-        m_runningParsers -= 1;
+        if (m_runningParsers != 0)
+            m_runningParsers -= 1;
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
