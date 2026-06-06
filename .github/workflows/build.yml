@@ -187,15 +187,22 @@ jobs:
     - name: ⬇️ Download Mesa3D for NoGPU version
       if: ${{ matrix.architecture_name == 'x86_64' }}
       shell: bash
+      continue-on-error: true
       run: |
         set -x
         echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
-        curl --connect-timeout 30 --retry 5 --retry-delay 0 --retry-max-time 30 https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
-        7z e mesa.7z
-        mv opengl32.dll build/install
+        if curl --connect-timeout 30 --retry 5 --retry-delay 2 --retry-max-time 120 \
+          https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z; then
+          7z e mesa.7z
+          mv opengl32.dll build/install
+        else
+          echo "Mesa download unavailable, skipping NoGPU package generation."
+          rm -f build/install/MESA.md
+          exit 0
+        fi
 
     - name: ⬆️ Upload NoGPU Portable ZIP
-      if: ${{ matrix.architecture_name == 'x86_64' }}
+      if: ${{ matrix.architecture_name == 'x86_64' && hashFiles('build/install/opengl32.dll') != '' }}
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
