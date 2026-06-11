@@ -9,8 +9,10 @@ namespace hex::ui {
 
     using Coordinates   = TextEditor::Coordinates;
     using Segments      = TextEditor::Segments;
+    using Line          = TextEditor::Line;
+    using Lines         = TextEditor::Lines;
 
-    TextEditor::Line TextEditor::Line::trim(TrimMode trimMode) {
+    Line Line::trim(TrimMode trimMode) {
         if (m_chars.empty())
             return m_emptyLine;
         std::string trimmed = wolv::util::trim(m_chars);
@@ -27,7 +29,7 @@ namespace hex::ui {
             return subLine(idx, trimmed.size());
     }
 
-    i32 TextEditor::Line::columnIndex(i32 column) const {
+    i32 Line::columnIndex(i32 column) const {
 
         i32 idx = 0;
         for (i32 col = 0;  idx < (i32) size() && col < column; ++col)
@@ -36,20 +38,20 @@ namespace hex::ui {
         return idx;
     }
 
-    i32 TextEditor::Line::maxColumn() {
+    i32 Line::maxColumn() {
         if (m_lineMaxColumn > 0)
             return m_lineMaxColumn;
         m_lineMaxColumn = indexColumn((i32) size());
         return m_lineMaxColumn;
     }
 
-    i32 TextEditor::Line::maxColumn() const {
+    i32 Line::maxColumn() const {
         if (m_lineMaxColumn > 0)
             return m_lineMaxColumn;
         return indexColumn((i32) size());
     }
 
-    i32 TextEditor::Line::indexColumn(i32 stringIndex) const {
+    i32 Line::indexColumn(i32 stringIndex) const {
         i32 limit = std::max(0, std::min(stringIndex, (i32) size()));
 
         i32 col = 0;
@@ -59,7 +61,7 @@ namespace hex::ui {
         return col;
     }
 
-    i32 TextEditor::Line::stringTextSize(const std::string &str) const {
+    i32 Line::stringTextSize(const std::string &str) const {
         if (str.empty())
             return 0;
         if (ImGui::GetFont() == nullptr) {
@@ -71,24 +73,24 @@ namespace hex::ui {
         return ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
     }
 
-    i32 TextEditor::Line::textSize(u32 index) const {
+    i32 Line::textSize(u32 index) const {
         if (m_chars.empty())
             return 0;
         return stringTextSize(m_chars.substr(0, index));
     }
 
-    i32 TextEditor::Line::textSize() const {
+    i32 Line::textSize() const {
         if (m_chars.empty())
             return 0;
         return stringTextSize(m_chars);
     }
 
-    i32 TextEditor::Line::lineTextSize(TrimMode trimMode) {
+    i32 Line::lineTextSize(TrimMode trimMode) {
         auto trimmedLine = trim(trimMode);
         return trimmedLine.textSize();
     }
 
-    i32 TextEditor::Line::textSizeIndex(float textSize, i32 position) {
+    i32 Line::textSizeIndex(float textSize, i32 position) {
         i32 result = textSize /  ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
         auto currentSize = stringTextSize(m_chars.substr(position, result));
         while (currentSize < textSize && (u32)(position + result) < size()) {
@@ -130,7 +132,7 @@ namespace hex::ui {
         return line.indexColumn(stringIndex);
     }
 
-    i32 TextEditor::Lines::lineMaxColumn(i32 lineIndex) {
+    i32 Lines::lineMaxColumn(i32 lineIndex) {
         if (lineIndex >= (i64) size() || lineIndex < 0)
             return 0;
 
@@ -227,7 +229,7 @@ namespace hex::ui {
         return {coordinates.m_line,line.columnIndex(coordinates.m_column)};
     }
 
-    i32 TextEditor::Lines::lineCoordsIndex(const Coordinates &coordinates)  {
+    i32 Lines::lineCoordsIndex(const Coordinates &coordinates)  {
         if (coordinates.m_line >= (i64) size())
             return -1;
 
@@ -235,44 +237,42 @@ namespace hex::ui {
         return line.columnIndex(coordinates.m_column);
     }
 
-    Coordinates TextEditor::Lines::lineIndexCoords(i32 lineNumber, i32 stringIndex) {
+    Coordinates Lines::lineIndexCoords(i32 lineNumber, i32 stringIndex) {
         if (lineNumber < 1 || lineNumber > size())
             return lineCoordinates( 0, 0);
         auto &line = operator[](lineNumber - 1);
         return lineCoordinates(lineNumber - 1, line.indexColumn(stringIndex));
     }
 
-    Segments TextEditor::Lines::unfoldedEllipsisCoordinates(Range delimiterCoordinates) {
+    Segments Lines::unfoldedEllipsisCoordinates(Range delimiterCoordinates) {
 
         auto lineStart = m_unfoldedLines[delimiterCoordinates.m_start.m_line];
         auto row = lineIndexToRow(delimiterCoordinates.m_start.m_line);
         float unfoldedSpan1, unfoldedSpan2, unfoldedSpan3;
         float unprocessedSpan1, unprocessedSpan2, unprocessedSpan3;
-        bool adddsBothEnds = true;
+        bool addsBothEnds = true;
         if (delimiterCoordinates.m_start.m_line == delimiterCoordinates.m_end.m_line) {
             unprocessedSpan1 = unfoldedSpan1 = delimiterCoordinates.m_end.m_column - delimiterCoordinates.m_start.m_column - 1;
             unprocessedSpan3 = unfoldedSpan3 = 0.0f;
             unprocessedSpan2 = unfoldedSpan2 = 0.0f;
         } else if (!m_foldedLines[row].addsFullFirstLineToFold() && !m_foldedLines[row].addsLastLineToFold())  {
-            adddsBothEnds = false;
-            auto innerLine = m_unfoldedLines[delimiterCoordinates.m_start.m_line];
-            unprocessedSpan1 = unfoldedSpan1 = std::max(innerLine.maxColumn() - 1, 0);
-            innerLine = m_unfoldedLines[delimiterCoordinates.m_end.m_line];
-            unprocessedSpan3 = unfoldedSpan3 = std::max(innerLine.maxColumn() - 1, 0);
+            addsBothEnds = false;
+            unfoldedSpan1 = std::max(lineMaxColumn(delimiterCoordinates.m_start.m_line) - 1, 0);
+            unprocessedSpan1 = unfoldedSpan1;
+            unfoldedSpan3 = std::max(lineMaxColumn(delimiterCoordinates.m_end.m_line) - 1, 0);
+            unprocessedSpan3 = unfoldedSpan3;
             unfoldedSpan2 = 0;
-            for (i32 j = delimiterCoordinates.m_start.m_line + 1; j < delimiterCoordinates.m_end.m_line; j++) {
-                innerLine = m_unfoldedLines[j];
-                unfoldedSpan2 += innerLine.maxColumn();
-            }
+            for (i32 j = delimiterCoordinates.m_start.m_line + 1; j < delimiterCoordinates.m_end.m_line; j++)
+                unfoldedSpan2 += lineMaxColumn(j);
+
             unprocessedSpan2 = unfoldedSpan2;
         } else {
             unprocessedSpan1 = unfoldedSpan1 = std::max(lineStart.maxColumn() - delimiterCoordinates.m_start.m_column - 2, 0);
             unprocessedSpan3 = unfoldedSpan3 = std::max(delimiterCoordinates.m_end.m_column - 1, 0);
             unfoldedSpan2 = 0;
-            for (i32 j = delimiterCoordinates.m_start.m_line + 1; j < delimiterCoordinates.m_end.m_line; j++) {
-                auto innerLine = m_unfoldedLines[j];
-                unfoldedSpan2 += innerLine.maxColumn();
-            }
+            for (i32 j = delimiterCoordinates.m_start.m_line + 1; j < delimiterCoordinates.m_end.m_line; j++)
+                unfoldedSpan2 += lineMaxColumn(j);
+
             unprocessedSpan2 = unfoldedSpan2;
         }
 
@@ -287,7 +287,7 @@ namespace hex::ui {
         float spanFragment = totalUnfoldedSpan / 2.0f;
 
         Segments unfoldedEllipsisCoordinates(4);
-        if (adddsBothEnds) {
+        if (addsBothEnds) {
             unfoldedEllipsisCoordinates[0] = lineCoordinates(delimiterCoordinates.m_start.m_line, delimiterCoordinates.m_start.m_column + 1);
             unfoldedEllipsisCoordinates[3] = delimiterCoordinates.m_end;
         } else {
@@ -310,7 +310,7 @@ namespace hex::ui {
         if ((unprocessedSpan2 > spanFragment || std::fabs(unprocessedSpan2 - spanFragment) < 0.001) && i < 3) {
             float lineLength = 0.0f;
             for (i32 j = delimiterCoordinates.m_start.m_line + 1; j < delimiterCoordinates.m_end.m_line; j++) {
-                auto currentLineLength = (float) m_unfoldedLines[j].maxColumn();
+                auto currentLineLength = (float) lineMaxColumn(j);
                 lineLength += currentLineLength + leftOver;
                 leftOver = 0.0f;
                 while ((lineLength > spanFragment || std::fabs(lineLength-spanFragment) < 0.001) && i < 3) {
@@ -333,7 +333,7 @@ namespace hex::ui {
         return unfoldedEllipsisCoordinates;
     }
 
-    Coordinates TextEditor::Lines::foldedToUnfoldedCoords(const Coordinates &coords) {
+    Coordinates Lines::foldedToUnfoldedCoords(const Coordinates &coords) {
         auto row = lineIndexToRow(coords.m_line);
         if (row == -1.0 || !m_foldedLines.contains(row))
             return coords;
@@ -382,9 +382,8 @@ namespace hex::ui {
             auto foldedSegmentStart = foldedLine.m_foldedSegments[foundIndex];
             if (foundIndex == 0) {
                 if (lineNeedsDelimiter(key.m_start.m_line)) {
-                    auto line = m_unfoldedLines[key.m_start.m_line];
                     auto delimiterCoordinates = foldedLine.findDelimiterCoordinates(key);
-                    if (coords.m_column > line.maxColumn())
+                    if (coords.m_column > lineMaxColumn(key.m_start.m_line))
                         return delimiterCoordinates.m_start;
                     else
                         return lineCoordinates( unfoldedSegmentStart.m_line, coords.m_column);
@@ -402,7 +401,7 @@ namespace hex::ui {
         else
             return {coordinate.m_line,coordinate.m_column + 1};
     }
-     bool TextEditor::testfoldMaps(TextEditor::Range toTest) {
+     bool TextEditor::testfoldMaps(Range toTest) {
         bool result = true;
         for (auto test = toTest.getStart(); test <= toTest.getEnd(); test = nextCoordinate(test)) {
             auto data = test;
@@ -414,7 +413,7 @@ namespace hex::ui {
          return result;
     }
 
-    Coordinates TextEditor::Lines::unfoldedToFoldedCoords(const Coordinates &coords) {
+    Coordinates Lines::unfoldedToFoldedCoords(const Coordinates &coords) {
         auto row = lineIndexToRow(coords.m_line);
         Coordinates result;
         if (row == -1 || !m_foldedLines.contains(row))
@@ -477,8 +476,8 @@ namespace hex::ui {
         } else {
             if (foundIndex == 0) {
                 if (foldedLine.firstLineNeedsDelimiter()) {
-                    auto line = m_unfoldedLines[foldedLine.m_full.m_start.m_line];
-                    if (coords > lineCoordinates(foldedLine.m_full.m_start.m_line, line.maxColumn()))
+                    auto lineIndex = foldedLine.m_full.m_start.m_line;
+                    if (coords > lineCoordinates(lineIndex, lineMaxColumn(lineIndex)))
                         result.m_column = foldedLine.m_ellipsisIndices[0] - 1;
                     else
                         result.m_column = coords.m_column;
@@ -494,7 +493,7 @@ namespace hex::ui {
         }
     }
 
-    Coordinates TextEditor::Lines::stringIndexCoords(i32 strIndex, const std::string &input) {
+    Coordinates Lines::stringIndexCoords(i32 strIndex, const std::string &input) {
         if (strIndex < 0 || strIndex > (i32) input.size())
             return lineCoordinates( 0, 0);
         std::string str = input.substr(0, strIndex);

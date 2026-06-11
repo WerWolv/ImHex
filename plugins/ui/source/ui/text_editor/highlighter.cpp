@@ -4,8 +4,12 @@
 #include <hex/helpers/logger.hpp>
 
 namespace hex::ui {
-    extern TextEditor::Palette s_paletteBase;
+    using Palette = TextEditor::Palette;
     using Keys = TextEditor::Keys;
+    using Lines = TextEditor::Lines;
+    using LanguageDefinition = TextEditor::LanguageDefinition;
+
+    extern Palette s_paletteBase;
 
     void TextEditor::setEnableHighlighting(bool enable) {
 
@@ -56,7 +60,7 @@ namespace hex::ui {
         }
     }
 
-    Keys TextEditor::Lines::getDeactivatedBlocks() {
+    Keys Lines::getDeactivatedBlocks() {
         colorizeInternal();
         Keys deactivatedBlocks;
         if (isEmpty())
@@ -93,11 +97,11 @@ namespace hex::ui {
 
     }
 
-    void TextEditor::Lines::colorize() {
+    void Lines::colorize() {
         m_updateFlags = true;
     }
 
-    void TextEditor::Lines::colorizeRange(bool force) {
+    void Lines::colorizeRange(bool force) {
 
         if (isEmpty())
             return;
@@ -221,7 +225,7 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::colorizeInternal(bool force) {
+    void Lines::colorizeInternal(bool force) {
         if (isEmpty())
             return;
 
@@ -458,7 +462,7 @@ namespace hex::ui {
         colorizeRange(force);
     }
 
-    void TextEditor::Lines::setLanguageDefinition(const LanguageDefinition &languageDef) {
+    void Lines::setLanguageDefinition(const LanguageDefinition &languageDef) {
         m_languageDefinition = languageDef;
         m_regexList.clear();
 
@@ -468,13 +472,13 @@ namespace hex::ui {
         colorize();
     }
 
-    const TextEditor::Palette &TextEditor::getPalette() { return s_paletteBase; }
+    const Palette &TextEditor::getPalette() { return s_paletteBase; }
 
     void TextEditor::setPalette(const Palette &value) {
         s_paletteBase = value;
     }
 
-    const TextEditor::Palette &TextEditor::getDarkPalette() {
+    const Palette &TextEditor::getDarkPalette() {
         const static Palette p = {
                 {
                         0xff7f7f7f, // Default
@@ -506,7 +510,7 @@ namespace hex::ui {
         return p;
     }
 
-    const TextEditor::Palette &TextEditor::getLightPalette() {
+    const Palette &TextEditor::getLightPalette() {
         const static Palette p = {
                 {
                         0xff7f7f7f, // None
@@ -538,7 +542,7 @@ namespace hex::ui {
         return p;
     }
 
-    const TextEditor::Palette &TextEditor::getRetroBluePalette() {
+    const Palette &TextEditor::getRetroBluePalette() {
         const static Palette p = {
                 {
                         0xff00ffff, // None
@@ -570,7 +574,7 @@ namespace hex::ui {
         return p;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::CPlusPlus() {
+    const LanguageDefinition &LanguageDefinition::CPlusPlus() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
@@ -643,7 +647,7 @@ namespace hex::ui {
         return langDef;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::HLSL() {
+    const LanguageDefinition &LanguageDefinition::HLSL() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
@@ -729,7 +733,7 @@ namespace hex::ui {
         return langDef;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::GLSL() {
+    const LanguageDefinition &LanguageDefinition::GLSL() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
@@ -780,7 +784,7 @@ namespace hex::ui {
         return langDef;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::C() {
+    const LanguageDefinition &LanguageDefinition::C() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
@@ -847,7 +851,7 @@ namespace hex::ui {
         return langDef;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::SQL() {
+    const LanguageDefinition &LanguageDefinition::SQL() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
@@ -925,7 +929,7 @@ namespace hex::ui {
         return langDef;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::AngelScript() {
+    const LanguageDefinition &LanguageDefinition::AngelScript() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
@@ -978,7 +982,7 @@ namespace hex::ui {
         return langDef;
     }
 
-    const TextEditor::LanguageDefinition &TextEditor::LanguageDefinition::Lua() {
+    const LanguageDefinition &LanguageDefinition::Lua() {
         static bool inited = false;
         static LanguageDefinition langDef;
         if (!inited) {
