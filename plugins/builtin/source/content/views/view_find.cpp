@@ -247,16 +247,43 @@ namespace hex::plugin::builtin {
                 return { Occurrence::DecodeType::Binary, std::endian::native };
         }();
 
+        
+        std::array<u32, 256> validityMask{};
+        constexpr u32 LOWER_FLAG = 1u << 0;
+        constexpr u32 UPPER_FLAG = 1u << 1;
+        constexpr u32 DIGIT_FLAG = 1u << 2;
+        constexpr u32 SPACE_FLAG = 1u << 3;
+        constexpr u32 PUNCT_FLAG = 1u << 4;
+        constexpr u32 UNDERSCORE_FLAG = 1u << 5;
+        constexpr u32 LINEFEED_FLAG = 1u << 6;
+        for (int i = 0; i < 256; ++i) {
+            const u8 b = static_cast<u8>(i);
+            u32 m = 0;
+            if (b >= 'a' && b <= 'z') m |= LOWER_FLAG;
+            if (b >= 'A' && b <= 'Z') m |= UPPER_FLAG;
+            if (b >= '0' && b <= '9') m |= DIGIT_FLAG;
+            // space-like but *not* CR/LF (handled by LINEFEED_FLAG)
+            if (b == ' ' || b == '\t' || b == '\v' || b == '\f') m |= SPACE_FLAG;
+            // ASCII punctuation excluding whitespace
+            if ((b >= '!' && b <= '/') || (b >= ':' && b <= '@') ||
+                (b >= '[' && b <= '`') || (b >= '{' && b <= '~')) m |= PUNCT_FLAG;
+            if (b == '_') m |= UNDERSCORE_FLAG;
+            if (b == '\r' || b == '\n') m |= LINEFEED_FLAG;
+            validityMask[i] = m;
+        }
+        u32 settingsMask = 0;
+        if (settings.lowerCaseLetters) settingsMask |= LOWER_FLAG;
+        if (settings.upperCaseLetters) settingsMask |= UPPER_FLAG;
+        if (settings.numbers)          settingsMask |= DIGIT_FLAG;
+        if (settings.spaces)           settingsMask |= SPACE_FLAG;
+        if (settings.symbols)          settingsMask |= PUNCT_FLAG;
+        if (settings.underscores)      settingsMask |= UNDERSCORE_FLAG;
+        if (settings.lineFeeds)        settingsMask |= LINEFEED_FLAG;
+
         const auto validAscii = [&](u8 byte) {
-            return
-                (settings.lowerCaseLetters    && std::islower(byte))  ||
-                (settings.upperCaseLetters    && std::isupper(byte))  ||
-                (settings.numbers             && std::isdigit(byte))  ||
-                (settings.spaces              && std::isspace(byte) && byte != '\r' && byte != '\n')  ||
-                (settings.underscores         && byte == '_')             ||
-                (settings.symbols             && std::ispunct(byte) && !std::isspace(byte))  ||
-                (settings.lineFeeds           && (byte == '\r' || byte == '\n'));
+            return (validityMask[byte] & settingsMask) != 0;
         };
+
 
         i64 countedCharacters = 0;
         u64 startAddress = reader.begin().getAddress();
