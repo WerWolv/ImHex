@@ -135,6 +135,10 @@ macro(addDefines)
     if (IMHEX_STATIC_LINK_PLUGINS)
         add_compile_definitions(IMHEX_STATIC_LINK_PLUGINS)
     endif ()
+
+    if (IMHEX_ENABLE_UPDATER)
+        add_compile_definitions(IMHEX_ENABLE_UPDATER)
+    endif()
 endmacro()
 
 function(addDefineToSource SOURCE DEFINE)
