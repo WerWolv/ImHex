@@ -17,6 +17,8 @@ cmake -G "Ninja"                          \
   -DCMAKE_BUILD_TYPE=Release              \
   -DCMAKE_INSTALL_PREFIX="./install"      \
   -DIMHEX_GENERATE_PACKAGE=ON             \
+  -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
+  -DIMHEX_RESIGN_BUNDLE=ON             \
   ..
 ninja install
 ```
