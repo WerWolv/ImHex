@@ -830,6 +830,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste.popup.button.selection": "Coller uniquement sur la sélection",
     "hex.builtin.view.hex_editor.menu.edit.paste_all": "Coller tout",
     "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "Coller tout en tant que chaîne",
+    "hex.builtin.view.hex_editor.menu.edit.paste_all_decoded_base64_string":"Coller tout comme chaîne base64 décodée",
     "hex.builtin.view.hex_editor.menu.edit.remove": "Supprimer...",
     "hex.builtin.view.hex_editor.menu.edit.resize": "Redimensionner...",
     "hex.builtin.view.hex_editor.menu.edit.select_all": "Sélectionner tout",
