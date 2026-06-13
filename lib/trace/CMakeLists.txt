@@ -24,7 +24,7 @@ else()
     set(LIBIMHEX_LIBRARY_TYPE_PRIVATE PRIVATE)
 endif()
 
-target_include_directories(tracing ${LIBIMHEX_LIBRARY_TYPE_PUBLIC} include)
+target_include_directories(tracing ${LIBIMHEX_LIBRARY_TYPE_PUBLIC} include ${LLVM_INCLUDE_DIRS})
 
 if (NOT IMHEX_DISABLE_STACKTRACE)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
