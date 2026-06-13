@@ -420,14 +420,16 @@ namespace hex {
             // If the application is running in debug mode, ImHex runs under the CONSOLE subsystem,
             // so we don't need to do anything besides enabling ANSI colors and UTF-8 encoding
             log::impl::enableColorPrinting();
-            system("chcp 65001 >nul");        //codepage 65001 = UTF-8.
+            ::SetConsoleOutputCP(CP_UTF8);
+            ::SetConsoleCP(CP_UTF8);
         } else if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
             // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
 
             // Enable ANSI colors in the console
             log::impl::enableColorPrinting();
             // Enable UTF-8 encoding
-            system("chcp 65001 >nul");
+            ::SetConsoleOutputCP(CP_UTF8);
+            ::SetConsoleCP(CP_UTF8);
         } else {
             log::impl::redirectToFile();
         }
