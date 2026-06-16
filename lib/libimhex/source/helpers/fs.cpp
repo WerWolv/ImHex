@@ -25,6 +25,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <sstream>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
