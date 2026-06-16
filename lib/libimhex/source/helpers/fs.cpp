@@ -230,7 +230,7 @@ namespace hex::fs {
         bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
             std::string fileFilter;
             for (const auto &extension : validExtensions) {
-                fileFilter += extension.name + "(*." + extension.spec + ")|*." + extension.spec + "|";
+                fileFilter += extension.name + " (*." + extension.spec + ")|*." + extension.spec + "|";
             }
 
             if (!fileFilter.empty()) {
