@@ -20,9 +20,10 @@
     #include <emscripten.h>
 #else
     #include <GLFW/glfw3.h>
-    #include <nfd.hpp>
+    #include <apifiledialogs/filedialogs.hpp>
 #endif
 
+#include <cstdlib>
 #include <filesystem>
 
 #include <wolv/io/file.hpp>
@@ -215,82 +216,68 @@ namespace hex::fs {
 
     #else
 
+        static std::vector<std::string> string_split(std::string str, char delimiter) {
+            std::vector<std::string> vec;
+            std::stringstream sstr(str);
+            std::string tmp;
+            while (getline(sstr, tmp, delimiter)) {
+                vec.push_back(tmp);
+            }
+            return vec;
+        }
+
         bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
-            // Turn the content of the ItemFilter objects into something NFD understands
-            std::vector<nfdfilteritem_t> validExtensionsNfd;
-            validExtensionsNfd.reserve(validExtensions.size());
+            std::string fileFilter;
             for (const auto &extension : validExtensions) {
-                validExtensionsNfd.emplace_back(nfdfilteritem_t{ extension.name.c_str(), extension.spec.c_str() });
+                fileFilter += extension.name + "|*." + extension.spec + "|";
             }
 
-            // Clear errors from previous runs
-            NFD::ClearError();
-
-            // Try to initialize NFD
-            if (NFD::Init() != NFD_OKAY) {
-                // Handle errors if initialization failed
-                log::error("NFD init returned an error: {}", NFD::GetError());
-                if (*s_fileBrowserErrorCallback != nullptr) {
-                    const auto error = NFD::GetError();
-                    (*s_fileBrowserErrorCallback)(error != nullptr ? error : "No details");
-                }
-
-                return false;
+            if (!fileFilter.empty()) {
+                fileFilter.pop_back();
             }
 
-            NFD::UniquePathU8 outPath;
-            NFD::UniquePathSet outPaths;
-            nfdresult_t result = NFD_ERROR;
+            #if defined(OS_WINDOWS)
+            SetEnvironmentVariableW(L"IMGUI_DIALOG_THEME", L"0");
+            #else
+            setenv("IMGUI_DIALOG_THEME", "0", 1);
+            #endif
+
+            std::string outPath;
 
             // Open the correct file dialog based on the mode
             switch (mode) {
                 case DialogMode::Open:
                     if (multiple)
-                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                        outPath = get_open_filenames_ext((char *)fileFilter.c_str(), (char *)"", (char *)defaultPath.c_str(), (char *)"Open File(s)");
                     else
-                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                        outPath = get_open_filename_ext((char *)fileFilter.c_str(), (char *)"", (char *)defaultPath.c_str(), (char *)"Open File");
                     break;
                 case DialogMode::Save:
-                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    outPath = get_save_filename_ext((char *)fileFilter.c_str(), (char *)"", (char *)defaultPath.c_str(), (char *)"Save As");
                     break;
                 case DialogMode::Folder:
-                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    outPath = get_directory_alt((char *)"Select Directory", (char *)defaultPath.c_str());
                     break;
             }
 
-            if (result == NFD_OKAY){
+            if (!outPath.empty()){
                 // Handle the path if the dialog was opened in single mode
-                if (outPath != nullptr) {
+                if (outPath.find('\n') == std::string::npos) {
                     // Call the provided callback with the path
-                    callback(outPath.get());
+                    callback(outPath);
                 }
 
                 // Handle multiple paths if the dialog was opened in multiple mode
-                if (outPaths != nullptr) {
-                    nfdpathsetsize_t numPaths = 0;
-                    if (NFD::PathSet::Count(outPaths, numPaths) == NFD_OKAY) {
-                        // Loop over all returned paths and call the callback with each of them
-                        for (size_t i = 0; i < numPaths; i++) {
-                            NFD::UniquePathSetPath path;
-                            if (NFD::PathSet::GetPath(outPaths, i, path) == NFD_OKAY)
-                                callback(path.get());
-                        }
+                if (outPath.find('\n') != std::string::npos) {
+                    std::vector<std::string> outPaths = string_split(outPath, '\n');
+                    // Loop over all returned paths and call the callback with each of them
+                    for (size_t i = 0; i < outPaths.size(); i++) {
+                        callback(outPaths[i]);
                     }
-                }
-            } else if (result == NFD_ERROR) {
-                // Handle errors that occurred during the file dialog call
-
-                log::error("Requested file dialog returned an error: {}", NFD::GetError());
-
-                if (*s_fileBrowserErrorCallback != nullptr) {
-                    const auto error = NFD::GetError();
-                    (*s_fileBrowserErrorCallback)(error != nullptr ? error : "No details");
                 }
             }
 
-            NFD::Quit();
-
-            return result == NFD_OKAY;
+            return true;
         }
 
     #endif
