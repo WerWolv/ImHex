@@ -1197,6 +1197,9 @@ namespace hex::ui {
                     if (!m_lines.m_codeFoldsDisabled)
                         drawCodeFolds(lineIndex, drawList);
 
+                    drawBlockIndicators(drawList);
+                    drawMatchedDelimiter();
+
                     if (!m_lines.m_ignoreImGuiChild) {
                         ImGui::EndChild();
                         ImGui::BeginChild(m_lines.m_title.c_str());
@@ -1788,20 +1791,28 @@ namespace hex::ui {
 
         renderCodeFolds(row, drawList, lineColor, state);
 
-        if (m_lines.m_matchedDelimiter.setNearCursor(&m_lines, m_lines.m_state.m_cursorPosition)) {
-            m_lines.m_matchedDelimiter.findMatchingDelimiter(&m_lines);
-            if (m_lines.isTrueMatchingDelimiter()) {
-                auto nearCursorScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(m_lines.m_matchedDelimiter.m_nearCursor.m_line));
-                auto matchedScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(m_lines.m_matchedDelimiter.m_matched.m_line));
+    }
 
-                if (nearCursorScreenPos != ImVec2(-1, -1) && matchedScreenPos != ImVec2(-1, -1) && nearCursorScreenPos.y != matchedScreenPos.y) {
+    void TextEditor::drawBlockIndicators(ImDrawList *drawList) {
+        for (auto &range: m_lines.m_indentBlocks) {
+            if (range.contains(m_lines.m_state.m_cursorPosition)) {
+                auto blockStartScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(range.m_start.m_line));
+                auto blockEndScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(range.m_end.m_line));
+
+                if (blockStartScreenPos != ImVec2(-1, -1) && blockEndScreenPos != ImVec2(-1, -1)) {
                     float lineX = m_lines.m_lineNumbersStartPos.x + m_lines.m_lineNumberFieldWidth - m_lines.m_charAdvance.x + 1_scaled;
-                    ImVec2 p1 = ImVec2(lineX, std::min(matchedScreenPos.y, nearCursorScreenPos.y));
-                    ImVec2 p2 = ImVec2(lineX, std::max(matchedScreenPos.y, nearCursorScreenPos.y) + m_lines.m_charAdvance.y - 1_scaled);
+                    ImVec2 p1 = ImVec2(lineX, std::min(blockStartScreenPos.y, blockEndScreenPos.y));
+                    ImVec2 p2 = ImVec2(lineX, std::max(blockStartScreenPos.y, blockEndScreenPos.y) + m_lines.m_charAdvance.y - 1_scaled);
                     drawList->AddLine(p1, p2, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]), 1.0f);
                 }
+                break;
             }
         }
+    }
+
+    void TextEditor::drawMatchedDelimiter() {
+        if (m_lines.m_matchedDelimiter.setNearCursor(&m_lines, m_lines.m_state.m_cursorPosition))
+            m_lines.m_matchedDelimiter.findMatchingDelimiter(&m_lines);
     }
 
     void TextEditor::renderCodeFolds(i32 row, ImDrawList *drawList, i32 color, FoldSymbol state) {
