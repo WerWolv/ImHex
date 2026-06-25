@@ -2,7 +2,7 @@
 
 #include <hex.hpp>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <fmt/color.h>
 
 #include <wolv/io/file.hpp>

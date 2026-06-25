@@ -281,8 +281,6 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DCMAKE_C_COMPILER="$($(Get-Command cl.exe).Path)"                        `
             -DCMAKE_CXX_COMPILER="$($(Get-Command cl.exe).Path)"                      `
-            -DCMAKE_C_FLAGS="/d2Qslpvec-"                                             `
-            -DCMAKE_CXX_FLAGS="/d2Qslpvec-"                                           `
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
             -DCMAKE_INSTALL_PREFIX="$(Join-Path $PWD 'install')"                      `
