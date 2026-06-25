@@ -61,6 +61,11 @@ project(ImHex
 )
 configureProject()
 
+if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Forces Clang on Windows to use DWARF format
+    add_compile_options(-gdwarf-5 -glldb)
+endif()
+
 # Add ImHex sources
 add_custom_target(imhex_all ALL)
 
