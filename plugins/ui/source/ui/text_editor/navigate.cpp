@@ -810,7 +810,8 @@ namespace hex::ui {
         delimiters += s_delimiters[idx];
         i32 direction = 1 - ((idx & 1) << 1);
         i32 auxDepth = 0;
-        char color1, auxColor;
+
+        char color1, auxColor = static_cast<char>(PaletteIndex::Separator);
         bool firstTimeAux = false;
         bool useIdx = false;
         if (idx > 5) {
@@ -818,7 +819,6 @@ namespace hex::ui {
             auxiliaryDelimiters += s_delimiters[idx - 6];
             firstTimeAux = true;
             color1 = static_cast<char>(PaletteIndex::Operator);
-            auxColor = static_cast<char>(PaletteIndex::Separator);
         } else
             color1 = static_cast<char>(PaletteIndex::Separator);
         char color = static_cast<char>(PaletteIndex::WarningText);
