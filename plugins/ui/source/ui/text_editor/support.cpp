@@ -1267,48 +1267,6 @@ namespace hex::ui {
         return m_lines.size();
     }
 
-    void Lines::setAllCodeFolds() {
-        initializeCodeFolds();
-        CodeFoldBlocks intervals = foldPointsFromSource();
-        m_codeFoldKeys.clear();
-        m_codeFolds.clear();
-        m_codeFoldKeyMap.clear();
-        m_codeFoldValueMap.clear();
-        m_codeFoldKeyLineMap.clear();
-        m_codeFoldValueLineMap.clear();
-        m_codeFoldDelimiters.clear();
-        for (auto interval : intervals) {
-            Range foldInterval(interval);
-            if (foldInterval.m_start.m_line > size() || foldInterval.m_end.m_line > size())
-                return;
-            std::pair<char,char> foldDelimiters = {};
-            foldDelimiters.second = m_unfoldedLines[foldInterval.m_end.m_line].m_chars[foldInterval.m_end.m_column];
-            if (foldDelimiters.second == '/')
-                foldDelimiters.first = foldDelimiters.second;
-            else
-                foldDelimiters.first = foldDelimiters.second - 2 + (foldDelimiters.second == ')');
-            m_codeFoldKeys.insert(foldInterval);
-            m_codeFoldDelimiters[foldInterval] = foldDelimiters;
-            if (!m_codeFoldKeyMap.contains(foldInterval.m_start))
-                m_codeFoldKeyMap[foldInterval.m_start] = foldInterval.m_end;
-            if (!m_codeFoldValueMap.contains(foldInterval.m_end))
-                m_codeFoldValueMap[foldInterval.m_end] = foldInterval.m_start;
-            m_codeFoldKeyLineMap.insert(std::make_pair(foldInterval.m_start.m_line,foldInterval.m_start));
-            m_codeFoldValueLineMap.insert(std::make_pair(foldInterval.m_end.m_line,foldInterval.m_end));
-        }
-
-        std::vector<Range> deactivated = getDeactivatedBlocks();
-        for (auto interval : deactivated) {
-            m_codeFoldKeys.insert(interval);
-            if (!m_codeFoldKeyMap.contains(interval.m_start))
-                m_codeFoldKeyMap[interval.m_start] = interval.m_end;
-            if (!m_codeFoldValueMap.contains(interval.m_end))
-                m_codeFoldValueMap[interval.m_end] = interval.m_start;
-            m_codeFoldKeyLineMap.insert(std::make_pair(interval.m_start.m_line,interval.m_start));
-            m_codeFoldValueLineMap.insert(std::make_pair(interval.m_end.m_line,interval.m_end));
-        }
-    }
-
     void Lines::removeHiddenLinesFromPattern() {
         i32 lineIndex = 0;
         const auto totalLines = (i32)m_unfoldedLines.size();

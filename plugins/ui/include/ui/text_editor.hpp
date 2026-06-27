@@ -19,6 +19,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/types.hpp>
 #include <pl/core/token.hpp>
+#include <pl/core/tokens.hpp>
 #include <pl/helpers/safe_iterator.hpp>
 #include <pl/core/location.hpp>
 
@@ -218,7 +219,7 @@ namespace hex::ui {
         using Palette           = std::array<ImU32, (u64) PaletteIndex::Max>;
         using Glyph             = u8;
         using CodeFoldBlocks    = std::map<Coordinates,Coordinates>;
-        using GlobalBlocks      = std::set<Interval>;
+        using IndentBlocks      = std::set<Range>;
 
         struct Identifier { Coordinates m_location; std::string m_declaration;};
         using Identifiers   = std::unordered_map<std::string, Identifier>;
@@ -498,6 +499,7 @@ namespace hex::ui {
             bool coordinatesNearDelimiter(Lines *lines, Coordinates &from);
             i32 detectDirection(Lines *lines, const Coordinates &from);
             void findMatchingDelimiter(Lines *lines, bool folded = true);
+            Line *getLine(Lines *lines, i32 lineIndex, bool folded = true);
             Coordinates findMatchingDelimiter(Lines *lines, Coordinates &from, bool folded = true);
             [[nodiscard]] bool isActive() const { return m_active; }
             [[nodiscard]] bool hasChanged() const { return m_changed; }
@@ -736,8 +738,8 @@ namespace hex::ui {
             Interval findBlockInRange(Interval interval);
             RangeFromCoordinates getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters);
             void nonDelimitedFolds();
-            std::pair<i32,char> findMatchingDelimiter(i32 from);
-            CodeFoldBlocks foldPointsFromSource();
+            std::pair<i32,char> findFoldDelimiters(i32 from, bool isOpenFound);
+            void tokensFromSource();
             Coordinates findCommentEndCoord(i32 tokenId);
             void skipAttribute();
             bool isTokenIdValid(i32 tokenId);
@@ -757,6 +759,7 @@ namespace hex::ui {
             void resetToTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location);
             i32 findNextDelimiter(bool openOnly);
             void resetCodeFoldStates();
+            void setIndentBlocks();
 
             constexpr static u32 Normal = 0;
             constexpr static u32 Not    = 1;
@@ -855,7 +858,7 @@ namespace hex::ui {
             SafeTokenIterator m_startToken, m_originalPosition, m_partOriginalPosition;
             Indices m_firstTokenIdOfLine;
             CodeFoldBlocks m_foldPoints;
-            GlobalBlocks m_globalBlocks;
+            IndentBlocks m_indentBlocks;
             i32 m_cachedGlobalRowMax{};
             bool m_globalRowMaxChanged = true;
         };
@@ -918,6 +921,8 @@ namespace hex::ui {
         void drawButtons(float lineNumber);
         void drawText(Coordinates &lineStart, u32 tokenLength, char color);
         i64 drawColoredText(i32 lineIndex, const ImVec2 &textEditorSize);
+        void drawBlockIndicators(ImDrawList *drawList);
+        void drawMatchedDelimiter();
         void postRender(float lineNumber, std::string textWindowName);
         ImVec2 calculateCharAdvance() const;
         void openCodeFoldAt(Coordinates line);
@@ -1069,6 +1074,8 @@ namespace hex::ui {
         inline static Palette m_palette = {};
         inline static Line Ellipsis = Line({'.','.','.'},{(i32)TextEditor::PaletteIndex::Operator,(i32)TextEditor::PaletteIndex::Operator,(i32)TextEditor::PaletteIndex::Operator},{0,0,0});
         inline static const Line m_emptyLine = Line();
+        inline static const std::string s_openDelimiters = "([{<";
+        inline static const std::string s_closeDelimiters = ")]}>";
         inline static const std::string s_delimiters = "()[]{}<>";
         inline static const std::string s_separators = "()[]{}";
         inline static const std::string s_operators = "<>";
@@ -1077,6 +1084,12 @@ namespace hex::ui {
         inline static const Range NoCodeFoldSelected = Range(Invalid, Invalid);
         inline static const i32 s_cursorBlinkInterval = 1200;
         inline static const i32 s_cursorBlinkOnTime = 800;
+        inline static std::map<char, std::pair<Token, Token>> s_delimiterTokens = {
+                {'{', {pl::core::tkn::Separator::LeftBrace, pl::core::tkn::Separator::RightBrace}},
+                {'[', {pl::core::tkn::Separator::LeftBracket, pl::core::tkn::Separator::RightBracket}},
+                {'(', {pl::core::tkn::Separator::LeftParenthesis, pl::core::tkn::Separator::RightParenthesis}},
+                {'<', {pl::core::tkn::Operator::BoolLessThan, pl::core::tkn::Operator::BoolGreaterThan}}
+        };
     };
 
     bool tokenizeCStyleString(strConstIter in_begin, strConstIter in_end, strConstIter &out_begin, strConstIter &out_end);

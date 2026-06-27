@@ -614,7 +614,7 @@ namespace hex::ui {
 
     u32 Line::skipSpaces(i32 charIndex) {
         u32 s;
-        for (s = 0; charIndex < (i32) m_chars.size() && m_chars[charIndex] == ' ' && m_flags[charIndex] == 0x00; ++s, ++charIndex);
+        for (s = 0; charIndex < (i32) m_chars.size() && m_chars[charIndex] == ' ' && (m_flags[charIndex] & ~(static_cast<u8>(FlagValues::Preprocessor) >> 1))== 0x00; ++s, ++charIndex);
         return s;
     }
 
@@ -666,8 +666,8 @@ namespace hex::ui {
 
     i32 MatchedDelimiter::detectDirection(Lines *lines, const Coordinates &from) {
         auto start = lines->lineCoordinates(from);
-        std::string delimiters = "()[]{}<>";
-        i32 result = -2; // dont check either
+
+        i32 result = -2; // don't check either previous or current char
 
         if (start == Invalid)
             return result;
@@ -675,26 +675,27 @@ namespace hex::ui {
         auto line = lines->m_unfoldedLines[lineIndex].m_chars;
         auto charIndex = lines->lineCoordsIndex(start);
         auto ch2 = line[charIndex];
-        auto idx2 = delimiters.find(ch2);
-        if (charIndex == 0) {// no previous character
-            if (idx2 == std::string::npos) // no delimiters
+        auto idx2 = s_delimiters.find(ch2);
+        if (charIndex == 0) {// no previous character on same line
+            if (idx2 == std::string::npos) // no delimiters found
                 return -2;// dont check either
             else
-                return 1; // check only current
-        }// charIndex > 0
+                return 1; // check only current char
+        }
+        // cursor is not at first char in line.
         auto ch1 = line[charIndex - 1];
-        auto idx1 = delimiters.find(ch1);
+        auto idx1 = s_delimiters.find(ch1);
         if (idx1 == std::string::npos && idx2 == std::string::npos) // no delimiters
             return -2;
-        if (idx1 != std::string::npos && idx2 != std::string::npos) {
+        if (idx1 != std::string::npos && idx2 != std::string::npos) { //two delimiters detected
             if (idx1 % 2) // closing delimiter + any delimiter
-                return -1; // check both and previous first
+                return -1; // check both directions, but check previous char first
             else if (!(idx1 % 2) && !(idx2 % 2)) // opening delimiter + opening delimiter
-                return 0; // check both and current first
+                return 0; // check both directions,  but current char first
         } else if (idx1 != std::string::npos) // only first delimiter
-            return 1; // check only previous
+            return 1; // check only previous char
         else  // only second delimiter
-            return 2; // check only current
+            return 2; // check only current char
 
         return result;
     }
@@ -771,6 +772,13 @@ namespace hex::ui {
         return false;
     }
 
+    Line *MatchedDelimiter::getLine(Lines *lines, i32 lineIndex, bool folded) {
+        if (folded)
+            return &lines->operator[](lineIndex);
+
+        return &lines->m_unfoldedLines[lineIndex];
+    }
+
     Coordinates MatchedDelimiter::findMatchingDelimiter(Lines *lines, Coordinates &from, bool folded) {
         Coordinates start;
         Coordinates result = Invalid;
@@ -787,23 +795,9 @@ namespace hex::ui {
         auto row = lines->lineIndexToRow(lineIndex);
         auto maxLineIndex = lines->size() - 1;
         auto charIndex = lines->lineCoordsIndex(start);
-        std::string line;
-        std::string colors;
-        if (!folded) {
-            line = lines->m_unfoldedLines[lineIndex].m_chars;
-            colors = lines->m_unfoldedLines[lineIndex].m_colors;
-        } else {
-            line = lines->operator[](lineIndex).m_chars;
-            colors = lines->operator[](lineIndex).m_colors;
-        }
-        if (!line.empty() && colors.empty()) {
-            m_active = false;
-            return Invalid;
-        }
-        std::string delimiters = "()[]{}<>";
-        char delimiterChar = line[charIndex];
-        char color1;
-        auto idx = delimiters.find_first_of(delimiterChar);
+        Line *line = getLine(lines, lineIndex, folded);
+
+        auto idx = s_delimiters.find_first_of(line->m_chars[charIndex]);
         if (idx == std::string::npos) {
             if (m_active) {
                 m_active = false;
@@ -811,76 +805,105 @@ namespace hex::ui {
             }
             return Invalid;
         }
-        auto delimiterChar2 = delimiters[idx ^ 1];
-        delimiters = delimiterChar;
-        delimiters += delimiterChar2;
-        i32 direction = 1 - 2 * (idx % 2);
-        if (idx > 5)
+
+        std::string auxiliaryDelimiters, delimiters = std::string(1,s_delimiters[idx ^ 1]);
+        delimiters += s_delimiters[idx];
+        i32 direction = 1 - ((idx & 1) << 1);
+        i32 auxDepth = 0;
+
+        char color1, auxColor = static_cast<char>(PaletteIndex::Separator);
+        bool firstTimeAux = false;
+        bool useIdx = false;
+        if (idx > 5) {
+            auxiliaryDelimiters += s_delimiters[(idx - 6) ^ 1];
+            auxiliaryDelimiters += s_delimiters[idx - 6];
+            firstTimeAux = true;
             color1 = static_cast<char>(PaletteIndex::Operator);
-        else
+        } else
             color1 = static_cast<char>(PaletteIndex::Separator);
         char color = static_cast<char>(PaletteIndex::WarningText);
+        u64 auxIdx;
         i32 depth = 1;
-        if (charIndex == (i64) (line.size() - 1) * (1 + direction) / 2) {
-            if (row + direction < 0 || lines->rowToLineIndex(row + direction) > (i64) maxLineIndex) {
-                m_active = false;
-                return Invalid;
-            }
-            if (!folded) {
-                if (lineIndex += direction; lineIndex < 0 || lineIndex > (i64) maxLineIndex) {
-                    m_active = false;
-                    return Invalid;
-                }
-            } else {
+        if (charIndex == (i64) (line->size() - 1) * ((1 + direction) >> 1)) {
+
+            if (folded) {
                 row += direction;
-                if(lineIndex = lines->rowToLineIndex(row); lineIndex <0 || lineIndex > (i64) maxLineIndex) {
-                    m_active = false;
-                    return Invalid;
-                }
-            }
-            if (!folded) {
-                line = lines->m_unfoldedLines[lineIndex].m_chars;
-                colors = lines->m_unfoldedLines[lineIndex].m_colors;
-            } else {
-                line = lines->operator[](lineIndex).m_chars;
-                colors = lines->operator[](lineIndex).m_colors;
-            }
-            if (!line.empty() && colors.empty()) {
+                lineIndex = lines->rowToLineIndex(row);
+            } else
+                lineIndex += direction;
+
+            if (row < 0 ||lineIndex < 0 || lineIndex > (i64) maxLineIndex) {
                 m_active = false;
                 return Invalid;
             }
-            charIndex = (line.size() - 1) * (1 - direction) / 2 - direction;
+
+            line = getLine(lines, lineIndex, folded);
+
+            charIndex = (line->size() - 1) * ((1 - direction) >> 1) - direction;
         }
         for (i32 i = charIndex + direction;; i += direction) {
-            if (direction == 1)
-                idx = line.find_first_of(delimiters, i);
-            else
-                idx = line.find_last_of(delimiters, i);
-            if (idx != std::string::npos) {
-                if (line[idx] == delimiterChar && (colors[idx] == color || colors[idx] == color1)) {
-                    ++depth;
-                    i = idx;
-                } else if ((line[idx] == delimiterChar2 && (colors[idx] == color)) || colors[idx] == color1) {
-                    --depth;
-                    if (depth == 0) {
+            if (auxDepth > 0 || firstTimeAux) {
+                if (direction == 1) {
+                    auxIdx = line->m_chars.find_first_of(auxiliaryDelimiters, i);
+                    if (firstTimeAux) {
+                        idx = line->m_chars.find_first_of(delimiters, i);
+                        if (idx < auxIdx)
+                            useIdx = true;
+                        firstTimeAux = false;
+                    }
+                } else {
+                    auxIdx = line->m_chars.find_last_of(auxiliaryDelimiters, i);
+                    if (firstTimeAux) {
+                        idx = line->m_chars.find_last_of(delimiters, i);
+                        if (idx > auxIdx)
+                            useIdx = true;
+                        firstTimeAux = false;
+                    }
+                }
+            } else
+                auxIdx = std::string::npos;
+
+            if (!useIdx && auxIdx != std::string::npos) {
+                if (line->m_chars[auxIdx] == auxiliaryDelimiters[1] && (line->m_colors[auxIdx] == color || line->m_colors[auxIdx] == auxColor)) {
+                    ++auxDepth;
+                    i = auxIdx;
+                } else if (line->m_chars[auxIdx] == auxiliaryDelimiters[0] && (line->m_colors[auxIdx] == color || line->m_colors[auxIdx] == auxColor)) {
+                    --auxDepth;
+                    if (auxDepth >= 0)
+                        i = auxIdx;
+                }
+            } else {
+                if (!useIdx) {
+                    if (direction == 1)
+                        idx = line->m_chars.find_first_of(delimiters, i);
+                    else
+                        idx = line->m_chars.find_last_of(delimiters, i);
+                } else
+                    useIdx = false;
+
+                if (idx != std::string::npos) {
+                    if (line->m_chars[idx] == delimiters[1] && (line->m_colors[idx] == color || line->m_colors[idx] == color1)) {
+                        ++depth;
+                        i = idx;
+                    } else if (line->m_chars[idx] == delimiters[0] && (line->m_colors[idx] == color || line->m_colors[idx] == color1)) {
+                        --depth;
+                        if (depth == 0) {
                             if (!folded)
                                 result = lines->lineIndexCoords(lineIndex + 1, idx);
                             else
-                                result = lines->foldedToUnfoldedCoords( lines->lineIndexCoords(lineIndex + 1, idx));
-                        m_active = true;
-                        break;
+                                result = lines->foldedToUnfoldedCoords(lines->lineIndexCoords(lineIndex + 1, idx));
+                            m_active = true;
+                            break;
+                        }
+                        i = idx;
+                    } else {
+                        i = idx;
                     }
-                    i = idx;
                 } else {
-                    i = idx;
+                    i = (line->size() - 1) * ((1 + direction) >> 1);
                 }
-            } else {
-                if (direction == 1)
-                    i = line.size() - 1;
-                else
-                    i = 0;
             }
-            if ((direction * i) >= (i32) ((line.size() - 1) * (1 + direction) / 2)) {
+            if ((direction * i) >= (i32) ((line->size() - 1) * ((1 + direction) >> 1))) {
                 if (lines->rowToLineIndex(row) == (i64) maxLineIndex * ((1 + direction) >> 1)) {
                     if (m_active) {
                         m_active = false;
@@ -901,18 +924,10 @@ namespace hex::ui {
                         }
                         return Invalid;
                     }
-                    if (!folded) {
-                        line = lines->m_unfoldedLines[lineIndex].m_chars;
-                        colors = lines->m_unfoldedLines[lineIndex].m_colors;
-                    } else {
-                         line = lines->operator[](lineIndex).m_chars;
-                         colors = lines->operator[](lineIndex).m_colors;
-                    }
-                    if (!line.empty() && colors.empty()) {
-                        m_active = false;
-                        return Invalid;
-                    }
-                    i = (line.size() - 1) * (1 - direction) / 2 - direction;
+
+                    line = getLine(lines, lineIndex, folded);
+
+                    i = (line->size() - 1) * ((1 - direction) >> 1) - direction;
                 }
             }
         }
@@ -925,16 +940,22 @@ namespace hex::ui {
         Coordinates result = findMatchingDelimiter(lines, from, folded);
         if (result != Invalid) {
             if (result != m_matched || hasChanged()) {
-                m_matched = result;
-                auto linesSize = (i32) lines->m_unfoldedLines.size();
-                auto matchedline = m_matched.m_line;
-                auto nearline = m_nearCursor.m_line;
-                if (matchedline < 0 || matchedline >= linesSize || nearline < 0 || nearline >= linesSize) {
+                from = result;
+                Coordinates nearCursor = findMatchingDelimiter(lines, from, folded);
+                if (nearCursor != m_nearCursor) {
                     m_active = false;
                     return;
                 }
-                i32 matchedLineSize = lines->m_unfoldedLines[matchedline].size();
-                i32 nearLineSize = lines->m_unfoldedLines[nearline].size();
+                m_matched = result;
+                auto linesSize = (i32) lines->m_unfoldedLines.size();
+                auto matchedLine = m_matched.m_line;
+                auto nearLine = m_nearCursor.m_line;
+                if (matchedLine < 0 || matchedLine >= linesSize || nearLine < 0 || nearLine >= linesSize) {
+                    m_active = false;
+                    return;
+                }
+                i32 matchedLineSize = lines->m_unfoldedLines[matchedLine].size();
+                i32 nearLineSize = lines->m_unfoldedLines[nearLine].size();
                 auto matchedColumn = m_matched.m_column;
                 auto nearColumn = m_nearCursor.m_column;
                 if (matchedColumn < 0 || matchedColumn >= matchedLineSize || nearColumn < 0 || nearColumn >= nearLineSize) {

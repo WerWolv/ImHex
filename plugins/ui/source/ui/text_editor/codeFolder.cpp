@@ -166,45 +166,33 @@ namespace hex::ui {
 
     RangeFromCoordinates Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
         RangeFromCoordinates result = {Invalid, Invalid};
-        Coordinates first = Invalid;
+        Coordinates first;
         auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
-        m_curr = tokenStart + start;
-        Token::Separator openSeparator = Token::Separator::EndOfProgram;
-        Token::Separator closeSeparator = Token::Separator::EndOfProgram;
-        Token::Operator openOperator  = Token::Operator{};
-        Token::Operator closeOperator = Token::Operator{};
-        if (delimiters == "{}") {
-            openSeparator = Token::Separator::LeftBrace;
-            closeSeparator = Token::Separator::RightBrace;
-        } else if (delimiters == "[]") {
-            openSeparator = Token::Separator::LeftBracket;
-            closeSeparator = Token::Separator::RightBracket;
-        } else if (delimiters == "()") {
-            openSeparator = Token::Separator::LeftParenthesis;
-            closeSeparator = Token::Separator::RightParenthesis;
-        } else if (delimiters == "<>") {
-            openOperator = Token::Operator::BoolLessThan;
-            closeOperator = Token::Operator::BoolGreaterThan;
-        }
 
-        Token::Separator *separator;
-        if (separator = const_cast<Token::Separator *>(getValue<Token::Separator>(0)); separator == nullptr || *separator != openSeparator) {
-            if (const auto *opener = const_cast<Token::Operator *>(getValue<Token::Operator>(0)); opener == nullptr || *opener != openOperator)
-                return result;
-        }
+        if (delimiters.empty() || !s_openDelimiters.contains(delimiters[0]) || (delimiters.size() > 1 && !s_closeDelimiters.contains(delimiters[1])))
+            return result;
+        m_curr = tokenStart + start;
+        const Token openDelimiter = s_delimiterTokens[delimiters[0]].first;
+        const Token closeDelimiter = s_delimiterTokens[delimiters[0]].second;
+
+        if (!peek(openDelimiter))
+            return result;
+
         if (!m_curr->location.source->mainSource)
             return result;
         if (start > 0) {
             Location location1 = m_curr->location;
             Location location2;
-            auto save = m_curr;
-            while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1)) {
-                if (getTokenId() == 0)
-                    break;
-                next(-1);
-            }
-            next(-1);
-            if (separator != nullptr && *separator == Token::Separator::LeftParenthesis) {
+            if (openDelimiter.value == tkn::Separator::LeftParenthesis.value) {
+                auto save = m_curr;
+                while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1)) {
+                    if (getTokenId() == 0)
+                        break;
+                    next(-1);
+                }
+                if (getTokenId() > 0)
+                    next(-1);
+
                 if (const auto *separator2 = const_cast<Token::Separator *>(getValue<Token::Separator>(0)); separator2 != nullptr && (*separator2 == Token::Separator::Semicolon || *separator2 == Token::Separator::LeftBrace || *separator2 == Token::Separator::RightBrace)) {
                     m_curr = save;
                     location2 = m_curr->location;
@@ -212,10 +200,9 @@ namespace hex::ui {
                     location2 = m_curr->location;
                     m_curr = save;
                 }
-            } else {
+            } else
                 location2 = m_curr->location;
-                m_curr = save;
-            }
+
             if (location1.line != location2.line) {
                 Coordinates coord(location2);
                 first = coord + Coordinates(0, location2.length);
@@ -224,15 +211,8 @@ namespace hex::ui {
         } else
             first = Coordinates(m_curr->location);
         m_curr = tokenStart + end;
-        if (separator = const_cast<Token::Separator *>(getValue<Token::Separator>(0)); separator == nullptr || *separator != closeSeparator) {
-            if (const auto *closer = const_cast<Token::Operator *>(getValue<Token::Operator>(0)); closer == nullptr || *closer != closeOperator) {
-                if (const auto *separator2 = const_cast<Token::Separator *>(getValue<Token::Separator>(1)); separator2 != nullptr && *separator2 == closeSeparator) {
-                    next();
-                } else if (const auto *closer2 = const_cast<Token::Operator *>(getValue<Token::Operator>(1)); closer2 != nullptr && *closer2 == closeOperator) {
-                    next();
-                } else
-                    return result;
-            }
+        if (!peek(closeDelimiter) && !peek(tkn::Separator::EndOfProgram)) {
+             return result;
         }
         if (!m_curr->location.source->mainSource)
             return result;
@@ -302,88 +282,25 @@ namespace hex::ui {
         return getTokenId();
     }
 
-    CodeFoldBlocks Lines::foldPointsFromSource() {
+    void Lines::tokensFromSource() {
+
         auto code = getText();
         if (code.empty())
-            return m_foldPoints;
+            return;
         std::unique_ptr<pl::PatternLanguage> runtime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*runtime, nullptr);
         std::ignore = runtime->preprocessString(code, pl::api::Source::DefaultSource);
         m_tokens = runtime->getInternals().preprocessor->getResult();
         const u32 tokenCount = m_tokens.size();
         if (tokenCount == 0)
-            return m_foldPoints;
+            return;
+        m_startToken = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
         loadFirstTokenIdOfLine();
         if (m_firstTokenIdOfLine.empty())
-            return m_foldPoints;
-        m_foldPoints.clear();
-        nonDelimitedFolds();
-        std::string openDelimiters = "{[(<";
-        size_t topLine = 0;
-        m_startToken = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
-        m_curr = m_startToken;
-        auto location = m_curr->location;
-        i32 lineIndex = topLine;
-        i32 currentTokenId = 0;
-        while (currentTokenId < (i32) tokenCount) {
-
-            if (currentTokenId = findNextDelimiter(true); !peek(tkn::Separator::EndOfProgram)) {
-                if (currentTokenId < 0) {
-                    return m_foldPoints;
-                }
-                auto line = operator[](m_curr->location.line - 1);
-                size_t stringIndex = line.columnIndex(m_curr->location.column);
-                std::string openDelimiter = std::string(1, line[static_cast<u64>(stringIndex - 1)]);
-                location = m_curr->location;
-
-                if (auto idx = openDelimiters.find(openDelimiter); idx != std::string::npos) {
-                    if (idx == 3) {
-                        if (currentTokenId == 0) {
-                            return m_foldPoints;
-                        }
-                        next(-1);
-                        auto column = m_curr[0].location.column - 1;
-                        if (line.m_colors[column] != (char) PaletteIndex::UserDefinedType) {
-                            next(2);
-                            if (peek(tkn::Separator::EndOfProgram, -1)) {
-                                return m_foldPoints;
-                            }
-
-                            if (currentTokenId = getTokenId(); currentTokenId < 0) {
-                                return m_foldPoints;
-                            }
-                            resetToTokenId(lineIndex, currentTokenId, location);
-                            continue;
-                        }
-                    }
-                    auto start = currentTokenId;
-                    auto end = findMatchingDelimiter(currentTokenId);
-                    if (end.first < 0) {
-                        return m_foldPoints;
-                    }
-                    std::string value = openDelimiter + end.second;
-                    auto lineBased = getDelimiterLineNumbers(start, end.first, value);
-
-                    if (lineBased.first.getLine() != lineBased.second.getLine())
-                        m_foldPoints[lineBased.first] = lineBased.second;
-
-                    if (currentTokenId = getTokenId(m_startToken + end.first); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size()) {
-                        return m_foldPoints;
-                    }
-                    incrementTokenId(lineIndex, currentTokenId, location);
-                } else {
-                    return m_foldPoints;
-                }
-            } else {
-                return m_foldPoints;
-            }
-        }
-        return m_foldPoints;
+            return;
     }
 
-
-    std::pair<i32, char> Lines::findMatchingDelimiter(i32 from) {
-        std::string blockDelimiters = "{}[]()<>";
+    std::pair<i32, char> Lines::findFoldDelimiters(i32 from, bool isOpenFound) {
         std::pair<i32, char> result = std::make_pair(-1, '\0');
         auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
         const i32 tokenCount = m_tokens.size();
@@ -391,63 +308,78 @@ namespace hex::ui {
             return result;
         m_curr = tokenStart + from;
         Location location = m_curr->location;
-        auto line = operator[](location.line - 1);
-        std::string openDelimiter;
-        if (auto columnIndex = line.m_chars.find_first_of(blockDelimiters, location.column - 1); columnIndex != std::string::npos)
-            openDelimiter = line[static_cast<u64>(columnIndex)];
-        else
-            return result;
-
-        i32 currentTokenId = from + 1;
-        std::string closeDelimiter;
-        if (size_t idx = blockDelimiters.find(openDelimiter); idx != std::string::npos && currentTokenId < (i32) m_tokens.size())
-            closeDelimiter = blockDelimiters[idx + 1];
-        else
-            return result;
-        m_curr = tokenStart + currentTokenId;
-        location = m_curr->location;
         i32 lineIndex = location.line - 1;
-        while (currentTokenId < tokenCount) {
+        std::string delimiters, openDelimiter, closeDelimiter;
+        i32 currentTokenId = from;
+        auto line = operator[](lineIndex);
+        if (isOpenFound) {
+            delimiters = s_openDelimiters + s_closeDelimiters;
+            if (auto columnIndex = line.m_chars.find_first_of(s_delimiters, location.column - 1); columnIndex != std::string::npos) {
+                openDelimiter = line[static_cast<u64>(columnIndex)];
+                if (size_t idx = s_delimiters.find(openDelimiter); idx != std::string::npos && currentTokenId < (i32) m_tokens.size())
+                    closeDelimiter = s_delimiters[idx + 1];
+                else
+                    return result;
+            } else
+                return result;
+            currentTokenId++;
+            next();
+            lineIndex = m_curr->location.line - 1;
+        } else
+            delimiters = s_openDelimiters;
 
-            if (currentTokenId = findNextDelimiter(false); !peek(tkn::Separator::EndOfProgram)) {
+        while (currentTokenId < tokenCount) {
+            if (currentTokenId = findNextDelimiter(!isOpenFound); !peek(tkn::Separator::EndOfProgram)) {
                 if (currentTokenId < 0) {
                     return result;
                 }
                 line = operator[](m_curr->location.line - 1);
-                std::string currentChar = std::string(1, line[(u64)(m_curr->location.column - 1)]);
+                size_t stringIndex = line.columnIndex(m_curr->location.column);
+                std::string currentChar = std::string(1, line[static_cast<u64>(stringIndex - 1)]);
                 location = m_curr->location;
 
-                if (auto idx = blockDelimiters.find(currentChar); idx != std::string::npos) {
-                    if (currentChar == closeDelimiter) {
+                if (auto idx = delimiters.find(currentChar); idx != std::string::npos) {
+                    if (isOpenFound && currentChar == closeDelimiter) {
                         return std::make_pair(currentTokenId, closeDelimiter[0]);
                     } else {
-                        if (idx == 6 || idx == 7) {
+                        if (idx == 3 || (isOpenFound && idx == 7)) {
+                            if (currentTokenId == 0) {
+                                return result;
+                            }
                             next(-1);
-                            if (const auto *identifier = const_cast<Token::Identifier *>(getValue<Token::Identifier>(0));
-                                    ((idx == 6) && (identifier == nullptr || identifier->getType() != Token::Identifier::IdentifierType::UDT)) || (idx == 7)) {
+                            auto column = m_curr[0].location.column - 1;
+                            if (line.m_colors[column] != (char) PaletteIndex::UserDefinedType) {
                                 next(2);
                                 if (peek(tkn::Separator::EndOfProgram, -1)) {
                                     return result;
                                 }
 
-                                if (currentTokenId = getTokenId(); currentTokenId < 0)
+                                if (currentTokenId = getTokenId(); currentTokenId < 0) {
                                     return result;
-
+                                }
                                 resetToTokenId(lineIndex, currentTokenId, location);
                                 continue;
                             }
                         }
-                        if (idx % 2 == 0) {
+                        if (idx < 4) {
                             auto start = currentTokenId;
-                            auto end = findMatchingDelimiter(currentTokenId);
-                            if (end.first < 0)
-                                return result;
-                            std::string value = currentChar + end.second;
-                            auto lineBased = getDelimiterLineNumbers(start, end.first, value);
+                            auto end = findFoldDelimiters(currentTokenId, true);
+                            std::string value;
+                            std::pair<Coordinates, Coordinates> lineBased;
+                            i64 currTokenId;
+                            if (end.first < 0) {
+                                value = currentChar;
+                                lineBased = getDelimiterLineNumbers(start, tokenCount - 1, value);
+                                currTokenId = start;
+                            } else {
+                                value = currentChar + end.second;
+                                lineBased = getDelimiterLineNumbers(start, end.first, value);
+                                currTokenId = end.first;
+                            }
                             if (lineBased.first.getLine() != lineBased.second.getLine())
                                 m_foldPoints[lineBased.first] = lineBased.second;
 
-                            if (currentTokenId = getTokenId(tokenStart + end.first); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size())
+                            if (currentTokenId = getTokenId(tokenStart + currTokenId); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size())
                                 return result;
 
                             incrementTokenId(lineIndex, currentTokenId, location);
@@ -862,5 +794,54 @@ namespace hex::ui {
         if (id+index < 0 || id+index >= (i32)m_tokens.size())
             return false;
         return m_curr[index].type == token.type && m_curr[index] == token.value;
+    }
+
+    void Lines::setIndentBlocks() {
+        m_indentBlocks.clear();
+        m_indentBlocks.insert(Range(lineCoordinates(0, 0), lineCoordinates(size() - 1, m_unfoldedLines.back().size())));
+        for (auto interval : m_foldPoints) {
+            Range foldInterval(interval);
+            m_indentBlocks.insert(foldInterval);
+        }
+    }
+
+    void Lines::setAllCodeFolds() {
+        initializeCodeFolds();
+        tokensFromSource();
+        m_foldPoints.clear();
+        findFoldDelimiters(0, false);
+        setIndentBlocks();
+        nonDelimitedFolds();
+        m_codeFoldKeys.clear();
+        m_codeFolds.clear();
+        m_codeFoldKeyMap.clear();
+        m_codeFoldValueMap.clear();
+        m_codeFoldKeyLineMap.clear();
+        m_codeFoldValueLineMap.clear();
+        m_codeFoldDelimiters.clear();
+        m_indentBlocks.clear();
+        m_indentBlocks.insert(Range(lineCoordinates(0, 0), lineCoordinates(size() - 1, m_unfoldedLines.back().size())));
+        for (auto interval: m_foldPoints) {
+            Range foldInterval(interval);
+            m_indentBlocks.insert(foldInterval);
+            if (foldInterval.m_start.m_line > size() || foldInterval.m_end.m_line > size())
+                return;
+            std::pair<char, char> foldDelimiters = {};
+            foldDelimiters.second = m_unfoldedLines[foldInterval.m_end.m_line].m_chars[foldInterval.m_end.m_column];
+            if (foldDelimiters.second == '\0')
+                continue;
+            if (foldDelimiters.second == '/')
+                foldDelimiters.first = foldDelimiters.second;
+            else
+                foldDelimiters.first = foldDelimiters.second - 2 + (foldDelimiters.second == ')');
+            m_codeFoldKeys.insert(foldInterval);
+            m_codeFoldDelimiters[foldInterval] = foldDelimiters;
+            if (!m_codeFoldKeyMap.contains(foldInterval.m_start))
+                m_codeFoldKeyMap[foldInterval.m_start] = foldInterval.m_end;
+            if (!m_codeFoldValueMap.contains(foldInterval.m_end))
+                m_codeFoldValueMap[foldInterval.m_end] = foldInterval.m_start;
+            m_codeFoldKeyLineMap.insert(std::make_pair(foldInterval.m_start.m_line, foldInterval.m_start));
+            m_codeFoldValueLineMap.insert(std::make_pair(foldInterval.m_end.m_line, foldInterval.m_end));
+        }
     }
 }

@@ -250,9 +250,7 @@ namespace hex::plugin::builtin {
             token = m_curr[0];
         }
         catch (const std::out_of_range &e) {
-            auto t = e.what();
-            if (t == nullptr)
-                return false;
+            log::error("IdentifierHighlighter::isValid: Out of range error: {}", e.what());
             return false;
         }
         return isLocationValid(token.location);
@@ -564,7 +562,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void IdentifierHighlighter::skipDelimiters(i32 maxSkipCount, Token delimiter[2], i8 increment) {
+    void IdentifierHighlighter::skipDelimiters(i32 maxSkipCount, Token delimiters[2], i8 increment) {
         auto curr = m_curr;
         i32 skipCount = 0;
         i32 depth = 0;
@@ -581,17 +579,29 @@ namespace hex::plugin::builtin {
         next(increment);
         skipCountLimit -= increment;
 
-        if (peek(delimiter[0])) {
+        if (peek(delimiters[0])) {
             next(increment);
             skipCountLimit -= increment;
             while (skipCount < skipCountLimit) {
 
-                if (peek(delimiter[1])) {
+                if (delimiters[0].value == tkn::Operator::BoolLessThan.value && peek(tkn::Separator::LeftParenthesis)) {
+                    Token parentheses[2] = {tkn::Separator::LeftParenthesis, tkn::Separator::RightParenthesis};
+                    next(-increment);
+                    skipCountLimit += increment;
+                    skipDelimiters(maxSkipCount, parentheses, 1);
+                } else if (delimiters[0].value == tkn::Operator::BoolGreaterThan.value && peek(tkn::Separator::RightParenthesis)) {
+                    Token parentheses[2] = {tkn::Separator::RightParenthesis, tkn::Separator::LeftParenthesis};
+                    next(-increment);
+                    skipCountLimit += increment;
+                    skipDelimiters(maxSkipCount,parentheses, -1);
+                }
+
+                if (peek(delimiters[1])) {
 
                     if (depth == 0)
                         return;
                     depth--;
-                } else if (peek(delimiter[0]))
+                } else if (peek(delimiters[0]))
                     depth++;
                 else if (peek(tkn::Separator::Semicolon)) {
                     if (increment < 0)
@@ -1950,7 +1960,7 @@ namespace hex::plugin::builtin {
         try {
             source = location.source;
         } catch  (const std::out_of_range &e) {
-            log::error("TextHighlighter::IsLocationValid: Out of range error: {}", e.what());
+            log::error("IdentifierHighlighter::isLocationValid: Out of range error: {}", e.what());
             return false;
         }
         if (source == nullptr)
@@ -2577,10 +2587,11 @@ namespace hex::plugin::builtin {
 
 // Only update if needed. Must wait for the parser to finish first.
     void IdentifierHighlighter::highlightSourceCode() {
+        bool wasInterrupted = false;
         m_viewPatternEditor->resetInterrupt();
         ON_SCOPE_EXIT {
             m_viewPatternEditor->incrementRunningHighlighters(-1);
-            m_viewPatternEditor->setChangesWereColored(!m_viewPatternEditor->interrupted());
+            m_viewPatternEditor->setChangesWereColored(!wasInterrupted);
         };
         try {
             clearVariables();
@@ -2626,6 +2637,7 @@ namespace hex::plugin::builtin {
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
+            wasInterrupted = true;
             return;
         }
     }

@@ -630,7 +630,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine(0, 10_scaled);
                     if (ImGuiExt::DimmedIconToggle(ICON_VS_EDIT_SPARKLE, &m_runAutomatically)) {
                         if (m_runAutomatically)
-                            m_hasUnevaluatedChanges.get(provider) = true;
+                            m_hasUnparsedChanges.get(provider) = true;
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.auto"_lang.get());
 
@@ -1276,33 +1276,33 @@ namespace hex::plugin::builtin {
                         if (pl::core::Token::isSigned(variable.type)) {
                             i64 value = i64(hex::get_or<i128>(variable.value, 0ll));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
-                                m_hasUnevaluatedChanges.get(provider) = true;
+                                m_hasUnparsedChanges.get(provider) = true;
                             variable.value = i128(value);
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
                             u64 value = u64(hex::get_or<u128>(variable.value, 0));
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
-                                m_hasUnevaluatedChanges.get(provider) = true;
+                                m_hasUnparsedChanges.get(provider) = true;
                             variable.value = u128(value);
                         } else if (pl::core::Token::isFloatingPoint(variable.type)) {
                             auto value = hex::get_or<double>(variable.value, 0.0);
                             if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
-                                m_hasUnevaluatedChanges.get(provider) = true;
+                                m_hasUnparsedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Boolean) {
                             ImGui::SameLine(0, ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing());
                             auto value = hex::get_or<bool>(variable.value, false);
                             if (ImGui::Checkbox(label.c_str(), &value))
-                                m_hasUnevaluatedChanges.get(provider) = true;
+                                m_hasUnparsedChanges.get(provider) = true;
                             variable.value = value;
                         } else if (variable.type == pl::core::Token::ValueType::Character) {
                             std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
                             if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
-                                m_hasUnevaluatedChanges.get(provider) = true;
+                                m_hasUnparsedChanges.get(provider) = true;
                             variable.value = buffer[0];
                         } else if (variable.type == pl::core::Token::ValueType::String) {
                             auto buffer = hex::get_or<std::string>(variable.value, "");
                             if (ImGui::InputText(label.c_str(), buffer))
-                                m_hasUnevaluatedChanges.get(provider) = true;
+                                m_hasUnparsedChanges.get(provider) = true;
                             variable.value = buffer;
                         }
                     }
@@ -1478,15 +1478,14 @@ namespace hex::plugin::builtin {
 
             if (m_textEditor.get(provider).isTextChanged()) {
                 m_textEditor.get(provider).setTextChanged(false);
-                m_hasUnevaluatedChanges.get(provider) = true;
+                m_hasUnparsedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
                 ImHexApi::Provider::markDirty();
                 markPatternFileDirty(provider);
             }
 
-            if (m_hasUnevaluatedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
+            if (m_hasUnparsedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
                 (std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
-                    m_changesWereParsed = false;
                     m_changesWereColored = false;
                     m_allStepsCompleted = false;
                     auto code = m_textEditor.get(provider).getText();
@@ -1507,16 +1506,16 @@ namespace hex::plugin::builtin {
                         if (m_runAutomatically)
                             m_triggerAutoEvaluate = true;
                     });
-                    m_hasUnevaluatedChanges.get(provider) = false;
+                m_hasUnparsedChanges.get(provider) = false;
             }
 
             if (m_triggerAutoEvaluate.exchange(false)) {
                 this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
             }
 
-            if (m_runningHighlighters > 0 && !m_changesWereParsed)
+            if (m_runningHighlighters > 0 && (m_hasUnparsedChanges.get(provider) || m_runningParsers > 0))
                 interrupt();
-            else if (m_runningHighlighters == 0 && m_changesWereParsed && !m_changesWereColored && !m_allStepsCompleted) {
+            else if (m_runningHighlighters == 0 && !m_hasUnparsedChanges.get(provider) && m_runningParsers == 0 && !m_changesWereColored && !m_allStepsCompleted) {
                 m_identifierHighlighter.get(provider).setViewPatternEditor(this);
                 bool restoreInterruptState = false;
                 if (interrupted()) {
@@ -1712,6 +1711,8 @@ namespace hex::plugin::builtin {
                 }
                 return false;
             });
+            m_changesWereColored = false;
+            m_allStepsCompleted = false;
             m_runningParsers += 1;
             TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
@@ -1753,7 +1754,6 @@ namespace hex::plugin::builtin {
             patternVariables = std::move(oldPatternVariables);
         }
 
-        m_changesWereParsed = true;
         m_changesWereColored = false;
         m_allStepsCompleted = false;
         if (m_runningParsers != 0)
@@ -1919,7 +1919,7 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).setText(wolv::util::preprocessText(code));
             m_textEditor.get(provider).removeHiddenLinesFromPattern();
             m_sourceCode.get(provider) = code;
-            m_hasUnevaluatedChanges.get(provider) = true;
+            m_hasUnparsedChanges.get(provider) = true;
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -2009,7 +2009,7 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(newProvider).setShowWhitespaces(m_showWhiteSpaces);
                 m_textEditor.get(newProvider).setDisableCodeFolds(m_codeFoldsDisabled);
                 m_textEditor.get(newProvider).setAutoIndent(m_autoIndent);
-                m_hasUnevaluatedChanges.get(newProvider) = true;
+                m_hasUnparsedChanges.get(newProvider) = true;
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
                 m_consoleEditor.get(newProvider).setScroll(m_consoleScroll.get(newProvider));
             }
@@ -2453,7 +2453,7 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(provider).removeHiddenLinesFromPattern();
                 m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
 
-                m_hasUnevaluatedChanges.get(provider) = true;
+                m_hasUnparsedChanges.get(provider) = true;
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {

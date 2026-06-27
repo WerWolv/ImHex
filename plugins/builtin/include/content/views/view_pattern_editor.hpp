@@ -113,8 +113,7 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningParsers    = 0;
         std::atomic<u32> m_runningHighlighters = 0;
 
-        PerProvider<bool> m_hasUnevaluatedChanges;
-        std::atomic<bool> m_changesWereParsed = false;
+        PerProvider<bool> m_hasUnparsedChanges;
         std::atomic<bool> m_changesWereColored = false;
         std::atomic<bool> m_allStepsCompleted = false;
         std::atomic<bool> m_interrupt;
