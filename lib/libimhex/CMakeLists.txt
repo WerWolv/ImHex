@@ -61,6 +61,7 @@ set(LIBIMHEX_SOURCES
         source/mcp/server.cpp
 
         source/subcommands/subcommands.cpp
+        source/init/cli.cpp
 )
 
 if (APPLE)
