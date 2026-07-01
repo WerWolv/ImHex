@@ -209,7 +209,7 @@ namespace hex::plugin::disasm {
                     option.remove_prefix(3);
                 }
 
-                constexpr static std::array<std::pair<std::string_view, cs_mode>, 110> Options = {{
+                constexpr static std::array<std::pair<std::string_view, cs_mode>, 129> Options = {{
                     // Common
                     { "16bit",      CS_MODE_16                      },
                     { "32bit",      CS_MODE_32                      },
@@ -299,9 +299,32 @@ namespace hex::plugin::disasm {
                     { "bpfe",       CS_MODE_BPF_EXTENDED            },
 
                     // RISC-V
-                    { "rv32g",      CS_MODE_RISCV32                 },
-                    { "rv64g",      CS_MODE_RISCV64                 },
-                    { "riscvc",     CS_MODE_RISCVC                  },
+                    { "rv32g",          CS_MODE_RISCV32             },
+                    { "rv64g",          CS_MODE_RISCV64             },
+                #if CS_API_MAJOR >= 6
+                    { "c",              CS_MODE_RISCV_C             },
+                    { "fd",             CS_MODE_RISCV_FD            },
+                    { "v",              CS_MODE_RISCV_V             },
+                    { "zfinx",          CS_MODE_RISCV_ZFINX         },
+                    { "zcmp-zcmt-zce",  CS_MODE_RISCV_ZCMP_ZCMT_ZCE },
+                    { "zicfiss",        CS_MODE_RISCV_ZICFISS       },
+                    { "e",              CS_MODE_RISCV_E             },
+                    { "a",              CS_MODE_RISCV_A             },
+                    { "corev",          CS_MODE_RISCV_COREV         },
+                    { "thead",          CS_MODE_RISCV_THEAD         },
+                    { "sifive",         CS_MODE_RISCV_SIFIVE        },
+                    { "bitmanip",       CS_MODE_RISCV_BITMANIP      },
+                    { "zba",            CS_MODE_RISCV_ZBA           },
+                    { "zbb",            CS_MODE_RISCV_ZBB           },
+                    { "zbc",            CS_MODE_RISCV_ZBC           },
+                    { "zbkb",           CS_MODE_RISCV_ZBKB          },
+                    { "zbkc",           CS_MODE_RISCV_ZBKC          },
+                    { "zbkx",           CS_MODE_RISCV_ZBKX          },
+                    { "zbs",            CS_MODE_RISCV_ZBS           },
+                    { "ventana",        CS_MODE_RISCV_VENTANA       },
+                #else
+                    { "riscv",              CS_MODE_RISCVC              },
+                #endif
 
                     // MOS65XX
                     { "6502",       CS_MODE_MOS65XX_6502            },

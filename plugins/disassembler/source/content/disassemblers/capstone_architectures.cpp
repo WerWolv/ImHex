@@ -4,6 +4,7 @@
 #include <hex/helpers/fmt.hpp>
 
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::disasm {
 
@@ -477,14 +478,75 @@ namespace hex::plugin::disasm {
             ImGui::SameLine();
             ImGui::RadioButton("hex.disassembler.view.disassembler.64bit"_lang, &m_riscvMode, CS_MODE_RISCV64);
 
-            ImGui::Checkbox("hex.disassembler.view.disassembler.riscv.compressed"_lang, &m_compressed);
+            #if CS_API_MAJOR >= 6
+                if (ImGuiExt::BeginSubWindow("hex.disassembler.view.disassembler.riscv.extensions"_lang)) {
+                    if (ImGui::BeginTable("Extensions", 5, ImGuiTableFlags_NoBordersInBody)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
 
-            m_mode = cs_mode(m_riscvMode | (m_compressed ? CS_MODE_RISCVC : cs_mode(0)));
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.c"_lang,             &m_extensions, CS_MODE_RISCV_C);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.fd"_lang,            &m_extensions, CS_MODE_RISCV_FD);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.v"_lang,             &m_extensions, CS_MODE_RISCV_V);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zfinx"_lang,         &m_extensions, CS_MODE_RISCV_ZFINX);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zcmp_zcmt_zce"_lang, &m_extensions, CS_MODE_RISCV_ZCMP_ZCMT_ZCE);
+
+                        ImGui::TableNextColumn();
+
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zicfiss"_lang,       &m_extensions, CS_MODE_RISCV_ZICFISS);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.e"_lang,             &m_extensions, CS_MODE_RISCV_E);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.a"_lang,             &m_extensions, CS_MODE_RISCV_A);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.corev"_lang,         &m_extensions, CS_MODE_RISCV_COREV);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.thead"_lang,         &m_extensions, CS_MODE_RISCV_THEAD);
+
+                        ImGui::TableNextColumn();
+
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.sifive"_lang,        &m_extensions, CS_MODE_RISCV_SIFIVE);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.bitmanip"_lang,      &m_extensions, CS_MODE_RISCV_BITMANIP);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zba"_lang,           &m_extensions, CS_MODE_RISCV_ZBA);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zbb"_lang,           &m_extensions, CS_MODE_RISCV_ZBB);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zbc"_lang,           &m_extensions, CS_MODE_RISCV_ZBC);
+
+                        ImGui::TableNextColumn();
+
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zbkb"_lang,          &m_extensions, CS_MODE_RISCV_ZBKB);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zbkc"_lang,          &m_extensions, CS_MODE_RISCV_ZBKC);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zbkx"_lang,          &m_extensions, CS_MODE_RISCV_ZBKX);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.zbs"_lang,           &m_extensions, CS_MODE_RISCV_ZBS);
+                        ImGui::TableNextColumn();
+                        ImGui::CheckboxFlags("hex.disassembler.view.disassembler.riscv.extension.ventana"_lang,       &m_extensions, CS_MODE_RISCV_VENTANA);
+
+                        ImGui::EndTable();
+                    }
+                }
+                ImGuiExt::EndSubWindow();
+
+                m_mode = cs_mode(m_riscvMode | m_extensions);
+            #else
+                ImGui::Checkbox("hex.disassembler.view.disassembler.riscv.compressed"_lang, &m_compressed);
+
+                m_mode = cs_mode(m_riscvMode | (m_compressed ? CS_MODE_RISCVC : cs_mode(0)));
+            #endif
         }
 
     private:
         int m_riscvMode = CS_MODE_RISCV32;
-        bool m_compressed = false;
+        [[maybe_unused]] bool m_compressed = false;
+        [[maybe_unused]] unsigned int m_extensions = 0x00;
     };
 
     class ArchitectureMOS65XX : public CapstoneArchitecture {
