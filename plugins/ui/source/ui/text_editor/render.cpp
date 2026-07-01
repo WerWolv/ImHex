@@ -1157,9 +1157,26 @@ namespace hex::ui {
         m_lines.m_cursorScreenPosition = ImGui::GetCursorScreenPos();
 
         m_topLineNumber = getTopLineNumber();
-        float maxDisplayedRow = m_lines.getMaxDisplayedRow();
         float lineIndex = m_topLineNumber;
+
+        float scrollY;
+        if (m_setScroll) {
+            setScroll(m_scroll);
+            scrollY = m_scroll.y;
+        } else {
+            scrollY = ImGui::GetScrollY();
+            float scrollX = ImGui::GetScrollX();
+            m_scroll = ImVec2(scrollX, scrollY);
+        }
+
+        if (m_lines.m_setTopRow)
+            m_lines.setFirstRow();
+        else
+            m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
+
         float row = m_lines.m_topRow;
+        float maxDisplayedRow = m_lines.getMaxDisplayedRow();
+
         m_longestDrawnLineLength = m_longestLineLength;
         if (!m_lines.isEmpty()) {
             if (!m_lines.m_codeFoldsDisabled) {
@@ -1218,21 +1235,6 @@ namespace hex::ui {
 
                 row = row + 1.0F;
             }
-
-            float scrollY;
-            if (m_setScroll) {
-                setScroll(m_scroll);
-                scrollY = m_scroll.y;
-            } else {
-                scrollY = ImGui::GetScrollY();
-                float scrollX = ImGui::GetScrollX();
-                m_scroll = ImVec2(scrollX, scrollY);
-            }
-
-            if (m_lines.m_setTopRow)
-                m_lines.setFirstRow();
-            else
-                m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
         } else {
             m_lines.m_rowToLineIndex[0] = 1;
             m_topLineNumber = 1;
