@@ -65,6 +65,9 @@ parts:
       - libssh2-1-dev
       - libmd4c-dev
       - libmd4c-html0-dev
+      - libwayland-dev
+      - libwayland-bin
+      - wayland-protocols
     stage-packages:
       - libglfw3
       - libmagic1t64
