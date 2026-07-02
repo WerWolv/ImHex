@@ -1148,6 +1148,9 @@ jobs:
             image: ubuntu-26.04-arm
     name: 🐧 Flatpak ${{ matrix.architecture }}
     runs-on: ${{ matrix.image }}
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
 
     permissions:
       id-token: write
