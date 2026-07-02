@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
 
             if (from < 0 || static_cast<u128>(from) >= input.size())
                 throwNodeError("'from' input out of range");
-            if (to < 0 || static_cast<u128>(to) >= input.size())
+            if (to < 0 || static_cast<u128>(to) > input.size())
                 throwNodeError("'to' input out of range");
             if (to <= from)
                 throwNodeError("'to' input needs to be greater than 'from' input");
