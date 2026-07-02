@@ -926,7 +926,6 @@ jobs:
 
   # RPM distro builds
   rpm-build:
-    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -937,6 +936,7 @@ jobs:
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
+    if: false
 
     container:
       image: "almalinux:10"
