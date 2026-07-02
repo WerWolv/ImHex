@@ -21,7 +21,9 @@
 #else
     #include <GLFW/glfw3.h>
     #include <nfd.hpp>
+    #include <nfd_glfw3.h>
 #endif
+
 
 #include <filesystem>
 
@@ -242,19 +244,22 @@ namespace hex::fs {
             NFD::UniquePathSet outPaths;
             nfdresult_t result = NFD_ERROR;
 
+            nfdwindowhandle_t windowHandle = {};
+            NFD_GetNativeWindowFromGLFWWindow(ImHexApi::System::getMainWindowHandle(), &windowHandle);
+
             // Open the correct file dialog based on the mode
             switch (mode) {
                 case DialogMode::Open:
                     if (multiple)
-                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), windowHandle);
                     else
-                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), windowHandle);
                     break;
                 case DialogMode::Save:
-                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nullptr, windowHandle);
                     break;
                 case DialogMode::Folder:
-                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str(), windowHandle);
                     break;
             }
 
