@@ -62,6 +62,10 @@ project(ImHex
 )
 configureProject()
 
+if(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options("$<$<CONFIG:Debug,RelWithDebInfo>:-gdwarf-5;-glldb>")
+endif()
+
 # Add ImHex sources
 add_custom_target(imhex_all ALL)
 
