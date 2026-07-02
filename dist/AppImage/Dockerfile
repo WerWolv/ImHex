@@ -14,7 +14,7 @@ apt update
 # general deps
 apt install -y ccache git wget
 # appimage tools deps
-apt install -y python3-pip python3-venv python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse ninja-build
+apt install -y python3-pip python3-venv python3-setuptools desktop-file-utils libgdk-pixbuf-xlib-2.0-dev fuse ninja-build
 apt install -y squashfs-tools zsync
 
 # imhex deps
@@ -77,7 +77,10 @@ chmod +x /cache/bin/appimagetool
 
 python3 -m venv venv
 . venv/bin/activate
-pip3 install git+https://github.com/AppImageCrafters/appimage-builder@e995e8e
+
+echo "#!/bin/sh" > /usr/bin/apt-key
+chmod +x /usr/bin/apt-key
+pip3 install git+https://github.com/AppImageCrafters/appimage-builder@b1d6ca4
 
 # Package ImHex as AppImage
 export VERSION=$(cat /imhex/VERSION)

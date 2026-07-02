@@ -18,7 +18,7 @@ AppDir:
     - sourceline: 'deb [arch=amd64] https://us.archive.ubuntu.com/ubuntu/ resolute main restricted universe multiverse'
     - sourceline: 'deb [arch=arm64] https://ports.ubuntu.com/ubuntu-ports/ resolute main restricted universe multiverse'
     include:
-    - libgdk-pixbuf2.0-0
+    - libgdk-pixbuf-2.0-0
     - libgdk-pixbuf2.0-common
     - shared-mime-info
     - librsvg2-common
@@ -29,14 +29,14 @@ AppDir:
     - libgpg-error0
     - liblzma5
     - libnss-mdns
-    - libpcre3
+    - libpcre2-8-0
     - libselinux1
     - libtinfo6
     - libmd4c-dev
     - libmd4c-html0-dev
   files:
     include:
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libLLVM-13.so.1"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libLLVM-18.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libOpenGL.so.0"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libX11.so.6"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libXau.so.6"
@@ -82,17 +82,17 @@ AppDir:
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libgraphite2.so.3"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libharfbuzz.so.0"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libhogweed.so.6"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libicudata.so.70"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libicuuc.so.70"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libicudata.so.78"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libicuuc.so.78"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libidn2.so.0"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libjpeg.so.8"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/liblber-2.5.so.0"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libldap-2.5.so.0"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/liblber.so.2"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libldap.so.2"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/liblz4.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmagic.so.1"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmbedcrypto.so.7"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmbedtls.so.14"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmbedx509.so.1"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmbedcrypto.so.16"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmbedtls.so.21"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmbedx509.so.7"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmd.so.0"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmount.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libnettle.so.8"
@@ -109,7 +109,7 @@ AppDir:
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libsystemd.so.0"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libtasn1.so.6"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libthai.so.0"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libunistring.so.2"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libunistring.so.5"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libuuid.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libvulkan.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libwayland-client.so.0"
@@ -120,10 +120,10 @@ AppDir:
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxcb-present.so.0"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxcb-sync.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxkbcommon.so.0"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxml2.so.2"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxml2.so.16"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libxshmfence.so.1"
     - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libzstd.so.1"
-    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmd4c.so"
+    - "/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/libmd4c.so.0"
     exclude:
     - usr/share/man
     - usr/share/doc/*/README.*
