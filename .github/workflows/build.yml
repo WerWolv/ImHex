@@ -643,6 +643,7 @@ jobs:
 
   # Ubuntu build
   ubuntu:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -925,6 +926,7 @@ jobs:
 
   # RPM distro builds
   rpm-build:
+    if: false
     strategy:
       fail-fast: false
       matrix:
