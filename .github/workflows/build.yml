@@ -752,11 +752,11 @@ jobs:
           - architecture: "x86_64"
             architecture_package: "amd64"
             architecture_appimage_builder: "x86_64"
-            image: ubuntu-24.04
+            image: ubuntu-26.04
           - architecture: "arm64"
             architecture_package: "arm64"
             architecture_appimage_builder: "aarch64"
-            image: ubuntu-24.04-arm
+            image: ubuntu-26.04-arm
 
     runs-on: ${{ matrix.image }}
     name: ⬇️ AppImage ${{ matrix.architecture }}
@@ -816,7 +816,7 @@ jobs:
   # ArchLinux build
   archlinux-build:
     name: 🐧 ArchLinux x86_64
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     container:
       image: archlinux:base-devel
@@ -1061,9 +1061,9 @@ jobs:
       matrix:
         include:
           - architecture: "x86_64"
-            image: ubuntu-24.04
+            image: ubuntu-26.04
           - architecture: "arm64"
-            image: ubuntu-24.04-arm
+            image: ubuntu-26.04-arm
     name: 🐧 Snap ${{ matrix.architecture }}
     runs-on: ${{ matrix.image }}
 
@@ -1142,10 +1142,10 @@ jobs:
         include:
           - architecture: "x86_64"
             flatpak_arch: "x86_64"
-            image: ubuntu-24.04
+            image: ubuntu-26.04
           - architecture: "arm64"
             flatpak_arch: "aarch64"
-            image: ubuntu-24.04-arm
+            image: ubuntu-26.04-arm
     name: 🐧 Flatpak ${{ matrix.architecture }}
     runs-on: ${{ matrix.image }}
 
@@ -1196,7 +1196,7 @@ jobs:
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
 
   webassembly-build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: 🌍 Web
     steps:
       - name: 🧰 Checkout

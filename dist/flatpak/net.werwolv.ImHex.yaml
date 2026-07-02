@@ -1,6 +1,6 @@
 app-id: net.werwolv.ImHex
 runtime: org.freedesktop.Platform
-runtime-version: '24.08'
+runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 command: imhex
 rename-desktop-file: imhex.desktop
