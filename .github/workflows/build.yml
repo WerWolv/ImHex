@@ -1114,7 +1114,7 @@ jobs:
 
       - name: 🛠️ Build
         run: |
-          sudo snapcraft --destructive-mode
+          sudo snapcraft pack
 
       - name: 🟩 Rename Snap
         run: |
@@ -1157,10 +1157,6 @@ jobs:
       attestations: write
 
     steps:
-      - name: ⬇️ Install setup dependencies
-        run: |
-          apt update && apt install -y git curl
-
       - name: 🧰 Checkout
         uses: actions/checkout@v4
         with:
