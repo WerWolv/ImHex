@@ -9,11 +9,24 @@
     #include <windows.h>
     #include <shlobj.h>
     #include <shellapi.h>
-#elif defined(OS_LINUX) || defined(OS_WEB)
+
+    #define GLFW_EXPOSE_NATIVE_WIN32
+#elif defined(OS_MACOS)
+    #define GLFW_EXPOSE_NATIVE_COCOA
+#elif defined(OS_LINUX)
     #include <xdg.hpp>
-# if defined(OS_FREEBSD)
-    #include <sys/syslimits.h>
-# endif
+
+    #if __has_include(<X11/Xlib.h>)
+        #define GLFW_EXPOSE_NATIVE_X11
+    #endif
+
+    #if __has_include(<wayland-client.h>)
+        #define GLFW_EXPOSE_NATIVE_WAYLAND
+    #endif
+
+    #if defined(OS_FREEBSD)
+        #include <sys/syslimits.h>
+    #endif
 #endif
 
 #if defined(OS_WEB)
