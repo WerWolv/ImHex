@@ -93,6 +93,14 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
+find_package(SDL3 REQUIRED)
+include_directories(${SDL3_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libfiledialogs/filedialogs)
+execute_process(COMMAND make WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libfiledialogs)
+target_include_directories(libimhex PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libfiledialogs/filedialogs)
+target_link_directories(libimhex PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libfiledialogs/filedialogs)
+target_link_libraries(libimhex PUBLIC filedialogs)
+
 addCppCheck(libimhex)
 
 
