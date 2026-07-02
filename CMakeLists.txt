@@ -20,6 +20,7 @@ option(IMHEX_ENABLE_CXX_MODULES         "Enable C++20 Module compilation. Testin
 option(IMHEX_ENABLE_CPPCHECK            "Enable cppcheck static analysis"                                                               OFF)
 option(IMHEX_BUNDLE_PLUGIN_SDK          "Enable bundling of Plugin SDK into install package"                                            ON )
 set   (IMHEX_RENDERING_BACKEND          "GLFW" CACHE STRING "Set the rendering backend ImHex should use (GLFW or SDL)"                     )
+option(IMHEX_ENABLE_UPDATER             "Enable automatic updater"                                                                      ON )
 ## Testing
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                                    ON )
 option(IMHEX_ENABLE_IMGUI_TEST_ENGINE   "Enable the ImGui Test Engine"                                                                  OFF)
