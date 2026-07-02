@@ -535,7 +535,7 @@ namespace hex::plugin::builtin {
 
         constexpr static auto MaxStringLength = 64;
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1,
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1, 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -566,7 +566,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.wstring", sizeof(wchar_t),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.wstring", sizeof(wchar_t), 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -612,7 +612,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string16", sizeof(char16_t),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string16", sizeof(char16_t), 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -658,7 +658,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string32", sizeof(char32_t),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string32", sizeof(char32_t), 512,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = buffer;
                 std::ignore = endian;
@@ -704,7 +704,7 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding", 1, [encodingFile = EncodingFile()](const std::vector<u8> &, std::endian, Style) mutable {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding", 1, 512, [encodingFile = EncodingFile()](const std::vector<u8> &, std::endian, Style) mutable {
             std::string value, copyValue;
 
             if (encodingFile.valid()) {
@@ -763,7 +763,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -783,7 +783,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -805,7 +805,7 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::localtime(&endianAdjustedTime);
+                auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
@@ -821,15 +821,15 @@ namespace hex::plugin::builtin {
 #endif
 
         struct DOSDate {
-            unsigned day   : 5;
-            unsigned month : 4;
-            unsigned year  : 7;
+            u16 day   : 5;
+            u16 month : 4;
+            u16 year  : 7;
         };
 
         struct DOSTime {
-            unsigned seconds : 5;
-            unsigned minutes : 6;
-            unsigned hours   : 5;
+            u16 seconds : 5;
+            u16 minutes : 6;
+            u16 hours   : 5;
         };
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.dos_date", sizeof(DOSDate), [](auto buffer, auto endian, auto style) {

@@ -62,6 +62,7 @@ EXPORT_MODULE namespace hex {
             void setMainWindowSize(u32 width, u32 height);
             void setMainDockSpaceId(ImGuiID id);
             void setMainWindowHandle(GLFWwindow *window);
+            void setMainWindowFocusState(bool focused);
 
             void setGlobalScale(float scale);
             void setNativeScale(float scale);
@@ -160,6 +161,12 @@ EXPORT_MODULE namespace hex {
          * @return GLFW window handle
          */
         GLFWwindow* getMainWindowHandle();
+
+        /**
+         * @brief Checks if the main window is currently focused
+         * @return Whether the main window is focused
+         */
+        bool isMainWindowFocused();
 
         /**
          * @brief Checks if borderless window mode is enabled currently

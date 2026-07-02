@@ -367,7 +367,17 @@ namespace hex {
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
-        runShortcut(pressedShortcut, currentView);
+        std::set<const View*> processedViews;
+        while (true) {
+            if (runShortcut(pressedShortcut, currentView)) {
+                break;
+            }
+
+            processedViews.insert(currentView);
+            currentView = currentView->getMenuItemInheritView();
+            if (currentView == nullptr || processedViews.contains(currentView))
+                break;
+        }
     }
 
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {

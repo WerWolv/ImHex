@@ -87,9 +87,9 @@ namespace hex {
 
     private:
         void reset() override {
-            if constexpr (requires { m_value.reset(); }) {
+            if constexpr (requires(T t) { t.reset(); }) {
                 m_value.reset();
-            } else if constexpr (requires { m_value.clear(); }) {
+            } else if constexpr (requires(T t) { t.clear(); }) {
                 m_value.clear();
             } else if constexpr (std::is_pointer_v<T>) {
                 m_value = nullptr; // cppcheck-suppress nullPointer

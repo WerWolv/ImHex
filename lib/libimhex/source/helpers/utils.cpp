@@ -988,6 +988,12 @@ namespace hex {
             nid.dwInfoFlags = NIIF_INFO;
 
             Shell_NotifyIcon(NIM_ADD, &nid);
+
+            Sleep(100);
+
+            Shell_NotifyIcon(NIM_DELETE, &nid);
+            CloseWindow(hwnd);
+            DestroyWindow(hwnd);
         #elif defined(OS_MACOS)
             toastMessageMacos(title.c_str(), message.c_str());
         #elif defined(OS_LINUX)
@@ -996,17 +1002,21 @@ namespace hex {
             }
         #elif defined(OS_WEB)
             EM_ASM({
-                const t = UTF8ToString($0);
-                const m = UTF8ToString($1);
+                try {
+                    const t = UTF8ToString($0);
+                    const m = UTF8ToString($1);
 
-                if (Notification.permission === "granted") {
-                    new Notification(t, { body: m });
-                } else if (Notification.permission !== "denied") {
-                    Notification.requestPermission().then(function(p) {
-                        if (p === "granted") {
-                            new Notification(t, { body: m });
-                        }
-                    });
+                    if (Notification.permission === "granted") {
+                        new Notification(t, { body: m });
+                    } else if (Notification.permission !== "denied") {
+                        Notification.requestPermission().then(function(p) {
+                            if (p === "granted") {
+                                new Notification(t, { body: m });
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error(e);
                 }
             }, title.c_str(), message.c_str());
         #endif

@@ -1,4 +1,6 @@
+# https://gist.github.com/iTrooz/d5bacca32c0974edc6c1ac3ad3ee82f3
 # See https://github.com/cli/cli/issues/9125
+# Extract archive with `tar -xf cache.tzst --transform 's@\.\./@#@g' -P` to avoid ../ errors
 name: Download cache key
 
 on:
@@ -8,22 +10,38 @@ on:
         description: 'Cache key'
         required: true
         type: string
-
 jobs:
-  cache-upload:
+  cache-download:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
+      - name: Query cache version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(gh api repos/$GITHUB_REPOSITORY/actions/caches \
+          --jq "
+            .actions_caches[]
+            | select(.ref == \"refs/heads/$GITHUB_REF_NAME\")
+            | select(.key == \"${{ github.event.inputs.cache_key }}\")
+            | .version
+          ")
+          echo "version=$VERSION" | tee $GITHUB_OUTPUT
+
+      - name: Restore cache
+        uses: iTrooz/cache/restore@restore_with_version
         with:
-          path: ./cache-folder
+          # Path won't be actually used, we will match by 'version'.
+          path: .
           key: ${{ github.event.inputs.cache_key }}
+          version: ${{ steps.version.outputs.version }}
 
       - name: Upload cached folder as artifact
         uses: actions/upload-artifact@v4
         with:
           name: cache-artifact
-          path: ./cache-folder
+          path: |
+            /home/runner/work/**/*.tzst

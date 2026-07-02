@@ -385,8 +385,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen,
             createFile,
-            noRunningTasks,
-            ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name")
+            noRunningTasks
         );
 
         ContentRegistry::UserInterface::addTaskBarMenuItem({ "hex.builtin.menu.file.create_file" }, 100,
@@ -397,7 +396,7 @@ namespace hex::plugin::builtin {
         /* Open File */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_FOLDER_OPENED, 1100, CTRLCMD + Keys::O + AllowWhileTyping + ShowOnWelcomeScreen, [] {
             RequestOpenWindow::post("Open File");
-        }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+        }, noRunningTasks);
 
         ContentRegistry::UserInterface::addTaskBarMenuItem({ "hex.builtin.menu.file.open_file" }, 200, [] {
             RequestOpenWindow::post("Open File");
@@ -409,7 +408,7 @@ namespace hex::plugin::builtin {
                 if (menu::menuItemEx(Lang(unlocalizedProviderName), icon))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }
-        }, noRunningTasks, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"), true);
+        }, noRunningTasks, nullptr, true);
 
         /* Reload Provider */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.reload_provider"}, ICON_VS_REFRESH, 1250, CTRLCMD + Keys::R + AllowWhileTyping + ShowOnWelcomeScreen, [] {

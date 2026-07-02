@@ -1,7 +1,7 @@
 {
     "name": "vcpkg",
     "version": "1.0.0",
-    "builtin-baseline": "7e21420f775f72ae938bdeb5e6068f722088f06a",
+    "builtin-baseline": "66c0373dc7fca549e5803087b9487edfe3aca0a1",
     "dependencies": [
         "libmagic",
         "freetype",

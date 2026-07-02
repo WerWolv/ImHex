@@ -286,13 +286,11 @@ namespace ImGuiExt {
     }
 
     void Texture::reset() {
-        #if !defined(OS_WEB)
-            if (glDeleteTextures == nullptr)
-                return;
-        #endif
-
         if (m_textureId != 0) {
-            glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+            #if !defined(OS_WEB)
+                if (glDeleteTextures != nullptr)
+                    glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+            #endif
             m_textureId = 0;
         }
     }
@@ -1051,9 +1049,9 @@ namespace ImGuiExt {
 
         if (no_progress) {
             auto time = (fmod(ImGui::GetTime() * 2, 1.8) - 0.4);
-            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
+            RenderRectFilledInRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
         } else {
-            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0F, fraction, style.FrameRounding);
+            RenderRectFilledInRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0F, fraction, style.FrameRounding);
         }
     }
 

@@ -1,1 +1,12 @@
-{}
+{
+    "hex.plugin.remote.ssh_provider.ssh_access": "SSH로 파일 접근",
+    "hex.plugin.remote.ssh_provider.error.open_failed": "원격 파일을 열 수 없습니다",
+    "hex.plugin.remote.ssh_provider": "원격 SSH 파일",
+    "hex.plugin.remote.ssh_provider.host": "호스트",
+    "hex.plugin.remote.ssh_provider.port": "포트",
+    "hex.plugin.remote.ssh_provider.username": "이름",
+    "hex.plugin.remote.ssh_provider.password": "암호",
+    "hex.plugin.remote.ssh_provider.key_file": "개인 키의 경로",
+    "hex.plugin.remote.ssh_provider.passphrase": "개인 키 비밀번호",
+    "hex.plugin.remote.ssh_provider.connect": "연결"
+}

@@ -94,8 +94,18 @@ namespace hex::mcp {
 
         void addPrimitive(std::string type, std::string_view capabilities, std::function<nlohmann::json(const nlohmann::json &params)> function);
 
+        struct ClientInfo {
+            std::string name;
+            std::string version;
+            std::string protocolVersion;
+        };
+
+        const ClientInfo& getClientInfo() const {
+            return m_clientInfo;
+        }
+
     private:
-        nlohmann::json handleInitialize();
+        nlohmann::json handleInitialize(const nlohmann::json &params);
         void handleNotifications(const std::string &method, const nlohmann::json &params);
 
         struct Primitive {
@@ -107,6 +117,7 @@ namespace hex::mcp {
 
         wolv::net::SocketServer m_server;
         bool m_connected = false;
+        ClientInfo m_clientInfo;
     };
 
 }

@@ -6,5 +6,7 @@
     "hex.plugin.remote.ssh_provider.key_file": "Шлях до приватного ключа",
     "hex.plugin.remote.ssh_provider.passphrase": "Пароль",
     "hex.plugin.remote.ssh_provider.connect": "Підключитись",
-    "hex.plugin.remote.ssh_provider": "Віддалений SSH-файл"
+    "hex.plugin.remote.ssh_provider": "Віддалений SSH-файл",
+    "hex.plugin.remote.ssh_provider.ssh_access": "Доступ до файлу через прямий SSH",
+    "hex.plugin.remote.ssh_provider.error.open_failed": "Не вдалося відкрити віддалений файл"
 }

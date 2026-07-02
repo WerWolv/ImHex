@@ -206,12 +206,16 @@ macro(configurePackingResources)
             set(CPACK_PACKAGE_NAME "ImHex")
             set(CPACK_PACKAGE_VENDOR "WerWolv")
             set(CPACK_WIX_VERSION 4)
+            set(CPACK_WIX_PRODUCT_GUID "*")
             set(CPACK_WIX_UPGRADE_GUID "05000E99-9659-42FD-A1CF-05C554B39285")
             set(CPACK_WIX_PRODUCT_ICON "${PROJECT_SOURCE_DIR}/resources/dist/windows/icon.ico")
             set(CPACK_WIX_UI_BANNER "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_banner.png")
             set(CPACK_WIX_UI_DIALOG "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_dialog.png")
             set(CPACK_WIX_CULTURES "en-US;de-DE;ja-JP;it-IT;pt-BR;zh-CN;zh-TW;ru-RU")
-            set(CPACK_WIX_PATCH_FILE "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix_patch.xml")
+            set(CPACK_WIX_TEMPLATE "${PROJECT_SOURCE_DIR}/resources/dist/windows/WIX.template.in")
+            set(CPACK_WIX_EXTENSIONS "WixToolset.UI.wixext")
+
+            file(GLOB_RECURSE CPACK_WIX_EXTRA_SOURCES "${PROJECT_SOURCE_DIR}/resources/dist/windows/wix/*.wxs")
 
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
@@ -530,6 +534,10 @@ function(configureProject)
             message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
+
+    if (APPLE)
+        addCCXXFlag("-Wno-#warnings")
+    endif()
 endfunction()
 
 macro(setDefaultBuiltTypeIfUnset)

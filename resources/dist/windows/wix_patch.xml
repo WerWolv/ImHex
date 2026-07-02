@@ -1,6 +1,0 @@
-<CPackWiXPatch>
-    <CPackWiXFragment Id="#PRODUCT">
-        <SetProperty Id="REINSTALL" Value="ALL" After="CostFinalize" />
-        <SetProperty Id="REINSTALLMODE" Value="amus" After="CostFinalize" />
-    </CPackWiXFragment>
-</CPackWiXPatch>

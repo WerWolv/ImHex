@@ -10,6 +10,8 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
+struct ImRect;
+
 EXPORT_MODULE namespace hex {
 
     class TutorialManager {
@@ -171,6 +173,8 @@ EXPORT_MODULE namespace hex {
         static void reset();
 
         static void setRenderer(std::function<DrawFunction(const std::string &)> renderer);
+
+        static void postElementRendered(ImGuiID id, const ImRect &boundingBox);
 
     private:
         TutorialManager() = delete;

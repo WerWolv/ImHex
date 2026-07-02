@@ -8,7 +8,7 @@
 #include <vector>
 #include <functional>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <wolv/types/static_string.hpp>
 
 EXPORT_MODULE namespace hex {

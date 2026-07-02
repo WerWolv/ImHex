@@ -1,6 +1,7 @@
 #include <ui/visualizer_drawer.hpp>
 
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/scaling.hpp>
 
 #include "imgui.h"
 
@@ -10,34 +11,32 @@ namespace hex::ui {
             const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, bool reset) {
         auto visualizerName = arguments.front().toString(true);
 
-        if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
-            const auto &[name, visualizer] = *entry;
+        if (m_lastVisualizerError.empty()) {
+            if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
+                const auto &[name, visualizer] = *entry;
 
-            auto paramCount = arguments.size() - 1;
-            auto [minParams, maxParams] = visualizer.parameterCount;
+                auto paramCount = arguments.size() - 1;
+                auto [minParams, maxParams] = visualizer.parameterCount;
 
-            if (paramCount >= minParams && paramCount <= maxParams) {
-                try {
-                    visualizer.callback(pattern, reset, {arguments.begin() + 1, arguments.end()});
-                } catch (std::exception &e) {
-                    m_lastVisualizerError = e.what();
+                if (paramCount >= minParams && paramCount <= maxParams) {
+                    try {
+                        visualizer.callback(pattern, reset, {arguments.begin() + 1, arguments.end()});
+                    } catch (std::exception &e) {
+                        m_lastVisualizerError = e.what();
+                    }
+                } else {
+                    ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.invalid_parameter_count"_lang);
                 }
             } else {
-                ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.invalid_parameter_count"_lang);
+                ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.unknown"_lang);
             }
-        } else {
-            ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.unknown"_lang);
         }
 
        if (!m_lastVisualizerError.empty()) {
-           auto windowWidth = ImGui::GetContentRegionAvail().x-2 * ImGuiStyleVar_WindowPadding;
-           auto errorMessageSize = ImGui::CalcTextSize(m_lastVisualizerError.c_str());
-           if (errorMessageSize.x > windowWidth)
-               errorMessageSize.y *= 2;
-           auto errorMessageWindowSize = ImVec2(windowWidth, errorMessageSize.y);
-           if (ImGui::BeginChild("##error_message", errorMessageWindowSize, 0, ImGuiWindowFlags_HorizontalScrollbar)) {
+           auto textSize = ImGui::CalcTextSize(m_lastVisualizerError.c_str(), nullptr, false, 300_scaled);
+           if (ImGui::BeginChild("##error_message", textSize + ImGui::GetStyle().WindowPadding * 2)) {
                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0F, 0.0F, 0.0F, 1.0F));
-               ImGui::TextUnformatted(m_lastVisualizerError.c_str());
+               ImGui::TextWrapped("%s", m_lastVisualizerError.c_str());
                ImGui::PopStyleColor();
            }
            ImGui::EndChild();

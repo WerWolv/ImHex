@@ -53,7 +53,7 @@ jobs:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses:  hendrikmuhs/ccache-action@main
+      uses:  hendrikmuhs/ccache-action@v1
       id:    cache-ccache
       with:
         key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
@@ -109,8 +109,8 @@ jobs:
 
     - name: 🕯️ Install WiX Toolkit
       run: |
-        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
-        "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
+        "C:/Program Files/dotnet/dotnet.exe" tool install --global wix@6.0.2
+        "$(echo "$USERPROFILE" | tr '\\' '/')/.dotnet/tools/wix" extension add --global WixToolset.UI.wixext/6.0.2
 
     - name: 🪲 Create PDBs for MSI
       run: |
@@ -187,15 +187,22 @@ jobs:
     - name: ⬇️ Download Mesa3D for NoGPU version
       if: ${{ matrix.architecture_name == 'x86_64' }}
       shell: bash
+      continue-on-error: true
       run: |
         set -x
         echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
-        curl --connect-timeout 30 --retry 5 --retry-delay 0 --retry-max-time 30 https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
-        7z e mesa.7z
-        mv opengl32.dll build/install
+        if curl --connect-timeout 30 --retry 5 --retry-delay 2 --retry-max-time 120 \
+          https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z; then
+          7z e mesa.7z
+          mv opengl32.dll build/install
+        else
+          echo "Mesa download unavailable, skipping NoGPU package generation."
+          rm -f build/install/MESA.md
+          exit 0
+        fi
 
     - name: ⬆️ Upload NoGPU Portable ZIP
-      if: ${{ matrix.architecture_name == 'x86_64' }}
+      if: ${{ matrix.architecture_name == 'x86_64' && hashFiles('build/install/opengl32.dll') != '' }}
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
@@ -237,7 +244,7 @@ jobs:
           arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
-        uses:  hendrikmuhs/ccache-action@main
+        uses:  hendrikmuhs/ccache-action@v1
         id:    cache-ccache
         with:
           key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
@@ -246,12 +253,11 @@ jobs:
 
       - name: 📦 Install vcpkg
         uses: friendlyanon/setup-vcpkg@v1
-        with: { committish: ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0 }
+        with: { committish: 66c0373dc7fca549e5803087b9487edfe3aca0a1 }
 
       - name: ⬇️ Install dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
-          vcpkg install
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
@@ -294,8 +300,8 @@ jobs:
 
       - name: 🕯️ Install WiX Toolkit
         run: |
-          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix
-          & "$($env:USERPROFILE -replace '\\','/')/.dotnet/tools/wix" extension add -g WixToolset.UI.wixext
+          & "C:/Program Files/dotnet/dotnet.exe" tool install --global wix@6.0.2
+          & "$($env:USERPROFILE -replace '\\','/')/.dotnet/tools/wix" extension add --global WixToolset.UI.wixext/6.0.2
 
       - name: 📦 Bundle MSI
         run: |
@@ -390,18 +396,7 @@ jobs:
       id-token: write
       attestations: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - file_suffix: "-NoGPU"
-            name_suffix: "NoGPU"
-            custom_glfw: true
-          - file_suffix: ""
-            name_suffix: ""
-            custom_glfw: false
-
-    name: 🍎 macOS 15 x86_64 ${{ matrix.name_suffix }}
+    name: 🍎 macOS 10.15 x86_64
 
     steps:
     - name: 🧰 Checkout
@@ -416,60 +411,39 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
-        key: ${{ runner.os }}${{ matrix.file_suffix }}-ccache-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}${{ matrix.file_suffix }}-ccache
+        key: ${{ runner.os }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-ccache
         max-size: 1G
 
     - name: Set Xcode version
-      run: sudo xcode-select -s /Library/Developer/CommandLineTools
+      run: |
+        sudo xcode-select --install || true
+        sudo xcode-select -s /Library/Developer/CommandLineTools
+
+    - name: 📦 Install MacPorts
+      run: |
+        wget https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-15-Sequoia.pkg
+        sudo installer -pkg MacPorts-2.11.6-15-Sequoia.pkg -target /
+        export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+        echo "PATH=/opt/local/bin:/opt/local/sbin:$PATH" >> $GITHUB_ENV
+        echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
+        echo "universal_target  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
+        echo "macos_deployment_target  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
+        echo "macosx_sdk_version  10.15" | sudo tee -a /opt/local/etc/macports/macports.conf
+        sudo port selfupdate
 
     - name: ⬇️ Install dependencies
       env:
         # Make brew not display useless errors
         HOMEBREW_TESTS: 1
       run: |
-        brew reinstall python --quiet || true
-        brew link --overwrite --quiet python 2>/dev/null || true
-        brew bundle --quiet --file dist/macOS/Brewfile || true
-        rm -rf /usr/local/Cellar/capstone
-
-    - name: ⬇️ Install classic glfw
-      if: ${{! matrix.custom_glfw }}
-      run: |
-        brew install --quiet glfw || true
+        brew install llvm automake
+        sudo -E port install mbedtls3 nlohmann-json ccache freetype libmagic pkgconfig curl glfw ninja zlib xz bzip2 zstd libssh2 md4c
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.100'
-
-    - name: 🧰 Checkout glfw
-      if: ${{ matrix.custom_glfw }}
-      uses: actions/checkout@v4
-      with:
-        repository: glfw/glfw
-        path: glfw
-
-    # GLFW custom build (to allow software rendering)
-    - name: ⬇️ Patch and install custom glfw
-      if: ${{ matrix.custom_glfw }}
-      run: |
-        set -x
-        cd glfw
-        git apply ../dist/macOS/0001-glfw-SW.patch
-
-        mkdir build
-        cd build
-
-        cmake -G "Ninja"                                \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}      \
-          -DBUILD_SHARED_LIBS=ON                        \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
-        ..
-        ninja install
 
     # MacOS cmake build
     - name: 🛠️ Configure CMake
@@ -481,8 +455,8 @@ jobs:
         CXX=$(brew --prefix llvm)/bin/clang++                                                       \
         OBJC=$(brew --prefix llvm)/bin/clang                                                        \
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
-        PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15                                                       \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}                                                  \
           -DIMHEX_GENERATE_PACKAGE=ON                                                               \
           -DIMHEX_SYSTEM_LIBRARY_PATH="$(brew --prefix llvm)/lib;$(brew --prefix llvm)/lib/unwind;$(brew --prefix llvm)/lib/c++;$(brew --prefix)/lib" \
@@ -531,7 +505,7 @@ jobs:
             break;
           fi
         done
-        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-x86_64.dmg
+        mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
       uses: actions/attest-build-provenance@v2
@@ -544,12 +518,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: macOS DMG ${{ matrix.name_suffix }} x86_64
+        name: macOS DMG x86_64
         path: ./*.dmg
 
   macos-arm64:
     runs-on: ubuntu-24.04
-    name: 🍎 macOS 15 arm64
+    name: 🍎 macOS 11 arm64
 
     outputs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
@@ -597,7 +571,7 @@ jobs:
 
   macos-arm64-package:
     runs-on: macos-15-intel
-    name: 🍎 macOS 15 arm64 Packaging
+    name: 🍎 macOS 11 arm64 Packaging
     needs: macos-arm64
 
     env:
@@ -669,6 +643,7 @@ jobs:
 
   # Ubuntu build
   ubuntu:
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -951,25 +926,14 @@ jobs:
 
   # RPM distro builds
   rpm-build:
+    if: false
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: Fedora
-            release_num: rawhide
-            mock_config: fedora-rawhide
-          - name: Fedora
             release_num: 43
             mock_config: fedora-43
-          - name: Fedora
-            release_num: 42
-            mock_config: fedora-42
-          - name: Fedora
-            release_num: 41
-            mock_config: fedora-41
-          - name: RHEL-AlmaLinux
-            release_num: 9
-            mock_config: "alma+epel-9"
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }} x86_64
     runs-on: ubuntu-24.04
@@ -1234,10 +1198,6 @@ jobs:
   webassembly-build:
     runs-on: ubuntu-24.04
     name: 🌍 Web
-    permissions:
-      pages: write
-      id-token: write
-      actions: write
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v4
@@ -1257,17 +1217,20 @@ jobs:
           cache-source: cache
           cache-target: /cache
 
-      - name: 🛠️ Build using docker
+      - name: 🔨 Copy necessary files
         run: |
           mkdir -p out/nightly
+          cp dist/web/serve.py out/nightly/start_imhex_web.py
+
+      - name: 🛠️ Build using docker
+        run: |
           docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
 
-      - name: ⬇️ Download Release
+      - name: ⬇️ Download Release artifact
         if: ${{ github.event.repository.fork == false }}
-        uses: robinraju/release-downloader@v1
-        with:
-          latest: true
-          fileName: 'imhex-*-Web.zip'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh --repo $GITHUB_REPOSITORY release download --pattern "imhex-*-Web.zip"
 
       - name: 🔨 Fix permissions
         if: ${{ github.event.repository.fork == false }}
@@ -1279,10 +1242,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: out/
-
-      - name: 🔨 Copy necessary files
-        run: |
-          cp dist/web/serve.py out/nightly/start_imhex_web.py
 
       - name: ⬆️ Upload package
         uses: actions/upload-artifact@v4
@@ -1302,7 +1261,7 @@ jobs:
 
   webassembly-deploy:
     environment:
-      name: github-pages
+      name: ImHex Web
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       pages: write
@@ -1315,11 +1274,64 @@ jobs:
     needs: webassembly-build
 
     steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+
       - name: 🌍 Deploy WebAssembly Build to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: 🗑️ Delete artifact
-        uses: geekyeggo/delete-artifact@v5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          .github/scripts/delete-artifact.sh "github-pages"
+
+  webassembly-docker-image-deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs: webassembly-build
+    name: 🐋 Deploy to ghcr.io
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
         with:
-          name: github-pages
+          name: ImHex Web
+          path: out
+
+      - name: 📜 Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ⛓️ Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/imhex-web
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: 🔨 Build and push Docker image
+        uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          context: .
+          file: dist/web/Host.Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

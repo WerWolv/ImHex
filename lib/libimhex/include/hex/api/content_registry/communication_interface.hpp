@@ -27,7 +27,7 @@ EXPORT_MODULE namespace hex {
     namespace ContentRegistry::MCP {
 
         namespace impl {
-            mcp::Server& getMcpServerInstance();
+            std::unique_ptr<mcp::Server>& getMcpServerInstance();
 
             void setEnabled(bool enabled);
         }

@@ -1199,13 +1199,13 @@ namespace hex::ui {
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.favorites"_lang, ImGuiTableColumnFlags_NoHeaderLabel | ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_IndentDisable | (m_favorites.empty() ? ImGuiTableColumnFlags_None : ImGuiTableColumnFlags_NoHide), ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang,  ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,     ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("end"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,      ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
-        ImGui::TableSetupColumn("hex.ui.pattern_drawer.comment"_lang,   ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultHide, 0, ImGui::GetID("comment"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,     ImGuiTableColumnFlags_NoSort, 0, ImGui::GetID("color"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,     ImGuiTableColumnFlags_None | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,       ImGuiTableColumnFlags_None, 0, ImGui::GetID("end"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,      ImGuiTableColumnFlags_None, 0, ImGui::GetID("size"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,      ImGuiTableColumnFlags_None, 0, ImGui::GetID("type"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,     ImGuiTableColumnFlags_None, 0, ImGui::GetID("value"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.comment"_lang,   ImGuiTableColumnFlags_DefaultHide, 0, ImGui::GetID("comment"));
 
         auto sortSpecs = ImGui::TableGetSortSpecs();
 

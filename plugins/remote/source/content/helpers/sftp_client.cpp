@@ -319,7 +319,7 @@ namespace hex::plugin::remote {
         : RemoteFile(mode), m_handle(handle) {
         m_readCommand  = fmt::format("dd if=\"{0}\" skip={{0}} count={{1}} bs=1", path);
         m_writeCommand = fmt::format("dd of=\"{0}\" seek={{0}} count={{1}} bs=1 conv=notrunc", path);
-        m_sizeCommand  = "stat -c%s {0}";
+        m_sizeCommand  = fmt::format("(fdisk -l \"{0}\" | head -n 1 | cut -d',' -f2 | cut -d' ' -f2) || (stat -c%s \"{0}\")", path);
     }
 
     RemoteFileSSH::~RemoteFileSSH() {

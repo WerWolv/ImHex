@@ -4,7 +4,7 @@ project(imgui_test_engine)
 
 set(CMAKE_CXX_STANDARD 23)
 
-if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
+if (IMHEX_ENABLE_IMGUI_TEST_ENGINE AND NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(imgui_test_engine OBJECT
             source/imgui_capture_tool.cpp
             source/imgui_te_context.cpp

@@ -401,7 +401,7 @@ namespace hex {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         } else {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         }
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
 
@@ -418,13 +418,18 @@ namespace hex {
     void Window::initNative() {
         if (ImHexApi::System::isDebugBuild()) {
             // If the application is running in debug mode, ImHex runs under the CONSOLE subsystem,
-            // so we don't need to do anything besides enabling ANSI colors
+            // so we don't need to do anything besides enabling ANSI colors and UTF-8 encoding
             log::impl::enableColorPrinting();
+            ::SetConsoleOutputCP(CP_UTF8);
+            ::SetConsoleCP(CP_UTF8);
         } else if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
             // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
 
             // Enable ANSI colors in the console
             log::impl::enableColorPrinting();
+            // Enable UTF-8 encoding
+            ::SetConsoleOutputCP(CP_UTF8);
+            ::SetConsoleCP(CP_UTF8);
         } else {
             log::impl::redirectToFile();
         }

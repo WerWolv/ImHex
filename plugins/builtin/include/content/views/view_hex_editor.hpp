@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hex/api/content_registry/views.hpp"
+
 #include <hex/ui/view.hpp>
 
 #include <ui/hex_editor.hpp>
@@ -42,6 +44,10 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpIfOffScreen();
         }
 
+        View* getMenuItemInheritView() const override {
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.data_inspector.name");
+        }
+
     public:
         class Popup {
         public:
@@ -54,7 +60,7 @@ namespace hex::plugin::builtin {
             [[nodiscard]] bool isPinned() const { return m_isPinned; }
             void setPinned(const bool pinned) { m_isPinned = pinned; }
 
-            [[nodiscard]] virtual ImGuiWindowFlags getFlags() const { return ImGuiWindowFlags_AlwaysAutoResize; }
+            [[nodiscard]] virtual ImGuiWindowFlags getFlags() const { return ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse; }
 
         private:
             bool m_isPinned = false;

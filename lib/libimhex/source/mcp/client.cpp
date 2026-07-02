@@ -35,7 +35,7 @@ namespace hex::mcp {
             client.writeString(request);
             auto response = client.readBytesUntil(0x00);
             if (!response.empty() && response.front() != 0x00)
-                output << std::string(response.begin(), response.end()) << '\n';
+                output << std::string(response.begin(), response.end()) << std::endl;
 
             if (!client.isConnected())
                 break;

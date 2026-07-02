@@ -645,12 +645,24 @@ namespace hex::ui {
                 ImGui::TableSetupScrollFreeze(0, 2);
 
                 // Row address column
+                u64 maxAddress = std::numeric_limits<u64>::max();
+                
+                if (m_provider != nullptr) {
+                    maxAddress = m_provider->getActualSize();
+                    if (maxAddress > 0)
+                        maxAddress--;
+                    if ((m_scrollPosition + m_visibleRowCount) * bytesPerRow < maxAddress)
+                        maxAddress = (m_scrollPosition + m_visibleRowCount) * bytesPerRow;
+
+                    if (maxAddress + m_provider->getCurrentPageAddress() < std::numeric_limits<u64>::max() - m_provider->getBaseAddress())
+                        maxAddress += m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                    else
+                        maxAddress = std::numeric_limits<u64>::max();
+                }
+
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
-                    CharacterSize.x * std::max(
-                        fmt::formatted_size("{:08X}: ", ((m_scrollPosition + m_visibleRowCount) * bytesPerRow) + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress()),
-                        m_separatorStride == 0 ? 0 : fmt::formatted_size("{} {}", "hex.ui.common.segment"_lang, (m_scrollPosition + m_visibleRowCount) * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress() / m_separatorStride)
-                    )
+                    CharacterSize.x * std::max(fmt::formatted_size("{:08X}: ", maxAddress),m_separatorStride == 0 ? 0 : fmt::formatted_size("{} {}", "hex.ui.common.segment"_lang, maxAddress / m_separatorStride))
                 );
                 ImGui::TableSetupColumn("");
 
@@ -1029,12 +1041,12 @@ namespace hex::ui {
                         if (m_shouldScrollToSelection && isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
                             if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left))) {
-                                if ((*m_selectionStart >= (*m_selectionEnd + bytesPerRow)) && y == (m_scrollPosition + 1)) {
+                                if (y == (m_scrollPosition + 1)) {
                                     if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 1) * bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition -= 3;
                                     }
-                                } else if ((*m_selectionStart <= (*m_selectionEnd - bytesPerRow)) && y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
+                                } else if (y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
                                     if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (ImS64((m_scrollPosition + m_visibleRowCount) - 2) * bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition += 3;
@@ -1074,7 +1086,7 @@ namespace hex::ui {
                         // Check if the targetRowNumber is outside the current visible range
                         if (ImS64(targetRowNumber) < currentTopRow) {
                             // If target is above the current view, scroll just enough to bring it into view at the top
-                            m_scrollPosition = targetRowNumber + m_visibleRowCount * m_jumpPivot - 3;
+                            m_scrollPosition = targetRowNumber + ImS64(m_visibleRowCount * m_jumpPivot - 3);
                         } else if (ImS64(targetRowNumber) > currentBottomRow) {
                             // If target is below the current view, scroll just enough to bring it into view at the bottom
                             m_scrollPosition = targetRowNumber - 3;

@@ -246,9 +246,11 @@ static std::mutex s_traceMutex;
 
     #if __has_include(BACKTRACE_HEADER)
 
-        #include BACKTRACE_HEADER
-
-        #include <wolv/io/fs.hpp>
+        #include <backtrace.h>
+        #include <unistd.h>
+        #include <string>
+        #include <filesystem>
+        #include <linux/limits.h>
 
         namespace hex::trace {
 
@@ -256,16 +258,13 @@ static std::mutex s_traceMutex;
 
 
             void initialize() {
-                std::lock_guard lock(s_traceMutex);
+                std::scoped_lock lock(s_traceMutex);
 
-                if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
-                    static std::string path = executablePath->string();
-                    s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *, int) { }, nullptr);
-                }
+                s_backtraceState = backtrace_create_state(nullptr, 1, [](void *, const char *, int) { }, nullptr);
             }
 
             StackTraceResult getStackTrace() {
-                std::lock_guard lock(s_traceMutex);
+                std::scoped_lock lock(s_traceMutex);
 
                 static std::vector<StackFrame> result;
 

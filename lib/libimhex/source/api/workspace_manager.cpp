@@ -135,7 +135,7 @@ namespace hex {
 
     void WorkspaceManager::process() {
         if (s_previousWorkspace != s_currentWorkspace) {
-            log::info("Updating workspace");
+            log::debug("Updating workspace");
             if (s_previousWorkspace != s_workspaces->end()) {
                 auto newWorkspace = s_currentWorkspace;
                 s_currentWorkspace = s_previousWorkspace;

@@ -1,17 +1,18 @@
 ﻿{
     "hex.yara.information_section.advanced_data_info": "Haladó adat információ",
-    "hex.yara.information_section.advanced_data_info.no_information": "Nem található további információ",
-    "hex.yara_rules.view.yara.error": "Yara Compiler hiba: {0}",
+    "hex.yara.information_section.advanced_data_info.no_information": "További információ nem elérhető.",
+    "hex.yara_rules.view.yara.error": "Yara fordítási hiba: {0}",
     "hex.yara_rules.view.yara.header.matches": "Találatok",
     "hex.yara_rules.view.yara.header.rules": "Szabályok",
-    "hex.yara_rules.view.yara.match": "Találat szabályok",
+    "hex.yara_rules.view.yara.match": "Kereső szabályok",
     "hex.yara_rules.view.yara.matches.identifier": "Azonosító",
     "hex.yara_rules.view.yara.matches.variable": "Változó",
     "hex.yara_rules.view.yara.matching": "Keresés...",
     "hex.yara_rules.view.yara.name": "Yara szabályok",
-    "hex.yara_rules.view.yara.no_rules": "Nem találhatók a YARA szabályok. Helyezd őket az ImHex 'yara' mappájába",
+    "hex.yara_rules.view.yara.no_rules": "Nem találhatók YARA szabályok. Helyezd őket az ImHex 'yara' mappájába",
     "hex.yara_rules.view.yara.reload": "Újratöltés",
     "hex.yara_rules.view.yara.reset": "Visszaállítás",
     "hex.yara_rules.view.yara.rule_added": "Yara szabály hozzáadva!",
-    "hex.yara_rules.view.yara.whole_data": "A teljes fájl talál!"
+    "hex.yara_rules.view.yara.whole_data": "A teljes fájl talált!",
+    "hex.yara.information_section.advanced_data_info.no_information.add_new": "Új információ hozzáadásához, adj hozzá új kereső szabályokat a 'category' és 'name' meta címkékkel az egyik Yara Advanced Analysis mappádhoz."
 }

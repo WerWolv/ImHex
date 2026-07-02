@@ -26,6 +26,7 @@
 
 namespace hex::plugin::builtin {
 
+    static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.data_inspector_exact_size_only"> onlyShowExactSizeMatchEntries = false;
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
     ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
@@ -34,11 +35,10 @@ namespace hex::plugin::builtin {
             // Save current selection
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
                 m_validBytes = 0;
-                m_selectedProvider = nullptr;
+                m_selectedRegion = { Region::Invalid(), nullptr };
             } else {
                 m_validBytes   = u64((region.getProvider()->getBaseAddress() + region.getProvider()->getActualSize()) - region.address);
-                m_startAddress = region.address;
-                m_selectedProvider = region.getProvider();
+                m_selectedRegion = region;
             }
 
             // Invalidate inspector rows
@@ -46,12 +46,12 @@ namespace hex::plugin::builtin {
         });
 
         EventDataChanged::subscribe(this, [this](const auto &provider) {
-            if (provider == m_selectedProvider)
+            if (provider == m_selectedRegion.getProvider())
                 m_shouldInvalidate = true;
         });
 
         EventProviderClosed::subscribe(this, [this](const auto*) {
-            m_selectedProvider = nullptr;
+            m_selectedRegion = { Region::Invalid(), nullptr };
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -77,26 +77,56 @@ namespace hex::plugin::builtin {
         });
     }
 
+    static u8 reverseBits(u8 byte) {
+        byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
+        byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
+        byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+        return byte;
+    }
+
+    void ViewDataInspector::preprocessBytes(std::span<u8> data) {
+        // Handle invert setting
+        if (m_invert) {
+            for (auto &byte : data)
+                byte ^= 0xFF;
+        }
+
+        // Handle reverse setting
+        if (m_reverse) {
+            for (auto &byte : data)
+                byte = reverseBits(byte);
+        }
+    }
+
     void ViewDataInspector::updateInspectorRowsTask() {
         m_workData.clear();
 
-        if (m_selectedProvider == nullptr)
+        if (m_selectedRegion.getProvider() == nullptr)
             return;
 
         // Decode bytes using registered inspectors
-        for (auto &entry : ContentRegistry::DataInspector::impl::getEntries()) {
+        for (const auto &entry : ContentRegistry::DataInspector::impl::getEntries()) {
             if (m_validBytes < entry.requiredSize)
                 continue;
 
+            // If the setting is enabled, skip all entries that don't match the exact selection size
+            if (onlyShowExactSizeMatchEntries) {
+                const auto selectedBytes = m_selectedRegion.getSize();
+
+                if (entry.requiredSize != entry.maxSize) {
+                    if (selectedBytes < entry.requiredSize || selectedBytes > entry.maxSize)
+                        continue;
+                } else {
+                    if (selectedBytes != entry.requiredSize)
+                        continue;
+                }
+            }
+
             // Try to read as many bytes as requested and possible
             std::vector<u8> buffer(m_validBytes > entry.maxSize ? entry.maxSize : m_validBytes);
-            m_selectedProvider->read(m_startAddress, buffer.data(), buffer.size());
+            m_selectedRegion.getProvider()->read(m_selectedRegion.getStartAddress(), buffer.data(), buffer.size());
 
-            // Handle invert setting
-            if (m_invert) {
-                for (auto &byte : buffer)
-                    byte ^= 0xFF;
-            }
+            preprocessBytes(buffer);
 
             // Insert processed data into the inspector list
             m_workData.emplace_back(
@@ -116,13 +146,9 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::inspectorReadFunction(u64 offset, u8 *buffer, size_t size) {
-        m_selectedProvider->read(offset, buffer, size);
+        m_selectedRegion.getProvider()->read(offset, buffer, size);
 
-        // Handle invert setting
-        if (m_invert) {
-            for (auto &byte : std::span(buffer, size))
-                byte ^= 0xFF;
-        }
+        preprocessBytes({ buffer, size });
     }
 
     void ViewDataInspector::executeInspectors() {
@@ -131,11 +157,13 @@ namespace hex::plugin::builtin {
                 { "numberDisplayStyle", u128(u64(m_numberDisplayStyle)) }
         };
 
+        const auto provider = m_selectedRegion.getProvider();
+
         // Setup a new pattern language runtime
-        ContentRegistry::PatternLanguage::configureRuntime(m_runtime, m_selectedProvider);
+        ContentRegistry::PatternLanguage::configureRuntime(m_runtime, provider);
 
         // Setup the runtime to read from the selected provider
-        m_runtime.setDataSource(m_selectedProvider->getBaseAddress(), m_selectedProvider->getActualSize(), [this](u64 offset, u8 *buffer, size_t size) {
+        m_runtime.setDataSource(provider->getBaseAddress(), provider->getActualSize(), [this](u64 offset, u8 *buffer, size_t size) {
             this->inspectorReadFunction(offset, buffer, size);
         });
 
@@ -146,7 +174,7 @@ namespace hex::plugin::builtin {
         m_runtime.setDefaultEndian(m_endian);
 
         // Set start address to the selected address
-        m_runtime.setStartAddress(m_startAddress);
+        m_runtime.setStartAddress(m_selectedRegion.getStartAddress());
 
         // Loop over all files in the inspectors folder and execute them
         for (const auto &folderPath : paths::Inspectors.read()) {
@@ -170,9 +198,9 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::executeInspector(const std::string& code, const std::fs::path& path, const std::map<std::string, pl::core::Token::Literal>& inVariables) {
-        if (m_runtime.executeString(code, pl::api::Source::DefaultSource, {}, inVariables, true) == 0) {
+        if (m_runtime.executeString(code, pl::api::Source::DefaultSource, {}, inVariables, true) != 0) {
 
-            auto displayFunction = createPatternErrorDisplayFunction();
+            auto displayFunction = createPatternErrorDisplayFunction(path);
 
             // Insert the inspector containing the error message into the list
             m_workData.emplace_back(
@@ -213,7 +241,13 @@ namespace hex::plugin::builtin {
 
             try {
                 // Set up the display function using the pattern's formatter
-                auto displayFunction = [pattern,value = pattern->getFormattedValue()] {
+                auto displayFunction = [pattern, value = pattern->getFormattedValue(), path] {
+                    ContentRegistry::DataInspector::drawMenuItems([&] {
+                        if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.open_pattern"_lang, ICON_VS_FOLDER_OPENED)) {
+                            fs::openFileExternal(path);
+                        }
+                    });
+
                     auto drawer = ui::VisualizerDrawer();
                     if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
                         drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
@@ -236,7 +270,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.patterns",
                                                       "hex.builtin.achievement.patterns.data_inspector.name");
             } catch (const pl::core::err::EvaluatorError::Exception &) {
-                auto displayFunction = createPatternErrorDisplayFunction();
+                auto displayFunction = createPatternErrorDisplayFunction(path);
 
                 // Insert the inspector containing the error message into the list
                 m_workData.emplace_back(
@@ -270,14 +304,16 @@ namespace hex::plugin::builtin {
 
         u64 requiredSize = selectedEntryIt == m_cachedData.end() ? 0x00 : selectedEntryIt->requiredSize;
 
-        bool noData = m_selectedProvider == nullptr || !m_selectedProvider->isReadable() || m_validBytes <= 0;
+        const auto provider = m_selectedRegion.getProvider();
+
+        bool noData = provider == nullptr || !provider->isReadable() || m_validBytes <= 0;
 
         ImGui::BeginDisabled(noData || !selection.has_value() || !m_selectedEntryName.has_value());
         {
             const auto buttonSizeSmall = ImVec2(ImGui::GetTextLineHeightWithSpacing() * 1.5F, 0);
             const auto buttonSize = ImVec2((ImGui::GetContentRegionAvail().x / 2) - buttonSizeSmall.x - ImGui::GetStyle().FramePadding.x * 3, 0);
-            const auto baseAddress = noData ? 0x00 : m_selectedProvider->getBaseAddress();
-            const auto providerSize = noData ? 0x00 : m_selectedProvider->getActualSize();
+            const auto baseAddress = noData ? 0x00 : provider->getBaseAddress();
+            const auto providerSize = noData ? 0x00 : provider->getActualSize();
             const auto providerEndAddress = baseAddress + providerSize;
 
             ImGui::BeginDisabled(!selection.has_value() || providerSize < requiredSize || selection->getStartAddress() < baseAddress + requiredSize);
@@ -319,7 +355,7 @@ namespace hex::plugin::builtin {
                                         ImGuiTableColumnFlags_WidthStretch);
 
                 if (m_tableEditingModeEnabled)
-                    ImGui::TableSetupColumn("##favorite", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
+                    ImGui::TableSetupColumn("##editing", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
                 ImGui::TableHeadersRow();
 
@@ -354,8 +390,12 @@ namespace hex::plugin::builtin {
                 // Draw radix setting
                 this->drawRadixSetting();
 
-                // Draw invert setting
+                // Draw invert and reverse setting
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x / 2 - ImGui::GetStyle().ItemSpacing.x / 2);
                 this->drawInvertSetting();
+                ImGui::SameLine();
+                this->drawReverseSetting();
+                ImGui::PopItemWidth();
             }
             ImGui::PopItemWidth();
         }
@@ -443,7 +483,7 @@ namespace hex::plugin::builtin {
             // Handle copying the value to the clipboard when clicking the row
             if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
                 m_selectedEntryName = entry.unlocalizedName;
-                if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value()) {
+                if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && entry.requiredSize > 0) {
                     ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress(), .size=entry.requiredSize });
                 }
             }
@@ -453,7 +493,7 @@ namespace hex::plugin::builtin {
             }
 
             // Enter editing mode when double-clicking the row
-            const bool editable = entry.editingFunction.has_value() && m_selectedProvider->isWritable();
+            const bool editable = entry.editingFunction.has_value() && m_selectedRegion.getProvider()->isWritable();
             if (ImGui::IsItemHovered()) {
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editable) {
                     entry.editing = true;
@@ -489,11 +529,10 @@ namespace hex::plugin::builtin {
             // Draw editing widget and capture edited value
             auto bytes = (*entry.editingFunction)(m_editingValue, m_endian, {});
             if (bytes.has_value()) {
-                if (m_invert)
-                    std::ranges::transform(*bytes, bytes->begin(), [](auto byte) { return byte ^ 0xFF; });
+                preprocessBytes(*bytes);
 
                 // Write those bytes to the selected provider at the current address
-                m_selectedProvider->write(m_startAddress, bytes->data(), bytes->size());
+                m_selectedRegion.getProvider()->write(m_selectedRegion.getStartAddress(), bytes->data(), bytes->size());
 
                 // Disable editing mode
                 m_editingValue.clear();
@@ -572,7 +611,22 @@ namespace hex::plugin::builtin {
         }
     }
 
-    ContentRegistry::DataInspector::impl::DisplayFunction ViewDataInspector::createPatternErrorDisplayFunction() {
+    void ViewDataInspector::drawReverseSetting() {
+        int selection = m_reverse ? 1 : 0;
+
+        std::array options = {
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.reverse"_lang, "hex.ui.common.no"_lang),
+            fmt::format("{}:  {}", "hex.builtin.view.data_inspector.reverse"_lang, "hex.ui.common.yes"_lang)
+        };
+
+        if (ImGui::SliderInt("##reverse", &selection, 0, options.size() - 1, options[selection].c_str(), ImGuiSliderFlags_NoInput)) {
+            m_shouldInvalidate = true;
+
+            m_reverse = selection == 1;
+        }
+    }
+
+    ContentRegistry::DataInspector::impl::DisplayFunction ViewDataInspector::createPatternErrorDisplayFunction(const std::fs::path &path) {
         // Generate error message
         std::string errorMessage;
         if (const auto &compileErrors = m_runtime.getCompileErrors(); !compileErrors.empty()) {
@@ -584,7 +638,13 @@ namespace hex::plugin::builtin {
         }
 
         // Create a dummy display function that displays the error message
-        auto displayFunction = [errorMessage = std::move(errorMessage)] {
+        auto displayFunction = [errorMessage = std::move(errorMessage), path] {
+            ContentRegistry::DataInspector::drawMenuItems([&, path] {
+                if (ImGui::MenuItemEx("hex.builtin.view.data_inspector.open_pattern"_lang, ICON_VS_FOLDER_OPENED)) {
+                    fs::openFileExternal(path);
+                }
+            });
+
             ImGuiExt::HelpHover(
                 errorMessage.c_str(),
                 "hex.builtin.view.data_inspector.execution_error"_lang,

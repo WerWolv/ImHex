@@ -7,5 +7,14 @@
     "hex.fonts.setting.font.font_antialias": "Élsimítás",
     "hex.fonts.setting.font.font_path": "Betűtípus",
     "hex.fonts.setting.font.font_size": "Betűméret",
-    "hex.fonts.setting.font.load_all_unicode_chars": "Minden Unicode karakter betöltése"
+    "hex.fonts.setting.font.load_all_unicode_chars": "Minden Unicode karakter betöltése",
+    "hex.fonts.font.hex_editor": "Hex szerkesztő betűtípus",
+    "hex.fonts.setting.font.antialias_grayscale": "Szürkeárnyalatos",
+    "hex.fonts.font.default": "Általános UI betűtípus",
+    "hex.fonts.setting.font.button.bold": "F",
+    "hex.fonts.setting.font.button.italic": "D",
+    "hex.fonts.setting.font.custom_font_info": "Az alábbi beállítások csak akkor érhetők el, ha egy egyedi font lett kiválasztva.",
+    "hex.fonts.font.code_editor": "Kód szerkesztő betűtípus",
+    "hex.fonts.setting.font.antialias_none": "Nincs",
+    "hex.fonts.setting.font.antialias_subpixel": "Alpixel"
 }

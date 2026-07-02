@@ -12,8 +12,7 @@ namespace hex::prv::undo {
 
     namespace {
 
-        std::atomic<bool> s_locked;
-        std::mutex s_mutex;
+        std::recursive_mutex s_mutex;
 
     }
 
@@ -21,12 +20,13 @@ namespace hex::prv::undo {
 
     }
 
+    std::recursive_mutex& Stack::getMutex() {
+        return s_mutex;
+    }
+
 
     void Stack::undo(u32 count) {
-        std::scoped_lock lock(s_mutex);
-
-        s_locked = true;
-        ON_SCOPE_EXIT { s_locked = false; };
+        std::lock_guard lock(s_mutex);
 
         // If there are no operations, we can't undo anything.
         if (m_undoStack.empty())
@@ -42,14 +42,12 @@ namespace hex::prv::undo {
             m_redoStack.emplace_back(std::move(m_undoStack.back()));
             m_redoStack.back()->undo(m_provider);
             m_undoStack.pop_back();
+            EventDataChanged::post(m_provider);
         }
     }
 
     void Stack::redo(u32 count) {
-        std::scoped_lock lock(s_mutex);
-
-        s_locked = true;
-        ON_SCOPE_EXIT { s_locked = false; };
+        std::lock_guard lock(s_mutex);
 
         // If there are no operations, we can't redo anything.
         if (m_redoStack.empty())
@@ -65,10 +63,13 @@ namespace hex::prv::undo {
             m_undoStack.emplace_back(std::move(m_redoStack.back()));
             m_undoStack.back()->redo(m_provider);
             m_redoStack.pop_back();
+            EventDataChanged::post(m_provider);
         }
     }
 
     void Stack::groupOperations(u32 count, const UnlocalizedString &unlocalizedName) {
+        std::lock_guard lock(s_mutex);
+
         if (count <= 1)
             return;
 
@@ -94,14 +95,19 @@ namespace hex::prv::undo {
     }
 
     void Stack::apply(const Stack &otherStack) {
+        std::lock_guard lock(s_mutex);
+
         for (const auto &operation : otherStack.m_undoStack) {
             this->add(operation->clone());
         }
     }
 
     void Stack::reapply() {
+        std::lock_guard lock(s_mutex);
+
         for (const auto &operation : m_undoStack) {
             operation->redo(m_provider);
+            EventDataChanged::post(m_provider);
         }
     }
 
@@ -109,14 +115,7 @@ namespace hex::prv::undo {
 
 
     bool Stack::add(std::unique_ptr<Operation> &&operation) {
-        // If we're already inside of an undo/redo operation, ignore new operations being added
-        if (s_locked)
-            return false;
-
-        s_locked = true;
-        ON_SCOPE_EXIT { s_locked = false; };
-
-        std::scoped_lock lock(s_mutex);
+        std::lock_guard lock(s_mutex);
 
         // Clear the redo stack
         m_redoStack.clear();
@@ -133,10 +132,14 @@ namespace hex::prv::undo {
     }
 
     bool Stack::canUndo() const {
+        std::lock_guard lock(s_mutex);
+
         return !m_undoStack.empty();
     }
 
     bool Stack::canRedo() const {
+        std::lock_guard lock(s_mutex);
+
         return !m_redoStack.empty();
     }
 

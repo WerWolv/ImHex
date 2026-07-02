@@ -3,13 +3,12 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include <array>
+#include <hex/api/tutorial_manager.hpp>
 
 #if !defined(IMGUI_TEST_ENGINE)
 
     void ImGuiTestEngineHook_ItemAdd(ImGuiContext*, ImGuiID id, const ImRect& bb, const ImGuiLastItemData*) {
-        std::array<float, 4> boundingBox = { bb.Min.x, bb.Min.y, bb.Max.x, bb.Max.y };
-        hex::EventImGuiElementRendered::post(id, boundingBox);
+        hex::TutorialManager::postElementRendered(id, bb);
     }
 
     void ImGuiTestEngineHook_ItemInfo(ImGuiContext*, ImGuiID, const char*, ImGuiItemStatusFlags) {}

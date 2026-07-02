@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
                             ImGui::NewLine();
                             ImGui::NewLine();
                             ImGui::NewLine();
-                            ImGuiExt::TextFormattedCentered("A powerful data analysis and visualization suite forReverse Engineers, Hackers and Security Researchers.");
+                            ImGuiExt::TextFormattedCentered("A powerful data analysis and visualization suite for Reverse Engineers, Hackers and Security Researchers.");
                         }
                         ImGui::EndChild();
 

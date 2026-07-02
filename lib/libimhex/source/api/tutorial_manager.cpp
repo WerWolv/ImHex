@@ -96,39 +96,6 @@ namespace hex {
     }
 
     void TutorialManager::init() {
-        EventImGuiElementRendered::subscribe([](ImGuiID id, const std::array<float, 4> bb){
-            const auto boundingBox = ImRect(bb[0], bb[1], bb[2], bb[3]);
-
-            if (!ImGui::IsRectVisible(boundingBox.Min, boundingBox.Max))
-                return;
-
-            {
-                const auto element = hex::s_highlights->find(id);
-                if (element != hex::s_highlights->end()) {
-                    hex::s_highlightDisplays->emplace_back(boundingBox, element->second);
-
-                    const auto window = ImGui::GetCurrentWindow();
-                    if (window != nullptr && window->DockNode != nullptr && window->DockNode->TabBar != nullptr)
-                        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
-                }
-            }
-
-            {
-                const auto element = s_interactiveHelpItems->find(id);
-                if (element != s_interactiveHelpItems->end()) {
-                    (*s_interactiveHelpDisplays)[id] = boundingBox;
-                }
-
-            }
-
-            if (id != 0 && boundingBox.Contains(ImGui::GetMousePos())) {
-                if ((s_hoveredRect.GetArea() == 0 || boundingBox.GetArea() < s_hoveredRect.GetArea()) && s_interactiveHelpItems->contains(id)) {
-                    s_hoveredRect = boundingBox;
-                    s_hoveredId = id;
-                }
-            }
-        });
-
         if (*s_renderer == nullptr) {
             *s_renderer = [](const std::string &message) {
                 return [message] {
@@ -138,6 +105,37 @@ namespace hex {
                     ImGui::NewLine();
                 };
             };
+        }
+    }
+
+    void TutorialManager::postElementRendered(ImGuiID id, const ImRect &boundingBox) {
+        if (!ImGui::IsRectVisible(boundingBox.Min, boundingBox.Max))
+            return;
+
+        {
+            const auto element = hex::s_highlights->find(id);
+            if (element != hex::s_highlights->end()) {
+                hex::s_highlightDisplays->emplace_back(boundingBox, element->second);
+
+                const auto window = ImGui::GetCurrentWindow();
+                if (window != nullptr && window->DockNode != nullptr && window->DockNode->TabBar != nullptr)
+                    window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+            }
+        }
+
+        {
+            const auto element = s_interactiveHelpItems->find(id);
+            if (element != s_interactiveHelpItems->end()) {
+                (*s_interactiveHelpDisplays)[id] = boundingBox;
+            }
+
+        }
+
+        if (id != 0 && boundingBox.Contains(ImGui::GetMousePos())) {
+            if ((s_hoveredRect.GetArea() == 0 || boundingBox.GetArea() < s_hoveredRect.GetArea()) && s_interactiveHelpItems->contains(id)) {
+                s_hoveredRect = boundingBox;
+                s_hoveredId = id;
+            }
         }
     }
 

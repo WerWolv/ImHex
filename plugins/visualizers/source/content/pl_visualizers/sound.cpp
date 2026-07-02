@@ -30,8 +30,10 @@ namespace hex::plugin::visualizers {
 
         if (sampleRate == 0)
             throw std::logic_error(fmt::format("Invalid sample rate: {}", sampleRate));
-        else if (channels == 0)
+        if (channels == 0)
             throw std::logic_error(fmt::format("Invalid channel count: {}", channels));
+        if (downSampling == 0)
+            throw std::logic_error(fmt::format("Invalid down sampling factor: {} / 2400 / {} = {}", wavePattern->getSize(), channels, downSampling));
         u64 sampledIndex;
         if (shouldReset) {
             waveData.clear();

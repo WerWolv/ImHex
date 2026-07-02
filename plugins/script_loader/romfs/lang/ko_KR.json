@@ -1,1 +1,7 @@
-{}
+{
+    "hex.script_loader.menu.run_script": "스크립트 실행...",
+    "hex.script_loader.menu.loading": "로딩중...",
+    "hex.script_loader.menu.no_scripts": "스크립트 없음",
+    "hex.script_loader.task.updating": "스크립트 업데이트 중...",
+    "hex.script_loader.task.running": "스크립트 실행 중..."
+}

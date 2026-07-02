@@ -133,7 +133,6 @@ namespace hex::prv {
         this->resizeRaw(newSize);
 
         std::vector<u8> buffer(0x1000, 0x00);
-        const std::vector<u8> zeroBuffer(0x1000, 0x00);
 
         auto position = oldSize;
         while (position > offset) {
@@ -142,8 +141,17 @@ namespace hex::prv {
             position -= readSize;
 
             this->readRaw(position, buffer.data(), readSize);
-            this->writeRaw(position, zeroBuffer.data(), newSize - oldSize);
             this->writeRaw(position + size, buffer.data(), readSize);
+        }
+
+        constexpr static std::array<u8, 0x1000> ZeroBuffer = {};
+        auto zeroPosition = offset;
+        auto remainingZeros = size;
+        while (remainingZeros > 0) {
+            const auto writeSize = std::min<size_t>(remainingZeros, ZeroBuffer.size());
+            this->writeRaw(zeroPosition, ZeroBuffer.data(), writeSize);
+            zeroPosition += writeSize;
+            remainingZeros -= writeSize;
         }
     }
 

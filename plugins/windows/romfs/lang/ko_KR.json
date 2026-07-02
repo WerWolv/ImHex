@@ -19,5 +19,6 @@
     "hex.windows.view.tty_console.send_eot": "EOT 보내기",
     "hex.windows.view.tty_console.send_etx": "ETX 보내기",
     "hex.windows.view.tty_console.send_sub": "SUB 보내기",
-    "hex.windows.view.tty_console.stop_bits": "스톱 비트"
+    "hex.windows.view.tty_console.stop_bits": "스톱 비트",
+    "hex.windows.view.tty_console.task.transmitting": "데이터 전송중..."
 }

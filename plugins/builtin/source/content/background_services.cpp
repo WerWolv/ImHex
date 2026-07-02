@@ -108,11 +108,11 @@ namespace hex::plugin::builtin {
         void handleMCPServer() {
             if (!ContentRegistry::MCP::isEnabled()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                ContentRegistry::MCP::impl::getMcpServerInstance().disconnect();
+                ContentRegistry::MCP::impl::getMcpServerInstance()->disconnect();
                 return;
             }
 
-            ContentRegistry::MCP::impl::getMcpServerInstance().listen();
+            ContentRegistry::MCP::impl::getMcpServerInstance()->listen();
         }
 
     }
@@ -125,6 +125,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.mcp", handleMCPServer);
+
+        EventImHexClosing::subscribe([] {
+            ContentRegistry::MCP::impl::getMcpServerInstance().reset();
+        });
 
         EventProviderDirtied::subscribe([](prv::Provider *) {
             s_dataDirty = true;

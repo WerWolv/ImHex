@@ -15,17 +15,17 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://imhex.werwolv.net/">
+    <meta property="og:url" content="https://web.imhex.werwolv.net/">
     <meta property="og:title" content="ImHex Web - Online Hex Editor">
-    <meta property="og:image" content="https://imhex.werwolv.net/assets/splash_wasm.png">
+    <meta property="og:image" content="splash_wasm.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://imhex.werwolv.net/">
+    <meta property="twitter:url" content="https://web.imhex.werwolv.net/">
     <meta property="twitter:title" content="ImHex Web - Online Hex Editor">
     <meta property="twitter:description"
           content="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.">
-    <meta property="twitter:image" content="https://imhex.werwolv.net/assets/splash_wasm.png">
+    <meta property="twitter:image" content="splash_wasm.png">
 
     <link rel="stylesheet" type="text/css" href="style.css">
 
@@ -37,8 +37,8 @@
             "email": "hey@werwolv.net",
             "founder": "WerWolv",
             "slogan": "A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.",
-            "url": "https://imhex.werwolv.net",
-            "logo": "https://imhex.werwolv.net/assets/logos/logo.svg"
+            "url": "https://web.imhex.werwolv.net",
+            "logo": "https://web.imhex.werwolv.net/icon.svg"
         }
     </script>
 
@@ -96,7 +96,9 @@
     </div>
 </div>
 
-<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+<div id="canvas-wrapper" class="imhex-web-canvas-wrapper">
+    <canvas class="imhex-web-canvas canvas-fixed" id="canvas" ></canvas>
+</div>
 
 <script src="wasm-config.js"></script>
 <script async src="imhex.js"></script>

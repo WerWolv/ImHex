@@ -425,7 +425,7 @@
     "hex.builtin.provider.file.size": "大小",
     "hex.builtin.provider.file.menu.open_file": "在外部打开文件",
     "hex.builtin.provider.file.menu.open_folder": "打开所处的目录",
-    "hex.builtin.provider.file.too_large": "该文件太大，无法加载到内存中。 无论如何打开它都会导致修改直接写入文件。 您想以只读方式打开它吗？",
+    "hex.builtin.provider.file.too_large": "文件大于设定的限制，若修改将直接写入文件。是否仍允许写入访问？",
     "hex.builtin.provider.file.too_large.allow_write": "允许写入访问",
     "hex.builtin.provider.file.reload_changes": "该文件已被外部源修改。 您想重新加载吗？",
     "hex.builtin.provider.file.reload_changes.reload": "重新加载",
