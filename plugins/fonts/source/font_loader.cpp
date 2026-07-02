@@ -8,6 +8,9 @@
 
 #include <imgui_freetype.h>
 
+#include <algorithm>
+#include <cmath>
+
 namespace hex::fonts::loader {
 
     void loadFont(const ContentRegistry::Settings::Widgets::Widget &widget, const UnlocalizedString &name, ImGuiFreeTypeLoaderFlags extraFlags, ImFont **imguiFont) {
@@ -26,7 +29,7 @@ namespace hex::fonts::loader {
         config.SizePixels = settings.getFontSize() / ImHexApi::System::getNativeScale();
         config.OversampleH = 3;
         config.OversampleV = 2;
-        config.RasterizerDensity = ImHexApi::System::getNativeScale();
+        config.RasterizerDensity = 2.0F;
         config.Flags |= ImFontFlags_NoLoadError;
 
         std::memcpy(config.Name, name.get().c_str(), std::min(name.get().size(), sizeof(config.Name) - 1));
@@ -67,8 +70,15 @@ namespace hex::fonts::loader {
             if (*imguiFont == nullptr) {
                 if (settings.isPixelPerfectFont()) {
                     auto defaultConfig = config;
-                    defaultConfig.SizePixels = 0;
-                    *imguiFont = atlas->AddFontDefault(&defaultConfig);
+
+                    constexpr float NativeDesignSize = 13.0F;
+                    const auto nativeScale = ImHexApi::System::getNativeScale();
+                    const auto integerMultiplier = std::max(1.0F, std::round(nativeScale));
+                    defaultConfig.SizePixels = (nativeScale > 0.0F)
+                        ? (NativeDesignSize * integerMultiplier) * nativeScale
+                        : NativeDesignSize;
+
+                    *imguiFont = atlas->AddFontDefaultBitmap(&defaultConfig);
                     atlas->Sources.back().FontDataOwnedByAtlas = false;
                 } else {
                     static auto jetbrainsFont = romfs::get("fonts/JetBrainsMono.ttf");
@@ -88,7 +98,7 @@ namespace hex::fonts::loader {
         for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
             config.OversampleH = 2;
             config.OversampleV = 1;
-            config.RasterizerDensity = 2;
+            config.RasterizerDensity = 2.0F;
             config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
             config.SizePixels = settings.getFontSize() * extraFont.fontSizeMultiplier.value_or(1) / ImHexApi::System::getNativeScale();
             atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);

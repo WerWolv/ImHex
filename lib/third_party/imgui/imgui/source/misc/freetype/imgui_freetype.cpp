@@ -308,7 +308,7 @@ static void ImGui_ImplFreeType_BlitGlyph(const FT_Bitmap* ft_bitmap, uint32_t* d
     // IMHEX PATCH BEGIN
     case FT_PIXEL_MODE_LCD:
         {
-            memset(dst, 0x00, (size_t)w * h * sizeof(uint32_t));
+            memset(dst, 0x00, (size_t)dst_pitch * h * sizeof(uint32_t));
             for (uint32_t y = 0; y < h; y++) {
                 for (uint32_t x = 0; x < w / 3; x++) {
                     dst[x] = IM_COL32(src[x * 3 + 0], src[x * 3 + 1], src[x * 3 + 2], (src[x * 3 + 0] + src[x * 3 + 1] + src[x * 3 + 2]) / 3);
@@ -553,7 +553,11 @@ static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConf
     // Pack and retrieve position inside texture atlas
     if (is_visible)
     {
-        ImFontAtlasRectId pack_id = ImFontAtlasPackAddRect(atlas, w, h);
+        // IMHEX PATCH BEGIN
+        const bool is_lcd = ft_bitmap->pixel_mode == FT_PIXEL_MODE_LCD;
+        const int dst_w = is_lcd ? (int)(w / 3) : (int)w;
+        // IMHEX PATCH END
+        ImFontAtlasRectId pack_id = ImFontAtlasPackAddRect(atlas, dst_w, h);
         if (pack_id == ImFontAtlasRectId_Invalid)
         {
             // Pathological out of memory case (TexMaxWidth/TexMaxHeight set too small?)
@@ -563,9 +567,9 @@ static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConf
         ImTextureRect* r = ImFontAtlasPackGetRect(atlas, pack_id);
 
         // Render pixels to our temporary buffer
-        atlas->Builder->TempBuffer.resize(w * h * 4);
+        atlas->Builder->TempBuffer.resize(dst_w * h * 4);
         uint32_t* temp_buffer = (uint32_t*)atlas->Builder->TempBuffer.Data;
-        ImGui_ImplFreeType_BlitGlyph(ft_bitmap, temp_buffer, w);
+        ImGui_ImplFreeType_BlitGlyph(ft_bitmap, temp_buffer, dst_w);
 
         const float ref_size = baked->OwnerFont->Sources[0]->SizePixels;
         const float offsets_scale = (ref_size != 0.0f) ? (baked->Size / ref_size) : 1.0f;
@@ -579,12 +583,12 @@ static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConf
         float glyph_off_y = (float)-face->glyph->bitmap_top;
         out_glyph->X0 = glyph_off_x * recip_h + font_off_x;
         out_glyph->Y0 = glyph_off_y * recip_v + font_off_y;
-        out_glyph->X1 = (glyph_off_x + w) * recip_h + font_off_x;
+        out_glyph->X1 = (glyph_off_x + dst_w) * recip_h + font_off_x;
         out_glyph->Y1 = (glyph_off_y + h) * recip_v + font_off_y;
         out_glyph->Visible = true;
         out_glyph->Colored = (ft_bitmap->pixel_mode == FT_PIXEL_MODE_BGRA);
         out_glyph->PackId = pack_id;
-        ImFontAtlasBakedSetFontGlyphBitmap(atlas, baked, src, out_glyph, r, (const unsigned char*)temp_buffer, ImTextureFormat_RGBA32, w * 4);
+        ImFontAtlasBakedSetFontGlyphBitmap(atlas, baked, src, out_glyph, r, (const unsigned char*)temp_buffer, ImTextureFormat_RGBA32, dst_w * 4);
     }
 
     return true;

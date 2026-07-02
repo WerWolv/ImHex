@@ -6727,8 +6727,13 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
     if (glyph->Colored)
         col |= ~IM_COL32_A_MASK;
     float scale = (size >= 0.0f) ? (size / baked->Size) : 1.0f;
-    float x = IM_TRUNC(pos.x);
-    float y = IM_TRUNC(pos.y);
+    // IMHEX PATCH BEGIN
+    // See matching comment in ImFont::RenderText() for why we snap to the physical pixel
+    // grid (via DisplayFramebufferScale) instead of the logical one.
+    const ImVec2 fbScale = GImGui->IO.DisplayFramebufferScale;
+    float x = (fbScale.x > 0.0f) ? (IM_ROUND(pos.x * fbScale.x) / fbScale.x) : IM_TRUNC(pos.x);
+    float y = (fbScale.y > 0.0f) ? (IM_ROUND(pos.y * fbScale.y) / fbScale.y) : IM_TRUNC(pos.y);
+    // IMHEX PATCH END
 
     float x1 = x + glyph->X0 * scale;
     float x2 = x + glyph->X1 * scale;
@@ -6762,8 +6767,19 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 {
     // Align to be pixel perfect
 begin:
-    float x = IM_TRUNC(pos.x);
-    float y = IM_TRUNC(pos.y);
+    // IMHEX PATCH BEGIN
+    // IM_TRUNC(pos.x/y) only snaps to the nearest whole LOGICAL unit. That is only
+    // equivalent to snapping to a physical pixel when DisplayFramebufferScale == 1.0.
+    // Under fractional display/monitor scaling (e.g. 1.25x on HiDPI/Wayland), an integer
+    // logical position still ends up at a fractional PHYSICAL pixel position after the
+    // viewport transform (e.g. 305 * 1.25 = 381.25 px), which gets softened by GL_LINEAR
+    // texture sampling even though the glyph bitmap itself is rasterized at the correct
+    // density. Snap to the nearest physical pixel instead, then convert back to logical
+    // units, so the final on-screen position is an exact physical pixel.
+    const ImVec2 fbScale = GImGui->IO.DisplayFramebufferScale;
+    float x = (fbScale.x > 0.0f) ? (IM_ROUND(pos.x * fbScale.x) / fbScale.x) : IM_TRUNC(pos.x);
+    float y = (fbScale.y > 0.0f) ? (IM_ROUND(pos.y * fbScale.y) / fbScale.y) : IM_TRUNC(pos.y);
+    // IMHEX PATCH END
     if (y > clip_rect.w)
         return;
 
