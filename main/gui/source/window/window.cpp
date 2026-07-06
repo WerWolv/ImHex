@@ -862,6 +862,9 @@ namespace hex {
                     const auto& vtxBuffer = drawData->CmdLists[n]->VtxBuffer;
                     const std::size_t bufSize = vtxBuffer.size() * sizeof(ImDrawVert);
 
+                    if (offset + bufSize > previousVtxData.size())
+                        return true;
+
                     if (std::memcmp(previousVtxData.data() + offset, vtxBuffer.Data, bufSize) != 0) {
                         std::memcpy(previousVtxData.data() + offset, vtxBuffer.Data, bufSize);
                         return true;
