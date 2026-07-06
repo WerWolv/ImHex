@@ -21,12 +21,13 @@ jobs:
         id: version
         env:
           GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: ${{ github.event.inputs.cache_key }}
         run: |
           VERSION=$(gh api repos/$GITHUB_REPOSITORY/actions/caches \
           --jq "
             .actions_caches[]
             | select(.ref == \"refs/heads/$GITHUB_REF_NAME\")
-            | select(.key == \"${{ github.event.inputs.cache_key }}\")
+            | select(.key == \"$CACHE_KEY\")
             | .version
           ")
           echo "version=$VERSION" | tee $GITHUB_OUTPUT
