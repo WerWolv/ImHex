@@ -1186,11 +1186,10 @@ namespace hex {
             if (font != nullptr) {
                 if (size <= 0.0F) {
                     size = font->LegacySize;
+                    size *= System::getGlobalScale();
 
                     if (font->Sources[0]->PixelSnapH)
-                        size *= System::getGlobalScale();
-                    else
-                        size *= std::floor(System::getGlobalScale());
+                        size = std::floor(size);
                 } else {
                     size *= ImGui::GetCurrentContext()->FontSizeBase;
                 }
