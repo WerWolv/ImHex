@@ -963,6 +963,8 @@
     "hex.builtin.view.hex_editor.shortcut.selection_page_up": "Extend selection up one page",
     "hex.builtin.view.hex_editor.shortcut.cursor_page_up": "Move cursor up one page",
     "hex.builtin.view.hex_editor.shortcut.selection_page_down": "Extend selection down one page",
+    "hex.builtin.view.hex_editor.shortcut.selection_file_up": "Extend selection to the start of the file",
+    "hex.builtin.view.hex_editor.shortcut.selection_file_down": "Extend selection to the end of the file",
     "hex.builtin.view.hex_editor.shortcut.cursor_page_down": "Move cursor down one page",
     "hex.builtin.view.highlight_rules.name": "Highlight Rules",
     "hex.builtin.view.highlight_rules.new_rule": "New Rule",
