@@ -70,6 +70,7 @@ namespace hex::plugin::builtin {
 
         EventProviderSaved::subscribe([this](prv::Provider *provider) {
             m_savedOperations.get(provider) = provider->getUndoStack().getAppliedOperations().size();
+            m_modifiedAddresses.get(provider).clear();
             EventHighlightingChanged::post();
         });
 
