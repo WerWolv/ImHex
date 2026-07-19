@@ -65,7 +65,6 @@ namespace hex {
     }
 
     Window::~Window() {
-        RequestCloseImHex::unsubscribe(this);
         EventDPIChanged::unsubscribe(this);
         RequestSetPostProcessingShader::unsubscribe(this);
 
@@ -78,14 +77,6 @@ namespace hex {
     void Window::registerEventHandlers() {
         // Initialize default theme
         RequestChangeTheme::post("Dark");
-
-        // Handle the close window request by telling GLFW to shut down
-        RequestCloseImHex::subscribe(this, [this](bool noQuestions) {
-            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
-
-            if (!noQuestions)
-                EventWindowClosing::post(m_window);
-        });
 
         EventDPIChanged::subscribe(this, [this](float oldScaling, float newScaling) {
             if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
