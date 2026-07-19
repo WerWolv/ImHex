@@ -79,53 +79,50 @@ namespace hex::plugin::visualizers {
         auto colorCount = colorTable.size();
         auto indexCount = indices.size();
         std::vector<u32> image(indexCount);
+        u32 *imageData = image.data();
 
-        for (u32 i = 0; i < indexCount; i++) {
-            auto index = indices[i];
+        for (auto index : indices) {
 
             if (index >= colorCount)
                 index = 0;
-            image[i] = colorTable[index];
+            *imageData++ = colorTable[index];
         }
+
         void *tmp = image.data();
         auto *data = static_cast<const ImU8 *>(tmp);
-        ImGuiExt::Texture texture = ImGuiExt::Texture::fromBitmap(data, indexCount*4, width, height, ImGuiExt::Texture::Filter::Nearest);
+        ImGuiExt::Texture texture = ImGuiExt::Texture::fromBitmap(data, indexCount * 4, width, height, ImGuiExt::Texture::Filter::Nearest);
         return texture;
     }
 
     std::vector<u32> getIndices(pl::ptrn::Pattern *pattern, u64 width, u64 height) {
 
-        const auto *iterable = dynamic_cast<pl::ptrn::IIterable *>(pattern);
         std::vector<u32> indices;
-        if (iterable == nullptr || iterable->getEntryCount() == 0)
+
+        auto indexCount = (width * height);
+        auto byteCount =  pattern->getSize();
+        if (byteCount == 0 || indexCount == 0)
             return indices;
 
-        auto indexCount = (width * height) / iterable->getEntryCount();
-        auto content = iterable->getEntry(0);
-        auto byteCount = content->getSize();
-
-        if (byteCount >= indexCount && indexCount != 0) {
+        if (byteCount >= indexCount) {
             auto bytesPerIndex = byteCount / indexCount;
 
             if (bytesPerIndex == 1) {
-                auto temp = patternToArray<u8>(pattern);
-                indices = std::vector<u32>(temp.begin(), temp.end());
+                auto bytes = patternToArray<u8>(pattern);
+                indices = std::vector<u32>(bytes.begin(), bytes.end());
             } else if (bytesPerIndex == 2) {
-                auto temp = patternToArray<u16>(pattern);
-                indices = std::vector<u32>(temp.begin(), temp.end());
-            } else // 32 bits indices make no sense.
-                return indices;
-        } else if (byteCount != 0) {
+                auto shorts = patternToArray<u16>(pattern);
+                indices = std::vector<u32>(shorts.begin(), shorts.end());
+            }
+        } else {
             auto indicesPerByte = indexCount / byteCount;
-            auto temp = patternToArray<u8>(pattern);
+            auto bytes = patternToArray<u8>(pattern);
 
             if (indicesPerByte == 2) {
-                for (unsigned char i : temp) {
-                    indices.push_back(i & 0xF);
-                    indices.push_back((i >> 4) & 0xF);
+                for (u8 byte : bytes) {
+                    indices.push_back(byte & 0xF);
+                    indices.push_back((byte >> 4) & 0xF);
                 }
-            } else  // 2 bits indices are too little
-                return indices;
+            }
         }
         return indices;
     }
