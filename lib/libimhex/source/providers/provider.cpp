@@ -72,13 +72,14 @@ namespace hex::prv {
             return;
 
         EventProviderDataModified::post(this, offset, size, static_cast<const u8*>(buffer));
-        this->markDirty();
+        this->markDataDirty();
     }
 
     void Provider::save() {
         if (!this->isWritable())
             return;
-        
+
+        this->markDataDirty(false);
         EventProviderSaved::post(this);
     }
     void Provider::saveAs(const std::fs::path &path) {
@@ -95,6 +96,7 @@ namespace hex::prv {
                 file.writeBuffer(buffer.data(), bufferSize);
             }
 
+            this->markDataDirty(false);
             EventProviderSaved::post(this);
         }
     }
@@ -111,20 +113,20 @@ namespace hex::prv {
         else if (difference < 0)
             EventProviderDataRemoved::post(this, this->getActualSize() + difference, -difference);
 
-        this->markDirty();
+        this->markDataDirty();
         return true;
     }
 
     void Provider::insert(u64 offset, u64 size) {
         EventProviderDataInserted::post(this, offset, size);
 
-        this->markDirty();
+        this->markDataDirty();
     }
 
     void Provider::remove(u64 offset, u64 size) {
         EventProviderDataRemoved::post(this, offset, size);
 
-        this->markDirty();
+        this->markDataDirty();
     }
 
     void Provider::insertRaw(u64 offset, u64 size) {
@@ -238,7 +240,6 @@ namespace hex::prv {
 
     void Provider::setBaseAddress(u64 address) {
         m_baseAddress = address;
-        this->markDirty();
     }
 
     u64 Provider::getBaseAddress() const {

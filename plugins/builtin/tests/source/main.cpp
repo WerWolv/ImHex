@@ -14,11 +14,13 @@ TEST_SEQUENCE("Providers/ReadWrite") {
     auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
 
     TEST_ASSERT(provider.getSize() == 0);
-    TEST_ASSERT(!provider.isDirty());
+    TEST_ASSERT(!provider.isDataDirty());
+    TEST_ASSERT(!provider.isMetadataDirty());
 
     provider.resize(50);
     TEST_ASSERT(provider.getSize() == 50);
-    TEST_ASSERT(provider.isDirty());
+    TEST_ASSERT(provider.isDataDirty());
+    TEST_ASSERT(!provider.isMetadataDirty());
 
     char buf[] = "\x99\x99"; // temporary value that should be overwriten
     provider.read(0, buf, 2);

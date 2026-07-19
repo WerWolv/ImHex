@@ -162,7 +162,9 @@ namespace hex::plugin::builtin {
             tar.writeString(MetadataPath, metadataContent);
         }
 
-        ImHexApi::Provider::resetDirty();
+        ImHexApi::Provider::resetDataDirty();
+        for (const auto &provider : ImHexApi::Provider::getProviders())
+            provider->markMetadataDirty(false);
 
         // If saveLocation is false, reset the project path (do not release the lock)
         if (updateLocation) {

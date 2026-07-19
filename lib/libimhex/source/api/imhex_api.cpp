@@ -304,7 +304,7 @@ namespace hex {
         namespace impl {
 
             static std::set<prv::Provider*> s_closingProviders;
-            void resetClosingProvider() {
+            void resetClosingProviders() {
                 s_closingProviders.clear();
             }
 
@@ -367,22 +367,36 @@ namespace hex {
             return !s_providers->empty() && s_currentProvider >= 0 && s_currentProvider < i64(s_providers->size());
         }
 
-        void markDirty() {
+        void markDataDirty() {
             const auto provider = get();
-            if (!provider->isDirty()) {
-                provider->markDirty();
+            if (!provider->isDataDirty()) {
+                provider->markDataDirty();
             }
             EventProviderDirtied::post(provider);
         }
 
-        void resetDirty() {
-            for (const auto &provider : *s_providers)
-                provider->markDirty(false);
+        void markMetadataDirty() {
+            const auto provider = get();
+            if (!provider->isMetadataDirty()) {
+                provider->markMetadataDirty();
+            }
+            EventProviderDirtied::post(provider);
         }
 
-        bool isDirty() {
+        void resetDataDirty() {
+            for (const auto &provider : *s_providers)
+                provider->markDataDirty(false);
+        }
+
+        bool isDataDirty() {
             return std::ranges::any_of(*s_providers, [](const auto &provider) {
-                return provider->isDirty();
+                return provider->isDataDirty();
+            });
+        }
+
+        bool isMetadataDirty() {
+            return std::ranges::any_of(*s_providers, [](const auto &provider) {
+                return provider->isMetadataDirty();
             });
         }
 

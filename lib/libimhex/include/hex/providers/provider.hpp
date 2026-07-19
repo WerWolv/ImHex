@@ -328,8 +328,10 @@ namespace hex::prv {
         [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings) const;
         virtual void loadSettings(const nlohmann::json &settings);
 
-        void markDirty(bool dirty = true) { m_dirty = dirty; }
-        [[nodiscard]] bool isDirty() const { return m_dirty; }
+        void markDataDirty(bool dirty = true) { m_dataDirty = dirty; }
+        void markMetadataDirty(bool dirty = true) { m_metadataDirty = dirty; }
+        [[nodiscard]] bool isDataDirty() const { return m_dataDirty; }
+        [[nodiscard]] bool isMetadataDirty() const { return m_metadataDirty; }
 
         [[nodiscard]] virtual std::pair<Region, bool> getRegionValidity(u64 address) const;
 
@@ -354,9 +356,14 @@ namespace hex::prv {
         u32 m_id;
 
         /**
-         * @brief true if there is any data that needs to be saved
+         * @brief true if binary data has been modified and needs to be saved to disk
          */
-        bool m_dirty = false;
+        bool m_dataDirty = false;
+
+        /**
+         * @brief true if metadata (patterns, bookmarks, highlights, etc.) has been modified and needs to be saved to a project
+         */
+        bool m_metadataDirty = false;
 
         /**
          * @brief Control if provider initialization should be skipped.

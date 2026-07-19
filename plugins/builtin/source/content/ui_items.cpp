@@ -585,7 +585,7 @@ namespace hex::plugin::builtin {
                         ImGui::PushID(tabProvider);
 
                         ImGuiTabItemFlags flags = ImGuiTabItemFlags_NoTooltip;
-                        if (tabProvider->isDirty())
+                        if (tabProvider->isDataDirty() || tabProvider->isMetadataDirty())
                             flags |= ImGuiTabItemFlags_UnsavedDocument;
                         if (i64(i) == selectedProviderIndex && providerJustChanged) {
                             flags |= ImGuiTabItemFlags_SetSelected;

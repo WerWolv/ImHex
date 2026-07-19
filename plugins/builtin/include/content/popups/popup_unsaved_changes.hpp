@@ -3,28 +3,47 @@
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization_manager.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace hex::plugin::builtin {
 
+    struct ProviderDirtyState {
+        prv::Provider *provider;
+        bool dataDirty;
+        bool metadataDirty;
+    };
+
     class PopupUnsavedChanges : public Popup<PopupUnsavedChanges> {
     public:
-        PopupUnsavedChanges(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction, std::function<void()> cancelFunction)
+        PopupUnsavedChanges(std::string message, std::vector<ProviderDirtyState> providers,
+                            std::function<void()> saveFunction, std::function<void()> discardFunction, std::function<void()> cancelFunction)
                 : hex::Popup<PopupUnsavedChanges>("hex.ui.common.question", false),
                   m_message(std::move(message)),
-                  m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)), m_cancelFunction(std::move(cancelFunction)) { }
+                  m_providers(std::move(providers)),
+                  m_saveFunction(std::move(saveFunction)), m_discardFunction(std::move(discardFunction)), m_cancelFunction(std::move(cancelFunction)) { }
 
         void drawContent() override {
             ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
             ImGui::NewLine();
 
-            if (ImGui::BeginTable("##unsaved_providers", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
-                for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders()) {
+            if (ImGui::BeginTable("##unsaved_providers", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
+                ImGui::TableSetupColumn("Provider", ImGuiTableColumnFlags_WidthStretch, 0.6F);
+                ImGui::TableSetupColumn("Data", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("X").x * 2);
+                ImGui::TableSetupColumn("Project", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("X").x * 2);
+                ImGui::TableHeadersRow();
+
+                for (const auto &entry : m_providers) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(provider->getName().c_str());
+                    ImGui::TextUnformatted(entry.provider->getName().c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(entry.dataDirty ? "X" : "");
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(entry.metadataDirty ? "X" : "");
                 }
                 ImGui::EndTable();
             }
@@ -34,14 +53,14 @@ namespace hex::plugin::builtin {
 
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX((width / 10) * 0.5);
-            if (ImGui::Button("hex.ui.common.yes"_lang, ImVec2(width / 4, 0))) {
-                m_yesFunction();
+            if (ImGui::Button("hex.ui.common.save"_lang, ImVec2(width / 4, 0))) {
+                m_saveFunction();
                 this->close();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX((width / 10) * 3.75);
-            if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 4, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-                m_noFunction();
+            if (ImGui::Button("hex.ui.common.discard"_lang, ImVec2(width / 4, 0))) {
+                m_discardFunction();
                 this->close();
             }
             ImGui::SameLine();
@@ -68,7 +87,8 @@ namespace hex::plugin::builtin {
 
     private:
         std::string m_message;
-        std::function<void()> m_yesFunction, m_noFunction, m_cancelFunction;
+        std::vector<ProviderDirtyState> m_providers;
+        std::function<void()> m_saveFunction, m_discardFunction, m_cancelFunction;
     };
 
 }

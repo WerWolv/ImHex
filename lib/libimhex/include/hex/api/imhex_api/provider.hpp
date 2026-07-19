@@ -21,7 +21,21 @@ EXPORT_MODULE namespace hex {
 
         namespace impl {
 
-            void resetClosingProvider();
+            /**
+             * @brief Clears the set of providers currently being closed
+             *
+             * Called when the user cancels a close operation to reset the closing state.
+             */
+            void resetClosingProviders();
+
+            /**
+             * @brief Gets the set of providers currently being closed
+             *
+             * When ImHexApi::Provider::remove() is called without noQuestions, the provider
+             * is added to this set before EventProviderClosing is posted. The popup handlers
+             * use this to know which providers are pending closure, so they can remove or
+             * cancel them after the user responds.
+             */
             std::set<prv::Provider*> getClosingProviders();
 
         }
@@ -64,20 +78,29 @@ EXPORT_MODULE namespace hex {
 
 
         /**
-         * @brief Marks the **currently selected** data provider as dirty
+         * @brief Marks the **currently selected** data provider's data as dirty
          */
-        void markDirty();
+        void markDataDirty();
 
         /**
-         * @brief Marks **all data providers** as clean
+         * @brief Marks the **currently selected** data provider's metadata as dirty
          */
-        void resetDirty();
+        void markMetadataDirty();
 
         /**
-         * @brief Checks whether **any of the data providers** is dirty
-         * @return Whether any data provider is dirty
+         * @brief Marks **all data providers'** data as clean
          */
-        bool isDirty();
+        void resetDataDirty();
+
+        /**
+         * @brief Checks whether **any of the data providers** has dirty data
+         */
+        bool isDataDirty();
+
+        /**
+         * @brief Checks whether **any of the data providers** has dirty metadata
+         */
+        bool isMetadataDirty();
 
 
         /**

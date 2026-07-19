@@ -758,7 +758,7 @@ namespace hex::plugin::builtin {
                                                     auto provider      = ImHexApi::Provider::get();
                                                     bool providerValid = ImHexApi::Provider::isValid();
 
-                                                    return providerValid && provider->isWritable() && provider->isSavable() && provider->isDirty();
+                                                    return providerValid && provider->isWritable() && provider->isSavable() && provider->isDataDirty();
                                                 },
                                                 this);
 
@@ -792,7 +792,7 @@ namespace hex::plugin::builtin {
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("hex.builtin.task.loading_encoding_file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
-                                                            ImHexApi::Provider::markDirty();
+                                                            ImHexApi::Provider::markDataDirty();
 
                                                             TaskManager::doLater([this, encoding = std::move(encoding)]() mutable {
                                                                 m_hexEditor.setCustomEncoding(std::move(encoding));

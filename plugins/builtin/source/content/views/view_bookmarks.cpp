@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
 
             m_bookmarks->emplace_back(std::move(bookmark), true, ui::Markdown(bookmark.comment));
 
-            ImHexApi::Provider::markDirty();
+            ImHexApi::Provider::markMetadataDirty();
 
             EventBookmarkCreated::post(m_bookmarks->back().entry);
             EventHighlightingChanged::post();

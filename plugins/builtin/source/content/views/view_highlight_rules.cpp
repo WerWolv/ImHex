@@ -105,13 +105,13 @@ namespace hex::plugin::builtin {
             else
                 return std::nullopt;
         });
-        ImHexApi::Provider::markDirty();
+        ImHexApi::Provider::markMetadataDirty();
     }
 
     void ViewHighlightRules::Rule::Expression::removeHighlight() {
         ImHexApi::HexEditor::removeForegroundHighlightingProvider(this->highlightId);
         this->highlightId = 0;
-        ImHexApi::Provider::markDirty();
+        ImHexApi::Provider::markMetadataDirty();
     }
 
 
@@ -293,7 +293,7 @@ namespace hex::plugin::builtin {
                 // Draw button to add a new expression
                 if (ImGuiExt::DimmedIconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     m_selectedRule.get()->addExpression(Rule::Expression("", {}));
-                    ImHexApi::Provider::markDirty();
+                    ImHexApi::Provider::markMetadataDirty();
                 }
 
                 ImGui::SameLine();

@@ -81,10 +81,10 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && s_dataDirty) {
                     s_dataDirty = false;
 
-                    std::vector<prv::Provider *> dirtyProviders;
+                    std::vector<std::tuple<prv::Provider *, bool, bool>> dirtyStates;
                     for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                        if (provider->isDirty()) {
-                            dirtyProviders.push_back(provider);
+                        if (provider->isDataDirty() || provider->isMetadataDirty()) {
+                            dirtyStates.emplace_back(provider, provider->isDataDirty(), provider->isMetadataDirty());
                         }
                     }
 
@@ -96,8 +96,11 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    for (const auto &provider : dirtyProviders) {
-                        provider->markDirty();
+                    for (const auto &[provider, wasDataDirty, wasMetadataDirty] : dirtyStates) {
+                        if (wasDataDirty)
+                            provider->markDataDirty();
+                        if (wasMetadataDirty)
+                            provider->markMetadataDirty();
                     }
                 }
             }
