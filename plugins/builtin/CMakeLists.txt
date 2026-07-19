@@ -109,6 +109,8 @@ add_imhex_plugin(
         source/content/popups/hex_editor/popup_hex_editor_resize.cpp
         source/content/popups/hex_editor/popup_hex_editor_select.cpp
 
+        source/content/popups/popup_unsaved_changes.cpp
+
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp
