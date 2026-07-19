@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fonts/vscode_icons.hpp"
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization_manager.hpp>
@@ -61,9 +62,9 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.provider->getName().c_str());
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(entry.dataDirty ? "X" : "");
+                    ImGui::TextUnformatted(entry.dataDirty ? ICON_VS_CHECK : "");
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(entry.metadataDirty ? "X" : "");
+                    ImGui::TextUnformatted(entry.metadataDirty ? ICON_VS_CHECK : "");
                 }
                 ImGui::EndTable();
             }
