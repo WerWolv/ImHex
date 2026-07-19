@@ -80,7 +80,19 @@ namespace hex::plugin::builtin {
 
             PopupUnsavedChanges::open("hex.builtin.popup.unsaved_changes.desc"_lang, std::move(dirtyStates),
                 [window] {
-                    // Save: persist project if any metadata is dirty, then remove all providers
+                    // Save data: write file data to disk for each dirty provider
+                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                        if (provider->isDataDirty() && provider->isSavable())
+                            provider->save();
+                    }
+
+                    imhexClosing = true;
+                    for (const auto &provider : ImHexApi::Provider::getProviders())
+                        ImHexApi::Provider::remove(provider, true);
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                },
+                [window] {
+                    // Save project: persist metadata (patterns, bookmarks, etc.), then close
                     if (ImHexApi::Provider::isMetadataDirty())
                         ProjectFile::hasPath() ? saveProject() : saveProjectAs();
 
@@ -162,30 +174,34 @@ namespace hex::plugin::builtin {
 
                 PopupUnsavedChanges::open("hex.builtin.popup.unsaved_changes.desc"_lang, dirtyStates,
                     [&dirtyStates]{
-                        // Save: persist project if any metadata is dirty, otherwise save file to disk
-                        bool anyMetadataDirty = false;
-                        bool anyDataDirty = false;
+                        // Save data: write file data to disk for each dirty provider
                         for (const auto &entry : dirtyStates) {
-                            if (entry.metadataDirty) anyMetadataDirty = true;
-                            if (entry.dataDirty) anyDataDirty = true;
-                        }
-
-                        bool saved = true;
-                        if (anyMetadataDirty)
-                            saved = ProjectFile::hasPath() ? saveProject() : saveProjectAs();
-                        else if (anyDataDirty) {
-                            auto provider = ImHexApi::Provider::get();
-                            if (provider != nullptr && provider->isSavable())
-                                provider->save();
+                            if (entry.dataDirty && entry.provider->isSavable())
+                                entry.provider->save();
                         }
 
                         // Once saved, close requested providers and close the window if it was closing
+                        for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
+                            ImHexApi::Provider::remove(provider, true);
+
+                        if (imhexClosing)
+                            ImHexApi::System::closeImHex(true);
+                    },
+                    [&dirtyStates]{
+                        // Save project: persist metadata (patterns, bookmarks, etc.)
+                        bool saved = true;
+                        bool anyMetadataDirty = false;
+                        for (const auto &entry : dirtyStates) {
+                            if (entry.metadataDirty) anyMetadataDirty = true;
+                        }
+
+                        if (anyMetadataDirty)
+                            saved = ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+
                         if (saved) {
-                            // Remove all providers that were queued for closing
                             for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
                                 ImHexApi::Provider::remove(provider, true);
 
-                            // If the window itself was closing, finish shutting down
                             if (imhexClosing)
                                 ImHexApi::System::closeImHex(true);
                         } else {
