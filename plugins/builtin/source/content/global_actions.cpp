@@ -20,10 +20,13 @@ namespace hex::plugin::builtin {
     }
 
     bool saveProject() {
-        if (!ImHexApi::Provider::isValid())
+        if (!ImHexApi::Provider::isValid()) {
+            log::info("Cannot save project because no current provider");
             return false;
+        }
 
         if (ProjectFile::hasPath()) {
+            log::info("Saving project to: {}", wolv::util::toUTF8String(ProjectFile::getPath()));
             if (!ProjectFile::store()) {
                 ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
                 return false;

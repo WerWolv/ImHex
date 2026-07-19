@@ -465,7 +465,7 @@ namespace hex::plugin::builtin {
         // Remove the link from the workspace
         workspace.links.erase(link);
 
-        ImHexApi::Provider::markDirty();
+        ImHexApi::Provider::markMetadataDirty();
     }
 
     void ViewDataProcessor::eraseNodes(Workspace &workspace, const std::vector<int> &ids) {
@@ -517,7 +517,7 @@ namespace hex::plugin::builtin {
             workspace.nodes.erase(node);
         }
 
-        ImHexApi::Provider::markDirty();
+        ImHexApi::Provider::markMetadataDirty();
     }
 
     void ViewDataProcessor::processNodes(Workspace &workspace) {
@@ -752,7 +752,7 @@ namespace hex::plugin::builtin {
 
                 workspace.nodes.push_back(std::move(node));
 
-                ImHexApi::Provider::markDirty();
+                ImHexApi::Provider::markMetadataDirty();
                 AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.place_node.name");
             }
 

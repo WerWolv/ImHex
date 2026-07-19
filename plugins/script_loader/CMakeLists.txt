@@ -50,10 +50,22 @@ add_imhex_plugin(
         source/plugin_script_loader.cpp
     INCLUDES
         include
-
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/imgui/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/backend/include>
+    	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/types/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/lib/jthread/includes>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/io/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/trace/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/pattern_language/lib/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/implot/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/implot3d/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/imnodes/include>
+	${FMT_INCLUDE_DIRS}
     LIBRARIES
         c_api
         fonts
         ui
         dotnet
+	${FMT_LIBRARIES}
 )

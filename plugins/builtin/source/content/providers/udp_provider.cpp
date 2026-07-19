@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
             std::chrono::system_clock::now()
         );
 
-        this->markDirty();
+        this->markDataDirty();
     }
 
     u64 UDPProvider::getActualSize() const {

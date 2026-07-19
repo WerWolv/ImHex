@@ -27,7 +27,21 @@ add_executable(main ${APPLICATION_TYPE}
     ${IMHEX_ICON}
 )
 
-target_include_directories(main PUBLIC include)
+target_include_directories(main PUBLIC include
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/imgui/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/backend/include>
+    	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/types/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/lib/jthread/includes>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/io/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/trace/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/pattern_language/lib/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/implot/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/implot3d/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/imgui/imnodes/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json/include>
+	${MBEDTLS_INCLUDE_DIR}
+)
 addCppCheck(main)
 setupCompilerFlags(main)
 setupCompilerFlags(libimhex)
@@ -61,8 +75,8 @@ set_target_properties(main PROPERTIES
 
 target_compile_definitions(main PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES})
 if (WIN32)
+    target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES} glfw3 ${FMT_LIBRARIES} ${MBEDTLS_LIBRARY} ${MBEDTLS_LIBRARIES})
     target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib Winmm.lib)
 
     if (MSVC)
@@ -71,6 +85,7 @@ if (WIN32)
         target_link_libraries(main PRIVATE pthread)
     endif()
 else ()
+    target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES} glfw ${FMT_LIBRARIES} ${MBEDTLS_LIBRARY} ${MBEDTLS_LIBRARIES})
     target_link_libraries(main PRIVATE pthread)
 
     if (APPLE)

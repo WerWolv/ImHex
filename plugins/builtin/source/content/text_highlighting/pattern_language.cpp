@@ -1380,8 +1380,8 @@ namespace hex::plugin::builtin {
                     result = definition;
                     return true;
                 }
-
-                vectorString.erase(vectorString.begin());
+                if (!vectorString.empty())
+                    vectorString.erase(vectorString.begin());
                 variableName = wolv::util::combineStrings(vectorString, ".");
                 Identifier *identifier = identifiers[0];
                 identifiers.erase(identifiers.begin());

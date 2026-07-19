@@ -109,6 +109,8 @@ add_imhex_plugin(
         source/content/popups/hex_editor/popup_hex_editor_resize.cpp
         source/content/popups/hex_editor/popup_hex_editor_select.cpp
 
+        source/content/popups/popup_unsaved_changes.cpp
+
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp
@@ -137,16 +139,28 @@ add_imhex_plugin(
 
         source/content/helpers/constants.cpp
     INCLUDES
-        include
-
+    	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/pattern_language/lib/include>
+    	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/types/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/io/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/lib/jthread/includes>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/trace/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/include>
+	include
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/boost/regex/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json/include>
+	${FMT_INCLUDE_DIRS}
     LIBRARIES
         ui
         fonts
         ${JTHREAD_LIBRARIES}
         plcli
         libpl-gen
+	${FMT_LIBRARIES}
 )
 
 if (WIN32)
     target_link_libraries(builtin PRIVATE setupapi)
-endif ()
+    target_link_libraries(builtin PUBLIC glfw3)
+else()
+    target_link_libraries(builtin PUBLIC glfw)
+endif()

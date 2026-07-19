@@ -1157,7 +1157,7 @@ namespace hex::ui {
             ImGui::Dummy({});
             if (ImGui::BeginTable("##footer_table", 3, ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
-                ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
+                ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 25_scaled);
                 ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
                 ImGui::TableNextRow();
 

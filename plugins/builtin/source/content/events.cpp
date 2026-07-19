@@ -28,7 +28,6 @@
 
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_notification.hpp>
-#include <popups/popup_question.hpp>
 #include <content/popups/popup_tasks_waiting.hpp>
 #include <content/popups/popup_unsaved_changes.hpp>
 #include <content/popups/popup_crash_recovered.hpp>
@@ -66,6 +65,59 @@ namespace hex::plugin::builtin {
     void registerEventHandlers() {
 
         static bool imhexClosing = false;
+
+        // Shared exit popup logic used by both EventWindowClosing and EventCloseButtonPressed.
+        // Collects all dirty providers, shows a table with their data/metadata dirty state,
+        // and offers Save / Discard / Cancel. Save persists metadata to project if any is dirty,
+        // Discard removes all providers and closes the window, Cancel does nothing.
+        static auto showExitPopup = [](GLFWwindow *window) {
+            // Build list of providers that have unsaved changes
+            std::vector<ProviderDirtyState> dirtyStates;
+            for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                if (provider->isDataDirty() || provider->isMetadataDirty())
+                    dirtyStates.push_back({ .provider = provider, .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() });
+            }
+
+            PopupUnsavedChanges::open(std::move(dirtyStates),
+                [window] {
+                    // Save data: write file data to disk for each dirty provider
+                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                        if (provider->isDataDirty() && provider->isSavable())
+                            provider->save();
+                    }
+
+                    imhexClosing = true;
+                    for (const auto &provider : ImHexApi::Provider::getProviders())
+                        ImHexApi::Provider::remove(provider, true);
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                },
+                [window] {
+                    // Save providers data
+                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                        if (provider->isDataDirty() && provider->isSavable())
+                            provider->save();
+                    }
+
+                    // Save project metadata
+                    ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+
+                    // Close
+                    imhexClosing = true;
+                    for (const auto &provider : ImHexApi::Provider::getProviders())
+                        ImHexApi::Provider::remove(provider, true);
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                },
+                [window] {
+                    // Discard: remove all providers and close without saving
+                    imhexClosing = true;
+                    for (const auto &provider : ImHexApi::Provider::getProviders())
+                        ImHexApi::Provider::remove(provider, true);
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                },
+                [] { }
+            );
+        };
+
         EventCrashRecovered::subscribe([](const std::exception &e) {
             PopupCrashRecovered::open(e);
 
@@ -79,16 +131,9 @@ namespace hex::plugin::builtin {
 
         EventWindowClosing::subscribe([](GLFWwindow *window) {
             imhexClosing = false;
-            if (ImHexApi::Provider::isDirty() && !imhexClosing) {
+            if ((ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty()) && !imhexClosing) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
-                    [] {
-                        imhexClosing = true;
-                        for (const auto &provider : ImHexApi::Provider::getProviders())
-                            ImHexApi::Provider::remove(provider);
-                    },
-                    [] { }
-                );
+                showExitPopup(window);
             } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 TaskManager::doLater([] {
@@ -103,14 +148,8 @@ namespace hex::plugin::builtin {
 
         EventCloseButtonPressed::subscribe([]() {
             if (ImHexApi::Provider::isValid()) {
-                if (ImHexApi::Provider::isDirty()) {
-                    ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
-                        [] {
-                            for (const auto &provider : ImHexApi::Provider::getProviders())
-                                ImHexApi::Provider::remove(provider);
-                        },
-                        [] { }
-                    );
+                if (ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty()) {
+                    showExitPopup(ImHexApi::System::getMainWindowHandle());
                 } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
                     TaskManager::doLater([] {
                         for (auto &task : TaskManager::getRunningTasks())
@@ -122,6 +161,7 @@ namespace hex::plugin::builtin {
                 } else {
                     for (const auto &provider : ImHexApi::Provider::getProviders())
                         ImHexApi::Provider::remove(provider);
+                    glfwSetWindowShouldClose(ImHexApi::System::getMainWindowHandle(), GLFW_TRUE);
                 }
             } else {
                 ImHexApi::System::closeImHex();
@@ -129,23 +169,60 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderClosing::subscribe([](const prv::Provider *provider, bool *shouldClose) {
-            if (provider->isDirty()) {
+            if (provider->isDataDirty() || provider->isMetadataDirty()) {
+                // Block the close until the user responds to the popup
                 *shouldClose = false;
-                PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
-                    []{
-                        const bool projectSaved = ProjectFile::hasPath() ? saveProject() : saveProjectAs();
-                        if (projectSaved) {
+
+                // Build dirty state for the popup table (single provider in this case)
+                std::vector<ProviderDirtyState> dirtyStates = {
+                    { .provider = const_cast<prv::Provider*>(provider), .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() }
+                };
+
+                PopupUnsavedChanges::open(dirtyStates,
+                    [dirtyStates]{
+                        // Save data: write file data to disk for each dirty provider
+                        for (const auto &entry : dirtyStates) {
+                            if (entry.dataDirty && entry.provider->isSavable())
+                                entry.provider->save();
+                        }
+
+                        // Once saved, close requested providers and close the window if it was closing
+                        for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
+                            ImHexApi::Provider::remove(provider, true);
+
+                        if (imhexClosing)
+                            ImHexApi::System::closeImHex(true);
+                    },
+                    [dirtyStates]{
+                        // Save data + project: write file data to disk, then persist metadata
+                        for (const auto &entry : dirtyStates) {
+                            if (entry.dataDirty && entry.provider->isSavable())
+                                entry.provider->save();
+                        }
+
+                        bool saved = true;
+                        bool anyMetadataDirty = false;
+                        for (const auto &entry : dirtyStates) {
+                            if (entry.metadataDirty) anyMetadataDirty = true;
+                        }
+
+                        if (anyMetadataDirty)
+                            saved = ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+
+                        if (saved) {
                             for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
                                 ImHexApi::Provider::remove(provider, true);
 
                             if (imhexClosing)
                                 ImHexApi::System::closeImHex(true);
                         } else {
-                            ImHexApi::Provider::impl::resetClosingProvider();
+                            // Save failed — abort the close and reset state
+                            ImHexApi::Provider::impl::resetClosingProviders();
                             imhexClosing = false;
                         }
                     },
                     [] {
+                        // Discard: remove all queued providers without saving
                         for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
                             ImHexApi::Provider::remove(provider, true);
 
@@ -153,7 +230,7 @@ namespace hex::plugin::builtin {
                             ImHexApi::System::closeImHex(true);
                     },
                     [] {
-                        ImHexApi::Provider::impl::resetClosingProvider();
+                        ImHexApi::Provider::impl::resetClosingProviders();
                         imhexClosing = false;
                     }
                 );

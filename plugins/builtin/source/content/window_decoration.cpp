@@ -722,7 +722,7 @@ namespace hex::plugin::builtin {
                 prefix  = "Project ";
                 title   = ProjectFile::getPath().stem().string();
 
-                if (ImHexApi::Provider::isDirty())
+                if (ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty())
                     postfix += " (*)";
 
             } else if (ImHexApi::Provider::isValid()) {
@@ -730,7 +730,7 @@ namespace hex::plugin::builtin {
                 if (provider != nullptr) {
                     title = provider->getName();
 
-                    if (provider->isDirty())
+                    if (provider->isDataDirty() || provider->isMetadataDirty())
                         postfix += " (*)";
 
                     if (!provider->isWritable())

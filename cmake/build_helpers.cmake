@@ -776,6 +776,7 @@ macro(setupCompilerFlags target)
         addCCXXFlag("-Wno-deprecated-declarations" ${target})
         addCCXXFlag("-Wno-unknown-pragmas" ${target})
         addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
+	addCXXFlag("-Wno-c2y-extensions" ${target})
 
         # Enable hardening flags
         if (IMHEX_BUILD_HARDENING)
@@ -992,7 +993,7 @@ macro(addBundledLibraries)
     endif()
     enableUnityBuild(libpl)
 
-    find_package(mbedTLS 3.4.0 REQUIRED)
+    find_package(mbedTLS 3.6.0 REQUIRED)
     find_package(Magic 5.39 REQUIRED)
 endmacro()
 

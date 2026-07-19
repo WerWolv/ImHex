@@ -1480,7 +1480,7 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(provider).setTextChanged(false);
                 m_hasUnparsedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
-                ImHexApi::Provider::markDirty();
+                ImHexApi::Provider::markMetadataDirty();
                 markPatternFileDirty(provider);
             }
 

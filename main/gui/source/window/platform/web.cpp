@@ -15,7 +15,9 @@
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/theme_manager.hpp>
 
+#pragma warning( disable : 4005 )
 #include <GLFW/glfw3.h>
+#pragma warning( default : 4005 )
 
 #include <imgui.h>
 #include <imgui_internal.h>

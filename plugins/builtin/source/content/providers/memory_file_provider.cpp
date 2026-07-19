@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                 } else {
                     MovePerProviderData::post(this, fileProvider);
 
-                    fileProvider->markDirty(false);
+                    fileProvider->markDataDirty(false);
                     EventProviderOpened::post(newProvider.get());
                     ImHexApi::Provider::remove(this, true);
                 }

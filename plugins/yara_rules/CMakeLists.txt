@@ -9,6 +9,7 @@ if (NOT USE_SYSTEM_YARA)
         target_compile_options(capstone PRIVATE /wd4005)
     endif ()
 else()
+    find_package(mbedTLS 3.6.0 REQUIRED)
     find_package(Yara REQUIRED)
 endif()
 
@@ -24,9 +25,10 @@ add_imhex_plugin(
     INCLUDES
         include
         ${YARA_INCLUDE_DIRS}
+	${MBEDTLS_INCLUDE_DIR}
     LIBRARIES
         ui
         fonts
         ${JTHREAD_LIBRARIES}
-        ${YARA_LIBRARIES}
+	${YARA_LIBRARIES} ${MBEDTLS_LIBRARIES} ${MBEDTLS_LIBRARY} 
 )

@@ -5,7 +5,7 @@ FROM emscripten/emsdk:4.0.21 AS build
 ARG UNIQUEKEY=1
 
 RUN apt update
-RUN apt install -y git ccache autoconf automake libtool pkg-config ninja-build
+RUN apt install -y git ccache autoconf autoconf-archive automake libtool pkg-config ninja-build
 
 RUN <<EOF
 # Install vcpkg

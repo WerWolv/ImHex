@@ -80,10 +80,11 @@ namespace hex {
 namespace hex {
 
     /**
-     * @brief Signals the dirtying of a provider
+     * @brief Signals that a provider's dirty state has changed
      *
-     * Any data modification that occurs in a provider dirties it, until its state is either saved or restored.
-     * This event signals that fact to subscribers so additional code can be executed for certain cases.
+     * Fired when either the data dirty flag or the metadata dirty flag is set on a provider.
+     * Data dirty indicates binary data was modified; metadata dirty indicates things like
+     * patterns, bookmarks, etc.. were modified.
      */
     EVENT_DEF(EventProviderDirtied, prv::Provider *);
 

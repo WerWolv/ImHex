@@ -1257,6 +1257,7 @@ jobs:
       contents: read
       pages: write
       id-token: write
+      actions: write # to delete artifact
     name: 📃 Deploy to GitHub Pages
     runs-on: ubuntu-26.04
 

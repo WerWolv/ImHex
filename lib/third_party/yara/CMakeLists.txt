@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
+include(GNUInstallDirs)
+
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
+
 set(LIBYARA_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/yara/libyara")
 
 set(LIBYARA_INCLUDES
@@ -102,7 +106,6 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
 
-find_package(mbedTLS 2.26.0 REQUIRED)
 
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 
@@ -113,28 +116,25 @@ target_compile_definitions(libyara PRIVATE
         HASH_MODULE DOTNET_MODULE MAGIC_MODULE MACHO_MODULE DEX_MODULE
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(libyara PRIVATE -Wno-pointer-sign -Wno-tautological-constant-out-of-range-compare)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(libyara PRIVATE /wd4005)
-endif ()
+find_package(mbedTLS 3.6.0 REQUIRED)
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "GNU|AppleClang")
+	if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		target_compile_options(libyara PRIVATE -Wno-pointer-sign -Wno-tautological-constant-out-of-range-compare)
+	endif ()
+	target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
+	target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
+	target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARY} pthread)
+else ()
+	if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+		target_compile_options(libyara PRIVATE /wd4005)
+	endif ()
 
+	target_link_directories(libyara PRIVATE mbedtls)
+	target_link_libraries(libyara PRIVATE mbedtls)
+endif ()
 target_include_directories(
-        libyara
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include>
-        PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
+	libyara
+	PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include>
+	PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
 )
 
-target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
-
-if (UNIX)
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES} pthread)
-else ()
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES})
-endif ()
-
-include(GNUInstallDirs)
-
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
