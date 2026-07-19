@@ -94,22 +94,23 @@ namespace hex::plugin::visualizers {
     }
 
     std::vector<u32> getIndices(pl::ptrn::Pattern *pattern, u64 width, u64 height) {
-        auto indexCount = width * height / pattern->getSize();
-        std::vector<u32> indices;
-        const auto *iterable = dynamic_cast<pl::ptrn::IIterable *>(pattern);
 
+        const auto *iterable = dynamic_cast<pl::ptrn::IIterable *>(pattern);
+        std::vector<u32> indices;
         if (iterable == nullptr || iterable->getEntryCount() == 0)
             return indices;
+
+        auto indexCount = (width * height) / iterable->getEntryCount();
         auto content = iterable->getEntry(0);
         auto byteCount = content->getSize();
 
         if (byteCount >= indexCount && indexCount != 0) {
-            auto bytePerIndex = byteCount / indexCount;
+            auto bytesPerIndex = byteCount / indexCount;
 
-            if (bytePerIndex == 1) {
+            if (bytesPerIndex == 1) {
                 auto temp = patternToArray<u8>(pattern);
                 indices = std::vector<u32>(temp.begin(), temp.end());
-            } else if (bytePerIndex == 2) {
+            } else if (bytesPerIndex == 2) {
                 auto temp = patternToArray<u16>(pattern);
                 indices = std::vector<u32>(temp.begin(), temp.end());
             } else // 32 bits indices make no sense.
@@ -119,9 +120,9 @@ namespace hex::plugin::visualizers {
             auto temp = patternToArray<u8>(pattern);
 
             if (indicesPerByte == 2) {
-                for (u32 i = 0; i < temp.size(); i++) {
-                    indices.push_back(temp[i] & 0xF);
-                    indices.push_back((temp[i] >> 4) & 0xF);
+                for (unsigned char i : temp) {
+                    indices.push_back(i & 0xF);
+                    indices.push_back((i >> 4) & 0xF);
                 }
             } else  // 2 bits indices are too little
                 return indices;
