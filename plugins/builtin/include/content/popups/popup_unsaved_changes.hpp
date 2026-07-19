@@ -32,8 +32,8 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("##unsaved_providers", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
                 ImGui::TableSetupColumn("Provider", ImGuiTableColumnFlags_WidthStretch, 0.6F);
-                ImGui::TableSetupColumn("Data", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("X").x * 2);
-                ImGui::TableSetupColumn("Project", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("X").x * 2);
+                ImGui::TableSetupColumn("hex.ui.common.data"_lang, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("hex.ui.common.data"_lang).x);
+                ImGui::TableSetupColumn("hex.ui.common.metadata"_lang, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("hex.ui.common.metadata"_lang).x);
                 ImGui::TableHeadersRow();
 
                 for (const auto &entry : m_providers) {
