@@ -164,25 +164,26 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     if (NOT WIN32)
         target_link_libraries(libimhex PRIVATE dl)
     endif()
-
     if (NOT EMSCRIPTEN)
         # curl is only used in non-emscripten builds
         target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
     endif()
 
-    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
-    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES})
+    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES} ${MBEDTLS_LIBRARY})
     target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
+    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES} tracing)
+target_link_libraries(libimhex PRIVATE ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY} ${MBEDTLS_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES} ${LUNASVG_LIBRARIES} ${BOOST_LIBRARIES} tracing)
+set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(libimhex PROPERTIES PREFIX "")
+set_target_properties(libimhex PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>;$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../external/libwolv/lib/types/include>;$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../external/libwolv/lib/io/include>;${NLOHMANN_JSON_INCLUDE_DIRS};${MBEDTLS_INCLUDE_DIR};${XDGPP_INCLUDE_DIRS};${LLVM_INCLUDE_DIRS};${FMT_INCLUDE_DIRS};${LIBWOLV_INCLUDE_DIRS};$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../trace/hex/include>")
+set_target_properties(libimhex PROPERTIES INTERFACE_LINK_DIRECTORIES "${MBEDTLS_LIBRARY_DIR};${MAGIC_LIBRARY_DIRS}")
+set_target_properties(libimhex PROPERTIES INTERFACE_LINK_LIBRARIES "${MBEDTLS_LIBRARY};${MBEDTLS_LIBRARIES}")
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
-
 add_dependencies(imhex_all libimhex)
 
 install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
-set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set_target_properties(libimhex PROPERTIES PREFIX "")

@@ -139,16 +139,28 @@ add_imhex_plugin(
 
         source/content/helpers/constants.cpp
     INCLUDES
-        include
-
+    	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/pattern_language/lib/include>
+    	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/types/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/io/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/lib/jthread/includes>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/trace/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/external/libwolv/libs/utils/include>
+	include
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/boost/regex/include>
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json/include>
+	${FMT_INCLUDE_DIRS}
     LIBRARIES
         ui
         fonts
         ${JTHREAD_LIBRARIES}
         plcli
         libpl-gen
+	${FMT_LIBRARIES}
 )
 
 if (WIN32)
     target_link_libraries(builtin PRIVATE setupapi)
-endif ()
+    target_link_libraries(builtin PUBLIC glfw3)
+else()
+    target_link_libraries(builtin PUBLIC glfw)
+endif()
