@@ -179,7 +179,7 @@ namespace hex::plugin::builtin {
                 };
 
                 PopupUnsavedChanges::open("hex.builtin.popup.unsaved_changes.desc"_lang, dirtyStates,
-                    [&dirtyStates]{
+                    [dirtyStates]{
                         // Save data: write file data to disk for each dirty provider
                         for (const auto &entry : dirtyStates) {
                             if (entry.dataDirty && entry.provider->isSavable())
@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
                         if (imhexClosing)
                             ImHexApi::System::closeImHex(true);
                     },
-                    [&dirtyStates]{
+                    [dirtyStates]{
                         // Save data + project: write file data to disk, then persist metadata
                         for (const auto &entry : dirtyStates) {
                             if (entry.dataDirty && entry.provider->isSavable())
