@@ -38,22 +38,22 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginTable("##unsaved_providers", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
+                ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("Provider", ImGuiTableColumnFlags_WidthStretch, 0.6F);
                 ImGui::TableSetupColumn("hex.ui.common.data"_lang, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("hex.ui.common.data"_lang).x);
                 ImGui::TableSetupColumn("hex.ui.common.metadata"_lang, ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoClip, ImGui::CalcTextSize("hex.ui.common.metadata"_lang).x);
-                ImGui::TableHeadersRow();
 
-                // Hover tooltip for Data column header
-                if (ImGui::TableGetColumnCount() > 1) {
-                    ImGui::TableSetColumnIndex(1);
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", "hex.ui.common.data.tooltip"_lang.get());
-                }
-                // Hover tooltip for Project data column header
-                if (ImGui::TableGetColumnCount() > 2) {
-                    ImGui::TableSetColumnIndex(2);
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", "hex.ui.common.metadata.tooltip"_lang.get());
+                // Manually render header row so IsItemHovered works on each cell
+                ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+                for (int col = 0; col < ImGui::TableGetColumnCount(); col++) {
+                    ImGui::TableNextColumn();
+                    ImGui::TableHeader(ImGui::TableGetColumnName(col));
+                    if (ImGui::IsItemHovered()) {
+                        if (col == 1)
+                            ImGui::SetTooltip("%s", "hex.ui.common.data.tooltip"_lang.get());
+                        else if (col == 2)
+                            ImGui::SetTooltip("%s", "hex.ui.common.metadata.tooltip"_lang.get());
+                    }
                 }
 
                 for (const auto &entry : m_providers) {
