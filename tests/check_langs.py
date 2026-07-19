@@ -1,13 +1,25 @@
 #!/usr/bin/env python3
+"""Check for unused and non-existent language keys across the codebase.
+
+- Every string in C/C++ source must have a matching key in an en_US.json file.
+- Every key in an en_US.json file must be referenced somewhere in C/C++ source.
+
+Usage:
+    python check_langs.py [--unused]
+
+Exit code 1 on any mismatch."""
 import json
 import re
 import os
 import sys
+from collections.abc import Generator
 
-SHOW_UNUSED_LANGS = "--unused" in sys.argv
+CHECK_UNUSED_LANGS = "--unused" in sys.argv
 
-# use a regex on code to get all "hex.lang.id"_lang occurences
-def get_lang_occurrences_in_code(path):
+
+def find_lang_keys_in_source(path: str) -> Generator[tuple[str, int, str], None, None]:
+    """Walk all C/C++ files under path and yield (filepath, line_number, key)
+    for every quoted string matching "hex.<identifier>"."""
     for dir, _, files in os.walk(path):
         for file in files:
 
@@ -18,11 +30,13 @@ def get_lang_occurrences_in_code(path):
 
             with open(filepath, encoding="utf8") as file:
                 for line_num, line in enumerate(file):
-                    for m in re.finditer('"([^"]*?)"_lang', line):
+                    for m in re.finditer(r'"(hex\.[a-zA-Z0-9_.]+)"', line):
                         yield (filepath, line_num+1, m.group(1))
 
-# Get langs in a specific json file
-def get_langs(filepath) -> list[str]:
+
+def load_json_lang_keys(filepath: str | None) -> list[str]:
+    """Return the list of top-level keys from a lang JSON file, or [] if
+    the file doesn't exist."""
     if filepath == None:
         return []
     elif not os.path.exists(filepath):
@@ -38,14 +52,23 @@ def get_langs(filepath) -> list[str]:
 
         return existing_langs
 
-def check_langs(code_path, bonus_langs, specific_langs_path):
+
+def check_plugin_langs(code_path: str, bonus_langs: list[str], specific_langs_path: str | None) -> bool:
+    """For a single plugin (or main): verify every "hex.*" string found in
+    source has a matching JSON key, and report keys in the JSON that aren't
+    referenced in code (when --unused is set)."""
     print(f"--- Checking langs at {code_path}")
- 
-    specific_langs = get_langs(specific_langs_path)
+
+    specific_langs = load_json_lang_keys(specific_langs_path)
     unused_langs = specific_langs.copy()
     ret = True
 
-    for filepath, line, match in get_lang_occurrences_in_code(code_path):
+    for lang in specific_langs:
+        if not lang.startswith("hex."):
+            ret = False
+            print(f"Problem: Lang '{lang}' in {specific_langs_path} doesn't start with 'hex.'")
+
+    for filepath, line, match in find_lang_keys_in_source(code_path):
         try:
             unused_langs.remove(match)
         except ValueError:
@@ -54,14 +77,19 @@ def check_langs(code_path, bonus_langs, specific_langs_path):
         if not match in bonus_langs + specific_langs:
             ret = False
             print(f"Problem: Lang '{match}' at {filepath}:{line} not found")
-    
-    if SHOW_UNUSED_LANGS and len(unused_langs) > 0:
+
+
+    if CHECK_UNUSED_LANGS and len(unused_langs) > 0:
+        ret = False
         print(f"Unused langs in {specific_langs_path}:")
         for unused_lang in unused_langs:
             print(unused_lang)
     return ret
 
-def check_languages_exist(languages_file_path: str):
+
+def verify_language_files_exist(languages_file_path: str) -> bool:
+    """Check that a plugin's languages.json references language files that
+    actually exist on disk."""
     languages_folder = os.path.dirname(languages_file_path)
     if not os.path.exists(languages_folder):
         return True
@@ -87,10 +115,10 @@ def check_languages_exist(languages_file_path: str):
             return False
 
 
-ui_langs = get_langs("./plugins/ui/romfs/lang/en_US.json")
+ui_langs = load_json_lang_keys("./plugins/ui/romfs/lang/en_US.json")
 
 exit_ok = True
-exit_ok &= check_langs("./main", ui_langs, None)
+exit_ok &= check_plugin_langs("./main", ui_langs, None)
 
 for plugin in os.listdir("./plugins"):
     if plugin == "ui": continue
@@ -98,7 +126,7 @@ for plugin in os.listdir("./plugins"):
     path = f"./plugins/{plugin}"
     if not os.path.isdir(path): continue
 
-    exit_ok &= check_langs(path, ui_langs, f"./plugins/{plugin}/romfs/lang/en_US.json")
-    exit_ok &= check_languages_exist(f"./plugins/{plugin}/romfs/lang/languages.json")
+    exit_ok &= check_plugin_langs(path, ui_langs, f"./plugins/{plugin}/romfs/lang/en_US.json")
+    exit_ok &= verify_language_files_exist(f"./plugins/{plugin}/romfs/lang/languages.json")
 
 sys.exit(0 if exit_ok else 1)
