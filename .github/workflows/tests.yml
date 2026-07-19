@@ -112,4 +112,4 @@ jobs:
 
     - name: Check langs
       run:
-        python3 tests/check_langs.py
+        python3 tests/check_langs.py --nonexistent
