@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
                     dirtyStates.push_back({ .provider = provider, .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() });
             }
 
-            PopupUnsavedChanges::open("hex.builtin.popup.unsaved_changes.desc"_lang, std::move(dirtyStates),
+            PopupUnsavedChanges::open(std::move(dirtyStates),
                 [window] {
                     // Save data: write file data to disk for each dirty provider
                     for (const auto &provider : ImHexApi::Provider::getProviders()) {
@@ -178,7 +178,7 @@ namespace hex::plugin::builtin {
                     { .provider = const_cast<prv::Provider*>(provider), .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() }
                 };
 
-                PopupUnsavedChanges::open("hex.builtin.popup.unsaved_changes.desc"_lang, dirtyStates,
+                PopupUnsavedChanges::open(dirtyStates,
                     [dirtyStates]{
                         // Save data: write file data to disk for each dirty provider
                         for (const auto &entry : dirtyStates) {

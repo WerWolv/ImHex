@@ -6,7 +6,6 @@
 #include <hex/providers/provider.hpp>
 
 #include <functional>
-#include <string>
 #include <vector>
 
 namespace hex::plugin::builtin {
@@ -19,17 +18,16 @@ namespace hex::plugin::builtin {
 
     class PopupUnsavedChanges : public Popup<PopupUnsavedChanges> {
     public:
-        PopupUnsavedChanges(std::string message, std::vector<ProviderDirtyState> providers,
+        PopupUnsavedChanges(std::vector<ProviderDirtyState> providers,
                             std::function<void()> saveDataFunction, std::function<void()> saveProjectFunction,
                             std::function<void()> discardFunction, std::function<void()> cancelFunction)
                 : hex::Popup<PopupUnsavedChanges>("hex.ui.common.question", false),
-                  m_message(std::move(message)),
                   m_providers(std::move(providers)),
                   m_saveDataFunction(std::move(saveDataFunction)), m_saveProjectFunction(std::move(saveProjectFunction)),
                   m_discardFunction(std::move(discardFunction)), m_cancelFunction(std::move(cancelFunction)) { }
 
         void drawContent() override {
-            ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.popup.unsaved_changes.desc"_lang.get());
             ImGui::NewLine();
 
             bool anyDataDirty = false;
@@ -128,7 +126,6 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_message;
         std::vector<ProviderDirtyState> m_providers;
         std::function<void()> m_saveDataFunction, m_saveProjectFunction, m_discardFunction, m_cancelFunction;
     };
