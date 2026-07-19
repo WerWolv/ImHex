@@ -11,6 +11,8 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/providers/provider.hpp>
 
+#include <content/popups/popup_unsaved_changes.hpp>
+
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
 #include <wolv/net/socket_server.hpp>
@@ -81,10 +83,10 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && s_dataDirty) {
                     s_dataDirty = false;
 
-                    std::vector<std::tuple<prv::Provider *, bool, bool>> dirtyStates;
+                    std::vector<ProviderDirtyState> dirtyStates;
                     for (const auto &provider : ImHexApi::Provider::getProviders()) {
                         if (provider->isDataDirty() || provider->isMetadataDirty()) {
-                            dirtyStates.emplace_back(provider, provider->isDataDirty(), provider->isMetadataDirty());
+                            dirtyStates.push_back({ .provider = provider, .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() });
                         }
                     }
 
@@ -96,11 +98,11 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    for (const auto &[provider, wasDataDirty, wasMetadataDirty] : dirtyStates) {
-                        if (wasDataDirty)
-                            provider->markDataDirty();
-                        if (wasMetadataDirty)
-                            provider->markMetadataDirty();
+                    for (const auto &entry : dirtyStates) {
+                        if (entry.dataDirty)
+                            entry.provider->markDataDirty();
+                        if (entry.metadataDirty)
+                            entry.provider->markMetadataDirty();
                     }
                 }
             }
