@@ -33,8 +33,10 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             bool anyDataDirty = false;
+            bool anyMetadataDirty = false;
             for (const auto &entry : m_providers) {
                 if (entry.dataDirty) anyDataDirty = true;
+                if (entry.metadataDirty) anyMetadataDirty = true;
             }
 
             if (ImGui::BeginTable("##unsaved_providers", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
@@ -86,13 +88,15 @@ namespace hex::plugin::builtin {
             if (!anyDataDirty) ImGui::EndDisabled();
             ImGui::SameLine();
 
-            // Save project
+            // Save data & project
+            if (!anyMetadataDirty) ImGui::BeginDisabled();
             if (ImGui::Button("hex.ui.common.save.project"_lang, ImVec2(buttonWidth, 0))) {
                 m_saveProjectFunction();
                 this->close();
             }
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("%s", "hex.ui.common.metadata.tooltip"_lang.get());
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("%s", anyMetadataDirty ? "hex.ui.common.metadata.tooltip"_lang.get() : "hex.ui.common.metadata.disabled.tooltip"_lang.get());
+            if (!anyMetadataDirty) ImGui::EndDisabled();
             ImGui::SameLine();
 
             // Discard

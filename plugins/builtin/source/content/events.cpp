@@ -92,10 +92,16 @@ namespace hex::plugin::builtin {
                     glfwSetWindowShouldClose(window, GLFW_TRUE);
                 },
                 [window] {
-                    // Save project: persist metadata (patterns, bookmarks, etc.), then close
-                    if (ImHexApi::Provider::isMetadataDirty())
-                        ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+                    // Save providers data
+                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                        if (provider->isDataDirty() && provider->isSavable())
+                            provider->save();
+                    }
 
+                    // Save project metadata
+                    ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+
+                    // Close
                     imhexClosing = true;
                     for (const auto &provider : ImHexApi::Provider::getProviders())
                         ImHexApi::Provider::remove(provider, true);
@@ -188,7 +194,12 @@ namespace hex::plugin::builtin {
                             ImHexApi::System::closeImHex(true);
                     },
                     [&dirtyStates]{
-                        // Save project: persist metadata (patterns, bookmarks, etc.)
+                        // Save data + project: write file data to disk, then persist metadata
+                        for (const auto &entry : dirtyStates) {
+                            if (entry.dataDirty && entry.provider->isSavable())
+                                entry.provider->save();
+                        }
+
                         bool saved = true;
                         bool anyMetadataDirty = false;
                         for (const auto &entry : dirtyStates) {
