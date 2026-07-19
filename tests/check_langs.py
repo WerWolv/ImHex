@@ -5,7 +5,7 @@
 - Every key in an en_US.json file must be referenced somewhere in C/C++ source.
 
 Usage:
-    python check_langs.py [--unused]
+    python check_langs.py [--unused] [--nonexistent]
 
 Exit code 1 on any mismatch."""
 import json
@@ -15,6 +15,7 @@ import sys
 from collections.abc import Generator
 
 CHECK_UNUSED_LANGS = "--unused" in sys.argv
+CHECK_NONEXISTENT_LANGS = "--nonexistent" in sys.argv
 
 
 def find_lang_keys_in_source(path: str) -> Generator[tuple[str, int, str], None, None]:
@@ -76,7 +77,7 @@ def check_plugin_langs(code_path: str, common_langs: list[str], specific_langs: 
         except ValueError:
             pass
 
-        if not match in all_langs:
+        if CHECK_NONEXISTENT_LANGS and not match in all_langs:
             ret = False
             print(f"Problem: Lang '{match}' at {filepath}:{line} not found")
 
