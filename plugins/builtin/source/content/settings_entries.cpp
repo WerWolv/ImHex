@@ -334,8 +334,14 @@ for (const auto &path : m_paths) {
                 if (data.empty())
                     return;
 
-                for (const auto &key : data.get<std::vector<u32>>())
-                    keys.insert(Key(scanCodeToKey(key)));
+                if (data.is_object() && data.value("version", 0) == 2) {
+                    for (const auto &key : data.at("keys").get<std::vector<u32>>())
+                        keys.insert(Key(Keys(key)));
+                } else {
+                    // Shortcut settings written before the SDL migration contain GLFW key values.
+                    for (const auto &key : data.get<std::vector<u32>>())
+                        keys.insert(Key(scanCodeToKey(key)));
+                }
 
                 if (keys.empty())
                     return;
@@ -355,10 +361,10 @@ for (const auto &path : m_paths) {
 
                 for (const auto &key : m_shortcut.getKeys()) {
                     if (key != CurrentView)
-                        keys.push_back(keyToScanCode(Keys(key.getKeyCode())));
+                        keys.push_back(key.getKeyCode());
                 }
 
-                return keys;
+                return nlohmann::json { { "version", 2 }, { "keys", keys } };
             }
 
             void reset() {

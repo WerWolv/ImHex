@@ -19,7 +19,8 @@ option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"            
 option(IMHEX_ENABLE_CXX_MODULES         "Enable C++20 Module compilation. Testing only!"                                                OFF)
 option(IMHEX_ENABLE_CPPCHECK            "Enable cppcheck static analysis"                                                               OFF)
 option(IMHEX_BUNDLE_PLUGIN_SDK          "Enable bundling of Plugin SDK into install package"                                            ON )
-set   (IMHEX_RENDERING_BACKEND          "GLFW" CACHE STRING "Set the rendering backend ImHex should use (GLFW or SDL)"                     )
+set   (IMHEX_RENDERING_BACKEND          "GLFW" CACHE STRING "Set the rendering backend ImHex should use (GLFW or SDL3)"                    )
+set_property(CACHE IMHEX_RENDERING_BACKEND PROPERTY STRINGS GLFW SDL3)
 option(IMHEX_ENABLE_UPDATER             "Enable automatic updater"                                                                      ON )
 ## Testing
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                                    ON )
@@ -39,6 +40,20 @@ set   (IMHEX_EXCLUDE_PLUGINS            "" CACHE STRING "Semicolon-separated lis
 
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
+
+if (IMHEX_RENDERING_BACKEND STREQUAL "GLFW")
+    set(IMHEX_VCPKG_BACKEND_FEATURE "glfw")
+    set(IMHEX_DEBIAN_WINDOWING_DEPENDENCY "libglfw3 | libglfw3-wayland")
+elseif (IMHEX_RENDERING_BACKEND STREQUAL "SDL3")
+    set(IMHEX_VCPKG_BACKEND_FEATURE "sdl3")
+    set(IMHEX_DEBIAN_WINDOWING_DEPENDENCY "libsdl3-0")
+else()
+    message(FATAL_ERROR "Invalid rendering backend: ${IMHEX_RENDERING_BACKEND}")
+endif()
+
+# The vcpkg toolchain consumes these variables during the first project() call.
+set(VCPKG_MANIFEST_NO_DEFAULT_FEATURES ON CACHE BOOL "Select ImHex's vcpkg backend explicitly" FORCE)
+set(VCPKG_MANIFEST_FEATURES "${IMHEX_VCPKG_BACKEND_FEATURE}" CACHE STRING "ImHex vcpkg manifest features" FORCE)
 
 # Optional IDE support
 include("${IMHEX_BASE_FOLDER}/cmake/ide_helpers.cmake")

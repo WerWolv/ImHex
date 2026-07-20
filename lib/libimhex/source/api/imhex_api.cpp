@@ -30,7 +30,6 @@
 #include <imgui_internal.h>
 #include <set>
 #include <algorithm>
-#include <GLFW/glfw3.h>
 #include <hex/api_urls.hpp>
 #include <hex/helpers/http_requests.hpp>
 
@@ -533,9 +532,17 @@ namespace hex {
                 s_mainDockSpaceId = id;
             }
 
-            static GLFWwindow *s_mainWindowHandle;
-            void setMainWindowHandle(GLFWwindow *window) {
-                s_mainWindowHandle = window;
+            static WindowBackend *s_windowBackend = nullptr;
+            void setWindowBackend(WindowBackend *backend) {
+                s_windowBackend = backend;
+            }
+
+            WindowBackend* getWindowBackend() {
+                return s_windowBackend;
+            }
+
+            NativeWindow getNativeWindow() {
+                return s_windowBackend != nullptr ? s_windowBackend->getNativeWindow() : NativeWindow();
             }
 
             static bool s_mainWindowFocused = false;
@@ -676,17 +683,7 @@ namespace hex {
             #elif defined(OS_MACOS)
                 return ::getBackingScaleFactor();
             #elif defined(OS_LINUX)
-                const auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
-                if (!sessionType.has_value() || sessionType == "x11")
-                    return 1.0F;
-                else {
-                    int windowW, windowH;
-                    int displayW, displayH;
-                    glfwGetWindowSize(getMainWindowHandle(), &windowW, &windowH);
-                    glfwGetFramebufferSize(getMainWindowHandle(), &displayW, &displayH);
-
-                    return (windowW > 0) ? float(displayW) / windowW : 1.0f;
-                }
+                return impl::s_windowBackend != nullptr ? impl::s_windowBackend->getBackingScaleFactor() : 1.0F;
             #elif defined(OS_WEB)
                 return emscripten_get_device_pixel_ratio();
             #else
@@ -706,13 +703,22 @@ namespace hex {
             return impl::s_mainWindowSize;
         }
 
+        InitialWindowProperties getMainWindowProperties() {
+            if (impl::s_windowBackend != nullptr)
+                return impl::s_windowBackend->getWindowProperties();
+
+            return {
+                .x = i32(impl::s_mainWindowPos.x),
+                .y = i32(impl::s_mainWindowPos.y),
+                .width = u32(impl::s_mainWindowSize.x),
+                .height = u32(impl::s_mainWindowSize.y),
+                .maximized = false,
+            };
+        }
+
 
         ImGuiID getMainDockSpaceId() {
             return impl::s_mainDockSpaceId;
-        }
-
-        GLFWwindow* getMainWindowHandle() {
-            return impl::s_mainWindowHandle;
         }
 
         bool isMainWindowFocused() {
@@ -1101,8 +1107,85 @@ namespace hex {
         }
 
         void setWindowResizable(bool resizable) {
-            glfwSetWindowAttrib(impl::s_mainWindowHandle, GLFW_RESIZABLE, int(resizable));
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->setResizable(resizable);
             impl::s_windowResizable = resizable;
+        }
+
+        void resizeMainWindow(i32 width, i32 height) {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->setSize(width, height);
+        }
+
+        void setMainWindowTitle(const std::string &title) {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->setTitle(title);
+        }
+
+        void setMainWindowAlwaysOnTop(bool enabled) {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->setAlwaysOnTop(enabled);
+        }
+
+        bool isMainWindowAlwaysOnTop() {
+            return impl::s_windowBackend != nullptr && impl::s_windowBackend->isAlwaysOnTop();
+        }
+
+        void setMainWindowFullscreen(bool enabled) {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->setFullscreen(enabled);
+        }
+
+        bool isMainWindowFullscreen() {
+            return impl::s_windowBackend != nullptr && impl::s_windowBackend->isFullscreen();
+        }
+
+        void minimizeMainWindow() {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->minimize();
+        }
+
+        void maximizeMainWindow() {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->maximize();
+        }
+
+        void restoreMainWindow() {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->restore();
+        }
+
+        bool isMainWindowMaximized() {
+            return impl::s_windowBackend != nullptr && impl::s_windowBackend->isMaximized();
+        }
+
+        void focusMainWindow() {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->focus();
+        }
+
+        void requestMainWindowAttention() {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->requestAttention();
+        }
+
+        void cancelMainWindowClose() {
+            if (impl::s_windowBackend != nullptr)
+                impl::s_windowBackend->setShouldClose(false);
+        }
+
+        void handleMainWindowTitlebarDoubleClick() {
+            #if defined(OS_MACOS)
+                macosHandleTitlebarDoubleClickGesture(impl::getNativeWindow().handle);
+            #endif
+        }
+
+        void setMainWindowMovable(bool movable) {
+            #if defined(OS_MACOS)
+                macosSetWindowMovable(impl::getNativeWindow().handle, movable);
+            #else
+                std::ignore = movable;
+            #endif
         }
 
         void unlockFrameRate() {

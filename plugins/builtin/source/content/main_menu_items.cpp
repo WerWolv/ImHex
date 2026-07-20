@@ -33,7 +33,6 @@
 #include <romfs/romfs.hpp>
 #include <hex/helpers/menu_items.hpp>
 
-#include <GLFW/glfw3.h>
 #include <popups/popup_question.hpp>
 
 using namespace std::literals::string_literals;
@@ -528,36 +527,14 @@ namespace hex::plugin::builtin {
 
         #if !defined(OS_WEB)
             ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.always_on_top" }, ICON_VS_PINNED, 1000, Keys::F10 + AllowWhileTyping, [] {
-                static bool state = false;
-
-                state = !state;
-                glfwSetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING, state);
-            }, []{ return true; }, []{ return glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING); });
+                ImHexApi::System::setMainWindowAlwaysOnTop(!ImHexApi::System::isMainWindowAlwaysOnTop());
+            }, []{ return true; }, []{ return ImHexApi::System::isMainWindowAlwaysOnTop(); });
         #endif
 
         #if !defined(OS_MACOS) && !defined(OS_WEB)
             ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.fullscreen" }, ICON_VS_SCREEN_FULL, 2000, Keys::F11 + AllowWhileTyping, [] {
-                static bool state = false;
-                static ImVec2 position, size;
-
-                state = !state;
-
-
-                const auto window = ImHexApi::System::getMainWindowHandle();
-                if (state) {
-                    position = ImHexApi::System::getMainWindowPosition();
-                    size     = ImHexApi::System::getMainWindowSize();
-
-                    const auto monitor = glfwGetPrimaryMonitor();
-                    const auto videoMode = glfwGetVideoMode(monitor);
-
-                    glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
-                } else {
-                    glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
-                    glfwSetWindowAttrib(window, GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GLFW_FALSE : GLFW_TRUE);
-                }
-
-            }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
+                ImHexApi::System::setMainWindowFullscreen(!ImHexApi::System::isMainWindowFullscreen());
+            }, []{ return true; }, []{ return ImHexApi::System::isMainWindowFullscreen(); });
         #endif
 
         #if !defined(OS_WEB)

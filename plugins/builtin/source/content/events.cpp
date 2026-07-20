@@ -33,7 +33,6 @@
 #include <content/popups/popup_unsaved_changes.hpp>
 #include <content/popups/popup_crash_recovered.hpp>
 
-#include <GLFW/glfw3.h>
 #include <hex/api/theme_manager.hpp>
 #include <hex/helpers/default_paths.hpp>
 
@@ -57,8 +56,8 @@ namespace hex::plugin::builtin {
 
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
 
-                glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
-                glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+                ImHexApi::System::requestMainWindowAttention();
+                ImHexApi::System::focusMainWindow();
             }
         });
     }
@@ -77,10 +76,10 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventWindowClosing::subscribe([](GLFWwindow *window) {
+        EventWindowClosing::subscribe([] {
             imhexClosing = false;
             if (ImHexApi::Provider::isDirty() && !imhexClosing) {
-                glfwSetWindowShouldClose(window, GLFW_FALSE);
+                ImHexApi::System::cancelMainWindowClose();
                 ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
                     [] {
                         imhexClosing = true;
@@ -90,7 +89,7 @@ namespace hex::plugin::builtin {
                     [] { }
                 );
             } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
-                glfwSetWindowShouldClose(window, GLFW_FALSE);
+                ImHexApi::System::cancelMainWindowClose();
                 TaskManager::doLater([] {
                     for (auto &task : TaskManager::getRunningTasks())
                         task->interrupt();
@@ -283,22 +282,19 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventWindowDeinitializing::subscribe([](GLFWwindow *window) {
+        EventWindowDeinitializing::subscribe([] {
             WorkspaceManager::exportToFile();
             if (auto workspace = WorkspaceManager::getCurrentWorkspace(); workspace != WorkspaceManager::getWorkspaces().end())
                 ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
 
             {
-                int x = 0, y = 0, width = 0, height = 0, maximized = 0;
-                glfwGetWindowPos(window, &x, &y);
-                glfwGetWindowSize(window, &width, &height);
-                maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+                const auto properties = ImHexApi::System::getMainWindowProperties();
 
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", properties.x);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", properties.y);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", properties.width);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", properties.height);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", properties.maximized);
             }
         });
 

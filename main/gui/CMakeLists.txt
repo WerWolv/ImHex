@@ -27,6 +27,14 @@ add_executable(main ${APPLICATION_TYPE}
     ${IMHEX_ICON}
 )
 
+if (IMHEX_RENDERING_BACKEND STREQUAL "GLFW")
+    target_sources(main PRIVATE source/window/backend_glfw.cpp)
+elseif (IMHEX_RENDERING_BACKEND STREQUAL "SDL3")
+    target_sources(main PRIVATE source/window/backend_sdl3.cpp)
+else()
+    message(FATAL_ERROR "Invalid window backend: ${IMHEX_RENDERING_BACKEND}")
+endif()
+
 target_include_directories(main PUBLIC include)
 addCppCheck(main)
 setupCompilerFlags(main)
@@ -37,9 +45,14 @@ set(LIBROMFS_PROJECT_NAME imhex)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/main/gui/libromfs EXCLUDE_FROM_ALL)
 add_dependencies(imhex_all main)
 
-if (EMSCRIPTEN)
+if (EMSCRIPTEN AND IMHEX_RENDERING_BACKEND STREQUAL "GLFW")
     target_compile_options(main PRIVATE --use-port=contrib.glfw3)
     target_link_options(main PRIVATE --use-port=contrib.glfw3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1 -Wno-pthreads-mem-growth)
+elseif (EMSCRIPTEN)
+    target_link_options(main PRIVATE -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1 -Wno-pthreads-mem-growth)
+endif()
+
+if (EMSCRIPTEN)
     target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
     target_link_options(main PRIVATE -sGL_UNSAFE_OPTS=0)
@@ -61,7 +74,7 @@ set_target_properties(main PROPERTIES
 
 target_compile_definitions(main PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv ${LIBBACKTRACE_LIBRARIES})
+target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv imgui_platform_backend ${LIBBACKTRACE_LIBRARIES})
 if (WIN32)
     target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib Winmm.lib)
 

@@ -3,7 +3,6 @@
 #include <hex/api/event_manager.hpp>
 
 /* Forward declarations */
-struct GLFWwindow;
 using ImGuiID = unsigned int;
 namespace hex { class View; }
 
@@ -44,8 +43,7 @@ namespace hex {
     /**
      * @brief Signals the focus of the ImHex main window.
      *
-     * This is directly tied as a GLFW window focus callback, and will be called accordingly when GLFW detects
-     * a change in focus.
+     * This is called when the platform window backend detects a change in focus.
      *
      * @param isFocused true if the window is focused
      */
@@ -57,18 +55,16 @@ namespace hex {
      * Allows reactive clean up of running tasks, and prevents ImHex from closing
      * by displaying an exit confirmation popup.
      *
-     * @param window The window reference
      */
-    EVENT_DEF(EventWindowClosing, GLFWwindow*);
+    EVENT_DEF(EventWindowClosing);
 
     /**
      * @brief Informs that the main window is deinitializing
      *
      * Allows for lifecycle cleanup before ImHex shutdown.
      *
-     * @param window The window reference
      */
-    EVENT_DEF(EventWindowDeinitializing, GLFWwindow*);
+    EVENT_DEF(EventWindowDeinitializing);
 
     /**
      * @brief Signals a theme change in the host OS

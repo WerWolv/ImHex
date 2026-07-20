@@ -14,6 +14,10 @@
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/auto_reset.hpp>
 
+#if defined(OS_MACOS)
+    #include <hex/helpers/utils_macos.hpp>
+#endif
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -23,8 +27,6 @@
 
 #include <romfs/romfs.hpp>
 #include <wolv/utils/guards.hpp>
-
-#include <GLFW/glfw3.h>
 
 #include <random>
 #include <unordered_set>
@@ -218,22 +220,21 @@ namespace hex::plugin::builtin {
             s_searchBarPosition = searchBoxPos.x;
 
             // Custom titlebar buttons implementation for borderless window mode
-            auto window = ImHexApi::System::getMainWindowHandle();
             bool titleBarButtonsVisible = false;
-            if (ImHexApi::System::isBorderlessWindowModeEnabled() && glfwGetWindowMonitor(window) == nullptr) {
+            if (ImHexApi::System::isBorderlessWindowModeEnabled() && !ImHexApi::System::isMainWindowFullscreen()) {
                 #if defined(OS_WINDOWS)
                     titleBarButtonsVisible = true;
 
                     // Draw minimize, restore and maximize buttons
                     ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
                     if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
-                        glfwIconifyWindow(window);
-                    if (glfwGetWindowAttrib(window, GLFW_MAXIMIZED)) {
+                        ImHexApi::System::minimizeMainWindow();
+                    if (ImHexApi::System::isMainWindowMaximized()) {
                         if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
-                            glfwRestoreWindow(window);
+                            ImHexApi::System::restoreMainWindow();
                     } else {
                         if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
-                            glfwMaximizeWindow(window);
+                            ImHexApi::System::maximizeMainWindow();
                     }
 
                     ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
@@ -497,7 +498,6 @@ namespace hex::plugin::builtin {
                 ON_SCOPE_EXIT { ImGui::PopStyleVar(); };
             #endif
 
-            auto window = ImHexApi::System::getMainWindowHandle();
             menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
                 drawTitleBarBackDrop();
@@ -510,22 +510,22 @@ namespace hex::plugin::builtin {
                         if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())
                             ImGui::OpenPopup("WindowingMenu");
                     #elif defined(OS_MACOS)
-                        if (!isMacosFullScreenModeEnabled(window))
+                        if (!isMacosFullScreenModeEnabled(ImHexApi::System::impl::getNativeWindow().handle))
                             ImGui::SetCursorPosX(80_scaled);
                     #endif
                 }
 
                 if (ImGui::BeginPopup("WindowingMenu")) {
-                    bool maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+                    bool maximized = ImHexApi::System::isMainWindowMaximized();
 
                     ImGui::BeginDisabled(!maximized);
-                    if (ImGui::MenuItemEx("Restore", ICON_VS_CHROME_RESTORE)) glfwRestoreWindow(window);
+                    if (ImGui::MenuItemEx("Restore", ICON_VS_CHROME_RESTORE)) ImHexApi::System::restoreMainWindow();
                     ImGui::EndDisabled();
 
-                    if (ImGui::MenuItemEx("Minimize", ICON_VS_CHROME_MINIMIZE)) glfwIconifyWindow(window);
+                    if (ImGui::MenuItemEx("Minimize", ICON_VS_CHROME_MINIMIZE)) ImHexApi::System::minimizeMainWindow();
 
                     ImGui::BeginDisabled(maximized);
-                    if (ImGui::MenuItemEx("Maximize", ICON_VS_CHROME_MAXIMIZE)) glfwMaximizeWindow(window);
+                    if (ImGui::MenuItemEx("Maximize", ICON_VS_CHROME_MAXIMIZE)) ImHexApi::System::maximizeMainWindow();
                     ImGui::EndDisabled();
 
                     ImGui::Separator();
@@ -563,12 +563,12 @@ namespace hex::plugin::builtin {
                         if (!ImGui::IsAnyItemHovered()) {
                             const auto cursorPos = ImGui::GetCursorScreenPos();
                             if (ImGui::IsMouseHoveringRect(cursorPos, cursorPos + menuUnderlaySize) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-                                macosHandleTitlebarDoubleClickGesture(window);
+                                ImHexApi::System::handleMainWindowTitlebarDoubleClick();
                             }
 
-                            macosSetWindowMovable(window, true);
+                            ImHexApi::System::setMainWindowMovable(true);
                         } else {
-                            macosSetWindowMovable(window, false);
+                            ImHexApi::System::setMainWindowMovable(false);
 
                         }
                     }
@@ -741,17 +741,14 @@ namespace hex::plugin::builtin {
             s_windowTitle     = prefix + hex::limitStringLength(title, 32) + postfix;
             s_windowTitleFull = prefix + title + postfix;
 
-            auto window = ImHexApi::System::getMainWindowHandle();
-            if (window != nullptr) {
-                if (title != DefaultImHexTitle)
-                    title = std::string(DefaultImHexTitle) + " - " + title;
+            if (title != DefaultImHexTitle)
+                title = std::string(DefaultImHexTitle) + " - " + title;
 
-                title = wolv::util::replaceStrings(title, DefaultImHexTitle, s_applicationName);
+            title = wolv::util::replaceStrings(title, DefaultImHexTitle, s_applicationName);
 
-                TaskManager::doLater([window, title] {
-                    glfwSetWindowTitle(window, title.c_str());
-                });
-            }
+            TaskManager::doLater([title] {
+                ImHexApi::System::setMainWindowTitle(title);
+            });
         });
 
         EventProviderDirtied::subscribe([] {

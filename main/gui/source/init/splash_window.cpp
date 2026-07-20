@@ -1,5 +1,5 @@
-#include "window.hpp"
 #include "init/splash_window.hpp"
+#include "window_backend.hpp"
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/requests_lifecycle.hpp>
@@ -14,15 +14,12 @@
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <GLFW/glfw3.h>
 #include <opengl_support.h>
 
 #include <wolv/utils/guards.hpp>
 
 #include <future>
-#include <numeric>
 #include <random>
 #include <hex/api/task_manager.hpp>
 #include <nlohmann/json.hpp>
@@ -33,12 +30,7 @@ namespace hex::init {
     
     constexpr static auto WindowSize = ImVec2(640, 400);
 
-    static struct GlfwError {
-        int errorCode = 0;
-        std::string desc;
-    } s_lastGlfwError;
-
-    WindowSplash::WindowSplash() : m_window(nullptr) {
+    WindowSplash::WindowSplash() : m_backend(nullptr) {
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
             std::scoped_lock guard(m_progressMutex);
 
@@ -53,7 +45,7 @@ namespace hex::init {
             return;
         }
 
-        this->initGLFW();
+        this->initWindow();
         this->initImGui();
         this->loadAssets();
 
@@ -68,19 +60,7 @@ namespace hex::init {
             log::debug("OpenGL Version String: '{}'", glVersionString);
             log::debug("OpenGL Shading Language Version: '{}'", glShadingLanguageVersion);
 
-            #if defined(GLFW_ANY_PLATFORM)
-                log::debug("GLFW Backend: '{}'", [] {
-                    switch (glfwGetPlatform()) {
-                        case GLFW_PLATFORM_WIN32:       return "Win32";
-                        case GLFW_PLATFORM_COCOA:       return "Cocoa";
-                        case GLFW_PLATFORM_X11:         return "X11";
-                        case GLFW_PLATFORM_WAYLAND:     return "Wayland";
-                        case GLFW_PLATFORM_NULL:        return "null";
-                        case GLFW_PLATFORM_UNAVAILABLE: return "Unavailable";
-                        default: return "Unknown";
-                    }
-                }());
-            #endif
+            log::debug("Window Backend: '{}'", m_backend->getName());
 
             ImHexApi::System::impl::setGPUVendor(glVendorString);
             ImHexApi::System::impl::setGLRenderer(glRendererString);
@@ -106,7 +86,7 @@ namespace hex::init {
                 if (glVersion < MinGLVersion) {
                     showErrorMessageBox(fmt::format("ImHex requires at least OpenGL {} to run but your system seems to only support up to OpenGL {}!\n\nTry upgrading your GPU drivers or try one of the NoGPU releases to use software rendering instead.", MinGLVersion.get(false), glVersion.get()));
                     this->exitImGui();
-                    this->exitGLFW();
+                    this->exitWindow();
                     std::exit(EXIT_FAILURE);
                 }
             }
@@ -114,47 +94,33 @@ namespace hex::init {
     }
 
     WindowSplash::~WindowSplash() {
-        if (m_window == nullptr) {
+        if (m_backend == nullptr) {
             ImGui::DestroyContext();
             return;
         }
-        // Clear textures before deinitializing glfw
+        // Clear textures before deinitializing the window backend
         m_splashBackgroundTexture.reset();
         m_splashTextTexture.reset();
 
         this->exitImGui();
-        this->exitGLFW();
+        this->exitWindow();
     }
 
 
-    static void centerWindow(GLFWwindow *window) {
+    static void centerWindow(ImHexApi::System::WindowBackend &backend) {
         // Wayland does not allow applications to set the position of their windows
         // so we skip centering the splash screen to avoid error message spamming
-        #if (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 + GLFW_VERSION_REVISION) >= 3400
-            if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND)
-                return;
-        #endif
-
-        // Get the primary monitor
-        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-        if (!monitor)
+        if (backend.isWayland())
             return;
 
-        // Get information about the monitor
-        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        if (!mode)
+        const auto monitor = backend.getPrimaryMonitor();
+        if (!monitor.has_value())
             return;
 
-        // Get the position of the monitor's viewport on the virtual screen
-        int monitorX, monitorY;
-        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
-
-        // Get the window size
-        int windowWidth, windowHeight;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-
-        // Center the splash screen on the monitor
-        glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+        const auto properties = backend.getWindowProperties();
+        backend.setPosition(
+            monitor->x + (monitor->width - static_cast<i32>(properties.width)) / 2,
+            monitor->y + (monitor->height - static_cast<i32>(properties.height)) / 2);
     }
 
     static ImColor getHighlightColor(u32 index) {
@@ -318,17 +284,17 @@ namespace hex::init {
 
 
     void WindowSplash::fullFrame() {
-        if (m_window == nullptr)
+        if (m_backend == nullptr)
             return;
 
-        glfwSetWindowSize(m_window, WindowSize.x, WindowSize.y);
-        centerWindow(m_window);
+        m_backend->setSize(static_cast<i32>(WindowSize.x), static_cast<i32>(WindowSize.y));
+        centerWindow(*m_backend);
 
-        glfwPollEvents();
+        m_backend->pollEvents();
 
         // Start a new ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        m_backend->newImGuiFrame();
         ImGui::NewFrame();
 
         // Draw the splash screen background
@@ -429,14 +395,13 @@ namespace hex::init {
 
         // Render the frame
         ImGui::Render();
-        int displayWidth, displayHeight;
-        glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+        const auto [displayWidth, displayHeight] = m_backend->getFramebufferSize();
         glViewport(0, 0, displayWidth, displayHeight);
         glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(m_window);
+        m_backend->swapBuffers();
     }
 
     std::optional<bool> WindowSplash::loop() {
@@ -457,90 +422,74 @@ namespace hex::init {
         return std::nullopt;
     }
 
-    void WindowSplash::initGLFW() {
-        glfwSetErrorCallback([](int errorCode, const char *desc) {
-            bool isWaylandError = errorCode == GLFW_PLATFORM_ERROR;
-            #if defined(GLFW_FEATURE_UNAVAILABLE)
-                isWaylandError = isWaylandError || (errorCode == GLFW_FEATURE_UNAVAILABLE);
-            #endif
-            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+    void WindowSplash::initWindow() {
+        ImHexApi::System::WindowBackend::Config config {
+            .title = "Starting ImHex...",
+            .width = static_cast<i32>(WindowSize.x),
+            .height = static_cast<i32>(WindowSize.y),
+            .glMajor = 3,
+            .glMinor = 1,
+            .coreProfile = false,
+            .forwardCompatible = false,
+            .resizable = false,
+            .decorated = false,
+            .transparent = true,
+            .visible = true,
+            .maximized = false,
+            .highPixelDensity = true,
+            .scaleToMonitor = true,
+            .applicationId = "imhex",
+            .webCanvasSelector = "#canvas",
+            .swapInterval = 1,
+        };
 
-            if (isWaylandError) {
-                // Ignore error spam caused by Wayland not supporting moving or resizing
-                // windows or querying their position and size.
-                return;
-            }
-
-            s_lastGlfwError.errorCode = errorCode;
-            s_lastGlfwError.desc = std::string(desc);
-            log::error("GLFW Error [{:05X}] : {}", errorCode, desc);
-        });
-
-    glfwDefaultWindowHints();
-
-	#if defined(OS_LINUX)
-        #if defined(GLFW_WAYLAND_APP_ID)
-	        glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
+        #if defined(OS_MACOS)
+            config.glMinor = 2;
+            config.highPixelDensity = false;
         #endif
 
-        #if defined(GLFW_SCALE_FRAMEBUFFER)
-            glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
-        #endif
+        m_backend = createWindowBackend();
+        ImHexApi::System::WindowBackend::Callbacks callbacks {
+            .moved = [](i32, i32) { },
+            .resized = [](i32, i32) { },
+            .framebufferResized = [](i32, i32) { },
+            .focused = [](bool) { },
+            .keyPressed = [](Keys) { },
+            .inputActivity = [] { },
+            .closeRequested = [] { },
+            .fileDropped = [](const std::fs::path &) { },
+            .refreshRequested = [] { },
+        };
 
-        glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-	#elif defined(OS_MACOS)
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-
-        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
-        glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
-    #endif
-
-        // Make splash screen non-resizable, undecorated and transparent
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-        glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-
-        // Create the splash screen window
-        m_window = glfwCreateWindow(WindowSize.x, WindowSize.y, "Starting ImHex...", nullptr, nullptr);
-        if (m_window == nullptr) {
-            hex::showErrorMessageBox(fmt::format(
-                "Failed to create GLFW window: [{}] {}.\n"
+        if (m_backend == nullptr || !m_backend->create(config, std::move(callbacks))) {
+            hex::showErrorMessageBox(
+                "Failed to create a window using the selected window backend.\n"
                 "You may not have a renderer available.\n"
                 "The most common cause of this is using a virtual machine\n"
-                "You may want to try a release artifact ending with 'NoGPU'"
-                , s_lastGlfwError.errorCode, s_lastGlfwError.desc));
+                "You may want to try a release artifact ending with 'NoGPU'");
             std::exit(EXIT_FAILURE);
         }
 
-        ImHexApi::System::impl::setMainWindowHandle(m_window);
-
         // Force window to be fully opaque by default
-        glfwSetWindowOpacity(m_window, 1.0F);
+        m_backend->setOpacity(1.0F);
 
         // Calculate native scale factor for hidpi displays
         {
-            float xScale = 0, yScale = 0;
-            glfwGetWindowContentScale(m_window, &xScale, &yScale);
-
-            auto meanScale = std::midpoint(xScale, yScale);
-            if (meanScale <= 0.0F)
-                meanScale = 1.0F;
+            auto scale = m_backend->getContentScale();
+            if (scale <= 0.0F)
+                scale = 1.0F;
 
             #if !defined(OS_LINUX) && !defined(OS_WEB)
-                meanScale /= hex::ImHexApi::System::getBackingScaleFactor();
+                scale /= m_backend->getBackingScaleFactor();
             #endif
 
-            ImHexApi::System::impl::setGlobalScale(meanScale);
-            ImHexApi::System::impl::setNativeScale(meanScale);
+            ImHexApi::System::impl::setGlobalScale(scale);
+            ImHexApi::System::impl::setNativeScale(scale);
 
-            log::info("Native scaling set to: {:.1f}", meanScale);
+            log::info("Native scaling set to: {:.1f}", scale);
         }
 
-        glfwMakeContextCurrent(m_window);
-        glfwSwapInterval(1);
+        m_backend->makeContextCurrent();
     }
 
     void WindowSplash::initImGui() {
@@ -549,13 +498,15 @@ namespace hex::init {
         GImGui = ImGui::CreateContext();
         ImGui::StyleColorsDark();
 
-        ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+        if (!m_backend->initializeImGui()) {
+            log::fatal("Failed to initialize ImGui for the selected window backend!");
+            std::abort();
+        }
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
         #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
-            ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif
@@ -628,13 +579,13 @@ namespace hex::init {
         m_tasksSucceeded = processTasksAsync();
     }
 
-    void WindowSplash::exitGLFW() const {
-        glfwDestroyWindow(m_window);
+    void WindowSplash::exitWindow() {
+        m_backend->destroy();
     }
 
     void WindowSplash::exitImGui() const {
         ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+        m_backend->shutdownImGui();
         ImGui::DestroyContext();
     }
 

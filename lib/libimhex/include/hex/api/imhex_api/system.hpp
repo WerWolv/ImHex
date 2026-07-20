@@ -4,20 +4,20 @@
 
 #include <hex/helpers/semantic_version.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/keys.hpp>
 
 #include <chrono>
 #include <functional>
 #include <optional>
 #include <string>
 #include <map>
+#include <utility>
 
 #if !defined(HEX_MODULE_EXPORT)
     using ImGuiID = unsigned int;
     struct ImVec2;
     struct ImFontAtlas;
 #endif
-
-struct GLFWwindow;
 
 EXPORT_MODULE namespace hex {
 
@@ -54,6 +54,113 @@ EXPORT_MODULE namespace hex {
             Error
         };
 
+        enum class NativeWindowType {
+            Unknown,
+            Win32,
+            Cocoa,
+            X11,
+            Wayland
+        };
+
+        struct NativeWindow {
+            NativeWindowType type = NativeWindowType::Unknown;
+            void *handle = nullptr;
+            void *display = nullptr;
+        };
+
+        class WindowBackend {
+        public:
+            struct Config {
+                std::string title;
+                i32 width = 0;
+                i32 height = 0;
+                i32 glMajor = 3;
+                i32 glMinor = 1;
+                bool coreProfile = false;
+                bool forwardCompatible = true;
+                bool resizable = true;
+                bool decorated = true;
+                bool transparent = false;
+                bool visible = false;
+                bool maximized = false;
+                bool highPixelDensity = true;
+                bool scaleToMonitor = true;
+                std::string applicationId = "imhex";
+                std::string webCanvasSelector = "#canvas";
+                i32 swapInterval = 0;
+            };
+
+            struct Monitor {
+                i32 x = 0;
+                i32 y = 0;
+                i32 width = 0;
+                i32 height = 0;
+                float refreshRate = 60.0F;
+            };
+
+            struct Callbacks {
+                std::function<void(i32, i32)> moved;
+                std::function<void(i32, i32)> resized;
+                std::function<void(i32, i32)> framebufferResized;
+                std::function<void(bool)> focused;
+                std::function<void(Keys)> keyPressed;
+                std::function<void()> inputActivity;
+                std::function<void()> closeRequested;
+                std::function<void(const std::fs::path&)> fileDropped;
+                std::function<void()> refreshRequested;
+            };
+
+            virtual ~WindowBackend() = default;
+
+            virtual bool create(const Config &config, Callbacks callbacks) = 0;
+            virtual void destroy() = 0;
+            virtual void pollEvents() = 0;
+            virtual void waitEvents() = 0;
+            virtual bool waitEvents(double timeout) = 0;
+            virtual void wakeEventLoop() = 0;
+
+            virtual bool initializeImGui() = 0;
+            virtual void shutdownImGui() = 0;
+            virtual void newImGuiFrame() = 0;
+            virtual void renderImGuiPlatformWindows() = 0;
+
+            virtual void show() = 0;
+            virtual void hide() = 0;
+            virtual bool shouldClose() const = 0;
+            virtual void setShouldClose(bool close) = 0;
+            virtual void setPosition(i32 x, i32 y) = 0;
+            virtual void setSize(i32 width, i32 height) = 0;
+            virtual void setSizeLimits(i32 minWidth, i32 minHeight, std::optional<i32> maxWidth, std::optional<i32> maxHeight) = 0;
+            virtual void setResizable(bool enabled) = 0;
+            virtual void setTitle(const std::string &title) = 0;
+            virtual void setAlwaysOnTop(bool enabled) = 0;
+            virtual bool isAlwaysOnTop() const = 0;
+            virtual void setFullscreen(bool enabled) = 0;
+            virtual bool isFullscreen() const = 0;
+            virtual void minimize() = 0;
+            virtual void maximize() = 0;
+            virtual void restore() = 0;
+            virtual bool isMaximized() const = 0;
+            virtual bool isMinimized() const = 0;
+            virtual bool isVisible() const = 0;
+            virtual bool isFocused() const = 0;
+            virtual void focus() = 0;
+            virtual void requestAttention() = 0;
+            virtual void setOpacity(float opacity) = 0;
+
+            virtual InitialWindowProperties getWindowProperties() const = 0;
+            virtual std::pair<i32, i32> getFramebufferSize() const = 0;
+            virtual float getContentScale() const = 0;
+            virtual float getBackingScaleFactor() const = 0;
+            virtual std::optional<Monitor> getPrimaryMonitor() const = 0;
+            virtual NativeWindow getNativeWindow() const = 0;
+            virtual bool isWayland() const = 0;
+            virtual const char* getName() const = 0;
+
+            virtual void makeContextCurrent() = 0;
+            virtual void swapBuffers() = 0;
+        };
+
         namespace impl {
 
             void setMainInstanceStatus(bool status);
@@ -61,8 +168,10 @@ EXPORT_MODULE namespace hex {
             void setMainWindowPosition(i32 x, i32 y);
             void setMainWindowSize(u32 width, u32 height);
             void setMainDockSpaceId(ImGuiID id);
-            void setMainWindowHandle(GLFWwindow *window);
             void setMainWindowFocusState(bool focused);
+            void setWindowBackend(WindowBackend *backend);
+            WindowBackend* getWindowBackend();
+            NativeWindow getNativeWindow();
 
             void setGlobalScale(float scale);
             void setNativeScale(float scale);
@@ -149,18 +258,13 @@ EXPORT_MODULE namespace hex {
          * @return Size of the main window
          */
         ImVec2 getMainWindowSize();
+        InitialWindowProperties getMainWindowProperties();
 
         /**
          * @brief Gets the current main dock space ID
          * @return ID of the main dock space
          */
         ImGuiID getMainDockSpaceId();
-
-        /**
-         * @brief Gets the main window's GLFW window handle
-         * @return GLFW window handle
-         */
-        GLFWwindow* getMainWindowHandle();
 
         /**
          * @brief Checks if the main window is currently focused
@@ -353,6 +457,22 @@ EXPORT_MODULE namespace hex {
          * @param resizable Whether the window should be resizable
          */
         void setWindowResizable(bool resizable);
+        void resizeMainWindow(i32 width, i32 height);
+
+        void setMainWindowTitle(const std::string &title);
+        void setMainWindowAlwaysOnTop(bool enabled);
+        bool isMainWindowAlwaysOnTop();
+        void setMainWindowFullscreen(bool enabled);
+        bool isMainWindowFullscreen();
+        void minimizeMainWindow();
+        void maximizeMainWindow();
+        void restoreMainWindow();
+        bool isMainWindowMaximized();
+        void focusMainWindow();
+        void requestMainWindowAttention();
+        void cancelMainWindowClose();
+        void handleMainWindowTitlebarDoubleClick();
+        void setMainWindowMovable(bool movable);
 
         /**
          * @brief Checks if this window is the main instance of ImHex

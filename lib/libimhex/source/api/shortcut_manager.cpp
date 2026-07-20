@@ -303,7 +303,7 @@ namespace hex {
         if (!inserted) log::error("Failed to add shortcut!");
     }
 
-    static Shortcut getShortcut(bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
+    static Shortcut getShortcut(bool ctrl, bool alt, bool shift, bool super, bool focused, Keys key) {
         Shortcut pressedShortcut;
 
         if (ctrl)
@@ -317,7 +317,7 @@ namespace hex {
         if (focused)
             pressedShortcut += CurrentView;
 
-        pressedShortcut += scanCodeToKey(keyCode);
+        pressedShortcut += key;
 
         return pressedShortcut;
     }
@@ -362,9 +362,9 @@ namespace hex {
             return processShortcut(shortcut, view->m_shortcuts);
     }
 
-    void ShortcutManager::process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
-        const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
-        if (keyCode != 0)
+    void ShortcutManager::process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, Keys key) {
+        const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, key);
+        if (key != Keys::Invalid)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
         std::set<const View*> processedViews;
@@ -380,9 +380,9 @@ namespace hex {
         }
     }
 
-    void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
-        const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
-        if (keyCode != 0)
+    void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, Keys key) {
+        const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, key);
+        if (key != Keys::Invalid)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
         runShortcut(pressedShortcut);

@@ -1,5 +1,3 @@
-#include <GLFW/glfw3.h>
-
 #include "window.hpp"
 #include "hex/api/imhex_api/system.hpp"
 
@@ -7,15 +5,11 @@
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
-#include <GLFW/emscripten_glfw3.h>
-
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/theme_manager.hpp>
-
-#include <GLFW/glfw3.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -35,6 +29,13 @@ EM_JS(void, setupThemeListener, (), {
     });
 });
 
+EM_JS(void, setupCanvasResizeListener, (), {
+    const wrapper = document.getElementById('canvas-wrapper');
+    const resize = () => Module._updateFramebufferSize(wrapper.clientWidth, wrapper.clientHeight);
+    new ResizeObserver(resize).observe(wrapper);
+    resize();
+});
+
 EM_JS(bool, isDarkModeEnabled, (), {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
 });
@@ -46,7 +47,7 @@ extern "C" void handleThemeChange() {
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void updateFramebufferSize(int width, int height) {
-    glfwSetWindowSize(hex::ImHexApi::System::getMainWindowHandle(), width, height);
+    hex::ImHexApi::System::resizeMainWindow(width, height);
 }
 
 
@@ -72,14 +73,14 @@ extern "C" void enterTouchMode() {
 
 namespace hex {
 
-    void Window::configureGLFW() {
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        glfwWindowHint(GLFW_DECORATED, GL_FALSE);
-        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
-        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
-
-        emscripten::glfw3::SetNextWindowCanvasSelector("#canvas");
+    void Window::configureWindowBackend(ImHexApi::System::WindowBackend::Config &config) {
+        config.glMajor = 3;
+        config.glMinor = 1;
+        config.decorated = false;
+        config.transparent = false;
+        config.highPixelDensity = true;
+        config.visible = true;
+        config.webCanvasSelector = "#canvas";
     }
 
     void Window::initNative() {
@@ -99,16 +100,8 @@ namespace hex {
         });
     }
 
-    static float calculateNativeScale(GLFWwindow *window) {
-        int windowW, windowH;
-        int displayW, displayH;
-        glfwGetWindowSize(window, &windowW, &windowH);
-        glfwGetFramebufferSize(window, &displayW, &displayH);
-
-        const auto xScale = (windowW > 0) ? float(displayW) / windowW : 1.0f;
-        const auto yScale = (windowH > 0) ? float(displayH) / windowH : 1.0f;
-
-        auto scaleFactor = std::midpoint(xScale, yScale);
+    static float calculateNativeScale(const ImHexApi::System::WindowBackend &backend) {
+        auto scaleFactor = backend.getBackingScaleFactor();
         if (scaleFactor <= 0.0F)
             scaleFactor = 1.0F;
 
@@ -127,28 +120,15 @@ namespace hex {
             RequestChangeTheme::post(!isDarkModeEnabled() ? "Light" : "Dark");
         });
 
-        // Register file drop callback
-        glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
-            for (int i = 0; i < count; i++) {
-                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
-            }
-        });
-
-        glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->fullFrame();
-        });
-
         if (themeFollowSystem)
             EventOSThemeChanged::post();
 
-        if (emscripten::glfw3::IsRuntimePlatformApple())
+        if (isMacOS())
             ShortcutManager::enableMacOSMode();
 
-        glfwSetWindowAttrib(m_window, GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
-        glfwShowWindow(m_window);
-        emscripten::glfw3::MakeCanvasResizable(m_window, "#canvas-wrapper");
-        ImHexApi::System::impl::setNativeScale(calculateNativeScale(m_window));
+        m_backend->show();
+        setupCanvasResizeListener();
+        ImHexApi::System::impl::setNativeScale(calculateNativeScale(*m_backend));
         EventDPIChanged::post(1.0, ImHexApi::System::getBackingScaleFactor());
     }
 
@@ -163,13 +143,13 @@ namespace hex {
         if (prevScaleFactor != 0 && prevScaleFactor != currScaleFactor) {
             EventDPIChanged::post(prevScaleFactor, currScaleFactor);
 
-            ImHexApi::System::impl::setNativeScale(calculateNativeScale(m_window));
+            ImHexApi::System::impl::setNativeScale(calculateNativeScale(*m_backend));
 
             ThemeManager::reapplyCurrentTheme();
         }
         prevScaleFactor = currScaleFactor;
 
-        glfwSetWindowSize(m_window, EM_ASM_INT({ return document.getElementById("canvas-wrapper").clientWidth; }), EM_ASM_INT({ return document.getElementById("canvas-wrapper").clientHeight; }));
+        m_backend->setSize(EM_ASM_INT({ return document.getElementById("canvas-wrapper").clientWidth; }), EM_ASM_INT({ return document.getElementById("canvas-wrapper").clientHeight; }));
     }
 
 }

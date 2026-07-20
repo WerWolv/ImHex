@@ -10,9 +10,24 @@
         "bzip2",
         "liblzma",
         "zstd",
-        "glfw3",
         "curl",
         "libssh2",
         "md4c"
-    ]
+    ],
+    "default-features": [ "glfw" ],
+    "features": {
+        "glfw": {
+            "description": "Build with the GLFW window backend",
+            "dependencies": [ "glfw3" ]
+        },
+        "sdl3": {
+            "description": "Build with the SDL3 window backend",
+            "dependencies": [
+                {
+                    "name": "sdl3",
+                    "version>=": "3.4.0"
+                }
+            ]
+        }
+    }
 }

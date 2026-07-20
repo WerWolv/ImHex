@@ -384,21 +384,19 @@ void macosSeparator(void) {
 
 void macosSetupDockMenu(void) {
     @autoreleasepool {
-        // Get GLFW's delegate class
-        Class delegateClass = objc_getClass("GLFWApplicationDelegate");
+        id delegate = [NSApp delegate];
+        Class delegateClass = delegate != nil ? object_getClass(delegate) : nil;
 
         if (delegateClass != nil) {
-            // Get our custom implementation
             Method customMethod = class_getInstanceMethod([NSObject class],
-                                                         @selector(imhexApplicationDockMenu:));
+                                                          @selector(imhexApplicationDockMenu:));
 
-            // Add the method to GLFW's delegate class
             class_addMethod(delegateClass,
-                          @selector(applicationDockMenu:),
-                          method_getImplementation(customMethod),
-                          method_getTypeEncoding(customMethod));
+                           @selector(applicationDockMenu:),
+                           method_getImplementation(customMethod),
+                           method_getTypeEncoding(customMethod));
         } else {
-            NSLog(@"ERROR: Could not find GLFWApplicationDelegate class");
+            NSLog(@"ERROR: Could not find the application delegate class");
         }
     }
 }

@@ -47,14 +47,18 @@ namespace hex::dbg {
 #if defined(_MSC_VER)
     #if EXPORT_SYMBOLS == 1
         #define IMGUI_API           __declspec(dllexport)
-        #define IMGUI_IMPL_API      __declspec(dllexport)
+        #ifndef IMGUI_IMPL_API
+            #define IMGUI_IMPL_API  __declspec(dllexport)
+        #endif
         #define IMPLOT_API          __declspec(dllexport)
         #define IMPLOT_IMPL_API     __declspec(dllexport)
         #define IMPLOT3D_API        __declspec(dllexport)
         #define IMPLOT3D_IMPL_API   __declspec(dllexport)
     #else
         #define IMGUI_API           __declspec(dllimport)
-        #define IMGUI_IMPL_API      __declspec(dllimport)
+        #ifndef IMGUI_IMPL_API
+            #define IMGUI_IMPL_API  __declspec(dllimport)
+        #endif
         #define IMPLOT_API          __declspec(dllimport)
         #define IMPLOT_IMPL_API     __declspec(dllimport)
         #define IMPLOT3D_API        __declspec(dllimport)

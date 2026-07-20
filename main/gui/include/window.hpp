@@ -10,11 +10,12 @@
 #include <vector>
 
 #include <hex/ui/view.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/helpers/keys.hpp>
 #include <jthread.hpp>
 #include <hex/helpers/opengl.hpp>
 
 struct ImGuiTestEngine;
-struct GLFWwindow;
 struct ImGuiSettingsHandler;
 
 
@@ -31,9 +32,11 @@ namespace hex {
         static void initNative();
 
         void resize(i32 width, i32 height);
+        static Window* getMainWindow();
+        ImHexApi::System::WindowBackend& getBackend();
 
     private:
-        void configureGLFW();
+        void configureWindowBackend(ImHexApi::System::WindowBackend::Config &config);
         void setupNativeWindow();
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
@@ -44,9 +47,9 @@ namespace hex {
         void frame();
         void frameEnd();
 
-        void initGLFW();
+        void initWindow();
         void initImGui();
-        void exitGLFW();
+        void exitWindow();
         void exitImGui();
 
         void registerEventHandlers();
@@ -57,21 +60,24 @@ namespace hex {
         void drawWithShader();
         void unlockFrameRate();
 
-        GLFWwindow *m_window = nullptr;
+        std::unique_ptr<ImHexApi::System::WindowBackend> m_backend;
         ImGuiTestEngine *m_testEngine = nullptr;
 
         std::string m_windowTitle, m_windowTitleFull;
 
-        std::set<int> m_pressedKeys;
+        std::set<Keys> m_pressedKeys;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
 
         bool m_emergencyPopupOpen = false;
         bool m_shouldUnlockFrameRate = false;
+        bool m_forceRender = true;
         double m_fpsUnlockedEndTime = 0.0;
         bool m_waitEventsBlocked = false;
 
         gl::Shader m_postProcessingShader;
+
+        static Window *s_mainWindow;
     };
 
 }

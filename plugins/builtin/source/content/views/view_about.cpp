@@ -361,6 +361,7 @@ namespace hex::plugin::builtin {
             ExternalResource { .name="curl", .author="curl", .link="https://github.com/curl/curl" },
             ExternalResource { .name="file", .author="file", .link="https://github.com/file/file" },
             ExternalResource { .name="glfw", .author="glfw", .link="https://github.com/glfw/glfw" },
+            ExternalResource { .name="SDL", .author="SDL contributors", .link="https://github.com/libsdl-org/SDL" },
             ExternalResource { .name="llvm", .author="LLVM Maintainers", .link="https://github.com/llvm/llvm-project" },
             ExternalResource { .name="Boost.Regex", .author="John Maddock", .link="https://github.com/boostorg/regex" },
             ExternalResource { .name="md4c", .author="mity", .link="https://github.com/mity/md4c" },

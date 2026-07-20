@@ -2,12 +2,12 @@
 
     #include <emscripten.h>
     #include <emscripten/html5.h>
-    #include <GLFW/glfw3.h>
 
     #include <hex/api/events/requests_lifecycle.hpp>
     #include <hex/api/task_manager.hpp>
 
     #include <window.hpp>
+    #include <window_backend.hpp>
 
     #include <init/run.hpp>
 
@@ -24,9 +24,10 @@
         }
 
         int runImHex() {
-            // Initialize GLFW
-            if (!glfwInit()) {
-                log::fatal("Failed to initialize GLFW!");
+            static std::optional<Window> window;
+
+            if (!initializeWindowing()) {
+                log::fatal("Failed to initialize the window backend!");
                 std::abort();
             }
 
@@ -60,9 +61,10 @@
 
                         emscripten_cancel_main_loop();
 
-                        ON_SCOPE_EXIT { glfwTerminate(); };
+                        ON_SCOPE_EXIT { shutdownWindowing(); };
 
                         try {
+                            window.reset();
                             saveFsData();
                             deinitializeImHex();
 
@@ -74,24 +76,18 @@
                         }
                     });
 
-                    // Delete splash window (do it before creating the main window so glfw destroys the window)
+                    // Delete the splash before creating the main window.
                     splashWindow.reset();
 
                     emscripten_cancel_main_loop();
 
-                    // Initialize GLFW
-                    if (!glfwInit()) {
-                        log::fatal("Failed to initialize GLFW!");
-                        std::abort();
-                    }
-
                     // Main window
-                    static std::optional<Window> window;
                     window.emplace();
 
                     initializationFinished();
 
                     emscripten_set_main_loop([]() {
+                        window->getBackend().pollEvents();
                         window->fullFrame();
                     }, 60, 0);
                 } else {

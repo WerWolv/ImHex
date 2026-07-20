@@ -12,7 +12,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include <GLFW/glfw3.h>
 #include <hex/api/events/events_lifecycle.hpp>
 
 #include <wolv/utils/string.hpp>

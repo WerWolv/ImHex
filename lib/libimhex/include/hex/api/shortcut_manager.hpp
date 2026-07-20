@@ -126,7 +126,7 @@ EXPORT_MODULE namespace hex {
          * @param focused Whether the current view is focused
          * @param keyCode The key code of the key that was pressed
          */
-        static void process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode);
+        static void process(const View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, Keys key);
 
         /**
          * @brief Process a key event. This should be called from the main loop.
@@ -136,7 +136,7 @@ EXPORT_MODULE namespace hex {
          * @param super Whether the SUPER key is pressed
          * @param keyCode The key code of the key that was pressed
          */
-        static void processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode);
+        static void processGlobals(bool ctrl, bool alt, bool shift, bool super, Keys key);
 
         /**
          * @brief Runs the callback of a shortcut as if it was pressed on the keyboard

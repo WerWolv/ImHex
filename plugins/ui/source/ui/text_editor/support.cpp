@@ -667,12 +667,16 @@ namespace hex::ui {
                 ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
 
             io.WantCaptureKeyboard = true;
-            io.WantTextInput = true;
+            auto &imeData = ImGui::GetCurrentContext()->PlatformImeData;
+            imeData.WantTextInput = true;
+            imeData.ViewportId = ImGui::GetWindowViewport()->ID;
 
             if (!m_lines.m_readOnly && !ctrl && !shift && !alt && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
                 enterCharacter('\n', false);
             else if (!m_lines.m_readOnly && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Tab))
                 enterCharacter('\t', shift);
+            else if (!m_lines.m_readOnly && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
+                backspace();
 
             if (!m_lines.m_readOnly && !io.InputQueueCharacters.empty()) {
                 for (i32 i = 0; i < io.InputQueueCharacters.Size; i++) {

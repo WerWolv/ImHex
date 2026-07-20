@@ -1,3 +1,4 @@
+#include "window_backend.hpp"
 #include "window.hpp"
 
 #include <hex.hpp>
@@ -13,10 +14,15 @@
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_gui.hpp>
+#include <hex/api/events/events_interaction.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
+
+#if defined(OS_MACOS)
+    #include <hex/helpers/utils_macos.hpp>
+#endif
 
 #include <hex/providers/provider.hpp>
 
@@ -25,13 +31,14 @@
 #include <hex/ui/banner.hpp>
 
 #include <cmath>
+#include <limits>
 #include <numbers>
+#include <utility>
 
 #include <romfs/romfs.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
@@ -48,7 +55,6 @@
 
 #include <wolv/utils/string.hpp>
 
-#include <GLFW/glfw3.h>
 #include <hex/ui/toast.hpp>
 #include <wolv/utils/guards.hpp>
 #include <fmt/printf.h>
@@ -56,8 +62,16 @@
 
 namespace hex {
 
+    static double getTime() {
+        static const auto Start = std::chrono::steady_clock::now();
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() - Start).count();
+    }
+
+    Window *Window::s_mainWindow = nullptr;
+
     Window::Window() {
-        this->initGLFW();
+        s_mainWindow = this;
+        this->initWindow();
         this->initImGui();
         this->setupNativeWindow();
         this->registerEventHandlers();
@@ -69,36 +83,48 @@ namespace hex {
         EventDPIChanged::unsubscribe(this);
         RequestSetPostProcessingShader::unsubscribe(this);
 
-        EventWindowDeinitializing::post(m_window);
+        EventWindowDeinitializing::post();
 
         this->exitImGui();
-        this->exitGLFW();
+        this->exitWindow();
+
+        ImHexApi::System::impl::setWindowBackend(nullptr);
+        s_mainWindow = nullptr;
+    }
+
+    Window* Window::getMainWindow() {
+        return s_mainWindow;
+    }
+
+    ImHexApi::System::WindowBackend& Window::getBackend() {
+        return *m_backend;
     }
 
     void Window::registerEventHandlers() {
         // Initialize default theme
         RequestChangeTheme::post("Dark");
 
-        // Handle the close window request by telling GLFW to shut down
+        // Handle close requests through the selected window backend.
         RequestCloseImHex::subscribe(this, [this](bool noQuestions) {
-            glfwSetWindowShouldClose(m_window, GLFW_TRUE);
+            m_backend->setShouldClose(true);
 
             if (!noQuestions)
-                EventWindowClosing::post(m_window);
+                EventWindowClosing::post();
         });
 
         EventDPIChanged::subscribe(this, [this](float oldScaling, float newScaling) {
             if (oldScaling == newScaling || oldScaling == 0 || newScaling == 0)
                 return;
 
-            int width, height;
-            glfwGetWindowSize(m_window, &width, &height);
+            const auto properties = m_backend->getWindowProperties();
+            auto width = i32(properties.width);
+            auto height = i32(properties.height);
 
             width = float(width) * newScaling / oldScaling;
             height = float(height) * newScaling / oldScaling;
 
             ImHexApi::System::impl::setMainWindowSize(width, height);
-            glfwSetWindowSize(m_window, width, height);
+            m_backend->setSize(width, height);
         });
 
         RequestSetPostProcessingShader::subscribe(this, [this](const std::string &vertexShader, const std::string &fragmentShader) {
@@ -114,7 +140,7 @@ namespace hex {
 
             if (width > 0 && height > 0) {
                 TaskManager::doLater([width, height, this]{
-                    glfwSetWindowSize(m_window, width, height);
+                    m_backend->setSize(width, height);
                 });
             }
         });
@@ -179,7 +205,7 @@ namespace hex {
     }
 
     void Window::unlockFrameRate()  {
-        glfwPostEmptyEvent();
+        m_backend->wakeEventLoop();
         m_shouldUnlockFrameRate = true;
     }
 
@@ -225,7 +251,7 @@ namespace hex {
     void Window::loop() {
         using namespace std::literals::chrono_literals;
 
-        glfwShowWindow(m_window);
+        m_backend->show();
 
         double returnToIdleTime = 5.0;
 
@@ -235,19 +261,14 @@ namespace hex {
         double idleFrameTime = 1.0 / IdleFPS;
         double targetFrameTime = -1.0;
         double longestExceededFrameTime = 0.0;
-        while (!glfwWindowShouldClose(m_window)) {
+        while (!m_backend->shouldClose()) {
             const auto maxFPS = ImHexApi::System::getTargetFPS();
 
             auto maxFrameTime = [&]() {
                 if (maxFPS < 15) {
                     // Use the monitor's refresh rate
-                    auto monitor = glfwGetPrimaryMonitor();
-                    if (monitor != nullptr) {
-                        auto videoMode = glfwGetVideoMode(monitor);
-                        if (videoMode != nullptr) {
-                            return 1.0 / videoMode->refreshRate;
-                        }
-                    }
+                    if (const auto monitor = m_backend->getPrimaryMonitor(); monitor.has_value())
+                        return 1.0 / monitor->refreshRate;
 
                     // Fallback to 60 FPS if real monitor refresh rate cannot be determined
                     return 1.0 / 60.0;
@@ -264,34 +285,28 @@ namespace hex {
                 targetFrameTime = maxFrameTime;
             }
 
-            auto frameTimeStart = glfwGetTime();
+            auto frameTimeStart = getTime();
 
-            glfwPollEvents();
+            m_backend->pollEvents();
 
             {
-                int x = 0, y = 0;
-                int width = 0, height = 0;
-                glfwGetWindowPos(m_window, &x, &y);
-                glfwGetWindowSize(m_window, &width, &height);
-
-                ImHexApi::System::impl::setMainWindowPosition(x, y);
-                ImHexApi::System::impl::setMainWindowSize(width, height);
+                const auto properties = m_backend->getWindowProperties();
+                ImHexApi::System::impl::setMainWindowPosition(properties.x, properties.y);
+                ImHexApi::System::impl::setMainWindowSize(properties.width, properties.height);
             }
 
-            while (!glfwGetWindowAttrib(m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(m_window, GLFW_ICONIFIED)) {
+            while (!m_backend->isVisible() || m_backend->isMinimized()) {
                 // If the application is minimized or not visible, don't render anything
-                // glfwWaitEvents() is supposed to block the thread, but it does pretty often spuriously wake up anyway
-                // so we need to keep looping here until the window is visible again, adding a short sleep to avoid busy-waiting
-                glfwWaitEvents();
+                m_backend->waitEvents();
                 std::this_thread::sleep_for(100ms);
             }
 
             static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
             if (ImHexApi::System::impl::isWindowResizable()) {
-                glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+                m_backend->setSizeLimits(480_scaled, 360_scaled, std::nullopt, std::nullopt);
                 lastWindowSize = ImHexApi::System::getMainWindowSize();
             } else {
-                glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
+                m_backend->setSizeLimits(lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
             }
 
             this->fullFrame();
@@ -310,7 +325,7 @@ namespace hex {
                 unlockFrameRate();
             }
 
-            // Unlock frame rate if there's more than one viewport since these don't call the glfw callbacks registered here
+            // Unlock frame rate while additional platform windows are active.
             if (ImGui::GetPlatformIO().Viewports.size() > 1)
                 unlockFrameRate();
 
@@ -318,27 +333,27 @@ namespace hex {
             if (ImHexApi::System::impl::frameRateUnlockRequested()) {
                 ImHexApi::System::impl::resetFrameRateUnlockRequested();
 
-                glfwPostEmptyEvent();
+                m_backend->wakeEventLoop();
                 unlockFrameRate();
             }
 
-            auto frameTime = glfwGetTime() - frameTimeStart;
+            auto frameTime = getTime() - frameTimeStart;
 
-            if (glfwGetTime() > returnToIdleTime) {
+            if (getTime() > returnToIdleTime) {
                 targetFrameTime = idleFrameTime;
             }
 
             while (frameTime < targetFrameTime - longestExceededFrameTime) {
                 auto remainingFrameTime = targetFrameTime - frameTime;
-                glfwWaitEventsTimeout(std::min(remainingFrameTime, 1000.0));
+                const bool receivedEvent = m_backend->waitEvents(std::min(remainingFrameTime, 1000.0));
 
-                auto newFrameTime = glfwGetTime() - frameTimeStart;
+                auto newFrameTime = getTime() - frameTimeStart;
 
                 auto elapsedWaitTime = newFrameTime - frameTime;
 
                 // Returned early; did not time out.
-                if (elapsedWaitTime < remainingFrameTime && glfwGetTime() > returnToIdleTime && m_shouldUnlockFrameRate) {
-                    returnToIdleTime = glfwGetTime() + FrameRateUnlockDuration;
+                if (receivedEvent && elapsedWaitTime < remainingFrameTime && getTime() > returnToIdleTime && m_shouldUnlockFrameRate) {
+                    returnToIdleTime = getTime() + FrameRateUnlockDuration;
                     targetFrameTime = maxFrameTime;
                 }
                 m_shouldUnlockFrameRate = false;
@@ -357,16 +372,16 @@ namespace hex {
             }
 
             while (frameTime < maxFrameTime) {
-                frameTime = glfwGetTime() - frameTimeStart;
+                frameTime = getTime() - frameTimeStart;
                 std::this_thread::sleep_for(100us);
             }
 
-            ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - frameTimeStart);
+            ImHexApi::System::impl::setLastFrameTime(getTime() - frameTimeStart);
         }
 
         // Hide the window as soon as the render loop exits to make the window
         // disappear as soon as it's closed
-        glfwHideWindow(m_window);
+        m_backend->hide();
     }
 
     void Window::frameBegin() {
@@ -377,7 +392,7 @@ namespace hex {
         #if !defined(OS_WEB)
             {
                 static bool lastAnyWindowFocused = false;
-                bool anyWindowFocused = glfwGetWindowAttrib(m_window, GLFW_FOCUSED);
+                bool anyWindowFocused = m_backend->isFocused();
 
                 if (!anyWindowFocused) {
                     const auto platformIo = ImGui::GetPlatformIO();
@@ -398,7 +413,7 @@ namespace hex {
 
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        m_backend->newImGuiFrame();
         ImGui::NewFrame();
 
         #if defined(IMGUI_TEST_ENGINE)
@@ -834,6 +849,9 @@ namespace hex {
         // The buffer might become quite large if there's a lot of vertices on the screen, but it's still usually less than
         // 10MB (out of which only the active portion needs to actually be compared) which is worth the ~60x speedup.
         bool shouldRender = [this] {
+            if (std::exchange(m_forceRender, false))
+                return true;
+
             if (m_postProcessingShader.isValid() && m_postProcessingShader.hasUniform("Time"))
                 return true;
 
@@ -875,10 +893,7 @@ namespace hex {
         }();
 
 
-        GLFWwindow *backupContext = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backupContext);
+        m_backend->renderImGuiPlatformWindows();
 
         if (shouldRender) {
             #if !defined(OS_WEB)
@@ -890,7 +905,7 @@ namespace hex {
                 drawImGui();
             #endif
 
-            glfwSwapBuffers(m_window);
+            m_backend->swapBuffers();
         }
 
         #if defined(IMGUI_TEST_ENGINE)
@@ -909,8 +924,7 @@ namespace hex {
         // Avoid accidentally clearing the viewport when the application is minimized,
         // otherwise the OS will display an empty frame during window restore on macOS
         if (drawData->DisplaySize.x != 0 && drawData->DisplaySize.y != 0) {
-            int displayWidth, displayHeight;
-            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+            const auto [displayWidth, displayHeight] = m_backend->getFramebufferSize();
             glViewport(0, 0, displayWidth, displayHeight);
             glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -920,8 +934,7 @@ namespace hex {
 
     void Window::drawWithShader() {
         #if !defined(OS_WEB)
-            int displayWidth, displayHeight;
-            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+            const auto [displayWidth, displayHeight] = m_backend->getFramebufferSize();
 
             GLuint fbo, texture;
             glGenFramebuffers(1, &fbo);
@@ -976,7 +989,7 @@ namespace hex {
 
             m_postProcessingShader.bind();
 
-            m_postProcessingShader.setUniform("Time", static_cast<float>(glfwGetTime()));
+            m_postProcessingShader.setUniform("Time", static_cast<float>(getTime()));
             m_postProcessingShader.setUniform("Resolution", gl::Vector<float, 2>{{ float(displayWidth), float(displayHeight) }});
 
             glBindVertexArray(quadVAO);
@@ -994,289 +1007,165 @@ namespace hex {
         #endif
     }
 
-    void Window::initGLFW() {
-        auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
-        glfwSetErrorCallback([](int error, const char *desc) {
-            bool isWaylandError = error == GLFW_PLATFORM_ERROR;
-            #if defined(GLFW_FEATURE_UNAVAILABLE)
-                isWaylandError = isWaylandError || (error == GLFW_FEATURE_UNAVAILABLE);
-            #endif
-            isWaylandError = isWaylandError && std::string_view(desc).contains("Wayland");
+    void Window::initWindow() {
+        const auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
 
-            if (isWaylandError) {
-                // Ignore error spam caused by Wayland not supporting moving or resizing
-                // windows or querying their position and size.
-                return;
-            }
+        ImHexApi::System::WindowBackend::Config config {
+            .title = "ImHex",
+            .width = static_cast<i32>(1280_scaled),
+            .height = static_cast<i32>(720_scaled),
+            .glMajor = 3,
+            .glMinor = 1,
+            .coreProfile = false,
+            .forwardCompatible = true,
+            .resizable = true,
+            .decorated = true,
+            .transparent = false,
+            .visible = false,
+            .maximized = initialWindowProperties.has_value() && initialWindowProperties->maximized,
+            .highPixelDensity = true,
+            .scaleToMonitor = true,
+            .applicationId = "imhex",
+            .webCanvasSelector = "#canvas",
+            .swapInterval = 0,
+        };
+        this->configureWindowBackend(config);
 
-            try {
-                log::error("GLFW Error [0x{:05X}] : {}", error, desc);
-            } catch (const std::system_error &) { //NOLINT(bugprone-empty-catch): we can't log it
-                // Catch and ignore system error that might be thrown when too many errors are being logged to a file
-            }
-        });
-
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-
-        // Don't hide the window on the web build, otherwise the mouse cursor offset will not
-        // be calculated correctly if the canvas is not filling the entire screen
-        #if !defined(OS_WEB)
-            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        #endif
-
-        configureGLFW();
-
-        if (initialWindowProperties.has_value()) {
-            glfwWindowHint(GLFW_MAXIMIZED, initialWindowProperties->maximized);
+        m_backend = createWindowBackend();
+        if (m_backend == nullptr) {
+            log::fatal("Failed to create window backend!");
+            std::abort();
         }
 
-        int monitorX = 0, monitorY = 0;
-        int monitorWidth = std::numeric_limits<int>::max(), monitorHeight = std::numeric_limits<int>::max();
-        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-        if (monitor != nullptr) {
-            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-            if (mode != nullptr) {
-                glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+        const auto monitor = m_backend->getPrimaryMonitor();
+        float maxWindowCreationWidth = monitor.has_value()
+            ? monitor->width / 1_scaled
+            : std::numeric_limits<float>::max();
+        float maxWindowCreationHeight = monitor.has_value()
+            ? monitor->height / 1_scaled
+            : std::numeric_limits<float>::max();
 
-                monitorWidth = mode->width;
-                monitorHeight = mode->height;
-            }
+        // Wayland auto-maximizes windows occupying at least 80% of the monitor.
+        if (m_backend->isWayland()) {
+            const auto SizeMultiplier = std::sqrt(0.79);
+            maxWindowCreationWidth *= SizeMultiplier;
+            maxWindowCreationHeight *= SizeMultiplier;
         }
-
-        float maxWindowCreationWidth = monitorWidth / 1_scaled;
-        float maxWindowCreationHeight = monitorHeight / 1_scaled;
-
-        // Wayland auto-maximizes windows that take up 80% or more of the monitor size
-        // Limit the size to take up slightly less than that at max
-        // glfwGetPlatform() is only available since GLFW 3.4
-        #if GLFW_VERSION_MAJOR > 4 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4)
-            if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
-                const static auto SizeMultiplier = sqrt(0.79);
-                maxWindowCreationWidth  *= SizeMultiplier;
-                maxWindowCreationHeight *= SizeMultiplier;
-            }
-        #endif
 
         maxWindowCreationWidth -= 50_scaled;
         maxWindowCreationHeight -= 50_scaled;
+        config.width = static_cast<i32>(std::min<float>(1280_scaled, maxWindowCreationWidth));
+        config.height = static_cast<i32>(std::min<float>(720_scaled, maxWindowCreationHeight));
+        m_windowTitle = config.title;
 
-        // Create window
-        m_windowTitle = "ImHex";
-        m_window = glfwCreateWindow(
-            std::min(1280_scaled, maxWindowCreationWidth),
-            std::min(720_scaled, maxWindowCreationHeight),
-            m_windowTitle.c_str(),
-            nullptr, nullptr
-        );
+        ImHexApi::System::WindowBackend::Callbacks callbacks {
+            .moved = [this](i32 x, i32 y) {
+                m_waitEventsBlocked = true;
+                const auto properties = m_backend->getWindowProperties();
+                ImHexApi::System::impl::setMainWindowPosition(x, y);
+                ImHexApi::System::impl::setMainWindowSize(properties.width, properties.height);
+            },
+            .resized = [this](i32, i32) {
+                m_waitEventsBlocked = true;
+                m_forceRender = true;
 
-        ImHexApi::System::impl::setMainWindowHandle(m_window);
+                if (!m_backend->isMinimized()) {
+                    const auto properties = m_backend->getWindowProperties();
+                    ImHexApi::System::impl::setMainWindowPosition(properties.x, properties.y);
+                    ImHexApi::System::impl::setMainWindowSize(properties.width, properties.height);
+                }
 
-        glfwSetWindowUserPointer(m_window, this);
+                if (m_backend->isMaximized())
+                    m_backend->show();
 
-        if (m_window == nullptr) {
+                #if defined(OS_MACOS)
+                    // Disable hover effects during a live resize.
+                    if (macosIsWindowBeingResizedByUser(m_backend->getNativeWindow().handle))
+                        ImGui::GetIO().MousePos = ImVec2();
+                #elif defined(OS_WEB)
+                    this->fullFrame();
+                #endif
+            },
+            .framebufferResized = [this](i32 width, i32 height) {
+                m_forceRender = true;
+                this->unlockFrameRate();
+                glViewport(0, 0, width, height);
+            },
+            .focused = [](bool focused) {
+                ImHexApi::System::impl::setMainWindowFocusState(focused);
+            },
+            .keyPressed = [this](Keys key) {
+                m_pressedKeys.insert(key);
+            },
+            .inputActivity = [this] {
+                this->unlockFrameRate();
+            },
+            .closeRequested = [] {
+                EventWindowClosing::post();
+            },
+            .fileDropped = [](const std::fs::path &path) {
+                EventFileDropped::post(path);
+            },
+            .refreshRequested = [this] {
+                m_forceRender = true;
+                this->fullFrame();
+            },
+        };
+
+        if (!m_backend->create(config, std::move(callbacks))) {
             log::fatal("Failed to create window!");
             std::abort();
         }
 
-        // Force window to be fully opaque by default
-        glfwSetWindowOpacity(m_window, 1.0F);
+        ImHexApi::System::impl::setWindowBackend(m_backend.get());
 
-        glfwMakeContextCurrent(m_window);
+        // Force the window opaque and ensure its graphics context is active.
+        m_backend->setOpacity(1.0F);
+        m_backend->makeContextCurrent();
 
-        // Disable VSync. Not like any graphics driver actually cares
-        glfwSwapInterval(0);
-
-        // Center window
-        if (monitorWidth != std::numeric_limits<int>::max() && monitorHeight != std::numeric_limits<int>::max()) {
-            int windowWidth, windowHeight;
-            glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
-
-            glfwSetWindowPos(m_window, monitorX + (monitorWidth - windowWidth) / 2, monitorY + (monitorHeight - windowHeight) / 2);
+        // Center the window before applying any persisted position.
+        if (monitor.has_value()) {
+            const auto properties = m_backend->getWindowProperties();
+            m_backend->setPosition(
+                monitor->x + (monitor->width - static_cast<i32>(properties.width)) / 2,
+                monitor->y + (monitor->height - static_cast<i32>(properties.height)) / 2);
         }
 
-        // Set up initial window position
         {
-            int x = 0, y = 0;
-            glfwGetWindowPos(m_window, &x, &y);
-
+            auto properties = m_backend->getWindowProperties();
             if (initialWindowProperties.has_value()) {
-                x = initialWindowProperties->x;
-                y = initialWindowProperties->y;
+                properties.x = initialWindowProperties->x;
+                properties.y = initialWindowProperties->y;
             }
 
-            ImHexApi::System::impl::setMainWindowPosition(x, y);
-            glfwSetWindowPos(m_window, x, y);
+            ImHexApi::System::impl::setMainWindowPosition(properties.x, properties.y);
+            m_backend->setPosition(properties.x, properties.y);
         }
 
-        // Set up initial window size
         {
-            int width = 0, height = 0;
-            glfwGetWindowSize(m_window, &width, &height);
+            const auto properties = m_backend->getWindowProperties();
+            i32 width = static_cast<i32>(properties.width);
+            i32 height = static_cast<i32>(properties.height);
 
-            width  = std::min(width,  monitorWidth  - int(50_scaled));
-            height = std::min(height, monitorHeight - int(100_scaled));
+            if (monitor.has_value()) {
+                width = std::min(width, monitor->width - static_cast<i32>(50_scaled));
+                height = std::min(height, monitor->height - static_cast<i32>(100_scaled));
+            }
 
             if (initialWindowProperties.has_value()) {
-                width  = initialWindowProperties->width;
-                height = initialWindowProperties->height;
+                width = static_cast<i32>(initialWindowProperties->width);
+                height = static_cast<i32>(initialWindowProperties->height);
             }
 
             ImHexApi::System::impl::setMainWindowSize(width, height);
-            glfwSetWindowSize(m_window, width, height);
+            m_backend->setSize(width, height);
         }
 
-        static const auto unlockFrameRate = [](GLFWwindow *, auto ...) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
-            if (win == nullptr)
-                return;
-
-            win->unlockFrameRate();
-        };
-
-        static const auto markWaitEventsBlocked = [](GLFWwindow *, auto ...) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
-            if (win == nullptr)
-                return;
-
-            win->m_waitEventsBlocked = true;
-        };
-
-        static const auto isMainWindow = [](const GLFWwindow *window) {
-            return window == ImHexApi::System::getMainWindowHandle();
-        };
-
-        // Register window move callback
-        glfwSetWindowPosCallback(m_window, [](GLFWwindow *window, int x, int y) {
-            unlockFrameRate(window);
-            markWaitEventsBlocked(window);
-
-            if (!isMainWindow(window)) return;
-
-            ImHexApi::System::impl::setMainWindowPosition(x, y);
-
-            int width = 0, height = 0;
-            glfwGetWindowSize(window, &width, &height);
-            ImHexApi::System::impl::setMainWindowPosition(x, y);
-            ImHexApi::System::impl::setMainWindowSize(width, height);
-
-        });
-
-        // Register window resize callback
-        glfwSetWindowSizeCallback(m_window, [](GLFWwindow *window, [[maybe_unused]] int width, [[maybe_unused]] int height) {
-            unlockFrameRate(window);
-            markWaitEventsBlocked(window);
-
-            if (!isMainWindow(window)) return;
-
-            #if !defined(OS_WINDOWS)
-                if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
-                    int x = 0, y = 0;
-                    glfwGetWindowPos(window, &x, &y);
-                    ImHexApi::System::impl::setMainWindowPosition(x, y);
-                    ImHexApi::System::impl::setMainWindowSize(width, height);
-                }
-            #endif
-
-            #if defined(OS_MACOS)
-                // Stop widgets registering hover effects while the window is being resized
-                if (macosIsWindowBeingResizedByUser(window)) {
-                    ImGui::GetIO().MousePos = ImVec2();
-                }
-            #elif defined(OS_WEB)
-                auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
-                win->fullFrame();
-            #endif
-        });
-
-        glfwSetCursorPosCallback(m_window, unlockFrameRate);
-        glfwSetMouseButtonCallback(m_window, unlockFrameRate);
-        glfwSetScrollCallback(m_window, unlockFrameRate);
-        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *window, int focused) {
-            unlockFrameRate(window);
-            ImHexApi::System::impl::setMainWindowFocusState(focused);
-        });
-
-        glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow *window, int) {
-            glfwShowWindow(window);
-        });
-
-        // Register key press callback
-        glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-        glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
-            std::ignore = mods;
-
-            #if !defined(OS_WEB)
-                // Handle A-Z keys using their ASCII value instead of the keycode
-                if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
-                    std::string_view name = glfwGetKeyName(key, scanCode);
-
-                    // If the key name is only one character long, use the ASCII value instead
-                    // Otherwise the keyboard was set to a non-English layout and the key name
-                    // is not the same as the ASCII value
-                    if (!name.empty()) {
-                        const std::uint8_t byte = name[0];
-                        if (name.length() == 1 && byte <= 0x7F) {
-                            key = std::toupper(byte);
-                        }
-                    }
-                }
-            #else
-                std::ignore = scanCode;
-                // Emscripten doesn't support glfwGetKeyName. Just pass the value through.
-            #endif
-
-            if (key == GLFW_KEY_UNKNOWN) return;
-
-            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
-                    key != GLFW_KEY_LEFT_ALT && key != GLFW_KEY_RIGHT_ALT &&
-                    key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
-                    key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
-                ) {
-                    unlockFrameRate(window);
-
-                    // Windows and Linux use the numpad for special actions when NumLock is disabled such as arrow keys or
-                    // the insert, home and end keys. GLFW however still returns the original numpad keys that are being pressed.
-                    // Translate them here to the desired keys.
-                    // macOS doesn't seem to have the concept of NumLock at all. They repurposed it as the "Clear" key so this
-                    // conversion makes no sense there.
-                    #if !defined(OS_MACOS)
-                        if (!(mods & GLFW_MOD_NUM_LOCK)) {
-                            if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
-                            else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
-                            else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
-                            else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
-                            else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
-                            else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
-                            else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
-                            else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
-                            else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
-                        }
-                    #endif
-
-                    auto win = static_cast<Window *>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
-                    win->m_pressedKeys.insert(key);
-                }
-            }
-        });
-
-        // Register window close callback
-        glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
-            unlockFrameRate(window);
-
-            if (!isMainWindow(window)) return;
-
-            EventWindowClosing::post(window);
-        });
-
-        glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        m_backend->setSizeLimits(480_scaled, 360_scaled, std::nullopt, std::nullopt);
     }
 
     void Window::resize(i32 width, i32 height) {
-        glfwSetWindowSize(m_window, width, height);
+        m_backend->setSize(width, height);
     }
 
     void Window::initImGui() {
@@ -1308,7 +1197,7 @@ namespace hex {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.ConfigDragClickToInputText = true;
 
-        if (glfwGetPrimaryMonitor() != nullptr) {
+        if (m_backend->getPrimaryMonitor().has_value()) {
             if (ImHexApi::System::isMultiWindowModeEnabled()) {
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
@@ -1371,13 +1260,15 @@ namespace hex {
         }
 
 
-        ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+        if (!m_backend->initializeImGui()) {
+            log::fatal("Failed to initialize ImGui for the selected window backend!");
+            std::abort();
+        }
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
         #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
-            ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
         #else
             if (ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0)) {
                 ImGui_ImplOpenGL3_Init("#version 410");
@@ -1386,23 +1277,22 @@ namespace hex {
             }
         #endif
 
-        ImGui_ImplGlfw_SetCallbacksChainForAllWindows(true);
-
         for (const auto &plugin : PluginManager::getPlugins())
             plugin.setImGuiContext(ImGui::GetCurrentContext());
 
         RequestInitThemeHandlers::post();
     }
 
-    void Window::exitGLFW() {
-        glfwDestroyWindow(m_window);
-
-        m_window = nullptr;
+    void Window::exitWindow() {
+        if (m_backend != nullptr) {
+            m_backend->destroy();
+            m_backend.reset();
+        }
     }
 
     void Window::exitImGui() {
         ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+        m_backend->shutdownImGui();
 
         ImNodes::DestroyContext();
         ImPlot3D::DestroyContext();

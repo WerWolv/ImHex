@@ -6,18 +6,16 @@
 
     #include <init/run.hpp>
     #include <window.hpp>
-
-    #include <GLFW/glfw3.h>
+    #include <window_backend.hpp>
 
     namespace hex::init {
 
         int runImHex() {
-            // Initialize GLFW
-            if (!glfwInit()) {
-                log::fatal("Failed to initialize GLFW!");
+            if (!initializeWindowing()) {
+                log::fatal("Failed to initialize the window backend!");
                 std::abort();
             }
-            ON_SCOPE_EXIT { glfwTerminate(); };
+            ON_SCOPE_EXIT { shutdownWindowing(); };
 
             bool shouldRestart = false;
             do {

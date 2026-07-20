@@ -18,8 +18,6 @@
     #include <sys/wait.h>
     #include <unistd.h>
 
-    #include <GLFW/glfw3.h>
-    #include <imgui_impl_glfw.h>
     #include <ranges>
 
     #if defined(IMHEX_HAS_FONTCONFIG)
@@ -104,21 +102,14 @@ namespace hex {
         }
     }
 
-    void Window::configureGLFW() {
-        #if defined(GLFW_SCALE_FRAMEBUFFER)
-            glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
-        #endif
-
-        glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
-        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-
-        #if defined(GLFW_WAYLAND_APP_ID)
-            glfwWindowHintString(GLFW_WAYLAND_APP_ID, "imhex");
-        #endif
+    void Window::configureWindowBackend(ImHexApi::System::WindowBackend::Config &config) {
+        config.glMajor = 3;
+        config.glMinor = 1;
+        config.decorated = !ImHexApi::System::isBorderlessWindowModeEnabled();
+        config.transparent = true;
+        config.highPixelDensity = true;
+        config.scaleToMonitor = true;
+        config.applicationId = "imhex";
     }
 
     void Window::initNative() {
@@ -159,18 +150,6 @@ namespace hex {
             if (exitCode != 0) return;
 
             RequestChangeTheme::post(hex::containsIgnoreCase(result, "uint32 2") ? "Light" : "Dark");
-        });
-
-        // Register file drop callback
-        glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
-            for (int i = 0; i < count; i++) {
-                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
-            }
-        });
-
-        glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->fullFrame();
         });
 
         if (themeFollowSystem)

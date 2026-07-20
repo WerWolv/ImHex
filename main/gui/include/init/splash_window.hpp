@@ -3,6 +3,7 @@
 #include <functional>
 #include <future>
 #include <list>
+#include <memory>
 #include <ranges>
 #include <string>
 
@@ -10,8 +11,7 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-
-struct GLFWwindow;
+#include <hex/api/imhex_api/system.hpp>
 
 namespace hex::init {
 
@@ -44,16 +44,16 @@ namespace hex::init {
         void fullFrame();
 
     private:
-        GLFWwindow *m_window;
+        std::unique_ptr<ImHexApi::System::WindowBackend> m_backend;
         std::mutex m_progressMutex;
         std::atomic<float> m_progress = 0;
         std::list<std::string> m_currTaskNames;
 
-        void initGLFW();
+        void initWindow();
         void initImGui();
         void loadAssets();
 
-        void exitGLFW() const;
+        void exitWindow();
         void exitImGui() const;
 
         std::future<bool> processTasksAsync();

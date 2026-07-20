@@ -10,19 +10,8 @@
     #include <shlobj.h>
     #include <shellapi.h>
 
-    #define GLFW_EXPOSE_NATIVE_WIN32
-#elif defined(OS_MACOS)
-    #define GLFW_EXPOSE_NATIVE_COCOA
 #elif defined(OS_LINUX)
     #include <xdg.hpp>
-
-    #if __has_include(<X11/Xlib.h>)
-        #define GLFW_EXPOSE_NATIVE_X11
-    #endif
-
-    #if __has_include(<wayland-client.h>)
-        #define GLFW_EXPOSE_NATIVE_WAYLAND
-    #endif
 
     #if defined(OS_FREEBSD)
         #include <sys/syslimits.h>
@@ -32,9 +21,7 @@
 #if defined(OS_WEB)
     #include <emscripten.h>
 #else
-    #include <GLFW/glfw3.h>
     #include <nfd.hpp>
-    #include <nfd_glfw3.h>
 #endif
 
 
@@ -258,7 +245,28 @@ namespace hex::fs {
             nfdresult_t result = NFD_ERROR;
 
             nfdwindowhandle_t windowHandle = {};
-            NFD_GetNativeWindowFromGLFWWindow(ImHexApi::System::getMainWindowHandle(), &windowHandle);
+            const auto nativeWindow = ImHexApi::System::impl::getNativeWindow();
+            switch (nativeWindow.type) {
+                case ImHexApi::System::NativeWindowType::Win32:
+                    windowHandle.type = NFD_WINDOW_HANDLE_TYPE_WINDOWS;
+                    break;
+                case ImHexApi::System::NativeWindowType::Cocoa:
+                    windowHandle.type = NFD_WINDOW_HANDLE_TYPE_COCOA;
+                    break;
+                case ImHexApi::System::NativeWindowType::X11:
+                    windowHandle.type = NFD_WINDOW_HANDLE_TYPE_X11;
+                    break;
+                case ImHexApi::System::NativeWindowType::Wayland:
+                    windowHandle.type = NFD_WINDOW_HANDLE_TYPE_WAYLAND;
+                    #if defined(OS_LINUX)
+                        if (nativeWindow.display != nullptr)
+                            NFD_SetWaylandDisplay(static_cast<wl_display *>(nativeWindow.display));
+                    #endif
+                    break;
+                case ImHexApi::System::NativeWindowType::Unknown:
+                    break;
+            }
+            windowHandle.handle = nativeWindow.handle;
 
             // Open the correct file dialog based on the mode
             switch (mode) {

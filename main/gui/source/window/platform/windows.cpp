@@ -20,11 +20,6 @@
     #include <imgui.h>
     #include <imgui_internal.h>
 
-    #define GLFW_EXPOSE_NATIVE_WIN32
-    #include <GLFW/glfw3.h>
-    #include <GLFW/glfw3native.h>
-    #undef GLFW_EXPOSE_NATIVE_WIN32
-
     #include <winbase.h>
     #include <winuser.h>
     #include <dwmapi.h>
@@ -149,7 +144,7 @@ namespace hex {
     static LRESULT borderlessWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
             case WM_MOVE: {
-                auto imhexWindow = static_cast<Window*>(glfwGetWindowUserPointer(ImHexApi::System::getMainWindowHandle()));
+                auto imhexWindow = Window::getMainWindow();
                 imhexWindow->fullFrame();
                 break;
             }
@@ -241,7 +236,7 @@ namespace hex {
                     static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale())
                 };
 
-                if (glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr) {
+                if (ImHexApi::System::isMainWindowFullscreen()) {
                     return HTCLIENT;
                 }
 
@@ -395,23 +390,19 @@ namespace hex {
         }
     }
 
-    void Window::configureGLFW() {
+    void Window::configureWindowBackend(ImHexApi::System::WindowBackend::Config &config) {
         if (ImHexApi::System::getGLVersion() >= SemanticVersion(4,1,0)) {
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+            config.glMajor = 4;
+            config.glMinor = 1;
         } else {
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+            config.glMajor = 3;
+            config.glMinor = 1;
         }
-        glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
+        config.decorated = !ImHexApi::System::isBorderlessWindowModeEnabled();
 
         // Windows versions before Windows 10 have issues with transparent framebuffers
         // causing the entire window to be slightly transparent ignoring all configurations
-        if (::IsWindows10OrGreater()) {
-            glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-        } else {
-            glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
-        }
+        config.transparent = ::IsWindows10OrGreater();
     }
 
 
@@ -522,7 +513,7 @@ namespace hex {
 
     void Window::setupNativeWindow() {
         // Setup borderless window
-        auto hwnd = glfwGetWin32Window(m_window);
+        auto hwnd = static_cast<HWND>(m_backend->getNativeWindow().handle);
 
         CoInitialize(nullptr);
         OleInitialize(nullptr);
@@ -531,12 +522,6 @@ namespace hex {
         if (RegisterDragDrop(hwnd, &dm) != S_OK) {
             log::warn("Failed to register drop target");
 
-            // Register fallback drop target using glfw
-            glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
-                for (int i = 0; i < count; i++) {
-                    EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
-                }
-            });
             EventFileDropped::subscribe([this] {
                 this->unlockFrameRate();
             });
@@ -609,7 +594,7 @@ namespace hex {
         };
 
         EventThemeChanged::subscribe([this]{
-            auto hwnd = glfwGetWin32Window(m_window);
+            auto hwnd = static_cast<HWND>(m_backend->getNativeWindow().handle);
 
             static auto user32Dll = LoadLibraryA("user32.dll");
             if (user32Dll != nullptr) {
@@ -630,21 +615,13 @@ namespace hex {
             }
         });
         RequestChangeTheme::subscribe([this](const std::string &theme) {
-            auto hwnd = glfwGetWin32Window(m_window);
+            auto hwnd = static_cast<HWND>(m_backend->getNativeWindow().handle);
 
             BOOL value = theme == "Dark" ? TRUE : FALSE;
             DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
         });
 
         ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
-
-        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
-            auto *win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->unlockFrameRate();
-
-            glViewport(0, 0, width, height);
-            ImHexApi::System::impl::setMainWindowSize(width, height);
-        });
 
         DwmEnableMMCSS(TRUE);
         
@@ -657,13 +634,6 @@ namespace hex {
             DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &value, sizeof(value));
         }
 
-        glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-
-            win->fullFrame();
-            DwmFlush();
-        });
-
         // AMD GPUs seem to have issues with Layered Window rendering. Until we figure out
         // why that is or AMD fixes the issue on their side, disable it on these GPUs.
         s_useLayeredWindow = ImHexApi::System::getGPUVendor() != "ATI Technologies Inc.";
@@ -673,7 +643,7 @@ namespace hex {
         s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
 
         // Remove WS_POPUP style from the window to make various window management tools work
-        auto hwnd = glfwGetWin32Window(m_window);
+        auto hwnd = static_cast<HWND>(m_backend->getNativeWindow().handle);
         {
             auto style = GetWindowLong(hwnd, GWL_STYLE);
             style |= WS_OVERLAPPEDWINDOW;
@@ -694,8 +664,8 @@ namespace hex {
         }
 
         if (!ImHexApi::System::impl::isWindowResizable()) {
-            if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED) == GLFW_TRUE) {
-                glfwRestoreWindow(m_window);
+            if (m_backend->isMaximized()) {
+                m_backend->restore();
             }
         }
 

@@ -5,7 +5,6 @@
 #if defined(OS_MACOS)
 
     #if !defined(HEX_MODULE_EXPORT)
-        struct GLFWwindow;
     #endif
 
     extern "C" {
@@ -13,17 +12,17 @@
         void errorMessageMacos(const char *message);
         void openWebpageMacos(const char *url);
         bool isMacosSystemDarkModeEnabled();
-        bool isMacosFullScreenModeEnabled(GLFWwindow *window);
+        bool isMacosFullScreenModeEnabled(void *window);
         float getBackingScaleFactor();
 
-        void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
+        void setupMacosWindowStyle(void *window, bool borderlessWindowMode);
 
         void enumerateFontsMacos();
     
-        void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window);
-        void macosSetWindowMovable(GLFWwindow *window, bool movable);
-        bool macosIsWindowBeingResizedByUser(GLFWwindow *window);
-        void macosMarkContentEdited(GLFWwindow *window, bool edited = true);
+        void macosHandleTitlebarDoubleClickGesture(void *window);
+        void macosSetWindowMovable(void *window, bool movable);
+        bool macosIsWindowBeingResizedByUser(void *window);
+        void macosMarkContentEdited(void *window, bool edited = true);
 
         void macosGetKey(Keys key, int *output);
 

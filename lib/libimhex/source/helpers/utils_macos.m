@@ -14,10 +14,6 @@
     #include <stdlib.h>
     #include <stdint.h>
 
-    #define GLFW_EXPOSE_NATIVE_COCOA
-    #include <GLFW/glfw3.h>
-    #include <GLFW/glfw3native.h>
-
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
     #import <AppleScriptObjC/AppleScriptObjC.h>
@@ -64,8 +60,8 @@
     }
     @end
 
-    void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode) {
-        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+    void setupMacosWindowStyle(void *window, bool borderlessWindowMode) {
+        NSWindow* cocoaWindow = (__bridge NSWindow*)window;
 
         cocoaWindow.titleVisibility = NSWindowTitleHidden;
 
@@ -75,19 +71,15 @@
 
             // Setup liquid glass background effect
             {
-                NSView* glfwContentView = [cocoaWindow contentView];
+                NSView* contentView = [cocoaWindow contentView];
 
                 NSOpenGLContext* context = [NSOpenGLContext currentContext];
-                if (!context) {
-                    glfwMakeContextCurrent(window);
-                    context = [NSOpenGLContext currentContext];
-                }
 
                 GLint opaque = 0;
                 [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
                 [context update];
 
-                NSView* containerView = [[NSView alloc] initWithFrame:[glfwContentView frame]];
+                NSView* containerView = [[NSView alloc] initWithFrame:[contentView frame]];
                 containerView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
                 [containerView setWantsLayer:YES];
 
@@ -109,9 +101,9 @@
 
                 [containerView addSubview:effectView];
 
-                [glfwContentView removeFromSuperview];
-                glfwContentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-                [containerView addSubview:glfwContentView];
+                [contentView removeFromSuperview];
+                contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+                [containerView addSubview:contentView];
 
                 [cocoaWindow setContentView:containerView];
             }
@@ -126,8 +118,8 @@
         [closeButton setTarget:[CloseButtonHandler alloc]];
     }
 
-    bool isMacosFullScreenModeEnabled(GLFWwindow *window) {
-        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+    bool isMacosFullScreenModeEnabled(void *window) {
+        NSWindow* cocoaWindow = (__bridge NSWindow*)window;
         return (cocoaWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen;
     }
 
@@ -160,8 +152,8 @@
         CFRelease(fontDescriptors);
     }
 
-    void macosHandleTitlebarDoubleClickGesture(GLFWwindow *window) {
-        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+    void macosHandleTitlebarDoubleClickGesture(void *window) {
+        NSWindow* cocoaWindow = (__bridge NSWindow*)window;
 
         // Consult user preferences: "System Settings -> Desktop & Dock -> Double-click a window's title bar to"
         NSString* action = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleActionOnDoubleClick"];
@@ -184,20 +176,20 @@
         }
     }
 
-    void macosSetWindowMovable(GLFWwindow *window, bool movable) {
-        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+    void macosSetWindowMovable(void *window, bool movable) {
+        NSWindow* cocoaWindow = (__bridge NSWindow*)window;
 
         [cocoaWindow setMovable:movable];
     }
 
-    bool macosIsWindowBeingResizedByUser(GLFWwindow *window) {
-        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+    bool macosIsWindowBeingResizedByUser(void *window) {
+        NSWindow* cocoaWindow = (__bridge NSWindow*)window;
         
         return cocoaWindow.inLiveResize;
     }
 
-    void macosMarkContentEdited(GLFWwindow *window, bool edited) {
-        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+    void macosMarkContentEdited(void *window, bool edited) {
+        NSWindow* cocoaWindow = (__bridge NSWindow*)window;
 
         [cocoaWindow setDocumentEdited:edited];
     }
