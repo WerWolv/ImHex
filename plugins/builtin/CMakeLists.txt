@@ -105,6 +105,7 @@ add_imhex_plugin(
         source/content/popups/hex_editor/popup_hex_editor_insert.cpp
         source/content/popups/hex_editor/popup_hex_editor_page_size.cpp
         source/content/popups/hex_editor/popup_hex_editor_paste_behaviour.cpp
+        source/content/popups/hex_editor/popup_hex_editor_paste_from_file_behaviour.cpp
         source/content/popups/hex_editor/popup_hex_editor_remove.cpp
         source/content/popups/hex_editor/popup_hex_editor_resize.cpp
         source/content/popups/hex_editor/popup_hex_editor_select.cpp

@@ -38,6 +38,7 @@
 #include <content/popups/hex_editor/popup_hex_editor_remove.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_fill.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_paste_behaviour.hpp>
+#include <content/popups/hex_editor/popup_hex_editor_paste_from_file_behaviour.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_decoded_string.hpp>
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
@@ -374,7 +375,96 @@ namespace hex::plugin::builtin {
                         selectionCheck ? "selection" : "everything");
                     pasteBytes(selection, selectionCheck, false);
                 });
+    }
 
+    static void pasteBytesChunked(const ImHexApi::HexEditor::ProviderRegion &src, const ImHexApi::HexEditor::ProviderRegion &dst, u64 size) {
+        constexpr size_t chunkSize = 0x1000; // 4 KB : 4096 Bytes
+        std::array<u8, chunkSize> buffer{};
+
+        auto srcOffset = src.getStartAddress(); // source selection start address
+        auto dstOffset = dst.getStartAddress(); // destination selection start address
+        auto bytesLeft = size;
+
+        while (bytesLeft > 0) {
+            const size_t chunk = std::min<u64>(bytesLeft, chunkSize);
+
+            src.provider->readRaw(srcOffset, buffer.data(), chunk);
+            dst.provider->writeRaw(dstOffset, buffer.data(), chunk);
+
+            srcOffset += chunk;
+            dstOffset += chunk;
+            bytesLeft -= chunk;
+        }
+
+        dst.provider->markDataDirty();
+    }
+
+    void ViewHexEditor::processPasteFromFileBehaviour(const ImHexApi::HexEditor::ProviderRegion &selection) {
+        using PasteModeType = PopupPasteFromFileBehaviour::PasteModeType;
+
+        // Open paste from file popup
+        this->openPopup<PopupPasteFromFileBehaviour>(selection, [this](const ImHexApi::HexEditor::ProviderRegion &src, 
+                                                                       const ImHexApi::HexEditor::ProviderRegion &dst, 
+                                                                       const u8 mode) {
+            PasteModeType pasteMode = static_cast<PasteModeType>(mode);
+            u64 pasteSize = 0;
+
+            if ( (src.provider == nullptr) || (dst.provider == nullptr)) {
+                return false; // Invalid source or destination file
+            }
+
+            // Process paste mode
+            switch (pasteMode) {
+                case PasteModeType::ModePasteOverSelection: {
+                    // Size of the data to be pasted is the smallest of source and destination region size
+                    pasteSize = std::min(src.getSize(), dst.getSize());
+                    break;
+                }
+
+                case PasteModeType::ModePasteEverything: {
+                    // Calculate available size from selected destination begin to end
+                    u64 availSize = (dst.provider->getActualSize() - dst.getStartAddress());
+
+                    pasteSize = src.getSize();
+                    // Resize the provider size to accommodate selected source region data
+                    if (availSize < pasteSize) {
+                        dst.provider->insertRaw(dst.getStartAddress(), (pasteSize - availSize));
+                    }
+                    break;
+                }
+
+                case PasteModeType::ModeReplaceSelection: {
+                    i64 sizeDiff = (dst.getSize() - src.getSize());
+
+                    pasteSize = src.getSize();
+                    // Resize selected destination region to match the selected source region size
+                    if (sizeDiff < 0) { // selected destination region size is smaller than selected source region size
+                        dst.provider->insertRaw(dst.getStartAddress(), -sizeDiff);
+                    } else if (sizeDiff > 0) { // selected destination region size is bigger than selected source region size
+                        dst.provider->removeRaw(dst.getStartAddress(), sizeDiff);
+                    } else {
+                        // same size
+                    }
+                    break;
+                }
+
+                case PasteModeType::ModeInsertEverything: {
+                    pasteSize = src.getSize();
+                    // Insert selected source region size of data bytes at destination region start address
+                    dst.provider->insertRaw(dst.getStartAddress(), src.getSize());
+                    break;
+                }
+
+                default: {
+                    return false; // Invalid paste mode
+                }
+            }
+
+            // Paste the source region data over the respective (selected/resized/inserted) region of destination
+            pasteBytesChunked(src, dst, pasteSize);
+
+            return true; // Paste successfull
+        });
     }
 
     static void copyString(const Region &selection) {
@@ -1029,6 +1119,14 @@ namespace hex::plugin::builtin {
                                                     pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, true);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
+                                                this);
+
+        /* Paste from File... */
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_from_file" }, ICON_VS_REFERENCES, 1515, Shortcut::None,
+                                                [this] {
+                                                    processPasteFromFileBehaviour(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, nullptr)));
+                                                },
+                                                ImHexApi::Provider::isValid,
                                                 this);
 
         /* Select */
