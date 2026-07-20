@@ -103,9 +103,19 @@
 
                 [contentView removeFromSuperview];
                 contentView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+                contentView.layerContentsRedrawPolicy = NSViewLayerContentsRedrawDuringViewResize;
+                contentView.layerContentsPlacement = NSViewLayerContentsPlacementTopLeft;
                 [containerView addSubview:contentView];
+                contentView.layer.needsDisplayOnBoundsChange = YES;
 
                 [cocoaWindow setContentView:containerView];
+                [containerView layoutSubtreeIfNeeded];
+
+                // Keep window backends in sync after extending their content view into the title bar.
+                id<NSWindowDelegate> delegate = cocoaWindow.delegate;
+                if ([delegate respondsToSelector:@selector(windowDidResize:)]) {
+                    [delegate windowDidResize:[NSNotification notificationWithName:NSWindowDidResizeNotification object:cocoaWindow]];
+                }
             }
 
             [cocoaWindow setOpaque:NO];

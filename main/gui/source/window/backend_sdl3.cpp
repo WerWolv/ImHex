@@ -30,57 +30,57 @@ namespace hex {
 
             switch (scancode) {
                 case SDL_SCANCODE_KP_0:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Insert;
                     #endif
                     return Keys::KeyPad0;
                 case SDL_SCANCODE_KP_1:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::End;
                     #endif
                     return Keys::KeyPad1;
                 case SDL_SCANCODE_KP_2:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Down;
                     #endif
                     return Keys::KeyPad2;
                 case SDL_SCANCODE_KP_3:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::PageDown;
                     #endif
                     return Keys::KeyPad3;
                 case SDL_SCANCODE_KP_4:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Left;
                     #endif
                     return Keys::KeyPad4;
                 case SDL_SCANCODE_KP_5:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Invalid;
                     #endif
                     return Keys::KeyPad5;
                 case SDL_SCANCODE_KP_6:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Right;
                     #endif
                     return Keys::KeyPad6;
                 case SDL_SCANCODE_KP_7:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Home;
                     #endif
                     return Keys::KeyPad7;
                 case SDL_SCANCODE_KP_8:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Up;
                     #endif
                     return Keys::KeyPad8;
                 case SDL_SCANCODE_KP_9:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::PageUp;
                     #endif
                     return Keys::KeyPad9;
                 case SDL_SCANCODE_KP_PERIOD:
-                    #if !defined(SDL_PLATFORM_MACOS)
+                    #if !defined(OS_MACOS)
                         if (!numLockEnabled) return Keys::Delete;
                     #endif
                     return Keys::KeyPadDecimal;
@@ -222,11 +222,25 @@ namespace hex {
                     this->destroy();
                     return false;
                 }
+                #if defined(OS_MACOS)
+                    if (!SDL_AddEventWatch(liveResizeEventWatch, this)) {
+                        this->destroy();
+                        return false;
+                    }
+                    m_liveResizeEventWatchInstalled = true;
+                #endif
                 m_shouldClose = false;
                 return true;
             }
 
             void destroy() override {
+                #if defined(OS_MACOS)
+                    if (m_liveResizeEventWatchInstalled) {
+                        SDL_RemoveEventWatch(liveResizeEventWatch, this);
+                        m_liveResizeEventWatchInstalled = false;
+                    }
+                #endif
+
                 this->shutdownImGui();
 
                 if (m_context != nullptr) {
@@ -270,9 +284,13 @@ namespace hex {
                 }
 
                 const double milliseconds = std::isnan(timeout) ? 0.0 : std::ceil(std::max(timeout, 0.0) * 1000.0);
-                const auto timeoutMilliseconds = static_cast<Sint32>(std::min(
+                auto timeoutMilliseconds = static_cast<Sint32>(std::min(
                     milliseconds,
                     static_cast<double>(std::numeric_limits<Sint32>::max())));
+                #if defined(OS_MACOS)
+                    // AppKit mouse tracking can update without producing an SDL event.
+                    timeoutMilliseconds = std::min<Sint32>(timeoutMilliseconds, 8);
+                #endif
 
                 SDL_Event event;
                 if (!SDL_WaitEventTimeout(&event, timeoutMilliseconds))
@@ -559,6 +577,23 @@ namespace hex {
                 return SDL_HITTEST_NORMAL;
             }
 
+            #if defined(OS_MACOS)
+                static bool SDLCALL liveResizeEventWatch(void *data, SDL_Event *event) {
+                    auto *backend = static_cast<SDL3WindowBackend *>(data);
+                    // SDL's Cocoa backend tags expose events emitted by its live-resize timer with data1 == 1.
+                    if (backend != nullptr && event->type == SDL_EVENT_WINDOW_EXPOSED &&
+                        event->window.windowID == backend->m_windowId && event->window.data1 == 1) {
+                        int width = 0, height = 0;
+                        if (SDL_GetWindowSize(backend->m_window, &width, &height) && backend->m_callbacks.resized)
+                            backend->m_callbacks.resized(width, height);
+                        if (backend->m_callbacks.refreshRequested)
+                            backend->m_callbacks.refreshRequested();
+                    }
+
+                    return true;
+                }
+            #endif
+
             bool hasWindowFlag(SDL_WindowFlags flag) const {
                 return m_window != nullptr && (SDL_GetWindowFlags(m_window) & flag) != 0;
             }
@@ -640,6 +675,9 @@ namespace hex {
             bool m_shouldClose = false;
             bool m_resizable = false;
             bool m_imguiInitialized = false;
+            #if defined(OS_MACOS)
+                bool m_liveResizeEventWatchInstalled = false;
+            #endif
             std::optional<SizeLimits> m_sizeLimits;
         };
 
