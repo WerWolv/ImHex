@@ -99,15 +99,15 @@ EXPORT_MODULE namespace hex {
             };
 
             struct Callbacks {
-                std::function<void(i32, i32)> moved;
-                std::function<void(i32, i32)> resized;
-                std::function<void(i32, i32)> framebufferResized;
-                std::function<void(bool)> focused;
-                std::function<void(Keys)> keyPressed;
-                std::function<void()> inputActivity;
-                std::function<void()> closeRequested;
-                std::function<void(const std::fs::path&)> fileDropped;
-                std::function<void()> refreshRequested;
+                std::function<void(i32, i32)> moved = [](i32, i32) { };
+                std::function<void(i32, i32)> resized = [](i32, i32) { };
+                std::function<void(i32, i32)> framebufferResized = [](i32, i32) { };
+                std::function<void(bool)> focused = [](bool) { };
+                std::function<void(Keys)> keyPressed = [](Keys) { };
+                std::function<void()> inputActivity = [] { };
+                std::function<void()> closeRequested = [] { };
+                std::function<void(const std::fs::path&)> fileDropped = [](const std::fs::path &) { };
+                std::function<void()> refreshRequested = [] { };
             };
 
             virtual ~WindowBackend() = default;

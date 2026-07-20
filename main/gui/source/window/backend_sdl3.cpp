@@ -16,6 +16,8 @@
 #include <string_view>
 #include <utility>
 
+#include <hex/helpers/logger.hpp>
+
 namespace hex {
 
     namespace {

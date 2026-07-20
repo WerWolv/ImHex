@@ -446,20 +446,12 @@ namespace hex::init {
         #if defined(OS_MACOS)
             config.glMinor = 2;
             config.highPixelDensity = false;
+            config.coreProfile = true;
+            config.forwardCompatible = true;
         #endif
 
         m_backend = createWindowBackend();
-        ImHexApi::System::WindowBackend::Callbacks callbacks {
-            .moved = [](i32, i32) { },
-            .resized = [](i32, i32) { },
-            .framebufferResized = [](i32, i32) { },
-            .focused = [](bool) { },
-            .keyPressed = [](Keys) { },
-            .inputActivity = [] { },
-            .closeRequested = [] { },
-            .fileDropped = [](const std::fs::path &) { },
-            .refreshRequested = [] { },
-        };
+        ImHexApi::System::WindowBackend::Callbacks callbacks;
 
         if (m_backend == nullptr || !m_backend->create(config, std::move(callbacks))) {
             hex::showErrorMessageBox(
