@@ -354,7 +354,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-k", "--keys", default=".*",
         help="Regex pattern used with --retranslate (default: %(default)s)",
     )
-    _add_translation_subparser(subparsers, "sync-sublangs", "Sync non-English files with en_US")
+    _add_translation_subparser(subparsers, "sync-sublangs", "Sync non-English files with en_US (Both adds and removes entries)")
     _add_translation_subparser(subparsers, "fmtzh", "Fix CJK punctuation in translations")
 
     # Untranslate needs --keys
@@ -362,7 +362,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_untranslate.add_argument("-k", "--keys", required=True, help="Regex pattern to match keys")
 
     # Source-checking commands (no --lang needed)
-    subparsers.add_parser("check-nonexistent", help="Verify _lang keys in C++ source exist in JSON")
+    subparsers.add_parser("check-nonexistent", help="Report _lang keys in C++ source that do not exist in JSON")
     subparsers.add_parser("check-unused", help="Report JSON keys not referenced in C++ source")
     subparsers.add_parser("remove-unused", help="Remove JSON keys not referenced in C++ source")
 

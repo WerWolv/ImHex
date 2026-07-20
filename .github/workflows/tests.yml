@@ -111,7 +111,7 @@ jobs:
         submodules: recursive
 
     - name: Check langs
-      run:
+      run: |
         python3 dist/langtool.py check-nonexistent
         python3 dist/langtool.py check-unused
         python3 dist/langtool.py sync-sublangs
