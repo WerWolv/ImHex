@@ -58,8 +58,8 @@ namespace hex {
                 RequestChangeTheme::post("Dark");
         });
 
-        EventProviderDirtied::subscribe([this](prv::Provider *) {
-            TaskManager::doLater([this] {
+        EventProviderDirtied::subscribe([](prv::Provider *) {
+            TaskManager::doLater([] {
                 macosMarkContentEdited(ImHexApi::System::impl::getNativeWindow().handle);
             });
         });
@@ -70,8 +70,8 @@ namespace hex {
             .load = [](const std::fs::path &, Tar &) {
                 return true;
             },
-            .store = [this](const std::fs::path &, Tar &) {
-                TaskManager::doLater([this] {
+            .store = [](const std::fs::path &, Tar &) {
+                TaskManager::doLater([] {
                     macosMarkContentEdited(ImHexApi::System::impl::getNativeWindow().handle, false);
                 });
 

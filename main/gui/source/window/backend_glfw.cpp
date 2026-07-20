@@ -182,8 +182,9 @@ namespace hex {
                     return false;
 
                 m_imguiInitialized = ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-                if (!m_imguiInitialized)
+                if (!m_imguiInitialized) {
                     return false;
+                }
 
                 #if defined(__EMSCRIPTEN__)
                     ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, m_webCanvasSelector.c_str());
