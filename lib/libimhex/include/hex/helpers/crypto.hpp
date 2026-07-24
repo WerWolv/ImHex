@@ -10,6 +10,7 @@
 
 #define CRYPTO_ERROR_INVALID_KEY_LENGTH (-1)
 #define CRYPTO_ERROR_INVALID_MODE (-2)
+#define CRYPTO_ERROR_UNSUPPORTED_MODE (-4)
 
 namespace hex::prv {
     class Provider;
@@ -42,6 +43,7 @@ namespace hex::crypt {
     std::vector<u8> encode64(const std::vector<u8> &input);
     std::vector<u8> decode16(const std::string &input);
     std::string encode16(const std::vector<u8> &input);
+    std::string getErrorString(int error);
 
     i128 decodeSleb128(const std::vector<u8> &bytes);
     u128 decodeUleb128(const std::vector<u8> &bytes);

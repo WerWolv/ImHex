@@ -4,7 +4,6 @@
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/data_processor/node.hpp>
-#include <mbedtls/error.h>
 
 #include <nlohmann/json.hpp>
 
@@ -61,12 +60,8 @@ namespace hex::plugin::builtin {
                         throwNodeError("Invalid key length");
                     case CRYPTO_ERROR_INVALID_MODE:
                         throwNodeError("Invalid mode");
-                    default: {
-                        std::array<char, 128> errorBuffer = { 0 };
-                        mbedtls_strerror(output.error(), errorBuffer.data(), errorBuffer.size());
-
-                        throwNodeError(std::string(errorBuffer.data()));
-                    }
+                    default:
+                        throwNodeError(crypt::getErrorString(output.error()));
                 }
             }
 

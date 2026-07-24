@@ -12,6 +12,7 @@ set(AVAILABLE_TESTS
     # Crypto
         EncodeDecode16
         EncodeDecode64
+        AESDecrypt
         EncodeDecodeLEB128
         CRC32
         CRC32Random
@@ -38,6 +39,10 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex tests_common ${FMT_LIBRARIES})
+
+if (CRYPTO_BACKEND STREQUAL "openssl")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE OPENSSL_CRYPTO_BACKEND)
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 

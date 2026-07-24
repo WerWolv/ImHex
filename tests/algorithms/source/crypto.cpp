@@ -49,6 +49,9 @@ TEST_SEQUENCE("EncodeDecode16") {
         TEST_ASSERT(decoded == original, "decoded: {} encoded: '{}' original: {}", decoded, encoded, original);
     }
 
+    TEST_ASSERT(hex::crypt::decode16("0").empty());
+    TEST_ASSERT(hex::crypt::decode16("GG").empty());
+
     if (hex::crypt::encode16({ 0x00, 0x2a }) == "2A") {
         hex::log::error("Known bug: in function hex::crypt::encode16 mbedtls_mpi_read_binary ingores initial null bytes");
         TEST_FAIL();
@@ -98,6 +101,75 @@ TEST_SEQUENCE("EncodeDecode64") {
         auto decoded = hex::crypt::decode64(stringToVector(encoded));
         TEST_ASSERT(decoded == original, "decoded: {} encoded: '{}' original: {}", decoded, encoded, original);
     }
+
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("!!!!")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("A=AA")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("TQ=A")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("====")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("Kg==\n")) == (std::vector<u8>{ 0x2a }));
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("S2c9 \r\nPQ==\n")) == stringToVector("Kg=="));
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("K\rg==")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("K g==")).empty());
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("AESDecrypt") {
+    const std::vector<u8> key = {
+        0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+        0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C,
+    };
+    const std::array<u8, 8> nonce = { 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 };
+    const std::array<u8, 8> iv = { 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF };
+    const std::vector<u8> ciphertext = {
+        0x87, 0x4D, 0x61, 0x91, 0xB6, 0x20, 0xE3, 0x26,
+        0x1B, 0xEF, 0x68, 0x64, 0x99, 0x0D, 0xB6, 0xCE,
+    };
+    const std::vector<u8> plaintext = {
+        0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96,
+        0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A,
+    };
+
+    const auto output = hex::crypt::aesDecrypt(hex::crypt::AESMode::CTR, hex::crypt::KeyLength::Key128Bits, key, nonce, iv, ciphertext);
+    TEST_ASSERT(output && output.value() == plaintext);
+
+    const std::array<u8, 8> blockModeNonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+    const std::array<u8, 8> blockModeIv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
+    const std::vector<u8> cfbOfbCiphertext = {
+        0x3B, 0x3F, 0xD9, 0x2E, 0xB7, 0x2D, 0xAD, 0x20,
+        0x33, 0x34, 0x49, 0xF8, 0xE8, 0x3C, 0xFB, 0x4A,
+    };
+    for (const auto mode : { hex::crypt::AESMode::CFB128, hex::crypt::AESMode::OFB }) {
+        const auto modeOutput = hex::crypt::aesDecrypt(mode, hex::crypt::KeyLength::Key128Bits, key, blockModeNonce, blockModeIv, cfbOfbCiphertext);
+        TEST_ASSERT(modeOutput && modeOutput.value() == plaintext);
+    }
+
+    const std::vector<u8> ecbCiphertext = {
+        0x3A, 0xD7, 0x7B, 0xB4, 0x0D, 0x7A, 0x36, 0x60,
+        0xA8, 0x9E, 0xCA, 0xF3, 0x24, 0x66, 0xEF, 0x97,
+    };
+    const auto ecbOutput = hex::crypt::aesDecrypt(hex::crypt::AESMode::ECB, hex::crypt::KeyLength::Key128Bits, key, {}, {}, ecbCiphertext);
+    TEST_ASSERT(ecbOutput && ecbOutput.value() == plaintext);
+
+    const auto invalidKey = hex::crypt::aesDecrypt(hex::crypt::AESMode::CTR, hex::crypt::KeyLength::Key128Bits, {}, nonce, iv, ciphertext);
+    TEST_ASSERT(!invalidKey && invalidKey.error() == CRYPTO_ERROR_INVALID_KEY_LENGTH);
+
+    const auto invalidKeyLength = hex::crypt::aesDecrypt(hex::crypt::AESMode::CTR, static_cast<hex::crypt::KeyLength>(0xFF), key, nonce, iv, ciphertext);
+    TEST_ASSERT(!invalidKeyLength && invalidKeyLength.error() == CRYPTO_ERROR_INVALID_KEY_LENGTH);
+
+    const auto invalidMode = hex::crypt::aesDecrypt(static_cast<hex::crypt::AESMode>(0xFF), hex::crypt::KeyLength::Key128Bits, key, nonce, iv, ciphertext);
+    TEST_ASSERT(!invalidMode && invalidMode.error() == CRYPTO_ERROR_INVALID_MODE);
+
+#if defined(OPENSSL_CRYPTO_BACKEND)
+    for (const auto mode : { hex::crypt::AESMode::CBC, hex::crypt::AESMode::GCM, hex::crypt::AESMode::CCM, hex::crypt::AESMode::XTS }) {
+        const auto unsupportedMode = hex::crypt::aesDecrypt(mode, hex::crypt::KeyLength::Key128Bits, key, nonce, iv, ciphertext);
+        TEST_ASSERT(!unsupportedMode && unsupportedMode.error() == CRYPTO_ERROR_UNSUPPORTED_MODE);
+    }
+#endif
+
+    const auto backendError = hex::crypt::aesDecrypt(hex::crypt::AESMode::ECB, hex::crypt::KeyLength::Key128Bits, key, {}, {}, { 0x00 });
+    TEST_ASSERT(!backendError && backendError.error() != 0);
+    TEST_ASSERT(!hex::crypt::getErrorString(backendError.error()).empty());
 
     TEST_SUCCESS();
 };

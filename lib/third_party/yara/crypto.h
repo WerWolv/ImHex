@@ -34,26 +34,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define YR_SHA1_LEN   20
 #define YR_SHA256_LEN 32
 
-#if defined(HAVE_LIBCRYPTO)
+#if defined(HAVE_LIBCRYPTO) || defined(HAVE_OPENSSL)
 #include <openssl/crypto.h>
-#include <openssl/md5.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
-typedef MD5_CTX yr_md5_ctx;
-typedef SHA_CTX yr_sha1_ctx;
-typedef SHA256_CTX yr_sha256_ctx;
+typedef EVP_MD_CTX *yr_md5_ctx;
+typedef EVP_MD_CTX *yr_sha1_ctx;
+typedef EVP_MD_CTX *yr_sha256_ctx;
 
-#define yr_md5_init(ctx)              MD5_Init(ctx)
-#define yr_md5_update(ctx, data, len) MD5_Update(ctx, data, len)
-#define yr_md5_final(digest, ctx)     MD5_Final(digest, ctx)
+#define yr_md5_init(ctx)             \
+  {                                  \
+    *ctx = EVP_MD_CTX_create();      \
+    EVP_DigestInit(*ctx, EVP_md5()); \
+  }
+#define yr_md5_update(ctx, data, len) EVP_DigestUpdate(*ctx, data, len)
+#define yr_md5_final(digest, ctx)        \
+  {                                      \
+    unsigned int len = YR_MD5_LEN;       \
+    EVP_DigestFinal(*ctx, digest, &len); \
+    EVP_MD_CTX_destroy(*ctx);            \
+  }
 
-#define yr_sha1_init(ctx)              SHA1_Init(ctx)
-#define yr_sha1_update(ctx, data, len) SHA1_Update(ctx, data, len)
-#define yr_sha1_final(digest, ctx)     SHA1_Final(digest, ctx)
+#define yr_sha1_init(ctx)             \
+  {                                   \
+    *ctx = EVP_MD_CTX_create();       \
+    EVP_DigestInit(*ctx, EVP_sha1()); \
+  }
+#define yr_sha1_update(ctx, data, len) EVP_DigestUpdate(*ctx, data, len)
+#define yr_sha1_final(digest, ctx)       \
+  {                                      \
+    unsigned int len = YR_SHA1_LEN;      \
+    EVP_DigestFinal(*ctx, digest, &len); \
+    EVP_MD_CTX_destroy(*ctx);            \
+  }
 
-#define yr_sha256_init(ctx)              SHA256_Init(ctx)
-#define yr_sha256_update(ctx, data, len) SHA256_Update(ctx, data, len)
-#define yr_sha256_final(digest, ctx)     SHA256_Final(digest, ctx)
+#define yr_sha256_init(ctx)             \
+  {                                     \
+    *ctx = EVP_MD_CTX_create();         \
+    EVP_DigestInit(*ctx, EVP_sha256()); \
+  }
+#define yr_sha256_update(ctx, data, len) EVP_DigestUpdate(*ctx, data, len)
+#define yr_sha256_final(digest, ctx)     \
+  {                                      \
+    unsigned int len = YR_SHA256_LEN;    \
+    EVP_DigestFinal(*ctx, digest, &len); \
+    EVP_MD_CTX_destroy(*ctx);            \
+  }
+
+#if defined(HAVE_OPENSSL)
+#define HAVE_COMMONCRYPTO_COMMONCRYPTO_H
+#endif
 
 #elif defined(HAVE_WINCRYPT_H)
 #include <windows.h>

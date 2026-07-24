@@ -20,6 +20,7 @@ option(IMHEX_ENABLE_CXX_MODULES         "Enable C++20 Module compilation. Testin
 option(IMHEX_ENABLE_CPPCHECK            "Enable cppcheck static analysis"                                                               OFF)
 option(IMHEX_BUNDLE_PLUGIN_SDK          "Enable bundling of Plugin SDK into install package"                                            ON )
 set   (IMHEX_RENDERING_BACKEND          "GLFW" CACHE STRING "Set the rendering backend ImHex should use (GLFW or SDL)"                     )
+set   (CRYPTO_BACKEND                   "mbedtls" CACHE STRING "Set the crypto backend ImHex should use (mbedtls or openssl)"              )
 option(IMHEX_ENABLE_UPDATER             "Enable automatic updater"                                                                      ON )
 ## Testing
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                                    ON )
@@ -36,6 +37,11 @@ option(IMHEX_STATIC_LINK_PLUGINS        "Statically link all plugins into the ma
 option(IMHEX_ENABLE_PLUGIN_TESTS        "Enable building plugin tests"                                                                  ON )
 set   (IMHEX_INCLUDE_PLUGINS            "" CACHE STRING "Semicolon-separated list of plugins to include in the build (empty = build all)"  )
 set   (IMHEX_EXCLUDE_PLUGINS            "" CACHE STRING "Semicolon-separated list of plugins to exclude from the build"                    )
+
+set_property(CACHE CRYPTO_BACKEND PROPERTY STRINGS mbedtls openssl)
+if (NOT CRYPTO_BACKEND STREQUAL "mbedtls" AND NOT CRYPTO_BACKEND STREQUAL "openssl")
+    message(FATAL_ERROR "Invalid CRYPTO_BACKEND '${CRYPTO_BACKEND}'. Expected 'mbedtls' or 'openssl'.")
+endif()
 
 set(IMHEX_BASE_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")

@@ -15,8 +15,14 @@ on:
 
 jobs:
   tests:
-    name: 🧪 Unit Tests
+    name: 🧪 Unit Tests (${{ matrix.crypto_backend }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        crypto_backend:
+          - mbedtls
+          - openssl
     permissions:
       actions: read
       contents: read
@@ -31,14 +37,18 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
-        key: ${{ runner.os }}-tests-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-tests-build
+        key: ${{ runner.os }}-tests-${{ matrix.crypto_backend }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-tests-${{ matrix.crypto_backend }}-build
         max-size: 50M
 
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
+
+    - name: ⬇️ Install OpenSSL dependencies
+      if: matrix.crypto_backend == 'openssl'
+      run: sudo apt install -y libssl-dev
 
     - name: 🛠️ Build
       run: |
@@ -49,6 +59,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug                                                                                 \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                             \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                                                                           \
+          -DCRYPTO_BACKEND=${{ matrix.crypto_backend }}                                                            \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                                       \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                     \
           -DCMAKE_C_FLAGS="-fuse-ld=lld -fsanitize=address,leak,undefined -fno-sanitize-recover=all --coverage"    \

@@ -102,13 +102,16 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
 
-find_package(mbedTLS 2.26.0 REQUIRED)
+if (CRYPTO_BACKEND STREQUAL "openssl")
+    set(YARA_CRYPTO_DEFINITION HAVE_OPENSSL)
+else()
+    set(YARA_CRYPTO_DEFINITION HAVE_MBEDTLS)
+endif()
 
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 
-# Add mbedtls crypto wrappers
 target_compile_definitions(libyara PRIVATE
-        HAVE_MBEDTLS
+        ${YARA_CRYPTO_DEFINITION}
         USE_NO_PROC BUCKETS_256 CHECKSUM_3B
         HASH_MODULE DOTNET_MODULE MAGIC_MODULE MACHO_MODULE DEX_MODULE
 )
@@ -124,15 +127,15 @@ endif ()
 target_include_directories(
         libyara
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include>
-        PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
+        PRIVATE ${LIBYARA_SOURCE_PATH} ${CRYPTO_INCLUDE_DIRS}
 )
 
-target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
+target_link_directories(libyara PRIVATE ${CRYPTO_LIBRARY_DIRS})
 
 if (UNIX)
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES} pthread)
+    target_link_libraries(libyara PRIVATE magic ${CRYPTO_LIBRARIES} pthread)
 else ()
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES})
+    target_link_libraries(libyara PRIVATE magic ${CRYPTO_LIBRARIES})
 endif ()
 
 include(GNUInstallDirs)
