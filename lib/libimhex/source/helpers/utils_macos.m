@@ -277,14 +277,24 @@
     @implementation HexDocument
 
     - (BOOL) readFromURL:(NSURL *)url ofType:(NSString *)typeName error:(NSError **)outError {
-        NSString* urlString = [url absoluteString];
-        const char* utf8String = [urlString UTF8String];
+        (void)typeName;
 
-        const char *prefix = "file://";
-        if (strncmp(utf8String, prefix, strlen(prefix)) == 0)
-            utf8String += strlen(prefix);
+        // Resolve file reference URLs (file:///.file/id=...) into a path based URL.
+        // -absoluteString must not be used here, as it returns a percent-encoded URL string
+        NSURL *filePathURL = [url filePathURL];
+        const char *path = filePathURL == nil ? NULL : [filePathURL fileSystemRepresentation];
 
-        openFile(utf8String);
+        if (path == NULL) {
+            if (outError != NULL) {
+                *outError = [NSError errorWithDomain:NSCocoaErrorDomain
+                                                code:NSFileReadUnsupportedSchemeError
+                                            userInfo:@{ NSURLErrorKey: url }];
+            }
+
+            return NO;
+        }
+
+        openFile(path);
 
         return YES;
     }
