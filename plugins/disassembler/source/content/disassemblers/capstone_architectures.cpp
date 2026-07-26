@@ -8,6 +8,92 @@
 
 namespace hex::plugin::disasm {
 
+    namespace {
+
+        template<typename T>
+        std::optional<u64> getLastImmediateOperand(const T &details) {
+            for (size_t i = details.op_count; i > 0; --i) {
+                const auto &operand = details.operands[i - 1];
+                if (static_cast<u32>(operand.type) == CS_OP_IMM)
+                    return static_cast<u64>(operand.imm);
+            }
+
+            return std::nullopt;
+        }
+
+        std::optional<u64> getDirectTargetAddress(BuiltinArchitecture architecture, const cs_insn &instruction) {
+            if (instruction.detail == nullptr)
+                return std::nullopt;
+
+            const auto &details = *instruction.detail;
+            switch (architecture) {
+                case BuiltinArchitecture::ARM:        return getLastImmediateOperand(details.arm);
+                case BuiltinArchitecture::ARM64:      return getLastImmediateOperand(details.arm64);
+                case BuiltinArchitecture::SYSTEMZ:    return getLastImmediateOperand(details.sysz);
+                case BuiltinArchitecture::MIPS:       return getLastImmediateOperand(details.mips);
+                case BuiltinArchitecture::X86:        return getLastImmediateOperand(details.x86);
+                case BuiltinArchitecture::POWERPC:    return getLastImmediateOperand(details.ppc);
+                case BuiltinArchitecture::SPARC:      return getLastImmediateOperand(details.sparc);
+                case BuiltinArchitecture::XCORE:      return getLastImmediateOperand(details.xcore);
+                case BuiltinArchitecture::TMS320C64X: return getLastImmediateOperand(details.tms320c64x);
+                case BuiltinArchitecture::RISCV:      return getLastImmediateOperand(details.riscv);
+                case BuiltinArchitecture::SUPERH:     return getLastImmediateOperand(details.sh);
+                case BuiltinArchitecture::TRICORE:    return getLastImmediateOperand(details.tricore);
+
+                case BuiltinArchitecture::M68K:
+                    for (size_t i = details.m68k.op_count; i > 0; --i) {
+                        const auto &operand = details.m68k.operands[i - 1];
+                        if (operand.type == M68K_OP_BR_DISP)
+                            return instruction.address + 2 + operand.br_disp.disp;
+                        if (operand.type == M68K_OP_IMM)
+                            return operand.imm;
+                        if (operand.type == M68K_OP_MEM &&
+                            (operand.address_mode == M68K_AM_ABSOLUTE_DATA_SHORT || operand.address_mode == M68K_AM_ABSOLUTE_DATA_LONG))
+                            return operand.mem.address;
+                    }
+                    return std::nullopt;
+
+                case BuiltinArchitecture::M680X:
+                    for (size_t i = details.m680x.op_count; i > 0; --i) {
+                        const auto &operand = details.m680x.operands[i - 1];
+                        if (operand.type == M680X_OP_RELATIVE)
+                            return operand.rel.address;
+                        if (operand.type == M680X_OP_EXTENDED && !operand.ext.indirect)
+                            return operand.ext.address;
+                        if (operand.type == M680X_OP_IMMEDIATE)
+                            return static_cast<u64>(operand.imm);
+                    }
+                    return std::nullopt;
+
+                case BuiltinArchitecture::MOS65XX:
+                    for (size_t i = details.mos65xx.op_count; i > 0; --i) {
+                        const auto &operand = details.mos65xx.operands[i - 1];
+                        if (operand.type == MOS65XX_OP_MEM)
+                            return operand.mem;
+                    }
+                    return std::nullopt;
+
+                case BuiltinArchitecture::EVM:
+                case BuiltinArchitecture::WASM:
+                case BuiltinArchitecture::BPF:
+                    return std::nullopt;
+
+                #if CS_API_MAJOR >= 6
+                    case BuiltinArchitecture::ALPHA:     return getLastImmediateOperand(details.alpha);
+                    case BuiltinArchitecture::HPPA:      return getLastImmediateOperand(details.hppa);
+                    case BuiltinArchitecture::LOONGARCH: return getLastImmediateOperand(details.loongarch);
+                    case BuiltinArchitecture::XTENSA:    return getLastImmediateOperand(details.xtensa);
+                    case BuiltinArchitecture::ARC:       return getLastImmediateOperand(details.arc);
+                #endif
+
+                case BuiltinArchitecture::MAX:
+                    return std::nullopt;
+            }
+
+            return std::nullopt;
+        }
+    }
+
     class CapstoneArchitecture : public ContentRegistry::Disassemblers::Architecture {
     public:
         explicit CapstoneArchitecture(BuiltinArchitecture architecture, cs_mode mode = cs_mode(0))
@@ -33,6 +119,7 @@ namespace hex::plugin::disasm {
 
             cs_option(m_handle, CS_OPT_SKIPDATA, CS_OPT_ON);
             cs_option(m_handle, CS_OPT_SYNTAX, m_syntaxMode);
+            cs_option(m_handle, CS_OPT_DETAIL, CS_OPT_ON);
 
             m_instruction = cs_malloc(m_handle);
 
@@ -115,6 +202,22 @@ namespace hex::plugin::disasm {
             disassembly.size        = m_instruction->size;
             disassembly.mnemonic    = m_instruction->mnemonic;
             disassembly.operators   = m_instruction->op_str;
+
+            disassembly.isRelativeBranch = cs_insn_group(m_handle, m_instruction, CS_GRP_BRANCH_RELATIVE);
+            disassembly.isPrivileged = cs_insn_group(m_handle, m_instruction, CS_GRP_PRIVILEGE);
+
+            if (cs_insn_group(m_handle, m_instruction, CS_GRP_CALL))
+                disassembly.type = ContentRegistry::Disassemblers::InstructionType::Call;
+            else if (cs_insn_group(m_handle, m_instruction, CS_GRP_JUMP) || disassembly.isRelativeBranch)
+                disassembly.type = ContentRegistry::Disassemblers::InstructionType::Jump;
+            else if (cs_insn_group(m_handle, m_instruction, CS_GRP_RET) || cs_insn_group(m_handle, m_instruction, CS_GRP_IRET))
+                disassembly.type = ContentRegistry::Disassemblers::InstructionType::Return;
+            else if (cs_insn_group(m_handle, m_instruction, CS_GRP_INT))
+                disassembly.type = ContentRegistry::Disassemblers::InstructionType::Interrupt;
+
+            if (disassembly.type == ContentRegistry::Disassemblers::InstructionType::Jump ||
+                disassembly.type == ContentRegistry::Disassemblers::InstructionType::Call)
+                disassembly.targetAddress = getDirectTargetAddress(m_architecture, *m_instruction);
 
             for (u16 j = 0; j < m_instruction->size; j++)
                 disassembly.bytes += fmt::format("{0:02X} ", m_instruction->bytes[j]);
