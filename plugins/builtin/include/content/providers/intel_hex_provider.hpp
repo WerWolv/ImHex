@@ -56,7 +56,8 @@ namespace hex::plugin::builtin {
             return ICON_VS_TABLE;
         }
 
-        [[nodiscard]] bool handleFilePicker() override;
+        [[nodiscard]] std::vector<fs::ItemFilter> getValidExtensions() const override;
+        [[nodiscard]] bool canOpenFile(const std::fs::path &path) const override;
 
         std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
@@ -67,6 +68,5 @@ namespace hex::plugin::builtin {
 
         ui::SearchableWidget<MemoryRegion> m_regionSearchWidget = ui::SearchableWidget<MemoryRegion>(memoryRegionFilter);
         std::vector<MemoryRegion> m_memoryRegions;
-        std::fs::path m_sourceFilePath;
     };
 }

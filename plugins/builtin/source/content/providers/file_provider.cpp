@@ -72,9 +72,9 @@ namespace hex::plugin::builtin {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        if (m_loadedIntoMemory)
+        if (m_loadedIntoMemory) {
             std::memcpy(m_data.data() + offset, buffer, size);
-        else {
+        } else {
             this->createBackupIfNeeded(m_file.getPath());
             m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
         }
@@ -111,16 +111,16 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::saveAs(const std::fs::path &path) {
-        if (path == m_path)
+        if (path == getPickedPath())
             this->save();
         else
             Provider::saveAs(path);
     }
 
     void FileProvider::resizeRaw(u64 newSize) {
-        if (m_loadedIntoMemory)
+        if (m_loadedIntoMemory) {
             m_data.resize(newSize);
-        else {
+        } else {
             this->createBackupIfNeeded(m_file.getPath());
             m_file.setSize(newSize);
         }
@@ -133,13 +133,13 @@ namespace hex::plugin::builtin {
     }
 
     std::string FileProvider::getName() const {
-        return wolv::util::toUTF8String(m_path.filename());
+        return wolv::util::toUTF8String(getPickedPath().filename());
     }
 
     std::vector<FileProvider::Description> FileProvider::getDataDescription() const {
         std::vector<Description> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(m_path));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(getPickedPath()));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (m_fileStats.has_value()) {
@@ -170,10 +170,11 @@ namespace hex::plugin::builtin {
             };
 
             {
-                auto xattrSize = getxattrs(m_path.c_str(), nullptr, 0);
+                const auto &path = getPickedPath();
+                auto xattrSize = getxattrs(path.c_str(), nullptr, 0);
                 if (xattrSize > 0) {
                     std::string xattrList(xattrSize, 0x00);
-                    getxattrs(m_path.c_str(), xattrList.data(), xattrSize);
+                    getxattrs(path.c_str(), xattrList.data(), xattrSize);
 
                     std::string formattedXattrs;
                     for (const auto &xattr : wolv::util::splitString(xattrList, std::string(1, 0x00))) {
@@ -190,13 +191,18 @@ namespace hex::plugin::builtin {
         return result;
     }
 
+    std::vector<fs::ItemFilter> FileProvider::getValidExtensions() const {
+        return {};
+    }
+
     std::variant<std::string, i128> FileProvider::queryInformation(const std::string &category, const std::string &argument) {
+        const auto &path = getPickedPath();
         if (category == "file_path")
-            return wolv::io::fs::toNormalizedPathString(m_path);
+            return wolv::io::fs::toNormalizedPathString(path);
         else if (category == "file_name")
-            return wolv::io::fs::toNormalizedPathString(m_path.filename());
+            return wolv::io::fs::toNormalizedPathString(path.filename());
         else if (category == "file_extension")
-            return wolv::io::fs::toNormalizedPathString(m_path.extension());
+            return wolv::io::fs::toNormalizedPathString(path.extension());
         else if (category == "creation_time")
             return m_fileStats->st_ctime;
         else if (category == "access_time")
@@ -204,45 +210,61 @@ namespace hex::plugin::builtin {
         else if (category == "modification_time")
             return m_fileStats->st_mtime;
         else if (category == "permissions")
-            return m_fileStats->st_mode & 0777;
+            return m_fileStats->st_mode & 0777U;
         else
             return Provider::queryInformation(category, argument);
-    }
-
-    bool FileProvider::handleFilePicker() {
-        return fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
-            this->setPath(path);
-        });
     }
 
     std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries() {
         MenuEntry loadMenuItem;
 
-        if (m_loadedIntoMemory)
-            loadMenuItem = { .name="hex.builtin.provider.file.menu.direct_access"_lang, .icon=ICON_VS_ARROW_SWAP, .callback=[this] { this->convertToDirectAccess(); } };
-        else
-            loadMenuItem = { .name="hex.builtin.provider.file.menu.into_memory"_lang, .icon=ICON_VS_ARROW_SWAP, .callback=[this] { this->convertToMemoryFile(); } };
+        if (m_loadedIntoMemory) {
+            loadMenuItem = {
+                .name = "hex.builtin.provider.file.menu.direct_access"_lang,
+                .icon = ICON_VS_ARROW_SWAP,
+                .callback = [this] {
+                    this->convertToDirectAccess();
+                },
+            };
+        } else {
+            loadMenuItem = {
+                .name = "hex.builtin.provider.file.menu.into_memory"_lang,
+                .icon = ICON_VS_ARROW_SWAP,
+                .callback = [this] {
+                    this->convertToMemoryFile();
+                },
+            };
+        }
 
         return {
-            { "hex.builtin.provider.file.menu.open_folder"_lang, ICON_VS_FOLDER_OPENED, [this] { fs::openFolderWithSelectionExternal(m_path); } },
-            { "hex.builtin.provider.file.menu.open_file"_lang,   ICON_VS_FILE, [this] { fs::openFileExternal(m_path); } },
-            loadMenuItem
+            {
+                .name = "hex.builtin.provider.file.menu.open_folder"_lang,
+                .icon = ICON_VS_FOLDER_OPENED,
+                .callback = [this] {
+                    fs::openFolderWithSelectionExternal(getPickedPath());
+                },
+            },
+            {
+                .name = "hex.builtin.provider.file.menu.open_file"_lang,
+                .icon = ICON_VS_FILE,
+                .callback = [this] {
+                    fs::openFileExternal(getPickedPath());
+                },
+            },
+            loadMenuItem,
         };
-    }
-
-    void FileProvider::setPath(const std::fs::path &path) {
-        m_path = path;
-        m_path.make_preferred();
     }
 
     prv::Provider::OpenResult FileProvider::open() {
         const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
 
+        const auto &path = getPickedPath();
+
         size_t fileSize = 0x00;
         {
-            wolv::io::File file(m_path, wolv::io::File::Mode::Read);
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
-                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
+                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, path.string(), formatSystemError(file.getOpenError().value_or(0))));
             }
 
             fileSize = file.getSize();
@@ -267,17 +289,18 @@ namespace hex::plugin::builtin {
         m_readable = true;
         m_writable = true;
 
-        if (wolv::io::fs::isDirectory(m_path))
-            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.is_directory"_lang, m_path.string()));
+        const auto &path = getPickedPath();
+        if (wolv::io::fs::isDirectory(path))
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.is_directory"_lang, path.string()));
 
-        wolv::io::File file(m_path, wolv::io::File::Mode::Write);
+        wolv::io::File file(path, wolv::io::File::Mode::Write);
         if (!file.isValid()) {
             m_writable = false;
 
-            file = wolv::io::File(m_path, wolv::io::File::Mode::Read);
+            file = wolv::io::File(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
                 m_readable = false;
-                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), formatSystemError(file.getOpenError().value_or(0))));
+                return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, path.string(), formatSystemError(file.getOpenError().value_or(0))));
             }
 
             ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
@@ -291,8 +314,8 @@ namespace hex::plugin::builtin {
 
         // Make sure the current file is not already opened
         {
-            auto alreadyOpenedFileProvider = std::ranges::find_if(s_openedFiles, [this](const FileProvider *provider) {
-                return provider->m_path == m_path;
+            auto alreadyOpenedFileProvider = std::ranges::find_if(s_openedFiles, [&path](const FileProvider *provider) {
+                return provider->getPickedPath() == path;
             });
 
             if (alreadyOpenedFileProvider != s_openedFiles.end()) {
@@ -374,19 +397,20 @@ namespace hex::plugin::builtin {
             path = std::move(fullPath);
         }
 
-        this->setPath(path);
+        this->setPickedPath(path);
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
-        std::fs::path path;
+        const auto &pickedPath = getPickedPath();
 
-        if (m_path.u8string().starts_with(u8"//")) {
-            path = m_path;
+        std::fs::path path;
+        if (pickedPath.u8string().starts_with(u8"//")) {
+            path = pickedPath;
         } else {
             if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-                path = std::fs::proximate(m_path, projectPath.parent_path());
+                path = std::fs::proximate(pickedPath, projectPath.parent_path());
             if (path.empty())
-                path = m_path;
+                path = pickedPath;
         }
 
         settings["path"] = wolv::io::fs::toNormalizedPathString(path);

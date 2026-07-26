@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
 
             auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
             if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
-                fileProvider->setPath(filePath);
+                fileProvider->setPickedPath(filePath);
 
                 ImHexApi::Provider::openProvider(provider);
             }

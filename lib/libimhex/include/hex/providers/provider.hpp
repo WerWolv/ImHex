@@ -40,7 +40,16 @@ namespace hex::prv {
     class IProviderFilePicker {
     public:
         virtual ~IProviderFilePicker() = default;
-        virtual bool handleFilePicker() = 0;
+        [[nodiscard]] virtual std::vector<fs::ItemFilter> getValidExtensions() const = 0;
+        [[nodiscard]] virtual bool canOpenFile(const std::fs::path &path) const { std::ignore = path; return true; }
+        void setPickedPath(const std::fs::path &path) {
+            m_path = path;
+            m_path.make_preferred();
+        }
+        [[nodiscard]] std::fs::path getPickedPath() const { return m_path; }
+
+    private:
+        std::fs::path m_path;
     };
 
     /**
@@ -55,7 +64,7 @@ namespace hex::prv {
         };
 
         virtual ~IProviderMenuItems() = default;
-        virtual std::vector<MenuEntry> getMenuEntries() = 0;
+        [[nodiscard]] virtual std::vector<MenuEntry> getMenuEntries() = 0;
     };
 
     /**

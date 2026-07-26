@@ -249,9 +249,10 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult IntelHexProvider::open() {
-        auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
+        const auto path = this->getPickedPath();
+        auto file = wolv::io::File(path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, path.string(), formatSystemError(errno)));
         }
 
         auto data = intel_hex::parseIntelHex(file.readString());
@@ -268,43 +269,36 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string IntelHexProvider::getName() const {
-        return fmt::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
+        return fmt::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(getPickedPath().filename()));
     }
 
     [[nodiscard]] std::vector<IntelHexProvider::Description> IntelHexProvider::getDataDescription() const {
         std::vector<Description> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(m_sourceFilePath));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(getPickedPath()));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         return result;
     }
 
-    bool IntelHexProvider::handleFilePicker() {
-        auto picked = fs::openFileBrowser(fs::DialogMode::Open, {
-                { "Intel Hex File", "hex" },
-                { "Intel Hex File", "h86" },
-                { "Intel Hex File", "hxl" },
-                { "Intel Hex File", "hxh" },
-                { "Intel Hex File", "obl" },
-                { "Intel Hex File", "obh" },
-                { "Intel Hex File", "mcs" },
-                { "Intel Hex File", "ihex" },
-                { "Intel Hex File", "ihe" },
-                { "Intel Hex File", "ihx" },
-                { "Intel Hex File", "a43" },
-                { "Intel Hex File", "a90" }
-            }, [this](const std::fs::path &path) {
-                m_sourceFilePath = path;
-            }
-        );
+    std::vector<fs::ItemFilter> IntelHexProvider::getValidExtensions() const {
+        return {
+            { "Intel Hex File", "hex"  },
+            { "Intel Hex File", "h86"  },
+            { "Intel Hex File", "hxl"  },
+            { "Intel Hex File", "hxh"  },
+            { "Intel Hex File", "obl"  },
+            { "Intel Hex File", "obh"  },
+            { "Intel Hex File", "mcs"  },
+            { "Intel Hex File", "ihex" },
+            { "Intel Hex File", "ihe"  },
+            { "Intel Hex File", "ihx"  },
+            { "Intel Hex File", "a43"  },
+        };
+    }
 
-        if (!picked)
-            return false;
-        if (!wolv::io::fs::isRegularFile(m_sourceFilePath))
-            return false;
-
-        return true;
+    bool IntelHexProvider::canOpenFile(const std::fs::path &path) const {
+        return wolv::io::fs::isRegularFile(path);
     }
 
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
@@ -382,11 +376,11 @@ namespace hex::plugin::builtin {
         Provider::loadSettings(settings);
 
         auto path = settings.at("path").get<std::string>();
-        m_sourceFilePath = std::u8string(path.begin(), path.end());
+        setPickedPath(std::u8string(path.begin(), path.end()));
     }
 
     nlohmann::json IntelHexProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = wolv::io::fs::toNormalizedPathString(m_sourceFilePath);
+        settings["path"] = wolv::io::fs::toNormalizedPathString(getPickedPath());
 
         return Provider::storeSettings(settings);
     }

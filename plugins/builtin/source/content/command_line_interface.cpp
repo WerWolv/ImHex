@@ -360,7 +360,7 @@ namespace hex::plugin::builtin {
         std::fs::path filePath = reinterpret_cast<const char8_t*>(args[0].data());
 
         FileProvider provider;
-        provider.setPath(filePath);
+        provider.setPickedPath(filePath);
         auto result = provider.open();
         if (result.isFailure()) {
             log::println("Failed to open file '{}': {}", args[0], result.getErrorMessage());
