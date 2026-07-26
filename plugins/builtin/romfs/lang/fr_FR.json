@@ -387,8 +387,6 @@
     "hex.builtin.popup.error.project.load.invalid_magic": "Fichier magique invalide dans le fichier de projet",
     "hex.builtin.popup.error.read_only": "Impossible d'obtenir l'accès en écriture. Le fichier a été ouvert en mode lecture seule.",
     "hex.builtin.popup.error.task_exception": "Exception levée dans la tâche '{}' :\n\n{}",
-    "hex.builtin.popup.exit_application.desc": "Vous avez des modifications non sauvegardées dans votre projet.\nÊtes-vous sûr de vouloir quitter ?",
-    "hex.builtin.popup.exit_application.title": "Quitter l'application ?",
     "hex.builtin.popup.waiting_for_tasks.title": "En attente des tâches",
     "hex.builtin.popup.crash_recover.title": "Récupération après plantage",
     "hex.builtin.popup.crash_recover.message": "Une exception a été levée, mais ImHex a pu l'intercepter et éviter un plantage",

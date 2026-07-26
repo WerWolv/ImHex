@@ -368,8 +368,6 @@
     "hex.builtin.popup.error.project.load.invalid_magic": "Hibás magic fájl a projektfájlban",
     "hex.builtin.popup.error.read_only": "Nem sikerült írási hozzáférést szerezni. A fájl csak olvasható módban van megnyitva.",
     "hex.builtin.popup.error.task_exception": "Hiba lépett fel a(z) '{}' feladat közben: \n\n{}",
-    "hex.builtin.popup.exit_application.desc": "Nem mentett módosítások vannak a projektben.\nBiztosan ki szeretnél lépni?",
-    "hex.builtin.popup.exit_application.title": "Bezárod az alkalmazást?",
     "hex.builtin.popup.waiting_for_tasks.title": "Várakozás háttérfeladatokra",
     "hex.builtin.popup.crash_recover.title": "Összeomlás helyreállítása",
     "hex.builtin.popup.crash_recover.message": "Egy belső hiba lépett fel, de az ImHex le tudta kezelni, így megelőzött egy összeomlást",

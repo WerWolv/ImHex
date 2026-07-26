@@ -375,8 +375,6 @@
     "hex.builtin.popup.error.project.save": "",
     "hex.builtin.popup.error.read_only": "Impossibile scrivere sul File. File aperto solo in modalità lettura",
     "hex.builtin.popup.error.task_exception": "",
-    "hex.builtin.popup.exit_application.desc": "Hai delle modifiche non salvate nel tuo progetto.\nSei sicuro di voler uscire?",
-    "hex.builtin.popup.exit_application.title": "Uscire dall'applicazione?",
     "hex.builtin.popup.safety_backup.delete": "No, Elimina",
     "hex.builtin.popup.safety_backup.desc": "Oh no, l'ultima volta ImHex è crashato.\nVuoi ripristinare il tuo lavoro?",
     "hex.builtin.popup.safety_backup.log_file": "",

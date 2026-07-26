@@ -375,8 +375,6 @@
     "hex.builtin.popup.error.project.save": "",
     "hex.builtin.popup.error.read_only": "Não foi possível obter acesso de gravação. Arquivo aberto no modo somente leitura.",
     "hex.builtin.popup.error.task_exception": "",
-    "hex.builtin.popup.exit_application.desc": "Você tem alterações não salvas feitas em seu projeto.\nVocê tem certeza que quer sair?",
-    "hex.builtin.popup.exit_application.title": "Sair da aplicação?",
     "hex.builtin.popup.safety_backup.delete": "Não, Apagar",
     "hex.builtin.popup.safety_backup.desc": "Ah não, ImHex crashou na ultima vez.\nDeseja restaurar seu trabalho anterior?",
     "hex.builtin.popup.safety_backup.log_file": "",

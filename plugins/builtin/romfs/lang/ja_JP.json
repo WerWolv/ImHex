@@ -375,8 +375,6 @@
     "hex.builtin.popup.error.project.save": "",
     "hex.builtin.popup.error.read_only": "書き込み権限を取得できませんでした。ファイルが読み取り専用で開かれました。",
     "hex.builtin.popup.error.task_exception": "",
-    "hex.builtin.popup.exit_application.desc": "変更がプロジェクトとして保存されていません。\n終了してもよろしいですか？",
-    "hex.builtin.popup.exit_application.title": "アプリケーションを終了しますか？",
     "hex.builtin.popup.safety_backup.delete": "破棄する",
     "hex.builtin.popup.safety_backup.desc": "ImHexがクラッシュしました。\n前のデータを復元しますか？",
     "hex.builtin.popup.safety_backup.log_file": "",

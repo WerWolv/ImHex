@@ -381,8 +381,6 @@
     "hex.builtin.popup.error.project.load.invalid_magic": "Неверный магический файл в файле проекта",
     "hex.builtin.popup.error.read_only": "Отказано в записи. Файл открыт в режиме только для чтения.",
     "hex.builtin.popup.error.task_exception": "Процесс вернул ошибку '{}':\n\n{}",
-    "hex.builtin.popup.exit_application.desc": "Изменения не были сохранены.\nВы действительно хотите выйти?",
-    "hex.builtin.popup.exit_application.title": "Выйти из ImHex?",
     "hex.builtin.popup.waiting_for_tasks.title": "Ожидание задач",
     "hex.builtin.popup.crash_recover.title": "Попытка восстановления",
     "hex.builtin.popup.crash_recover.message": "Произошла критическая ошибка, но ImHex смог её перехватить и предотвратить вылет программы.",
