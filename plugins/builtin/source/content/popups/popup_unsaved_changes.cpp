@@ -59,43 +59,53 @@ namespace hex::plugin::builtin {
         ImGui::NewLine();
         ImGui::Separator();
 
-        auto width = ImGui::GetWindowWidth();
-        float buttonWidth = width / 5;
+        const auto tableWidth = ImGui::GetWindowWidth() - ImGui::GetStyle().WindowPadding.x * 2;
+        if (ImGui::BeginTable("##buttons", 2, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_SizingFixedSame, ImVec2(tableWidth, 0))) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
-        // Save data only (grayed out if no data is dirty)
-        ImGui::SetCursorPosX((width / 10) * 0.5);
-        if (!anyDataDirty) ImGui::BeginDisabled();
-        if (ImGui::Button("hex.ui.common.save.data_only"_lang, ImVec2(buttonWidth, 0))) {
-            m_saveDataFunction();
-            this->close();
-        }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-            ImGui::SetTooltip("%s", "hex.ui.common.data.tooltip"_lang.get());
-        if (!anyDataDirty) ImGui::EndDisabled();
-        ImGui::SameLine();
+            const auto buttonWidth = (tableWidth / 2) - ImGui::GetStyle().FramePadding.x;
 
-        // Save data & project
-        if (!anyMetadataDirty) ImGui::BeginDisabled();
-        if (ImGui::Button("hex.ui.common.save.project"_lang, ImVec2(buttonWidth, 0))) {
-            m_saveProjectFunction();
-            this->close();
-        }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-            ImGui::SetTooltip("%s", anyMetadataDirty ? "hex.ui.common.metadata.tooltip"_lang.get() : "hex.ui.common.metadata.disabled.tooltip"_lang.get());
-        if (!anyMetadataDirty) ImGui::EndDisabled();
-        ImGui::SameLine();
+            // Save data only (grayed out if no data is dirty)
+            if (!anyDataDirty) ImGui::BeginDisabled();
+            if (ImGuiExt::DimmedButton("hex.ui.common.save.data_only"_lang, ImVec2(buttonWidth, 0))) {
+                m_saveDataFunction();
+                this->close();
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("%s", "hex.ui.common.data.tooltip"_lang.get());
+            if (!anyDataDirty) ImGui::EndDisabled();
 
-        // Discard
-        if (ImGui::Button("hex.ui.common.discard"_lang, ImVec2(buttonWidth, 0))) {
-            m_discardFunction();
-            this->close();
-        }
-        ImGui::SameLine();
+            ImGui::TableNextColumn();
 
-        // Cancel
-        if (ImGui::Button("hex.ui.common.cancel"_lang, ImVec2(buttonWidth, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-            m_cancelFunction();
-            this->close();
+            // Save data & project
+            if (!anyMetadataDirty) ImGui::BeginDisabled();
+            if (ImGuiExt::DimmedButton("hex.ui.common.save.project"_lang, ImVec2(buttonWidth, 0))) {
+                m_saveProjectFunction();
+                this->close();
+            }
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                ImGui::SetTooltip("%s", anyMetadataDirty ? "hex.ui.common.metadata.tooltip"_lang.get() : "hex.ui.common.metadata.disabled.tooltip"_lang.get());
+            if (!anyMetadataDirty) ImGui::EndDisabled();
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            // Discard
+            if (ImGuiExt::DimmedButton("hex.ui.common.discard"_lang, ImVec2(buttonWidth, 0))) {
+                m_discardFunction();
+                this->close();
+            }
+
+            ImGui::TableNextColumn();
+
+            // Cancel
+            if (ImGuiExt::DimmedButton("hex.ui.common.cancel"_lang, ImVec2(buttonWidth, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                m_cancelFunction();
+                this->close();
+            }
+
+            ImGui::EndTable();
         }
 
         ImGui::SetWindowPos((ImHexApi::System::getMainWindowSize() - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
