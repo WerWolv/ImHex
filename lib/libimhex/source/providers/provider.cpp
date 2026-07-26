@@ -109,9 +109,9 @@ namespace hex::prv {
         i64 difference = newSize - this->getActualSize();
 
         if (difference > 0)
-            EventProviderDataInserted::post(this, this->getActualSize(), difference);
+            EventProviderDataInserted::post(this, this->getBaseAddress() + this->getActualSize(), difference);
         else if (difference < 0)
-            EventProviderDataRemoved::post(this, this->getActualSize() + difference, -difference);
+            EventProviderDataRemoved::post(this, this->getBaseAddress() + this->getActualSize() + difference, -difference);
 
         this->markDataDirty();
         return true;
