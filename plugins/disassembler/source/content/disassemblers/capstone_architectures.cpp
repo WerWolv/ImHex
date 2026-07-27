@@ -47,9 +47,13 @@ namespace hex::plugin::disasm {
                             return instruction.address + 2 + operand.br_disp.disp;
                         if (operand.type == M68K_OP_IMM)
                             return operand.imm;
-                        if (operand.type == M68K_OP_MEM &&
-                            (operand.address_mode == M68K_AM_ABSOLUTE_DATA_SHORT || operand.address_mode == M68K_AM_ABSOLUTE_DATA_LONG))
-                            return operand.mem.address;
+                        if (operand.type == M68K_OP_MEM && (operand.address_mode == M68K_AM_ABSOLUTE_DATA_SHORT || operand.address_mode == M68K_AM_ABSOLUTE_DATA_LONG)) {
+                            #if CS_API_MAJOR >= 6
+                                return operand.mem.address;
+                            #else
+                                return operand.imm;
+                            #endif
+                        }
                     }
                     return std::nullopt;
 
