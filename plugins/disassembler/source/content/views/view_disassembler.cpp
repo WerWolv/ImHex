@@ -514,7 +514,7 @@ namespace hex::plugin::disasm {
                             ImGui::PushID(i);
                             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                             ImGui::BeginDisabled(edge == flowEdges.end());
-                            if (ImGuiExt::DimmedIconButton(ICON_VS_CALL_OUTGOING, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(rowHeight, rowHeight)) && edge != flowEdges.end()) {
+                            if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_OUT, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(rowHeight, rowHeight)) && edge != flowEdges.end()) {
                                 ImGui::SetScrollY(std::max(0.0F, contentStartY + rowTop(edge->target) - ImGui::GetWindowHeight() * 0.5F));
                                 const auto &target = disassembly[edge->target];
                                 ImHexApi::HexEditor::setSelection(m_imageBaseAddress.get(provider) + target.offset, target.size);
