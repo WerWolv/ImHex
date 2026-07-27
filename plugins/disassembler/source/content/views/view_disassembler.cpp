@@ -18,6 +18,7 @@
 #include <cmath>
 #include <tuple>
 #include <unordered_map>
+#include <numbers>
 
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
