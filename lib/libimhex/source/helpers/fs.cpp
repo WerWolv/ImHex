@@ -9,16 +9,20 @@
     #include <windows.h>
     #include <shlobj.h>
     #include <shellapi.h>
-    #define GLFW_EXPOSE_NATIVE_WIN32
+    #if !defined(GLFW_EXPOSE_NATIVE_WIN32)
+        #define GLFW_EXPOSE_NATIVE_WIN32
+    #endif
 #elif defined(OS_MACOS)
-    #define GLFW_EXPOSE_NATIVE_COCOA
+    #if !defined(GLFW_EXPOSE_NATIVE_COCOA)
+        #define GLFW_EXPOSE_NATIVE_COCOA
+    #endif
 #elif defined(OS_LINUX)
     #include <xdg.hpp>
-    #if !defined(GLFW_EXPOSE_NATIVE_X11)
-        #define GLFW_EXPOSE_NATIVE_X11
-    #endif
     #if defined(OS_FREEBSD)
         #include <sys/syslimits.h>
+    #endif
+    #if !defined(GLFW_EXPOSE_NATIVE_X11)
+        #define GLFW_EXPOSE_NATIVE_X11
     #endif
 #endif
 
@@ -232,7 +236,7 @@ namespace hex::fs {
             nativeWindow = (unsigned long long)(void *)glfwGetWin32Window(ImHexApi::System::getMainWindowHandle());
 #elif defined(OS_MACOS)
             nativeWindow = (unsigned long long)(void *)glfwGetCocoaWindow(ImHexApi::System::getMainWindowHandle());
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) && defined(GLFW_PLATFORM) && defined(GLFW_PLATFORM_X11)
             nativeWindow = (unsigned long long)glfwGetX11Window(ImHexApi::System::getMainWindowHandle());
 #endif
 
