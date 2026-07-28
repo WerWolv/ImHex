@@ -101,8 +101,7 @@ namespace hex::plugin::disasm {
         std::vector<FlowEdge> edges;
         for (std::size_t source = 0; source < disassembly.size(); source += 1) {
             const auto &instruction = disassembly[source];
-            if ((instruction.type != ContentRegistry::Disassemblers::InstructionType::Jump &&
-                 instruction.type != ContentRegistry::Disassemblers::InstructionType::Call) || !instruction.targetAddress.has_value())
+            if (instruction.type != ContentRegistry::Disassemblers::InstructionType::Jump || !instruction.targetAddress.has_value())
                 continue;
 
             const auto target = instructionIndices.find(*instruction.targetAddress);
