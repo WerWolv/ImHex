@@ -170,9 +170,10 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult MotorolaSRECProvider::open() {
-        auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
+        const auto &path = getPickedPath();
+        auto file = wolv::io::File(path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, m_sourceFilePath.string(), formatSystemError(errno)));
+            return OpenResult::failure(fmt::format("hex.builtin.provider.file.error.open"_lang, path.string(), formatSystemError(errno)));
         }
 
         auto data = motorola_srec::parseMotorolaSREC(file.readString());
@@ -189,45 +190,35 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return fmt::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
+        return fmt::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(getPickedPath().filename()));
     }
 
 
     [[nodiscard]] std::vector<MotorolaSRECProvider::Description> MotorolaSRECProvider::getDataDescription() const {
         std::vector<Description> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(m_sourceFilePath));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(getPickedPath()));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         return result;
     }
 
-    bool MotorolaSRECProvider::handleFilePicker() {
-        auto picked = fs::openFileBrowser(fs::DialogMode::Open, {
-                { "Motorola SREC File", "s19" },
-                { "Motorola SREC File", "s28" },
-                { "Motorola SREC File", "s37" },
-                { "Motorola SREC File", "s" },
-                { "Motorola SREC File", "s1" },
-                { "Motorola SREC File", "s2" },
-                { "Motorola SREC File", "s3" },
-                { "Motorola SREC File", "sx" },
-                { "Motorola SREC File", "srec" },
-                { "Motorola SREC File", "exo" },
-                { "Motorola SREC File", "mot" },
-                { "Motorola SREC File", "mxt" }
-            },
-            [this](const std::fs::path &path) {
-                m_sourceFilePath = path;
-            }
-        );
 
-        if (!picked)
-            return false;
-        if (!wolv::io::fs::isRegularFile(m_sourceFilePath))
-            return false;
-
-        return true;
+    std::vector<fs::ItemFilter> MotorolaSRECProvider::getValidExtensions() const {
+        return {
+            { "Motorola SREC File", "s19" },
+            { "Motorola SREC File", "s28" },
+            { "Motorola SREC File", "s37" },
+            { "Motorola SREC File", "s" },
+            { "Motorola SREC File", "s1" },
+            { "Motorola SREC File", "s2" },
+            { "Motorola SREC File", "s3" },
+            { "Motorola SREC File", "sx" },
+            { "Motorola SREC File", "srec" },
+            { "Motorola SREC File", "exo" },
+            { "Motorola SREC File", "mot" },
+            { "Motorola SREC File", "mxt" }
+        };
     }
 
 }

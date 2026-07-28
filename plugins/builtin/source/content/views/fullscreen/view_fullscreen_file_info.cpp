@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewFullScreenFileInfo::ViewFullScreenFileInfo(std::fs::path filePath) : m_filePath(std::move(filePath)) {
-        this->m_provider.setPath(m_filePath);
+        this->m_provider.setPickedPath(m_filePath);
         if (this->m_provider.open().isFailure()) {
             ui::ToastError::open("hex.builtin.view.fullscreen.file_info.error.file_not_readable"_lang);
             return;

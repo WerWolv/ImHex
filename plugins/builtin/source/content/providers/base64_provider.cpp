@@ -60,6 +60,11 @@ namespace hex::plugin::builtin {
         FileProvider::removeRaw(4 * (offset / 3), newFileLength);
     }
 
-
+    std::vector<fs::ItemFilter> Base64Provider::getValidExtensions() const {
+        return {
+            { "Base64 File", "b64" },
+            { "Base64 File", "base64" }
+        };
+    }
 
 }

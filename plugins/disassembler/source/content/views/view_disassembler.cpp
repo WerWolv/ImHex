@@ -1,6 +1,7 @@
 #include <content/views/view_disassembler.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/views.hpp>
+#include <hex/api/events/events_interaction.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 
 #include <hex/providers/provider.hpp>
@@ -13,6 +14,12 @@
 
 #include <wolv/literals.hpp>
 
+#include <algorithm>
+#include <cmath>
+#include <tuple>
+#include <unordered_map>
+#include <numbers>
+
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
 
@@ -21,6 +28,15 @@ namespace hex::plugin::disasm {
     ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name", ICON_VS_FILE_CODE) {
         EventProviderDeleted::subscribe(this, [this](const auto *provider) {
             m_disassembly.get(provider).clear();
+            m_flowEdges.get(provider).clear();
+            m_returnPrefix.get(provider).clear();
+            m_selectedInstruction.get(provider).reset();
+            m_selectedRegion.get(provider) = Region::Invalid();
+            m_scrollToSelectedInstruction.get(provider) = false;
+        });
+
+        EventRegionSelected::subscribe(this, [this](const auto &selection) {
+            this->updateSelection(selection.getProvider(), selection.getRegion());
         });
 
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
@@ -40,12 +56,120 @@ namespace hex::plugin::disasm {
 
     ViewDisassembler::~ViewDisassembler() {
         EventProviderDeleted::unsubscribe(this);
+        EventRegionSelected::unsubscribe(this);
+    }
+
+    void ViewDisassembler::updateSelection(prv::Provider *provider, const Region &region) {
+        if (provider == nullptr) {
+            provider = ImHexApi::Provider::get();
+            if (provider == nullptr)
+                return;
+        }
+
+        m_selectedRegion.get(provider) = region;
+        if (m_disassemblerTask.isRunning())
+            return;
+
+        std::optional<std::size_t> selectedInstruction;
+        const auto &disassembly = m_disassembly.get(provider);
+        const u64 imageBaseAddress = m_imageBaseAddress.get(provider);
+        if (region != Region::Invalid() && region.getStartAddress() >= imageBaseAddress) {
+            const u64 offset = region.getStartAddress() - imageBaseAddress;
+
+            auto instruction = std::upper_bound(disassembly.begin(), disassembly.end(), offset, [](u64 value, const auto &candidate) {
+                return value < candidate.offset;
+            });
+
+            if (instruction != disassembly.begin()) {
+                instruction -= 1;
+                if (offset >= instruction->offset && offset - instruction->offset < instruction->size)
+                    selectedInstruction = std::distance(disassembly.begin(), instruction);
+            }
+        }
+
+        auto &previousSelection = m_selectedInstruction.get(provider);
+        m_scrollToSelectedInstruction.get(provider) = selectedInstruction.has_value() && selectedInstruction != previousSelection;
+        previousSelection = selectedInstruction;
+    }
+
+    std::vector<ViewDisassembler::FlowEdge> ViewDisassembler::findFlowEdges(const std::vector<ContentRegistry::Disassemblers::Instruction> &disassembly) {
+        std::unordered_map<u64, std::size_t> instructionIndices;
+        instructionIndices.reserve(disassembly.size());
+        for (std::size_t i = 0; i < disassembly.size(); i += 1)
+            instructionIndices.emplace(disassembly[i].address, i);
+
+        std::vector<FlowEdge> edges;
+        for (std::size_t source = 0; source < disassembly.size(); source += 1) {
+            const auto &instruction = disassembly[source];
+            if ((instruction.type != ContentRegistry::Disassemblers::InstructionType::Jump &&
+                 instruction.type != ContentRegistry::Disassemblers::InstructionType::Call) || !instruction.targetAddress.has_value())
+                continue;
+
+            const auto target = instructionIndices.find(*instruction.targetAddress);
+            if (target != instructionIndices.end() && target->second != source) {
+                edges.push_back({
+                    .source = source,
+                    .target = target->second,
+                    .lane = 0,
+                    .sourceSlot = 0,
+                    .sourceSlotCount = 0,
+                    .targetSlot = 0,
+                    .targetSlotCount = 0
+                });
+            }
+        }
+
+        std::ranges::sort(edges, [](const auto &left, const auto &right) {
+            return std::tuple(std::min(left.source, left.target), std::max(left.source, left.target), left.source, left.target) <
+                   std::tuple(std::min(right.source, right.target), std::max(right.source, right.target), right.source, right.target);
+        });
+
+        std::vector<std::size_t> laneEnds;
+        for (auto &edge : edges) {
+            const std::size_t start = std::min(edge.source, edge.target);
+            const std::size_t end = std::max(edge.source, edge.target);
+
+            auto lane = std::ranges::find_if(
+                laneEnds,
+                [start](std::size_t laneEnd) {
+                    return laneEnd < start;
+                }
+            );
+
+            if (lane == laneEnds.end()) {
+                edge.lane = laneEnds.size();
+                laneEnds.push_back(end);
+            } else {
+                edge.lane = std::distance(laneEnds.begin(), lane);
+                *lane = end;
+            }
+        }
+
+        std::vector<std::size_t> endpointCounts(disassembly.size(), 0);
+        for (const auto &edge : edges) {
+            endpointCounts[edge.source] += 1;
+            endpointCounts[edge.target] += 1;
+        }
+
+        std::vector<std::size_t> nextEndpointSlot(disassembly.size(), 0);
+        for (auto &edge : edges) {
+            edge.sourceSlot = nextEndpointSlot[edge.source] += 1;
+            edge.sourceSlotCount = endpointCounts[edge.source];
+            edge.targetSlot = nextEndpointSlot[edge.target] += 1;
+            edge.targetSlotCount = endpointCounts[edge.target];
+        }
+
+        return edges;
     }
 
     void ViewDisassembler::disassemble() {
         const auto provider = ImHexApi::Provider::get();
 
         m_disassembly.get(provider).clear();
+        m_flowEdges.get(provider).clear();
+        m_returnPrefix.get(provider).clear();
+        m_selectedInstruction.get(provider).reset();
+        m_scrollToSelectedInstruction.get(provider) = false;
 
         if (m_regionToDisassemble.get(provider).getStartAddress() < m_imageBaseAddress)
             return;
@@ -58,7 +182,7 @@ namespace hex::plugin::disasm {
             if (currArchitecture == nullptr)
                 return;
 
-            // Create a capstone disassembler instance
+            // Create a disassembler instance
             if (currArchitecture->start()) {
                 ON_SCOPE_EXIT {
                     currArchitecture->end();
@@ -79,12 +203,12 @@ namespace hex::plugin::disasm {
                 bool hadError = false;
                 while (instructionDataAddress <= region.getEndAddress()) {
                     // Read a chunk of data
-                    size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress()-instructionDataAddress)+1);
+                    std::size_t bufferSize = std::min<u64>(buffer.size(), (region.getEndAddress()-instructionDataAddress)+1);
                     provider->read(instructionDataAddress, buffer.data(), bufferSize);
 
                     auto code = std::span(buffer.data(), bufferSize);
 
-                    // Ask capstone to disassemble the data
+                    // Ask the backend to disassemble the data
                     while (true) {
                         auto instruction = currArchitecture->disassemble(m_imageBaseAddress, instructionLoadAddress, instructionDataAddress, code);
                         if (!instruction.has_value())
@@ -109,6 +233,20 @@ namespace hex::plugin::disasm {
                     if (hadError) break;
                     hadError = true;
                 }
+
+                m_flowEdges.get(provider) = findFlowEdges(disassembly);
+                auto &returnPrefix = m_returnPrefix.get(provider);
+                returnPrefix.resize(disassembly.size() + 1, 0);
+                for (std::size_t i = 0; i < disassembly.size(); i += 1) {
+                    returnPrefix[i + 1] = returnPrefix[i];
+
+                    if (disassembly[i].type == ContentRegistry::Disassemblers::InstructionType::Return)
+                        returnPrefix[i + 1] += 1;
+                }
+
+                TaskManager::doLater([this, provider] {
+                    this->updateSelection(provider, m_selectedRegion.get(provider));
+                });
             }
         });
     }
@@ -253,64 +391,244 @@ namespace hex::plugin::disasm {
 
             ImGui::NewLine();
 
-            // Draw disassembly table
-            if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.disassembler.view.disassembler.disassembly.address"_lang);
-                ImGui::TableSetupColumn("hex.disassembler.view.disassembler.disassembly.offset"_lang);
-                ImGui::TableSetupColumn("hex.disassembler.view.disassembler.disassembly.bytes"_lang);
-                ImGui::TableSetupColumn("hex.disassembler.view.disassembler.disassembly.title"_lang);
+            // Draw code listing with control-flow gutter.
+            constexpr static std::size_t MaxVisibleFlowLanes = 12;
 
-                if (!m_disassemblerTask.isRunning()) {
-                    ImGuiListClipper clipper;
-                    clipper.Begin(disassembly.size());
+            const auto &flowEdges = m_flowEdges.get(provider);
+            const auto &returnPrefix = m_returnPrefix.get(provider);
 
-                    ImGui::TableHeadersRow();
-                    while (clipper.Step()) {
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            const auto &instruction = disassembly[i];
+            const bool isDisassembling = m_disassemblerTask.isRunning();
 
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
+            const std::size_t laneCount = isDisassembling || flowEdges.empty()
+                ? 0
+                : std::min(MaxVisibleFlowLanes, std::ranges::max_element(flowEdges, { }, &FlowEdge::lane)->lane + 1);
 
-                            // Draw a selectable label for the address
+            const float rowHeight = ImGui::GetTextLineHeight() + ImGui::GetStyle().CellPadding.y * 2;
+            const float returnGap = ImGui::GetFontSize() * 0.65F;
+            const float laneSpacing = ImGui::GetFontSize() * 0.55F;
+
+            const float gutterWidth = std::max(ImGui::GetFontSize() * 1.5F, laneCount * laneSpacing + ImGui::GetFontSize());
+            const float addressWidth = ImGui::CalcTextSize("0x0000000000000000").x + ImGui::GetStyle().ItemSpacing.x * 2;
+            const float bytesWidth = ImGui::CalcTextSize("00 00 00 00 00 ...").x + ImGui::GetStyle().ItemSpacing.x * 2;
+            const float typeIconWidth = rowHeight + ImGui::GetStyle().ItemSpacing.x;
+
+            const bool showOffsets = ImGui::GetIO().KeyShift;
+            const auto &selectedInstruction = m_selectedInstruction.get(provider);
+            auto &scrollToSelection = m_scrollToSelectedInstruction.get(provider);
+
+            auto *drawList = ImGui::GetWindowDrawList();
+
+            if (ImGui::BeginChild("##disassemblyListing", ImVec2(0, 0), ImGuiChildFlags_Borders)) {
+                if (!isDisassembling) {
+                    drawList = ImGui::GetWindowDrawList();
+                    const ImVec2 rowsOrigin = ImGui::GetCursorScreenPos();
+                    const ImVec2 childMin = ImGui::GetWindowPos();
+                    const ImVec2 childMax = childMin + ImGui::GetWindowSize();
+                    const float contentStartY = ImGui::GetCursorPosY();
+
+                    const float childWidth = ImGui::GetContentRegionAvail().x;
+                    const float rowAddressX = rowsOrigin.x + gutterWidth;
+                    const float rowBytesX = rowAddressX + addressWidth;
+                    const float rowTypeIconX = rowBytesX + bytesWidth;
+                    const float rowInstructionX = rowTypeIconX + typeIconWidth;
+
+                    const ImVec4 bytesClip(rowBytesX, childMin.y, rowTypeIconX - ImGui::GetStyle().ItemSpacing.x, childMax.y);
+                    const ImVec4 instructionClip(rowInstructionX, childMin.y, childMax.x, childMax.y);
+
+                    const auto returnCountBefore = [&returnPrefix](size_t index) {
+                        return index < returnPrefix.size() ? returnPrefix[index] : size_t(0);
+                    };
+
+                    const auto rowTop = [rowHeight, returnGap, &returnCountBefore](size_t index) {
+                        return float(index) * rowHeight + float(returnCountBefore(index)) * returnGap;
+                    };
+
+                    const float contentHeight = rowTop(disassembly.size());
+
+                    if (scrollToSelection && selectedInstruction.has_value()) {
+                        ImGui::SetScrollY(std::max(0.0F, contentStartY + rowTop(*selectedInstruction) - ImGui::GetWindowHeight() * 0.5F));
+                        scrollToSelection = false;
+                    }
+
+                    const auto rowAtY = [&rowTop, &disassembly](float y) {
+                        std::size_t first = 0;
+                        std::size_t last = disassembly.size();
+                        while (first < last) {
+                            const std::size_t middle = first + (last - first) / 2;
+                            if (rowTop(middle) < y)
+                                first = middle + 1;
+                            else
+                                last = middle;
+                        }
+                        return first;
+                    };
+
+                    const float visibleTop = childMin.y - rowsOrigin.y;
+                    const float visibleBottom = childMax.y - rowsOrigin.y;
+                    std::size_t firstVisible = rowAtY(visibleTop);
+                    if (firstVisible > 0)
+                        firstVisible -= 1;
+
+                    const std::size_t lastVisible = std::min(disassembly.size(), rowAtY(visibleBottom) + 1);
+
+                    const ImVec2 itemSpacing = ImGui::GetStyle().ItemSpacing;
+                    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(itemSpacing.x, 0.0F));
+
+                    std::size_t anchorIndex = 0;
+                    float anchorY = rowsOrigin.y;
+                    bool hasAnchor = false;
+                    for (std::size_t i = firstVisible; i < lastVisible; i += 1) {
+                        const auto &instruction = disassembly[i];
+                        ImGui::SetCursorPosY(contentStartY + rowTop(i));
+                        const ImVec2 rowPosition = ImGui::GetCursorScreenPos();
+                        anchorIndex = i;
+                        anchorY = rowPosition.y;
+                        hasAnchor = true;
+
+                        ImGui::PushID(i);
+                        if (ImGui::Selectable("##DisassemblyLine", selectedInstruction == i, ImGuiSelectableFlags_AllowOverlap, ImVec2(childWidth, rowHeight)))
+                            ImHexApi::HexEditor::setSelection(m_imageBaseAddress.get(provider) + instruction.offset, instruction.size);
+                        ImGui::PopID();
+
+                        const float textY = rowPosition.y + ImGui::GetStyle().CellPadding.y;
+                        drawList->AddText(ImVec2(rowAddressX, textY), ImGui::GetColorU32(ImGuiCol_Text),
+                                          fmt::format("0x{0:X}", showOffsets ? instruction.offset : instruction.address).c_str());
+
+                        std::string bytes = instruction.bytes;
+                        if (instruction.size > 6 && bytes.size() > 14)
+                            bytes = fmt::format("{} ...", bytes.substr(0, 14));
+                        drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(rowBytesX, textY), ImGui::GetColorU32(ImGuiCol_TextDisabled), bytes.data(), bytes.data() + bytes.size(), 0.0F, &bytesClip);
+
+                        if (ImGui::IsMouseHoveringRect(ImVec2(rowBytesX, rowPosition.y), ImVec2(rowTypeIconX, rowPosition.y + rowHeight)) && !instruction.bytes.empty()) {
+                            ImGui::BeginTooltip();
+                            ImGui::TextUnformatted(instruction.bytes.c_str());
+                            ImGui::EndTooltip();
+                        }
+
+                        if (instruction.type == ContentRegistry::Disassemblers::InstructionType::Call) {
+                            const auto edge = std::ranges::find_if(flowEdges, [i](const auto &candidate) { return candidate.source == i; });
+                            const ImVec2 nextRowPosition = ImGui::GetCursorScreenPos();
+
+                            ImGui::SetCursorScreenPos(ImVec2(rowTypeIconX, rowPosition.y));
+
                             ImGui::PushID(i);
-                            if (ImGui::Selectable("##DisassemblyLine", false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                ImHexApi::HexEditor::setSelection(instruction.offset, instruction.size);
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                            ImGui::BeginDisabled(edge == flowEdges.end());
+                            if (ImGuiExt::DimmedIconButton(ICON_VS_DEBUG_STEP_OUT, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(rowHeight, rowHeight)) && edge != flowEdges.end()) {
+                                ImGui::SetScrollY(std::max(0.0F, contentStartY + rowTop(edge->target) - ImGui::GetWindowHeight() * 0.5F));
+                                const auto &target = disassembly[edge->target];
+                                ImHexApi::HexEditor::setSelection(m_imageBaseAddress.get(provider) + target.offset, target.size);
                             }
+                            ImGui::EndDisabled();
+                            ImGui::PopStyleVar();
                             ImGui::PopID();
 
-                            // Draw instruction address
-                            ImGui::SameLine();
-                            ImGuiExt::TextFormatted("0x{0:X}", instruction.address);
+                            if (edge != flowEdges.end() && ImGui::IsItemHovered()) {
+                                ImGui::BeginTooltip();
+                                ImGuiExt::TextFormatted("0x{:X}", disassembly[edge->target].address);
+                                ImGui::EndTooltip();
+                            }
 
-                            // Draw instruction offset
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("0x{0:X}", instruction.offset);
+                            ImGui::SetCursorScreenPos(nextRowPosition);
+                        } else if (instruction.type == ContentRegistry::Disassemblers::InstructionType::Interrupt) {
+                            const float iconX = rowTypeIconX + (rowHeight - ImGui::CalcTextSize(ICON_VS_PULSE).x) * 0.5F;
+                            drawList->AddText(ImVec2(iconX, textY), ImGui::GetColorU32(ImGuiCol_PlotHistogram), ICON_VS_PULSE);
+                        }
 
-                            // Draw instruction bytes
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(instruction.bytes.c_str());
+                        drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(rowInstructionX, textY), ImU32(0xFFD69C56), instruction.mnemonic.data(), instruction.mnemonic.data() + instruction.mnemonic.size(), 0.0F, &instructionClip);
 
-                            // Draw instruction mnemonic and operands
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "{}", instruction.mnemonic);
-                            ImGui::SameLine();
-                            ImGui::TextUnformatted(instruction.operators.c_str());
+                        const float operandsX = rowInstructionX + ImGui::CalcTextSize(instruction.mnemonic.c_str()).x + ImGui::GetStyle().ItemSpacing.x;
+                        if (operandsX < childMax.x)
+                            drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(operandsX, textY), ImGui::GetColorU32(ImGuiCol_Text), instruction.operators.data(), instruction.operators.data() + instruction.operators.size(), 0.0F, &instructionClip);
+
+                        if (instruction.type == ContentRegistry::Disassemblers::InstructionType::Return) {
+                            const float lineY = rowPosition.y + rowHeight + returnGap * 0.35F;
+                            drawList->AddLine(ImVec2(rowsOrigin.x, lineY), ImVec2(childMax.x - ImGui::GetStyle().WindowPadding.x, lineY), ImGui::GetColorU32(ImGuiCol_Separator));
                         }
                     }
 
-                    clipper.End();
-                }
+                    ImGui::SetCursorPosY(contentStartY + contentHeight);
+                    ImGui::Dummy(ImVec2(1.0F, 1.0F));
+                    ImGui::PopStyleVar();
 
-                ImGui::EndTable();
+                    drawList->PushClipRect(childMin, childMax, true);
+
+                    const bool listingHovered = ImGui::IsWindowHovered();
+                    const ImVec2 mousePosition = ImGui::GetMousePos();
+
+                    const auto isSegmentHovered = [listingHovered, mousePosition](const ImVec2 &start, const ImVec2 &end) {
+                        if (!listingHovered)
+                            return false;
+
+                        constexpr float HoverDistance = 4.0F;
+                        const ImVec2 delta = end - start;
+                        const float lengthSquared = delta.x * delta.x + delta.y * delta.y;
+                        const float projection =
+                            lengthSquared == 0.0F ?
+                            0.0F : std::clamp(((mousePosition.x - start.x) * delta.x + (mousePosition.y - start.y) * delta.y) / lengthSquared, 0.0F, 1.0F);
+                        const ImVec2 closest = start + delta * projection;
+                        const float distanceX = mousePosition.x - closest.x;
+                        const float distanceY = mousePosition.y - closest.y;
+                        return distanceX * distanceX + distanceY * distanceY <= HoverDistance * HoverDistance;
+                    };
+
+                    const auto endpointOffset = [rowHeight](std::size_t slot, std::size_t count) {
+                        if (count <= 1)
+                            return 0.0F;
+
+                        const float spacing = std::min(3.0F, rowHeight * 0.65F / float(count - 1));
+                        return (float(slot) - float(count - 1) * 0.5F) * spacing;
+                    };
+
+                    std::size_t edgeIndex = 0;
+                    for (const auto &edge : flowEdges) {
+                        if (!hasAnchor)
+                            break;
+
+                        const std::size_t currentEdgeIndex = edgeIndex;
+                        edgeIndex += 1;
+
+                        const float sourceY = anchorY + rowTop(edge.source) - rowTop(anchorIndex) + rowHeight * 0.5F +
+                                              endpointOffset(edge.sourceSlot, edge.sourceSlotCount);
+                        const float targetY = anchorY + rowTop(edge.target) - rowTop(anchorIndex) + rowHeight * 0.5F +
+                                              endpointOffset(edge.targetSlot, edge.targetSlotCount);
+                        if (std::max(sourceY, targetY) < childMin.y || std::min(sourceY, targetY) > childMax.y)
+                            continue;
+
+                        const float edgeX = rowAddressX - ImGui::GetFontSize() * 0.45F;
+                        const bool overflow = edge.lane >= MaxVisibleFlowLanes;
+                        const float laneX = overflow ? childMin.x - laneSpacing * float(edge.lane - MaxVisibleFlowLanes + 1) :
+                                                      edgeX - edge.lane * laneSpacing - ImGui::GetFontSize() * 0.5F;
+                        const ImVec2 source(edgeX, sourceY);
+                        const ImVec2 sourceCorner(laneX, sourceY);
+                        const ImVec2 targetCorner(laneX, targetY);
+                        const ImVec2 target(edgeX, targetY);
+                        const bool hovered = isSegmentHovered(source, sourceCorner) || isSegmentHovered(targetCorner, target) ||
+                                             (!overflow && isSegmentHovered(sourceCorner, targetCorner));
+                        const float hue = std::fmod(float(currentEdgeIndex) * std::numbers::phi, 1.0F);
+                        float red, green, blue;
+                        ImGui::ColorConvertHSVtoRGB(hue, hovered ? 0.45F : 0.65F, 0.95F, red, green, blue);
+                        const ImU32 color = ImGui::GetColorU32(ImVec4(red, green, blue, hovered ? 1.0F : 0.9F));
+                        const float thickness = hovered ? 2.5F : 1.5F;
+                        if (overflow) {
+                            drawList->AddLine(source, sourceCorner, color, thickness);
+                            drawList->AddLine(targetCorner, target, color, thickness);
+                        } else {
+                            const ImVec2 points[] = { source, sourceCorner, targetCorner, target };
+                            drawList->AddPolyline(points, std::size(points), color, ImDrawFlags_None, thickness);
+                        }
+                        drawList->AddTriangleFilled(target, ImVec2(edgeX - 5.0F, targetY - 3.5F), ImVec2(edgeX - 5.0F, targetY + 3.5F), color);
+                    }
+                    drawList->PopClipRect();
+                }
             }
+            ImGui::EndChild();
         }
     }
 
     void ViewDisassembler::drawHelpText() {
         ImGuiExt::TextFormattedWrapped("This view lets you disassemble byte regions into assembly instructions of various different architectures.");
         ImGui::NewLine();
-        ImGuiExt::TextFormattedWrapped("Select the desired Architecture from the tabs in the settings panel and configure its options as needed. Clicking the \"Disassemble\" button will disassemble the selected region (or the entire data if no region is selected) and display the resulting instructions in a table below.");
+        ImGuiExt::TextFormattedWrapped("Select the desired Architecture from the tabs in the settings panel and configure its options as needed. Clicking the \"Disassemble\" button will disassemble the selected region (or the entire data if no region is selected) and display the resulting instructions in the listing below. Selecting an instruction is synchronized with the Hex Editor. Control-flow arrows connect direct jumps and calls to destinations within the listing. Call buttons navigate to their destination, while separators and event icons mark returns and interrupts.");
     }
 }

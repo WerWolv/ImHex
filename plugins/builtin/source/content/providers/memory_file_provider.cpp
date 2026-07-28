@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
 
             if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider.get()); fileProvider != nullptr) {
-                fileProvider->setPath(path);
+                fileProvider->setPickedPath(path);
 
                 if (fileProvider->open().isFailure()) {
                     ImHexApi::Provider::remove(newProvider.get());

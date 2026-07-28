@@ -1145,10 +1145,10 @@ namespace hex {
                 return *s_providerNames;
             }
 
-            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon) {
+            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions) {
                 log::debug("Registered new provider: {}", unlocalizedName.get());
 
-                s_providerNames->emplace_back(unlocalizedName, icon);
+                s_providerNames->emplace_back(unlocalizedName, icon, std::move(validFileExtensions));
             }
 
         }

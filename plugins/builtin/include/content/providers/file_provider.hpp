@@ -39,10 +39,9 @@ namespace hex::plugin::builtin {
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
         [[nodiscard]] std::vector<Description> getDataDescription() const override;
-        [[nodiscard]] bool handleFilePicker() override;
-        std::vector<MenuEntry> getMenuEntries() override;
+        [[nodiscard]] std::vector<fs::ItemFilter> getValidExtensions() const override;
 
-        void setPath(const std::fs::path &path);
+        std::vector<MenuEntry> getMenuEntries() override;
 
         [[nodiscard]] OpenResult open() override;
         void close() override;
@@ -69,7 +68,6 @@ namespace hex::plugin::builtin {
         OpenResult open(bool directAccess);
 
     protected:
-        std::fs::path m_path;
         wolv::io::File m_file;
         size_t m_fileSize = 0;
 

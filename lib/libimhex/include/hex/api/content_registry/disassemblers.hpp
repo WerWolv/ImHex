@@ -16,6 +16,14 @@ EXPORT_MODULE namespace hex {
     /* Disassembler Registry. Allows adding new disassembler architectures */
     namespace ContentRegistry::Disassemblers {
 
+        enum class InstructionType : u8 {
+            Uncategorized,
+            Jump,
+            Call,
+            Return,
+            Interrupt
+        };
+
         struct Instruction {
             u64 address;
             u64 offset;
@@ -23,6 +31,10 @@ EXPORT_MODULE namespace hex {
             std::string bytes;
             std::string mnemonic;
             std::string operators;
+            InstructionType type = InstructionType::Uncategorized;
+            std::optional<u64> targetAddress;
+            bool isRelativeBranch = false;
+            bool isPrivileged = false;
         };
 
         class Architecture {

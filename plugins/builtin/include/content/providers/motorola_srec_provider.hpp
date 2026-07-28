@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
             return "hex.builtin.provider.motorola_srec";
         }
 
-        bool handleFilePicker() override;
+        std::vector<fs::ItemFilter> getValidExtensions() const override;
     };
 
 }

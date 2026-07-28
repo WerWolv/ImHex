@@ -338,8 +338,8 @@ namespace hex::plugin::builtin {
             buffer = parseHexString(clipboard);
 
         if (!selectionCheck) {
-            if (selection.getStartAddress() + buffer.size() >= provider->getActualSize())
-                provider->resize(selection.getStartAddress() + buffer.size());
+            if (selection.getStartAddress() + buffer.size() >= provider->getBaseAddress() + provider->getActualSize())
+                provider->resize(selection.getStartAddress() - provider->getBaseAddress() + buffer.size());
         }
 
         // Write bytes
