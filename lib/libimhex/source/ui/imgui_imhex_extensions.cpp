@@ -1041,18 +1041,32 @@ namespace ImGuiExt {
         if (!ItemAdd(bb, 0))
             return;
 
+        // Fraction < 0.0f will display an indeterminate progress bar animation
+        // The value must be animated along with time, so e.g. passing '-1.0f * ImGui::GetTime()' as fraction works.
+        const bool is_indeterminate = (fraction < 0.0f);
+        if (!is_indeterminate)
+            fraction = ImSaturate(fraction);
+
+        // Out of courtesy we accept a NaN fraction without crashing
+        float fill_n0 = 0.0f;
+        float fill_n1 = (fraction == fraction) ? fraction : 0.0f;
+
+        if (is_indeterminate)
+        {
+            const float fill_width_n = 0.2f;
+            fill_n0 = ImFmod(-fraction, 1.0f) * (1.0f + fill_width_n) - fill_width_n;
+            fill_n1 = ImSaturate(fill_n0 + fill_width_n);
+            fill_n0 = ImSaturate(fill_n0);
+        }
+
         // Render
-        bool no_progress = fraction < 0;
-        fraction = ImSaturate(fraction);
         RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
         bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
+        float fill_x0 = ImLerp(bb.Min.x, bb.Max.x, fill_n0);
+        float fill_x1 = ImLerp(bb.Min.x, bb.Max.x, fill_n1);
+        if (fill_x0 < fill_x1)
+            RenderRectFilledInRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), fill_x0, fill_x1, style.FrameRounding);
 
-        if (no_progress) {
-            auto time = (fmod(ImGui::GetTime() * 2, 1.8) - 0.4);
-            RenderRectFilledInRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
-        } else {
-            RenderRectFilledInRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0F, fraction, style.FrameRounding);
-        }
     }
 
     void TextUnformattedCentered(const char *text) {
