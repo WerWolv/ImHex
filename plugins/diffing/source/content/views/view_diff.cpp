@@ -14,7 +14,7 @@
 
 namespace hex::plugin::diffing {
 
-    using DifferenceType = ContentRegistry::Diffing::DifferenceType;
+    using ContentRegistry::Diffing::DifferenceType;
 
     ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF) {
         // Clear the selected diff providers when a provider is closed
@@ -120,6 +120,8 @@ namespace hex::plugin::diffing {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
         m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &task) {
             task.setInterruptCallback([this]{ m_analysisInterrupted = true; });
+
+            this->reset();
 
             auto differences = m_algorithm->analyze(providerA, providerB);
 
