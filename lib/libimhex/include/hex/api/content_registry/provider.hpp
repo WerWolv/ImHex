@@ -17,7 +17,7 @@ EXPORT_MODULE namespace hex {
 
         namespace impl {
 
-            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon);
+            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions);
 
             using ProviderCreationFunction = std::function<std::shared_ptr<prv::Provider>()>;
             void add(const std::string &typeName, ProviderCreationFunction creationFunction);
@@ -25,6 +25,7 @@ EXPORT_MODULE namespace hex {
             struct Entry {
                 UnlocalizedString unlocalizedName;
                 const char *icon;
+                std::vector<fs::ItemFilter> validFileExtensions;
             };
 
             const std::vector<Entry>& getEntries();
@@ -39,14 +40,21 @@ EXPORT_MODULE namespace hex {
         template<std::derived_from<prv::Provider> T>
         void add(bool addToList = true) {
             const T provider;
-            auto typeName = provider.getTypeName();
+            const auto typeName = provider.getTypeName();
 
             impl::add(typeName, []() -> std::unique_ptr<prv::Provider> {
                 return std::make_unique<T>();
             });
 
-            if (addToList)
-                impl::addProviderName(typeName, provider.getIcon());
+            if (addToList) {
+                std::vector<fs::ItemFilter> validFileExtensions = {};
+
+                if constexpr (std::derived_from<T, prv::IProviderFilePicker>) {
+                    validFileExtensions = static_cast<const prv::IProviderFilePicker&>(provider).getValidExtensions();
+                }
+
+                impl::addProviderName(typeName, provider.getIcon(), std::move(validFileExtensions));
+            }
         }
 
     }

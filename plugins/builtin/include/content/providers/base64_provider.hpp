@@ -17,6 +17,8 @@ namespace hex::plugin::builtin {
         void insertRaw(u64 offset, u64 size) override;
         void removeRaw(u64 offset, u64 size) override;
 
+        std::vector<fs::ItemFilter> getValidExtensions() const override;
+
         [[nodiscard]] UnlocalizedString getTypeName() const override {
             return "hex.builtin.provider.base64";
         }

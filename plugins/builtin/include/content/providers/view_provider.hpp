@@ -62,8 +62,8 @@ namespace hex::plugin::builtin {
 
         std::vector<MenuEntry> getMenuEntries() override;
 
-        void undo() override { if (m_provider != nullptr) m_provider->undo(); }
-        void redo() override { if (m_provider != nullptr) m_provider->redo(); }
+        void undo() override { Provider::undo(); if (m_provider != nullptr) m_provider->undo(); }
+        void redo() override { Provider::redo(); if (m_provider != nullptr) m_provider->redo(); }
 
         bool canUndo() const override { return m_provider != nullptr && m_provider->canUndo(); }
         bool canRedo() const override { return m_provider != nullptr && m_provider->canRedo(); }

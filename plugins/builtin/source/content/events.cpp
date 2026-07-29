@@ -9,6 +9,7 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/file_type_handler.hpp>
+#include <hex/api/content_registry/provider.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
@@ -38,6 +39,20 @@
 
 namespace hex::plugin::builtin {
 
+    static void openFileWithProvider(UnlocalizedString providerName, const std::fs::path &path) {
+        auto provider = ImHexApi::Provider::createProvider(providerName, true);
+        if (auto *fileProvider = dynamic_cast<prv::IProviderFilePicker*>(provider.get()); fileProvider != nullptr) {
+            fileProvider->setPickedPath(path);
+
+            ImHexApi::Provider::openProvider(provider);
+
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+
+            glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
+            glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+        }
+    }
+
     static void openFile(const std::fs::path &path) {
         TaskManager::doLater([path] {
             if (path.extension() == ".hexproj") {
@@ -48,17 +63,16 @@ namespace hex::plugin::builtin {
                 return;
             }
 
-            auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
-            if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
-                fileProvider->setPath(path);
-
-                ImHexApi::Provider::openProvider(provider);
-
-                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-
-                glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
-                glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+            for (const auto &entry : ContentRegistry::Provider::impl::getEntries()) {
+                for (const auto &extension : entry.validFileExtensions) {
+                    if (path.extension() == fmt::format(".{}", extension.spec)) {
+                        openFileWithProvider(entry.unlocalizedName, path);
+                        return;
+                    }
+                }
             }
+
+            openFileWithProvider("hex.builtin.provider.file", path);
         });
     }
 
@@ -258,23 +272,7 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::openProvider(newProvider);
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
-                    if (path.extension() == ".hexproj") {
-                        if (!ProjectFile::load(path)) {
-                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-                        } else {
-                            return;
-                        }
-                    }
-
-                    auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
-                    auto newProvider = static_cast<FileProvider*>(provider.get());
-
-                    if (newProvider == nullptr)
-                        return;
-
-                    newProvider->setPath(path);
-                    ImHexApi::Provider::openProvider(provider);
-                    AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+                    openFile(path);
                 }, {}, true);
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
@@ -303,8 +301,19 @@ namespace hex::plugin::builtin {
                 return;
 
             if (auto *filePickerProvider = dynamic_cast<prv::IProviderFilePicker*>(provider.get()); filePickerProvider != nullptr) {
-                if (!filePickerProvider->handleFilePicker()) {
-                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider.get()); });
+                std::fs::path filePath;
+                auto filePicked = fs::openFileBrowser(
+                    fs::DialogMode::Open,
+                    filePickerProvider->getValidExtensions(),
+                    [&filePath](const std::fs::path &path) {
+                        filePath = path;
+                    }
+                );
+
+                if (!filePicked || !filePickerProvider->canOpenFile(filePath)) {
+                    TaskManager::doLater([provider] {
+                        ImHexApi::Provider::remove(provider.get());
+                    });
                     return;
                 }
 
