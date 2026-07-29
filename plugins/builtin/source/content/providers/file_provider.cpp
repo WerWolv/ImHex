@@ -276,7 +276,7 @@ namespace hex::plugin::builtin {
         if (result.isSuccess() && directAccess) {
             m_writable = false;
 
-            ui::BannerButton::open(ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
+            ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
                 m_writable = true;
                 RequestUpdateWindowTitle::post();
             });
@@ -448,7 +448,7 @@ namespace hex::plugin::builtin {
         }
 
         m_changeEventAcknowledgementPending = true;
-        ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this] {
+        ui::BannerButtonProviderSpecific::open(this, ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this] {
             this->close();
             (void)this->open(!m_loadedIntoMemory);
 

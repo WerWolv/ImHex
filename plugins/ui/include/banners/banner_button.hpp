@@ -8,11 +8,16 @@
 
 namespace hex::ui {
 
-    class BannerButton : public Banner<BannerButton> {
-    public:
-        BannerButton(const char *icon, UnlocalizedString message, ImColor color, UnlocalizedString buttonText, std::function<void()> buttonCallback, std::function<void()> closeCallback = []{})
-            : Banner(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)), m_closeCallback(std::move(closeCallback)) { }
+    template<typename T>
+    class BannerButtonBase : public Banner<T> {
+    private:
+        BannerButtonBase(const char *icon, UnlocalizedString message, ImColor color, UnlocalizedString buttonText, std::function<void()> buttonCallback, std::function<void()> closeCallback = []{})
+        : Banner<T>(color), m_icon(icon), m_message(std::move(message)), m_buttonText(std::move(buttonText)), m_buttonCallback(std::move(buttonCallback)), m_closeCallback(std::move(closeCallback)) { }
 
+        friend class BannerButton;
+        friend class BannerButtonProviderSpecific;
+
+    public:
         void drawContent() override {
             const std::string buttonText = fmt::format(" {} ", Lang(m_buttonText).get());
             const auto buttonSize = ImGui::CalcTextSize(buttonText.c_str());
@@ -30,7 +35,7 @@ namespace hex::ui {
             if (ImGui::IsItemHovered()) {
                 ImGui::SetNextWindowSize(ImVec2(400_scaled, 0));
                 if (ImGui::BeginTooltip()) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, getColor().Value);
+                    ImGui::PushStyleColor(ImGuiCol_Text, this->getColor().Value);
                     ImGuiExt::TextFormattedWrapped("{}", message);
                     ImGui::PopStyleColor();
                     ImGui::EndTooltip();
@@ -62,6 +67,24 @@ namespace hex::ui {
         UnlocalizedString m_buttonText;
         std::function<void()> m_buttonCallback;
         std::function<void()> m_closeCallback;
+    };
+
+    class BannerButton : public BannerButtonBase<BannerButton> {
+    public:
+        BannerButton(const char *icon, UnlocalizedString message, ImColor color, UnlocalizedString buttonText, std::function<void()> buttonCallback, std::function<void()> closeCallback = []{}) :
+            BannerButtonBase(icon, std::move(message), color, std::move(buttonText), std::move(buttonCallback), std::move(closeCallback)) { }
+    };
+
+    class BannerButtonProviderSpecific : public BannerButtonBase<BannerButtonProviderSpecific> {
+    public:
+        BannerButtonProviderSpecific(const prv::Provider *provider, const char *icon, UnlocalizedString message, ImColor color, UnlocalizedString buttonText, std::function<void()> buttonCallback, std::function<void()> closeCallback = []{}) :
+            BannerButtonBase(icon, std::move(message), color, std::move(buttonText), std::move(buttonCallback), std::move(closeCallback)), m_provider(provider) { }
+
+        bool isVisible() override {
+            return ImHexApi::Provider::get() == m_provider;
+        }
+    private:
+        const prv::Provider *m_provider;
     };
 
 }
