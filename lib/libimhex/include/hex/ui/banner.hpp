@@ -20,7 +20,8 @@ namespace hex {
 
             virtual void draw() { drawContent(); }
             virtual void drawContent() = 0;
-            virtual void onClose() {};
+            virtual void onClose() {}
+            virtual bool isVisible() { return true; }
 
             [[nodiscard]] static std::list<std::unique_ptr<BannerBase>> &getOpenBanners();
 

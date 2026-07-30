@@ -670,7 +670,11 @@ namespace hex {
                 startY += 2 * ImGui::GetStyle().FramePadding.y;
             #endif
 
-            for (const auto &banner : impl::BannerBase::getOpenBanners() | std::views::take(3)) {
+            auto bannersToDisplay =
+                impl::BannerBase::getOpenBanners()
+                | std::views::filter([](const auto &banner) { return banner->isVisible(); })
+                | std::views::take(3);
+            for (const auto &banner : bannersToDisplay) {
                 auto &style = ImGui::GetStyle();
                 ImGui::SetNextWindowPos(ImVec2(windowPos.x + 1_scaled, startY));
                 ImGui::SetNextWindowSize(ImVec2(ImHexApi::System::getMainWindowSize().x - 2_scaled, height));
