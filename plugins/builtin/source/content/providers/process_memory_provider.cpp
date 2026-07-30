@@ -511,10 +511,11 @@ namespace hex::plugin::builtin {
 
             SYSTEM_INFO sysInfo;
             GetSystemInfo(&sysInfo);
+            const u64 minAddress = reinterpret_cast<u64>(sysInfo.lpMinimumApplicationAddress);
             const u64 maxAddress = reinterpret_cast<u64>(sysInfo.lpMaximumApplicationAddress);
 
             MEMORY_BASIC_INFORMATION memoryInfo;
-            u64 address = 0;
+            u64 address = minAddress;
 
             while (address < maxAddress) {
                 if (VirtualQueryEx(m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
