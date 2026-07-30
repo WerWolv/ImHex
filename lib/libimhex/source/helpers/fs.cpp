@@ -9,23 +9,20 @@
     #include <windows.h>
     #include <shlobj.h>
     #include <shellapi.h>
-
-    #define GLFW_EXPOSE_NATIVE_WIN32
+    #if !defined(GLFW_EXPOSE_NATIVE_WIN32)
+        #define GLFW_EXPOSE_NATIVE_WIN32
+    #endif
 #elif defined(OS_MACOS)
-    #define GLFW_EXPOSE_NATIVE_COCOA
+    #if !defined(GLFW_EXPOSE_NATIVE_COCOA)
+        #define GLFW_EXPOSE_NATIVE_COCOA
+    #endif
 #elif defined(OS_LINUX)
     #include <xdg.hpp>
-
-    #if __has_include(<X11/Xlib.h>)
-        #define GLFW_EXPOSE_NATIVE_X11
-    #endif
-
-    #if __has_include(<wayland-client.h>)
-        #define GLFW_EXPOSE_NATIVE_WAYLAND
-    #endif
-
     #if defined(OS_FREEBSD)
         #include <sys/syslimits.h>
+    #endif
+    #if !defined(GLFW_EXPOSE_NATIVE_X11)
+        #define GLFW_EXPOSE_NATIVE_X11
     #endif
 #endif
 
@@ -33,12 +30,13 @@
     #include <emscripten.h>
 #else
     #include <GLFW/glfw3.h>
-    #include <nfd.hpp>
-    #include <nfd_glfw3.h>
+    #include <GLFW/glfw3native.h>
+    #include <libdlgmod/libdlgmod.h>
 #endif
 
-
+#include <cstdlib>
 #include <filesystem>
+#include <sstream>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
@@ -231,84 +229,66 @@ namespace hex::fs {
     #else
 
         bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
-            // Turn the content of the ItemFilter objects into something NFD understands
-            std::vector<nfdfilteritem_t> validExtensionsNfd;
-            validExtensionsNfd.reserve(validExtensions.size());
-            for (const auto &extension : validExtensions) {
-                validExtensionsNfd.emplace_back(nfdfilteritem_t{ extension.name.c_str(), extension.spec.c_str() });
-            }
+            std::string fileFilter, firstSpec, outPath;
+            unsigned long long nativeWindow = 0;
 
-            // Clear errors from previous runs
-            NFD::ClearError();
+#if defined(OS_WINDOWS)
+            nativeWindow = (unsigned long long)(void *)glfwGetWin32Window(ImHexApi::System::getMainWindowHandle());
+#elif defined(OS_MACOS)
+            nativeWindow = (unsigned long long)(void *)glfwGetCocoaWindow(ImHexApi::System::getMainWindowHandle());
+#elif defined(OS_LINUX) && defined(GLFW_PLATFORM) && defined(GLFW_PLATFORM_X11)
+            nativeWindow = (unsigned long long)glfwGetX11Window(ImHexApi::System::getMainWindowHandle());
+#endif
 
-            // Try to initialize NFD
-            if (NFD::Init() != NFD_OKAY) {
-                // Handle errors if initialization failed
-                log::error("NFD init returned an error: {}", NFD::GetError());
-                if (*s_fileBrowserErrorCallback != nullptr) {
-                    const auto error = NFD::GetError();
-                    (*s_fileBrowserErrorCallback)(error != nullptr ? error : "No details");
+            widget_set_owner(std::to_string(nativeWindow).c_str());
+
+            bool initFirstSpec = false;
+            size_t validExtensionsSize = validExtensions.size();
+            for (size_t i = 0; i < validExtensionsSize; i++) {
+                if (!initFirstSpec) {
+                    firstSpec = validExtensions[i].spec;
+                    initFirstSpec = true;
                 }
-
-                return false;
+                fileFilter += validExtensions[i].name + " (*." + validExtensions[i].spec + ")|*." + validExtensions[i].spec;
+                if (i < validExtensionsSize - 1) {
+                    fileFilter += "|";
+                }
             }
-
-            NFD::UniquePathU8 outPath;
-            NFD::UniquePathSet outPaths;
-            nfdresult_t result = NFD_ERROR;
-
-            nfdwindowhandle_t windowHandle = {};
-            NFD_GetNativeWindowFromGLFWWindow(ImHexApi::System::getMainWindowHandle(), &windowHandle);
 
             // Open the correct file dialog based on the mode
             switch (mode) {
                 case DialogMode::Open:
                     if (multiple)
-                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), windowHandle);
+                        outPath = get_open_filenames_ext(fileFilter.c_str(), "", defaultPath.c_str(), "Open one or more files...");
                     else
-                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), windowHandle);
+                        outPath = get_open_filename_ext(fileFilter.c_str(), "", defaultPath.c_str(), "Open a file...");
                     break;
                 case DialogMode::Save:
-                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str(), nullptr, windowHandle);
+                    outPath = get_save_filename_ext(fileFilter.c_str(), ((!firstSpec.empty()) ? ("Untitled." + firstSpec).c_str() : "Untitled"), defaultPath.c_str(), "Save a file...");
                     break;
                 case DialogMode::Folder:
-                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str(), windowHandle);
+                    outPath = get_directory_alt("Select a folder...", defaultPath.c_str());
                     break;
             }
 
-            if (result == NFD_OKAY){
+            if (!outPath.empty()){
                 // Handle the path if the dialog was opened in single mode
-                if (outPath != nullptr) {
+                if (outPath.find('\n') == std::string::npos) {
                     // Call the provided callback with the path
-                    callback(outPath.get());
+                    callback(outPath);
                 }
 
                 // Handle multiple paths if the dialog was opened in multiple mode
-                if (outPaths != nullptr) {
-                    nfdpathsetsize_t numPaths = 0;
-                    if (NFD::PathSet::Count(outPaths, numPaths) == NFD_OKAY) {
-                        // Loop over all returned paths and call the callback with each of them
-                        for (size_t i = 0; i < numPaths; i++) {
-                            NFD::UniquePathSetPath path;
-                            if (NFD::PathSet::GetPath(outPaths, i, path) == NFD_OKAY)
-                                callback(path.get());
-                        }
+                if (outPath.find('\n') != std::string::npos) {
+                    std::vector<std::string> outPaths = wolv::util::splitString(outPath, "\n", true);
+                    // Loop over all returned paths and call the callback with each of them
+                    for (size_t i = 0; i < outPaths.size(); i++) {
+                        callback(outPaths[i]);
                     }
-                }
-            } else if (result == NFD_ERROR) {
-                // Handle errors that occurred during the file dialog call
-
-                log::error("Requested file dialog returned an error: {}", NFD::GetError());
-
-                if (*s_fileBrowserErrorCallback != nullptr) {
-                    const auto error = NFD::GetError();
-                    (*s_fileBrowserErrorCallback)(error != nullptr ? error : "No details");
                 }
             }
 
-            NFD::Quit();
-
-            return result == NFD_OKAY;
+            return true;
         }
 
     #endif

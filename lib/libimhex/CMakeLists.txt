@@ -93,6 +93,23 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
+if (WIN32)
+	target_link_libraries(libimhex PUBLIC ntdll gdiplus comctl32 shlwapi comdlg32 ole32 oleaut32 uuid)
+elseif (UNIX AND NOT APPLE)
+	target_link_libraries(libimhex PUBLIC X11 pthread)
+	if (BSD)
+		target_link_libraries(libimhex PUBLIC kvm)
+	endif()
+elseif (APPLE)
+	target_link_libraries(libimhex PUBLIC "-framework AppKit -framework UniformTypeIdentifiers")
+endif()
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libdlgmod")
+execute_process(COMMAND make WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libdlgmod")
+target_include_directories(libimhex PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libdlgmod")
+target_link_directories(libimhex PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libdlgmod")
+target_link_libraries(libimhex PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libdlgmod/libdlgmod.a")
+
+
 addCppCheck(libimhex)
 
 

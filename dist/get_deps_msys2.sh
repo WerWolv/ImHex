@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-pacman -S --needed --noconfirm pactoys unzip git
+pacman -S --needed --noconfirm pactoys unzip git make
 pacboy -S --needed --noconfirm  \
   gcc:p             \
   lld:p             \
