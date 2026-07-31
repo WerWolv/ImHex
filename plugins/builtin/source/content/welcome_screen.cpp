@@ -24,7 +24,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -298,6 +298,41 @@ namespace hex::plugin::builtin {
             ImGuiExt::TextFormattedCentered("hex.builtin.welcome.drop_file"_lang);
         }
 
+        void drawEmptyProjectWelcomeScreen() {
+            const auto centerText = [](std::string_view text) {
+                const auto textWidth = ImGui::CalcTextSize(text.begin(), text.end()).x;
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.0F, (ImGui::GetContentRegionAvail().x - textWidth) / 2));
+                ImGui::TextUnformatted(text.begin(), text.end());
+            };
+
+            const auto contentHeight = ImGui::GetTextLineHeightWithSpacing() * 6 + ImGui::GetFrameHeight();
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + std::max(0.0F, (ImGui::GetContentRegionAvail().y - contentHeight) / 2));
+            fonts::Default().push(1.5F);
+            centerText(fmt::format("{}  {}", ICON_VS_PROJECT, ProjectManager::getProjectRoot().filename().string()));
+            fonts::Default().pop();
+
+            ImGui::NewLine();
+            centerText("hex.builtin.welcome.project.empty"_lang);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+            centerText("hex.builtin.welcome.project.empty.desc"_lang);
+            ImGui::PopStyleColor();
+
+            ImGui::NewLine();
+
+            const auto subWindowSize = scaled(300, 150);
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.0F, (ImGui::GetContentRegionAvail().x - subWindowSize.x) / 2));
+            if (ImGuiExt::BeginSubWindow("Choose Data Source", nullptr, subWindowSize)) {
+                if (ImGui::MenuItemEx("File", ICON_VS_GO_TO_FILE))
+                    RequestOpenWindow::post("Open File");
+                ImGui::Separator();
+                for (const auto &[unlocalizedProviderName, icon, _] : ContentRegistry::Provider::impl::getEntries()) {
+                    if (ImGui::MenuItemEx(Lang(unlocalizedProviderName), icon))
+                        ImHexApi::Provider::createProvider(unlocalizedProviderName);
+                }
+                ImGuiExt::EndSubWindow();
+            }
+        }
+
         void drawWelcomeScreenContentFull() {
             const ImVec2 margin = scaled({ 30, 20 });
 
@@ -355,7 +390,7 @@ namespace hex::plugin::builtin {
                             if (ImGuiExt::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
                                 RequestOpenWindow::post("Open File");
                             if (ImGuiExt::IconHyperlink(ICON_VS_NOTEBOOK, "hex.builtin.welcome.start.open_project"_lang))
-                                RequestOpenWindow::post("Open Project");
+                                RequestOpenWindow::post("Open Folder");
                             if (ImGuiExt::IconHyperlink(ICON_VS_TELESCOPE, "hex.builtin.welcome.start.open_other"_lang))
                                 otherProvidersVisible = !otherProvidersVisible;
                         }
@@ -525,42 +560,46 @@ namespace hex::plugin::builtin {
                             } else {
                                 drawWelcomeScreenBackground();
 
-                                if (s_simplifiedWelcomeScreen)
-                                    drawWelcomeScreenContentSimplified();
-                                else
-                                    drawWelcomeScreenContentFull();
+                                if (ProjectManager::isFolderProject()) {
+                                    drawEmptyProjectWelcomeScreen();
+                                } else {
+                                    if (s_simplifiedWelcomeScreen)
+                                        drawWelcomeScreenContentSimplified();
+                                    else
+                                        drawWelcomeScreenContentFull();
 
-                                static bool hovered = false;
-                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
-                                {
-                                    const auto &quickSettings = ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles();
-                                    if (!quickSettings.empty()) {
-                                        const auto padding = ImGui::GetStyle().FramePadding.y;
-                                        const ImVec2 windowSize = { 150_scaled, 2 * ImGui::GetTextLineHeightWithSpacing() + padding + std::ceil(quickSettings.size() / 5.0F) * (ImGui::GetTextLineHeightWithSpacing() + padding) };
-                                        ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
-                                        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
-                                        if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
-                                            u32 id = 0;
-                                            for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : quickSettings) {
-                                                ImGui::PushID(id + 1);
-                                                if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
-                                                    ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                    static bool hovered = false;
+                                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
+                                    {
+                                        const auto &quickSettings = ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles();
+                                        if (!quickSettings.empty()) {
+                                            const auto padding = ImGui::GetStyle().FramePadding.y;
+                                            const ImVec2 windowSize = { 150_scaled, 2 * ImGui::GetTextLineHeightWithSpacing() + padding + std::ceil(quickSettings.size() / 5.0F) * (ImGui::GetTextLineHeightWithSpacing() + padding) };
+                                            ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
+                                            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+                                            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, nullptr, windowSize, ImGuiChildFlags_AutoResizeY)) {
+                                                u32 id = 0;
+                                                for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : quickSettings) {
+                                                    ImGui::PushID(id + 1);
+                                                    if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
+                                                        ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                                    }
+                                                    if (id % 5 > 0)
+                                                        ImGui::SameLine();
+                                                    ImGui::SetItemTooltip("%s", Lang(unlocalizedTooltip).get());
+                                                    ImGui::PopID();
+                                                    id += 1;
                                                 }
-                                                if (id % 5 > 0)
-                                                    ImGui::SameLine();
-                                                ImGui::SetItemTooltip("%s", Lang(unlocalizedTooltip).get());
-                                                ImGui::PopID();
-                                                id += 1;
                                             }
+                                            ImGuiExt::EndSubWindow();
+
+                                            ImGui::PopStyleColor();
+                                            hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                                         }
-                                        ImGuiExt::EndSubWindow();
 
-                                        ImGui::PopStyleColor();
-                                        hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                                     }
-
+                                    ImGui::PopStyleVar();
                                 }
-                                ImGui::PopStyleVar();
                             }
 
                         }
@@ -711,8 +750,8 @@ namespace hex::plugin::builtin {
         // Clear project context if we go back to the welcome screen
         EventProviderChanged::subscribe([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
             std::ignore = oldProvider;
-            if (newProvider == nullptr) {
-                ProjectFile::clearPath();
+            if (newProvider == nullptr && !ProjectManager::isFolderProject()) {
+                ProjectManager::clearPath();
                 RequestUpdateWindowTitle::post();
             }
         });
@@ -722,7 +761,7 @@ namespace hex::plugin::builtin {
 
         // Check for crash backup
         constexpr static auto CrashFileName = "crash.json";
-        constexpr static auto BackupFileName = "crash_backup.hexproj";
+        constexpr static auto BackupFileName = "crash_backup";
         bool hasCrashed = false;
 
         for (const auto &path : paths::Config.read()) {
@@ -743,8 +782,7 @@ namespace hex::plugin::builtin {
                 bool hasProject = !crashFileData.value("project", "").empty();
 
                 auto backupFilePath = path / BackupFileName;
-                auto backupFilePathOld = path / BackupFileName;
-                backupFilePathOld.replace_extension(".hexproj.old");
+                auto backupFilePathOld = path / "crash_backup.old";
 
                 bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time", 0) > 0;
                 auto autoBackups = recent::PopupAutoBackups::getAutoBackups();
@@ -761,12 +799,11 @@ namespace hex::plugin::builtin {
                     wolv::io::fs::remove(crashFilePath);
 
                     // Delete old backup file
-                    wolv::io::fs::remove(backupFilePathOld);
+                    wolv::io::fs::removeAll(backupFilePathOld);
 
                     // Try to move current backup file to the old backup location
-                    if (wolv::io::fs::copyFile(backupFilePath, backupFilePathOld)) {
-                        wolv::io::fs::remove(backupFilePath);
-                    }
+                    std::error_code error;
+                    std::fs::rename(backupFilePath, backupFilePathOld, error);
                     continue;
                 }
 
@@ -778,13 +815,13 @@ namespace hex::plugin::builtin {
                     // Restore callback
                     [crashFileData, backupFilePath, hasProject, hasBackupFile, hasAutoBackups, autoBackups = std::move(autoBackups)] {
                         if (hasBackupFile) {
-                            if (ProjectFile::load(backupFilePath)) {
+                            if (ProjectManager::load(backupFilePath)) {
                                 if (hasProject) {
-                                    ProjectFile::setPath(crashFileData["project"].get<std::string>());
+                                    ProjectManager::setPath(crashFileData["project"].get<std::string>());
                                 } else if (hasAutoBackups) {
-                                    ProjectFile::setPath(autoBackups.front().path);
+                                    ProjectManager::setPath(autoBackups.front().path);
                                 } else {
-                                    ProjectFile::setPath("");
+                                    ProjectManager::setPath("");
                                 }
                                 RequestUpdateWindowTitle::post();
                             } else {
@@ -792,9 +829,9 @@ namespace hex::plugin::builtin {
                             }
                         } else {
                             if (hasProject) {
-                                ProjectFile::setPath(crashFileData["project"].get<std::string>());
+                                ProjectManager::setPath(crashFileData["project"].get<std::string>());
                             } else if (hasAutoBackups) {
-                                ProjectFile::setPath(autoBackups.front().path);
+                                ProjectManager::setPath(autoBackups.front().path);
                             }
                         }
                     },
@@ -802,7 +839,7 @@ namespace hex::plugin::builtin {
                     // Delete callback (also executed after restore)
                     [crashFilePath, backupFilePath] {
                         wolv::io::fs::remove(crashFilePath);
-                        wolv::io::fs::remove(backupFilePath);
+                        wolv::io::fs::removeAll(backupFilePath);
                     }
                 );
             }

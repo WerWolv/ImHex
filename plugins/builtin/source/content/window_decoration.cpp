@@ -4,7 +4,7 @@
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -142,16 +142,12 @@ namespace hex::plugin::builtin {
 
                 if (enabledCallback()) {
                     drawIndex += 1;
-                    ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
-                    {
-                        if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
-                            if (static_cast<u32>(openWindow) == index)
-                                openWindow = -1;
-                            else
-                                openWindow = index;
-                        }
+                    if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
+                        if (static_cast<u32>(openWindow) == index)
+                            openWindow = -1;
+                        else
+                            openWindow = index;
                     }
-                    ImGui::EndDisabled();
                 }
 
                 ImGui::PopStyleColor(3);
@@ -723,11 +719,11 @@ namespace hex::plugin::builtin {
             std::string prefix, postfix;
             std::string title = DefaultImHexTitle;
 
-            if (ProjectFile::hasPath()) {
+            if (ProjectManager::hasPath()) {
                 // If a project is open, show the project name instead of the file name
 
                 prefix  = "Project ";
-                title   = ProjectFile::getPath().stem().string();
+                title   = ProjectManager::getPath().stem().string();
 
                 if (ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty())
                     postfix += " (*)";

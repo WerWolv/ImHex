@@ -2,7 +2,6 @@
 
 #include <hex/api/content_registry/data_information.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/magic.hpp>
@@ -15,7 +14,16 @@ namespace hex::plugin::builtin {
 
     using namespace hex::literals;
 
-    ViewInformation::ViewInformation() : View::Scrolling("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE) {
+    ViewInformation::ViewInformation()
+        : View::Scrolling("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE),
+          m_informationConfig({
+              .typeId = "hex.builtin.data-information",
+              .displayName = "hex.builtin.view.information.name",
+              .displayIcon = ICON_VS_GRAPH_LINE,
+              .extensions = { { "hex.builtin.view.information.name", "hexinfo" } },
+              .encode = &ViewInformation::encodeConfig,
+              .decode = &ViewInformation::decodeConfig
+          }) {
         m_analysisData.setOnCreateCallback([](const prv::Provider *provider, AnalysisData &data) {
             data.analyzedProvider = provider;
 
@@ -25,33 +33,48 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "data_information.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                std::string save = tar.readString(basePath);
-                nlohmann::json input = nlohmann::json::parse(save);
-
-                for (const auto &section : m_analysisData.get(provider).informationSections) {
-                    if (!input.contains(section->getUnlocalizedName().get()))
-                        continue;
-
-                    section->load(input[section->getUnlocalizedName().get()]);
-                }
-
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                nlohmann::json output;
-                for (const auto &section : m_analysisData.get(provider).informationSections) {
-                    output[section->getUnlocalizedName().get()] = section->store();
-                }
-
-                tar.writeString(basePath, output.dump(4));
-
-                return true;
-            }
+        m_informationConfig.setChangedCallback([this](prv::Provider *provider) {
+            this->applyConfig(provider);
         });
+    }
+
+    ViewInformation::~ViewInformation() = default;
+
+    FileBackedProviderData<ViewInformation::InformationConfig>::SerializedData ViewInformation::encodeConfig(const InformationConfig &config) {
+        const auto data = config.sections.dump(4);
+        return { data.begin(), data.end() };
+    }
+
+    std::optional<ViewInformation::InformationConfig> ViewInformation::decodeConfig(std::span<const u8> data) {
+        try {
+            auto sections = nlohmann::json::parse(data.begin(), data.end());
+            if (!sections.is_object())
+                return std::nullopt;
+
+            for (const auto &section : sections)
+                if (!section.is_object())
+                    return std::nullopt;
+
+            return InformationConfig { .sections = std::move(sections) };
+        } catch (const std::exception &) {
+            return std::nullopt;
+        }
+    }
+
+    void ViewInformation::applyConfig(prv::Provider *provider) {
+        const auto &config = m_informationConfig.get(provider);
+        for (const auto &section : m_analysisData.get(provider).informationSections) {
+            const auto entry = config.sections.find(section->getUnlocalizedName().get());
+            section->load(entry != config.sections.end() ? *entry : nlohmann::json::object());
+        }
+    }
+
+    void ViewInformation::synchronizeConfig(prv::Provider *provider) {
+        InformationConfig config { .sections = nlohmann::json::object() };
+
+        for (const auto &section : m_analysisData.get(provider).informationSections)
+            config.sections[section->getUnlocalizedName().get()] = section->store();
+        m_informationConfig.set(std::move(config), provider);
     }
 
     void ViewInformation::analyze() {
@@ -177,6 +200,7 @@ namespace hex::plugin::builtin {
                                     {
                                         if (ImGui::Checkbox("##enabled", &enabled)) {
                                             section->setEnabled(enabled);
+                                            this->synchronizeConfig(provider);
                                         }
                                     }
                                     ImGui::PopStyleVar();
@@ -204,7 +228,8 @@ namespace hex::plugin::builtin {
 
                                         if (ImGui::BeginPopup("SectionSettings")) {
                                             ImGuiExt::Header("hex.ui.common.settings"_lang, true);
-                                            section->drawSettings();
+                                            if (section->drawSettings())
+                                                this->synchronizeConfig(provider);
                                             ImGui::EndPopup();
                                         }
                                     }

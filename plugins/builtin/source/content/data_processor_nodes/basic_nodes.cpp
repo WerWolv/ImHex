@@ -31,10 +31,12 @@ namespace hex::plugin::builtin {
             constexpr static int StepSize = 1, FastStepSize = 10;
 
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &m_size, &StepSize, &FastStepSize);
+            if (ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &m_size, &StepSize, &FastStepSize))
+                this->markPersistentDataChanged();
             ImGui::PopItemWidth();
 
-            ImGui::InputTextMultiline("##buffer", m_constantString, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal);
+            if (ImGui::InputTextMultiline("##buffer", m_constantString, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CharsHexadecimal))
+                this->markPersistentDataChanged();
         }
 
         /// Adapted from PatternLanguageBot
@@ -67,11 +69,11 @@ namespace hex::plugin::builtin {
         void process() override {
             m_buffer = parseByteString(m_constantString);
 
-            m_size = std::max<std::size_t>(m_buffer.size(), m_size);
+            const auto size = std::max<std::size_t>(m_buffer.size(), m_size);
 
             // fill buffer with zeros if required
-            if (m_buffer.size() != m_size)
-                m_buffer.resize(m_size, 0x00);
+            if (m_buffer.size() != size)
+                m_buffer.resize(size, 0x00);
 
             this->setBufferOnOutput(0, m_buffer);
         }
@@ -81,13 +83,11 @@ namespace hex::plugin::builtin {
 
             j["size"] = m_size;
             j["constantString"] = m_constantString;
-            j["data"] = m_buffer;
         }
 
         void load(const nlohmann::json &j) override {
             m_size   = j.at("size");
             m_constantString = j.at("constantString").get<std::string>();
-            m_buffer = j.at("data").get<std::vector<u8>>();
         }
 
     private:
@@ -103,7 +103,8 @@ namespace hex::plugin::builtin {
         }
 
         void drawNode() override {
-            ImGui::InputTextMultiline("##string", m_value, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput);
+            if (ImGui::InputTextMultiline("##string", m_value, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput))
+                this->markPersistentDataChanged();
         }
 
         void process() override {
@@ -130,7 +131,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGuiExt::InputTextIcon("##integer_value", ICON_VS_SYMBOL_OPERATOR, m_input, ImGuiInputTextFlags_AutoSelectAll);
+            if (ImGuiExt::InputTextIcon("##integer_value", ICON_VS_SYMBOL_OPERATOR, m_input, ImGuiInputTextFlags_AutoSelectAll))
+                this->markPersistentDataChanged();
             ImGui::PopItemWidth();
         }
 
@@ -166,7 +168,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputScalar("##floatValue", ImGuiDataType_Float, &m_value, nullptr, nullptr, "%f", ImGuiInputTextFlags_CharsDecimal);
+            if (ImGui::InputScalar("##floatValue", ImGuiDataType_Float, &m_value, nullptr, nullptr, "%f", ImGuiInputTextFlags_CharsDecimal))
+                this->markPersistentDataChanged();
             ImGui::PopItemWidth();
         }
 
@@ -201,7 +204,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(200_scaled);
-            ImGui::ColorPicker4("##colorPicker", &m_color.Value.x, ImGuiColorEditFlags_AlphaBar);
+            if (ImGui::ColorPicker4("##colorPicker", &m_color.Value.x, ImGuiColorEditFlags_AlphaBar))
+                this->markPersistentDataChanged();
             ImGui::PopItemWidth();
         }
 
@@ -246,7 +250,8 @@ namespace hex::plugin::builtin {
         }
 
         void drawNode() override {
-            ImGui::InputTextMultiline("##string", m_comment, scaled(ImVec2(150, 100)));
+            if (ImGui::InputTextMultiline("##string", m_comment, scaled(ImVec2(150, 100))))
+                this->markPersistentDataChanged();
         }
 
         void process() override {

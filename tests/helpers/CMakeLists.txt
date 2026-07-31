@@ -13,6 +13,7 @@ set(AVAILABLE_TESTS
 
     # File
         FileAccess
+        FileBackedProviderData
 
     # Utils
         ExtractBits

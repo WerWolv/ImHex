@@ -13,7 +13,7 @@ namespace hex {
 
     using namespace hex::literals;
 
-    Tar::Tar(const std::fs::path &path, Mode mode) {
+    Tar::Tar(const std::fs::path &path, Mode mode) : m_path(path) {
         int tarError = MTAR_ESUCCESS;
 
         // Explicitly create file so a short path gets generated
@@ -34,7 +34,6 @@ namespace hex {
         else
             tarError = MTAR_EFAILURE;
 
-        m_path = path;
         m_valid = (tarError == MTAR_ESUCCESS);
 
         if (!m_valid) {
@@ -63,7 +62,6 @@ namespace hex {
     Tar &Tar::operator=(Tar &&other) noexcept {
         m_ctx  = std::move(other.m_ctx);
         m_path = std::move(other.m_path);
-
         m_valid = other.m_valid;
         other.m_valid = false;
 

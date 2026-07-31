@@ -5,7 +5,6 @@
 #include <hex/api/content_registry/data_formatter.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/shortcut_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
 #include <content/differing_byte_searcher.hpp>
@@ -53,7 +52,39 @@ namespace hex::plugin::builtin {
 
     /* Hex Editor */
 
-    ViewHexEditor::ViewHexEditor() : View::Window("hex.builtin.view.hex_editor.name", ICON_VS_FILE_BINARY) {
+    ViewHexEditor::ViewHexEditor()
+        : View::Window("hex.builtin.view.hex_editor.name", ICON_VS_FILE_BINARY),
+          m_customEncodings({
+              .typeId = "hex.builtin.custom-encoding",
+              .displayName = "hex.builtin.menu.file.import.custom_encoding",
+              .displayIcon = "あ",
+              .extensions = { { "Thingy Table File", "tbl" } },
+              .encode = [](const std::optional<EncodingFile> &encoding) {
+                  if (!encoding.has_value())
+                      return std::vector<u8>();
+
+                  const auto &content = encoding->getTableContent();
+                  return std::vector<u8>(content.begin(), content.end());
+              },
+              .decode = [](std::span<const u8> bytes) -> std::optional<std::optional<EncodingFile>> {
+                  if (bytes.empty())
+                      return std::optional<std::optional<EncodingFile>>(std::in_place);
+
+                  const auto *data = reinterpret_cast<const char *>(bytes.data());
+                  return std::optional<std::optional<EncodingFile>>(
+                      std::in_place, std::in_place, EncodingFile::Type::Thingy, std::string(data, bytes.size()));
+              }
+          }) {
+        m_customEncodings.setChangedCallback([this](prv::Provider *provider) {
+            if (provider != ImHexApi::Provider::get())
+                return;
+
+            if (const auto &encoding = m_customEncodings.get(provider); encoding.has_value())
+                m_hexEditor.setCustomEncoding(*encoding);
+            else
+                m_hexEditor.clearCustomEncoding();
+        });
+
         m_hexEditor.setForegroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
             if (auto highlight = m_foregroundHighlights->find(address); highlight != m_foregroundHighlights->end())
                 return highlight->second;
@@ -651,8 +682,13 @@ namespace hex::plugin::builtin {
 
             if (newProvider != nullptr) {
                 m_hexEditor.setSelectionUnchecked(m_selectionStart.get(newProvider), m_selectionEnd.get(newProvider));
+                if (const auto &encoding = m_customEncodings.get(newProvider); encoding.has_value())
+                    m_hexEditor.setCustomEncoding(*encoding);
+                else
+                    m_hexEditor.clearCustomEncoding();
             } else {
                 m_hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+                m_hexEditor.clearCustomEncoding();
             }
 
             if (isSelectionValid()) {
@@ -671,31 +707,6 @@ namespace hex::plugin::builtin {
 
             m_foregroundHighlights.get(provider).clear();
             m_backgroundHighlights.get(provider).clear();
-        });
-
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "custom_encoding.tbl",
-            .required = false,
-            .load = [this](prv::Provider *, const std::fs::path &basePath, const Tar &tar) {
-                if (!tar.contains(basePath))
-                    return true;
-
-                auto content = tar.readString(basePath);
-                if (!content.empty())
-                    m_hexEditor.setCustomEncoding(EncodingFile(hex::EncodingFile::Type::Thingy, content));
-
-                return true;
-            },
-            .store = [this](prv::Provider *, const std::fs::path &basePath, const Tar &tar) {
-                if (const auto &encoding = m_hexEditor.getCustomEncoding(); encoding.has_value()) {
-                    auto content = encoding->getTableContent();
-
-                    if (!content.empty())
-                        tar.writeString(basePath, encoding->getTableContent());
-                }
-
-                return true;
-            }
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -792,12 +803,16 @@ namespace hex::plugin::builtin {
 
                                                     ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
-                                                        TaskManager::createTask("hex.builtin.task.loading_encoding_file", 0, [this, path](auto&) {
+                                                        auto *provider = ImHexApi::Provider::get();
+                                                        TaskManager::createTask("hex.builtin.task.loading_encoding_file", 0, [this, path, provider](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
-                                                            ImHexApi::Provider::markDataDirty();
 
-                                                            TaskManager::doLater([this, encoding = std::move(encoding)]() mutable {
-                                                                m_hexEditor.setCustomEncoding(std::move(encoding));
+                                                            TaskManager::doLater([this, provider, encoding = std::move(encoding)]() mutable {
+                                                                const auto providers = ImHexApi::Provider::getProviders();
+                                                                if (std::ranges::find(providers, provider) == providers.end())
+                                                                    return;
+
+                                                                m_customEncodings.set(std::move(encoding), provider);
                                                             });
                                                         });
                                                     });

@@ -15,8 +15,10 @@ namespace hex::dp {
             attr.setParentNode(this);
     }
 
-    void Node::draw() {
+    bool Node::draw() {
+        m_persistentDataChanged = false;
         this->drawNode();
+        return m_persistentDataChanged;
     }
 
 

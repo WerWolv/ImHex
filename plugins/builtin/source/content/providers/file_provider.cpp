@@ -4,7 +4,7 @@
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/localization_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -383,12 +383,12 @@ namespace hex::plugin::builtin {
         auto pathString = settings.at("path").get<std::string>();
         std::fs::path path = std::u8string(pathString.begin(), pathString.end());
 
-        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty()) {
+        if (auto projectPath = ProjectManager::getProjectRoot(); !projectPath.empty()) {
             std::fs::path fullPath;
             try {
-                fullPath = std::fs::weakly_canonical(projectPath.parent_path() / path);
+                fullPath = std::fs::weakly_canonical(projectPath / path);
             } catch (const std::fs::filesystem_error &) {
-                fullPath = projectPath.parent_path() / path;
+                fullPath = projectPath / path;
             }
 
             if (!wolv::io::fs::exists(fullPath))
@@ -407,8 +407,8 @@ namespace hex::plugin::builtin {
         if (pickedPath.u8string().starts_with(u8"//")) {
             path = pickedPath;
         } else {
-            if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-                path = std::fs::proximate(pickedPath, projectPath.parent_path());
+            if (auto projectPath = ProjectManager::getProjectRoot(); !projectPath.empty())
+                path = std::fs::proximate(pickedPath, projectPath);
             if (path.empty())
                 path = pickedPath;
         }

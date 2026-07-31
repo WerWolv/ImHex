@@ -1,22 +1,17 @@
 #pragma once
 
 #include <hex/api/imhex_api/provider.hpp>
-#include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/requests_provider.hpp>
 
-
+#include <functional>
 #include <map>
 #include <ranges>
+#include <stdexcept>
 #include <utility>
 
 namespace hex {
-
-    #if !defined(HEX_MODULE_EXPORT)
-        namespace prv {
-            class Provider;
-        }
-    #endif
 
     template<typename T>
     class PerProvider {
@@ -121,25 +116,18 @@ namespace hex {
                 m_data.clear();
             });
 
-            // Moves the data of this PerProvider instance from one provider to another
             MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
-                // Get the value from the old provider, (removes it from the map)
                 auto node = m_data.extract(from);
+                if (node.empty())
+                    return;
 
-                // Ensure the value existed
-                if (node.empty()) return;
-
-                // Delete the value from the new provider, that we want to replace
                 m_data.erase(to);
-
-                // Re-insert it with the key of the new provider
                 node.key() = to;
                 m_data.insert(std::move(node));
             });
         }
 
         void onDestroy() {
-
             EventProviderOpened::unsubscribe(this);
             EventProviderDeleted::unsubscribe(this);
             EventImHexClosing::unsubscribe(this);

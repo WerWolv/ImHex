@@ -3,6 +3,8 @@
 #include "hex/api/content_registry/views.hpp"
 
 #include <hex/ui/view.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 
 #include <ui/hex_editor.hpp>
 
@@ -109,6 +111,7 @@ namespace hex::plugin::builtin {
         std::unique_ptr<Popup> m_currPopup;
 
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
+        FileBackedProviderData<std::optional<EncodingFile>> m_customEncodings;
 
         PerProvider<std::map<u64, color_t>> m_foregroundHighlights, m_backgroundHighlights;
         PerProvider<std::set<Region>> m_hoverHighlights;

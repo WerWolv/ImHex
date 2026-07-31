@@ -19,6 +19,7 @@ EXPORT_MODULE namespace hex {
             struct Entry {
                 std::vector<std::string> extensions;
                 Callback callback;
+                std::string icon;
             };
 
             const std::vector<Entry>& getEntries();
@@ -29,8 +30,9 @@ EXPORT_MODULE namespace hex {
          * @brief Adds a new file handler
          * @param extensions The file extensions to handle
          * @param callback The function to call to handle the file
+         * @param icon The icon used when displaying files of this type
          */
-        void add(const std::vector<std::string> &extensions, const impl::Callback &callback);
+        void add(const std::vector<std::string> &extensions, const impl::Callback &callback, std::string icon = {});
 
     }
 

@@ -13,7 +13,6 @@
 #include <content/providers/udp_provider.hpp>
 #include <content/providers/command_provider.hpp>
 
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/fmt.hpp>
 

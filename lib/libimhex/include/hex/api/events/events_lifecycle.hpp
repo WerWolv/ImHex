@@ -80,6 +80,11 @@ namespace hex {
     EVENT_DEF(EventProjectOpened);
 
     /**
+     * @brief Signals that the current project was closed
+     */
+    EVENT_DEF(EventProjectClosed);
+
+    /**
      * @brief Called when a project is saved/saved as
      */
     EVENT_DEF(EventProjectSaved);

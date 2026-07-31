@@ -10,7 +10,7 @@ set(LIBIMHEX_SOURCES
         source/api/task_manager.cpp
         source/api/shortcut_manager.cpp
         source/api/plugin_manager.cpp
-        source/api/project_file_manager.cpp
+        source/api/project_manager.cpp
         source/api/theme_manager.cpp
         source/api/layout_manager.cpp
         source/api/workspace_manager.cpp
@@ -47,6 +47,7 @@ set(LIBIMHEX_SOURCES
         source/test/tests.cpp
 
         source/providers/provider.cpp
+        source/providers/file_backed_provider_data.cpp
         source/providers/cached_provider.cpp
         source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp

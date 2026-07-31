@@ -2,7 +2,6 @@
 
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/content_registry/file_type_handler.hpp>
-#include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/default_paths.hpp>
@@ -18,7 +17,50 @@ namespace hex::plugin::yara {
 
     using namespace wolv::literals;
 
-    ViewYara::ViewYara() : View::Window("hex.yara_rules.view.yara.name", ICON_VS_BUG) {
+    ViewYara::ViewYara()
+        : View::Window("hex.yara_rules.view.yara.name", ICON_VS_BUG),
+          m_rulePaths({
+              .typeId = "hex.yara.rules",
+              .displayName = "hex.yara_rules.view.yara.name",
+              .displayIcon = ICON_VS_BUG,
+              .extensions = { { "YARA Rules", "hexyara" } },
+              .encode = [](const RulePaths &rulePaths) {
+                  nlohmann::json data;
+                  data["rules"] = nlohmann::json::array();
+
+                  for (const auto &[name, path] : rulePaths) {
+                      data["rules"].push_back({
+                          { "name", wolv::util::toUTF8String(name) },
+                          { "path", wolv::util::toUTF8String(path) }
+                      });
+                  }
+
+                  const auto serialized = data.dump(4);
+                  return FileBackedProviderData<RulePaths>::SerializedData(serialized.begin(), serialized.end());
+              },
+              .decode = [](std::span<const u8> serialized) -> std::optional<RulePaths> {
+                  try {
+                      const auto data = nlohmann::json::parse(serialized.begin(), serialized.end());
+                      if (!data.contains("rules") || !data["rules"].is_array())
+                          return std::nullopt;
+
+                      RulePaths rulePaths;
+                      for (const auto &rule : data["rules"]) {
+                          if (!rule.contains("name") || !rule["name"].is_string() ||
+                              !rule.contains("path") || !rule["path"].is_string())
+                              return std::nullopt;
+
+                          rulePaths.emplace_back(
+                              std::fs::path(rule["name"].get<std::string>()),
+                              std::fs::path(rule["path"].get<std::string>()));
+                      }
+
+                      return rulePaths;
+                  } catch (const std::exception &) {
+                      return std::nullopt;
+                  }
+              }
+          }) {
         YaraRule::init();
 
         ContentRegistry::FileTypeHandler::add({ ".yar", ".yara" }, [](const auto &path) {
@@ -30,59 +72,7 @@ namespace hex::plugin::yara {
             }
 
             return false;
-        });
-
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "yara.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                auto fileContent = tar.readString(basePath);
-                if (fileContent.empty())
-                    return true;
-
-                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-
-                if (!data.contains("rules"))
-                    return false;
-
-                auto &rules = data["rules"];
-                if (!rules.is_array())
-                    return false;
-
-                m_matchedRules.get(provider).clear();
-
-                for (auto &rule : rules) {
-                    if (!rule.contains("name") || !rule.contains("path"))
-                        return false;
-
-                    auto &name = rule["name"];
-                    auto &path = rule["path"];
-
-                    if (!name.is_string() || !path.is_string())
-                        return false;
-
-                    m_rulePaths.get(provider).emplace_back(std::fs::path(name.get<std::string>()), std::fs::path(path.get<std::string>()));
-                }
-
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                nlohmann::json data;
-
-                data["rules"] = nlohmann::json::array();
-
-                for (auto &[name, path] : m_rulePaths.get(provider)) {
-                    data["rules"].push_back({
-                        { "name", wolv::util::toUTF8String(name) },
-                        { "path", wolv::util::toUTF8String(path) }
-                    });
-                }
-
-                tar.writeString(basePath, data.dump(4));
-
-                return true;
-            }
-        });
+        }, ICON_VS_BUG);
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *, size_t size, bool) -> std::optional<color_t> {
             auto &highlights = m_highlights.get();
@@ -157,6 +147,7 @@ namespace hex::plugin::yara {
 
                 if (indexToErase.has_value()) {
                     m_rulePaths->erase(m_rulePaths->begin() + *indexToErase);
+                    m_rulePaths.markChanged();
                 }
 
                 ImGui::EndTable();
@@ -193,6 +184,7 @@ namespace hex::plugin::yara {
             ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                 [&](const auto &path) {
                     m_rulePaths->push_back({ path.filename(), path });
+                    m_rulePaths.markChanged();
             });
         }
 

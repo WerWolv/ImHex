@@ -5,6 +5,8 @@
 #include <hex/ui/view.hpp>
 
 #include <hex/api/task_manager.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 
 #include <content/yara_rule.hpp>
 #include <wolv/container/interval_tree.hpp>
@@ -20,7 +22,9 @@ namespace hex::plugin::yara {
         void drawHelpText() override;
 
     private:
-        PerProvider<std::vector<std::pair<std::fs::path, std::fs::path>>> m_rulePaths;
+        using RulePaths = std::vector<std::pair<std::fs::path, std::fs::path>>;
+
+        FileBackedProviderData<RulePaths> m_rulePaths;
         PerProvider<std::vector<YaraRule::Rule>> m_matchedRules;
         PerProvider<std::vector<std::string>> m_consoleMessages;
         PerProvider<wolv::container::IntervalTree<std::string>> m_highlights;

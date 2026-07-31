@@ -3,7 +3,6 @@
 #include <hex/api/content_registry/reports.hpp>
 #include <hex/api/content_registry/views.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_interaction.hpp>
@@ -24,7 +23,20 @@
 
 namespace hex::plugin::builtin {
 
-    ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name", ICON_VS_BOOKMARK) {
+    ViewBookmarks::ViewBookmarks()
+        : View::Window("hex.builtin.view.bookmarks.name", ICON_VS_BOOKMARK),
+          m_bookmarks({
+              .typeId = "hex.builtin.bookmarks",
+              .displayName = "hex.builtin.view.bookmarks.name",
+              .displayIcon = ICON_VS_BOOKMARK,
+              .extensions = { { "Bookmarks File", "hexbm" } },
+              .encode = &ViewBookmarks::encodeBookmarks,
+              .decode = &ViewBookmarks::decodeBookmarks
+          }) {
+
+        m_bookmarks.setChangedCallback([this](prv::Provider *provider) {
+            this->refreshBookmarkState(provider);
+        });
 
         // Handle bookmark add requests sent by the API
         RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
@@ -49,18 +61,19 @@ namespace hex::plugin::builtin {
                 .id=bookmarkId
             };
 
-            m_bookmarks->emplace_back(std::move(bookmark), true, ui::Markdown(bookmark.comment));
-
-            ImHexApi::Provider::markMetadataDirty();
+            auto commentDisplay = ui::Markdown(bookmark.comment);
+            m_bookmarks->emplace_back(std::move(bookmark), true, std::move(commentDisplay));
+            m_bookmarks.markChanged();
 
             EventBookmarkCreated::post(m_bookmarks->back().entry);
             EventHighlightingChanged::post();
         });
 
         RequestRemoveBookmark::subscribe([this](u64 id) {
-            std::erase_if(m_bookmarks.get(), [id](const auto &bookmark) {
+            if (std::erase_if(m_bookmarks.get(), [id](const auto &bookmark) {
                 return bookmark.entry.id == id;
-            });
+            }) > 0)
+                m_bookmarks.markChanged();
         });
 
         // Draw hex editor background highlights for bookmarks
@@ -152,29 +165,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        // Handle saving / restoring of bookmarks in projects
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "bookmarks.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                auto fileContent = tar.readString(basePath);
-                if (fileContent.empty())
-                    return true;
-
-                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                m_bookmarks.get(provider).clear();
-                return this->importBookmarks(provider, data);
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                nlohmann::json data;
-
-                bool result = this->exportBookmarks(provider, data);
-                tar.writeString(basePath, data.dump(4));
-
-                return result;
-            }
-        });
-
         ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
             std::string result;
 
@@ -253,7 +243,7 @@ namespace hex::plugin::builtin {
             EventHighlightingChanged::post();
     }
 
-    void ViewBookmarks::drawDropTarget(std::list<Bookmark>::iterator it, float height) {
+    void ViewBookmarks::drawDropTarget(Bookmarks::iterator it, float height) {
         height = std::max(height, 1.0F);
 
         if (it != m_bookmarks->begin()) {
@@ -285,6 +275,7 @@ namespace hex::plugin::builtin {
                 // Swap the two bookmarks
                 if (droppedIter != m_bookmarks->end()) {
                     m_bookmarks->splice(it, m_bookmarks, droppedIter);
+                    m_bookmarks.markChanged();
 
                     EventHighlightingChanged::post();
                 }
@@ -407,6 +398,7 @@ namespace hex::plugin::builtin {
                     // Draw highlight visible toggle
                     if (ImGuiExt::IconButton(highlightVisible ? ICON_VS_EYE : ICON_VS_EYE_CLOSED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         highlightVisible = !highlightVisible;
+                        m_bookmarks.markChanged();
                         EventHighlightingChanged::post();
                     }
 
@@ -436,7 +428,8 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         // Draw lock/unlock button
-                        ImGuiExt::DimmedIconToggle(ICON_VS_LOCK, ICON_VS_UNLOCK, &locked);
+                        if (ImGuiExt::DimmedIconToggle(ICON_VS_LOCK, ICON_VS_UNLOCK, &locked))
+                            m_bookmarks.markChanged();
                         if (locked)
                             ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
                         else
@@ -453,8 +446,11 @@ namespace hex::plugin::builtin {
 
                         // Draw color picker
                         if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
+                            const auto oldColor = color;
                             drawColorPopup(headerColor);
                             color = headerColor;
+                            if (color != oldColor)
+                                m_bookmarks.markChanged();
                             ImGui::EndPopup();
                         }
 
@@ -465,7 +461,8 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted(name.data());
                         } else {
                             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                            ImGui::InputText("##nameInput", name);
+                            if (ImGui::InputText("##nameInput", name))
+                                m_bookmarks.markChanged();
                             ImGui::PopItemWidth();
                         }
 
@@ -498,6 +495,7 @@ namespace hex::plugin::builtin {
 
                             if (updated && end >= begin) {
                                 region = Region(begin, end - begin + 1);
+                                m_bookmarks.markChanged();
                                 EventHighlightingChanged::post();
                             }
                         } else {
@@ -523,6 +521,7 @@ namespace hex::plugin::builtin {
                             if (!locked) {
                                 if (ImGui::InputTextMultiline("##comment", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), locked ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None)) {
                                     commentDisplay = ui::Markdown(comment);
+                                    m_bookmarks.markChanged();
                                 }
                             } else {
                                 commentDisplay.draw();
@@ -544,49 +543,31 @@ namespace hex::plugin::builtin {
             // Remove the bookmark that was marked for removal
             if (bookmarkToRemove != m_bookmarks->end()) {
                 m_bookmarks->erase(bookmarkToRemove);
+                m_bookmarks.markChanged();
                 EventHighlightingChanged::post();
             }
         }
         ImGuiExt::EndSubWindow();
     }
 
-    bool ViewBookmarks::importBookmarks(prv::Provider *provider, const nlohmann::json &json) {
-        if (!json.contains("bookmarks"))
-            return false;
-
-        for (const auto &bookmark : json["bookmarks"]) {
-            if (!bookmark.contains("name") || !bookmark.contains("comment") || !bookmark.contains("color") || !bookmark.contains("region") || !bookmark.contains("locked"))
-                continue;
-
-            const auto &region = bookmark["region"];
-            if (!region.contains("address") || !region.contains("size"))
-                continue;
-
-            m_bookmarks.get(provider).push_back({
-                {
-                    .region     = { .address=region["address"], .size=region["size"] },
-                    .name       = bookmark["name"],
-                    .comment    = bookmark["comment"],
-                    .color      = bookmark["color"],
-                    .locked     = bookmark["locked"],
-                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : m_currBookmarkId.get(provider),
-                },
-                bookmark.contains("highlightVisible") ? bookmark["highlightVisible"].get<bool>() : true,
-                ui::Markdown(bookmark["comment"])
-            });
-            if (bookmark.contains("id"))
-                m_currBookmarkId.get(provider) = std::max<u64>(m_currBookmarkId.get(provider), bookmark["id"].get<i64>() + 1);
-            else
-                m_currBookmarkId.get(provider) += 1;
-        }
-
-        return true;
+    FileBackedProviderData<ViewBookmarks::Bookmarks>::SerializedData ViewBookmarks::encodeBookmarks(const Bookmarks &bookmarks) {
+        const auto data = bookmarksToJson(bookmarks).dump(4);
+        return { data.begin(), data.end() };
     }
 
-    bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
+    std::optional<ViewBookmarks::Bookmarks> ViewBookmarks::decodeBookmarks(std::span<const u8> data) {
+        try {
+            return bookmarksFromJson(nlohmann::json::parse(data.begin(), data.end()));
+        } catch (const std::exception &) {
+            return std::nullopt;
+        }
+    }
+
+    nlohmann::json ViewBookmarks::bookmarksToJson(const Bookmarks &bookmarks) {
+        nlohmann::json json;
         json["bookmarks"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &[bookmark, highlightVisible, commentDisplay]  : m_bookmarks.get(provider)) {
+        for (const auto &[bookmark, highlightVisible, commentDisplay] : bookmarks) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
                     { "comment",    bookmark.comment },
@@ -604,6 +585,70 @@ namespace hex::plugin::builtin {
             index++;
         }
 
+        return json;
+    }
+
+    std::optional<ViewBookmarks::Bookmarks> ViewBookmarks::bookmarksFromJson(const nlohmann::json &json) {
+        if (!json.contains("bookmarks") || !json["bookmarks"].is_array())
+            return std::nullopt;
+
+        Bookmarks bookmarks;
+        u64 nextBookmarkId = 0;
+        for (const auto &bookmark : json["bookmarks"]) {
+            if (!bookmark.contains("name") || !bookmark.contains("comment") || !bookmark.contains("color") || !bookmark.contains("region") || !bookmark.contains("locked"))
+                continue;
+
+            const auto &region = bookmark["region"];
+            if (!region.contains("address") || !region.contains("size"))
+                continue;
+
+            const auto comment = bookmark["comment"].get<std::string>();
+            const auto id = bookmark.contains("id") ? bookmark["id"].get<u64>() : nextBookmarkId;
+            bookmarks.push_back({
+                {
+                    .region     = { .address=region["address"], .size=region["size"] },
+                    .name       = bookmark["name"],
+                    .comment    = comment,
+                    .color      = bookmark["color"],
+                    .locked     = bookmark["locked"],
+                    .id         = id,
+                },
+                bookmark.contains("highlightVisible") ? bookmark["highlightVisible"].get<bool>() : true,
+                ui::Markdown(comment)
+            });
+            nextBookmarkId = std::max(nextBookmarkId, id + 1);
+        }
+
+        return bookmarks;
+    }
+
+    void ViewBookmarks::refreshBookmarkState(prv::Provider *provider) {
+        u64 currentBookmarkId = 0;
+        for (auto &bookmark : m_bookmarks.get(provider)) {
+            currentBookmarkId = std::max(currentBookmarkId, bookmark.entry.id);
+            bookmark.commentDisplay = ui::Markdown(bookmark.entry.comment);
+        }
+
+        m_currBookmarkId.get(provider) = currentBookmarkId;
+        EventHighlightingChanged::post();
+    }
+
+    bool ViewBookmarks::importBookmarks(prv::Provider *provider, const nlohmann::json &json) {
+        auto importedBookmarks = bookmarksFromJson(json);
+        if (!importedBookmarks.has_value())
+            return false;
+
+        auto &bookmarks = m_bookmarks.get(provider);
+        const bool changed = !importedBookmarks->empty();
+        bookmarks.splice(bookmarks.end(), *importedBookmarks);
+        if (changed)
+            m_bookmarks.markChanged(provider);
+        this->refreshBookmarkState(provider);
+        return true;
+    }
+
+    bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
+        json = bookmarksToJson(m_bookmarks.get(provider));
         return true;
     }
 
