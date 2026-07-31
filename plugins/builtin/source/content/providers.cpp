@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
                 // If no providers were opened, display an error with
                 // the warnings that happened when opening them 
                 if (ImHexApi::Provider::getProviders().empty()) {
-                    ui::ToastError::open(fmt::format("{}{}", "hex.builtin.popup.error.project.load"_lang, "hex.builtin.popup.error.project.load.no_providers"_lang, warningMessage));
+                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, "hex.builtin.popup.error.project.load.no_providers"_lang, warningMessage));
 
                     return false;
                 } else {
