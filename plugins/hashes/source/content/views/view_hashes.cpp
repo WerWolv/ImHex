@@ -1,6 +1,5 @@
 #include "content/views/view_hashes.hpp"
 
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/api/content_registry/hashes.hpp>
@@ -70,7 +69,16 @@ namespace hex::plugin::hashes {
         ViewHashes::Function m_hash;
     };
 
-    ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY) {
+    ViewHashes::ViewHashes()
+        : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY),
+          m_hashDefinitions({
+              .typeId = "hex.hashes.functions",
+              .displayName = "hex.hashes.view.hashes.name",
+              .displayIcon = ICON_VS_KEY,
+              .extensions = { { "hex.hashes.view.hashes.name", "hexhashes" } },
+              .encode = &ViewHashes::encodeHashes,
+              .decode = &ViewHashes::decodeHashes
+          }) {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
             const auto provider = providerRegion.getProvider();
             if (provider == nullptr)
@@ -127,27 +135,8 @@ namespace hex::plugin::hashes {
             }
         });
 
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "hashes.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                auto fileContent = tar.readString(basePath);
-                if (fileContent.empty())
-                    return true;
-
-                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                m_hashFunctions->clear();
-
-                return this->importHashes(provider, data);
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                nlohmann::json data;
-
-                bool result = this->exportHashes(provider, data);
-                tar.writeString(basePath, data.dump(4));
-
-                return result;
-            }
+        m_hashDefinitions.setChangedCallback([this](prv::Provider *provider) {
+            this->refreshHashFunctions(provider);
         });
     }
 
@@ -215,8 +204,12 @@ namespace hex::plugin::hashes {
             ImGui::BeginDisabled(m_newHashName.empty() || m_selectedHash == nullptr);
             if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 if (m_selectedHash != nullptr) {
-                    m_hashFunctions.get(provider).emplace_back(m_selectedHash.get(provider)->create(m_newHashName));
-                    this->invalidate(provider);
+                    m_hashDefinitions.get(provider).push_back({
+                        .name = m_newHashName,
+                        .type = m_selectedHash.get(provider)->getUnlocalizedName().get(),
+                        .settings = m_selectedHash.get(provider)->store()
+                    });
+                    m_hashDefinitions.markChanged(provider);
                     AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
                     ImGui::CloseCurrentPopup();
                 }
@@ -293,7 +286,12 @@ namespace hex::plugin::hashes {
             }
 
             if (itToRemove != m_hashFunctions->end()) {
-                m_hashFunctions->erase(itToRemove);
+                const auto index = std::distance(m_hashFunctions->begin(), itToRemove);
+                auto &definitions = m_hashDefinitions.get(provider);
+                if (index < std::ssize(definitions)) {
+                    definitions.erase(definitions.begin() + index);
+                    m_hashDefinitions.markChanged(provider);
+                }
             }
 
             ImGui::TableNextRow();
@@ -325,11 +323,25 @@ namespace hex::plugin::hashes {
         }
     }
 
-    bool ViewHashes::importHashes(prv::Provider *provider, const nlohmann::json &json) {
-        if (!json.contains("hashes"))
-            return false;
+    FileBackedProviderData<ViewHashes::HashDefinitions>::SerializedData ViewHashes::encodeHashes(const HashDefinitions &hashes) {
+        const auto data = exportHashes(hashes).dump(4);
+        return { data.begin(), data.end() };
+    }
+
+    std::optional<ViewHashes::HashDefinitions> ViewHashes::decodeHashes(std::span<const u8> data) {
+        try {
+            return importHashes(nlohmann::json::parse(data.begin(), data.end()));
+        } catch (const std::exception &) {
+            return std::nullopt;
+        }
+    }
+
+    std::optional<ViewHashes::HashDefinitions> ViewHashes::importHashes(const nlohmann::json &json) {
+        if (!json.contains("hashes") || !json["hashes"].is_array())
+            return std::nullopt;
 
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
+        HashDefinitions result;
 
         for (const auto &hash : json["hashes"]) {
             if (!hash.contains("name") || !hash.contains("type") || !hash.contains("settings"))
@@ -337,32 +349,63 @@ namespace hex::plugin::hashes {
 
             for (const auto &newHash : hashes) {
                 if (newHash->getUnlocalizedName() == hash["type"].get<std::string>()) {
-                    newHash->load(hash["settings"]);
-                    auto newFunction = newHash->create(hash["name"]);
-
-                    m_hashFunctions.get(provider).emplace_back(std::move(newFunction));
+                    result.push_back({
+                        .name = hash["name"].get<std::string>(),
+                        .type = hash["type"].get<std::string>(),
+                        .settings = hash["settings"]
+                    });
                     break;
                 }
             }
         }
 
-        return true;
+        return result;
     }
 
-    bool ViewHashes::exportHashes(prv::Provider *provider, nlohmann::json &json) {
+    nlohmann::json ViewHashes::exportHashes(const HashDefinitions &hashes) {
+        nlohmann::json json;
         json["hashes"] = nlohmann::json::array();
-        size_t index = 0;
-        for (const auto &hashFunction : m_hashFunctions.get(provider)) {
-            const auto &function = hashFunction.getFunction();
-            json["hashes"][index] = {
-                    { "name", function.getName() },
-                    { "type", function.getType()->getUnlocalizedName() },
-                    { "settings", function.getType()->store() }
-            };
-            index++;
+        for (const auto &hash : hashes) {
+            json["hashes"].push_back({
+                    { "name", hash.name },
+                    { "type", hash.type },
+                    { "settings", hash.settings }
+            });
         }
 
-        return true;
+        return json;
+    }
+
+    void ViewHashes::refreshHashFunctions(prv::Provider *provider) {
+        const auto &definitions = m_hashDefinitions.get(provider);
+        auto &runtimeDefinitions = m_runtimeHashDefinitions.get(provider);
+        if (definitions == runtimeDefinitions)
+            return;
+
+        const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
+        std::list<Function> functions;
+        for (const auto &definition : definitions) {
+            for (const auto &hash : hashes) {
+                if (hash->getUnlocalizedName() != definition.type)
+                    continue;
+
+                hash->load(definition.settings);
+                functions.emplace_back(hash->create(definition.name));
+                break;
+            }
+        }
+
+        if (const auto selection = ImHexApi::HexEditor::getSelection();
+            selection.has_value() && selection->getProvider() == provider) {
+            for (auto &function : functions)
+                function.update(selection->getRegion(), provider);
+        }
+
+        for (const auto &function : m_hashFunctions.get(provider))
+            function.wait();
+
+        m_hashFunctions.set(std::move(functions), provider);
+        runtimeDefinitions = definitions;
     }
 
     void ViewHashes::drawHelpText() {

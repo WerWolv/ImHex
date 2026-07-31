@@ -5,7 +5,6 @@
 #include <hex/api/content_registry/data_processor.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/file_type_handler.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
 #include <hex/api/events/events_provider.hpp>
@@ -41,11 +40,13 @@ namespace hex::plugin::builtin {
                 this->setAttributes({
                     { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
                 });
+                this->markPersistentDataChanged();
             }
 
             // Draw text input to set the name of the input
             if (ImGui::InputText("##name", m_name)) {
                 this->setUnlocalizedTitle(m_name);
+                this->markPersistentDataChanged();
             }
 
             ImGui::PopItemWidth();
@@ -112,11 +113,13 @@ namespace hex::plugin::builtin {
                 this->setAttributes({
                     { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
                 });
+                this->markPersistentDataChanged();
             }
 
             // Draw text input to set the name of the output
             if (ImGui::InputText("##name", m_name)) {
                 this->setUnlocalizedTitle(m_name);
+                this->markPersistentDataChanged();
             }
 
             ImGui::PopItemWidth();
@@ -171,7 +174,9 @@ namespace hex::plugin::builtin {
      */
     class NodeCustom : public dp::Node {
     public:
-        explicit NodeCustom(ViewDataProcessor *dataProcessor) : Node("hex.builtin.nodes.custom.custom.header", {}), m_dataProcessor(dataProcessor) { }
+        explicit NodeCustom(ViewDataProcessor *dataProcessor) : Node("hex.builtin.nodes.custom.custom.header", {}), m_dataProcessor(dataProcessor) {
+            this->setUnlocalizedTitle(m_name);
+        }
         ~NodeCustom() override = default;
 
         void drawNode() override {
@@ -182,6 +187,7 @@ namespace hex::plugin::builtin {
                 // Find all input and output nodes that are used by the workspace of this node
                 // and set the attributes of this node to the attributes of the input and output nodes
                 this->setAttributes(this->findAttributes());
+                this->markPersistentDataChanged();
             }
 
             ImGui::PushItemWidth(200_scaled);
@@ -189,7 +195,10 @@ namespace hex::plugin::builtin {
             bool editing = false;
             if (m_editable) {
                 // Draw name input field
-                ImGuiExt::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, m_name);
+                if (ImGuiExt::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, m_name)) {
+                    this->setUnlocalizedTitle(m_name);
+                    this->markPersistentDataChanged();
+                }
 
                 // Prevent editing mode from deactivating when the input field is focused
                 editing = ImGui::IsItemActive();
@@ -205,8 +214,6 @@ namespace hex::plugin::builtin {
                     m_dataProcessor->updateNodePositions();
                 }
             } else {
-                this->setUnlocalizedTitle(m_name);
-
                 if (this->getAttributes().empty()) {
                     ImGui::TextUnformatted("hex.builtin.nodes.custom.custom.edit_hint"_lang);
                 }
@@ -357,32 +364,47 @@ namespace hex::plugin::builtin {
         ViewDataProcessor::Workspace m_workspace;
     };
 
-    ViewDataProcessor::ViewDataProcessor() : View::Window("hex.builtin.view.data_processor.name", ICON_VS_CHIP) {
+    ViewDataProcessor::ViewDataProcessor()
+        : View::Window("hex.builtin.view.data_processor.name", ICON_VS_CHIP),
+          m_mainWorkspace({
+              .typeId = "hex.builtin.data-processor",
+              .displayName = "hex.builtin.view.data_processor.name",
+              .displayIcon = ICON_VS_CHIP,
+              .extensions = { { "hex.builtin.view.data_processor.name", "hexnode" } },
+              .encode = [](const Workspace &workspace) {
+                  const auto data = ViewDataProcessor::saveNodes(workspace).dump(4);
+                  return FileBackedProviderData<Workspace>::SerializedData(data.begin(), data.end());
+              },
+              .decode = [this](std::span<const u8> data) -> std::optional<Workspace> {
+                  try {
+                      Workspace workspace;
+                      ViewDataProcessor::loadNodes(workspace, nlohmann::json::parse(data.begin(), data.end()));
+                      return std::optional<Workspace>(std::in_place, std::move(workspace));
+                  } catch (const std::exception &) {
+                      return std::nullopt;
+                  }
+              }
+          }) {
         ContentRegistry::DataProcessor::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
         ContentRegistry::DataProcessor::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
         ContentRegistry::DataProcessor::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
 
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "data_processor.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                std::string save = tar.readString(basePath);
-
-                ViewDataProcessor::loadNodes(m_mainWorkspace.get(provider), nlohmann::json::parse(save));
-                m_updateNodePositions = true;
-
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                tar.writeString(basePath, ViewDataProcessor::saveNodes(m_mainWorkspace.get(provider)).dump(4));
-
-                return true;
+        m_mainWorkspace.setChangedCallback([this](prv::Provider *provider) {
+            auto &mainWorkspace = m_mainWorkspace.get(provider);
+            auto &mainWorkspaceContext = m_mainWorkspaceContexts.get(provider);
+            if (mainWorkspaceContext != mainWorkspace.context.get()) {
+                auto &workspaceStack = m_workspaceStack.get(provider);
+                workspaceStack.clear();
+                workspaceStack.push_back(&mainWorkspace);
+                mainWorkspaceContext = mainWorkspace.context.get();
             }
+            m_updateNodePositions = true;
         });
 
         EventProviderOpened::subscribe(this, [this](auto *provider) {
-            m_mainWorkspace.get(provider) = { };
-            m_workspaceStack.get(provider).push_back(&m_mainWorkspace.get(provider));
+            auto &mainWorkspace = m_mainWorkspace.get(provider);
+            m_workspaceStack.get(provider).push_back(&mainWorkspace);
+            m_mainWorkspaceContexts.get(provider) = mainWorkspace.context.get();
         });
 
         EventProviderChanged::subscribe(this, [this](const auto *, const auto *newProvider) {
@@ -406,8 +428,9 @@ namespace hex::plugin::builtin {
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
                                     if (file.isValid()) {
-                                        ViewDataProcessor::loadNodes(*m_mainWorkspace, nlohmann::json::parse(file.readString()));
-                                        m_updateNodePositions = true;
+                                         ViewDataProcessor::loadNodes(*m_mainWorkspace, nlohmann::json::parse(file.readString()));
+                                         m_mainWorkspace.markChanged();
+                                         m_updateNodePositions = true;
                                     }
                                 });
         }, ImHexApi::Provider::isValid);
@@ -429,10 +452,11 @@ namespace hex::plugin::builtin {
             if (!file.isValid()) return false;
 
             ViewDataProcessor::loadNodes(*m_mainWorkspace, file.readString());
+            m_mainWorkspace.markChanged();
             m_updateNodePositions = true;
 
             return true;
-        });
+        }, ICON_VS_CHIP);
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
@@ -465,7 +489,7 @@ namespace hex::plugin::builtin {
         // Remove the link from the workspace
         workspace.links.erase(link);
 
-        ImHexApi::Provider::markMetadataDirty();
+        m_mainWorkspace.markChanged();
     }
 
     void ViewDataProcessor::eraseNodes(Workspace &workspace, const std::vector<int> &ids) {
@@ -517,7 +541,7 @@ namespace hex::plugin::builtin {
             workspace.nodes.erase(node);
         }
 
-        ImHexApi::Provider::markMetadataDirty();
+        m_mainWorkspace.markChanged();
     }
 
     void ViewDataProcessor::processNodes(Workspace &workspace) {
@@ -752,7 +776,7 @@ namespace hex::plugin::builtin {
 
                 workspace.nodes.push_back(std::move(node));
 
-                ImHexApi::Provider::markMetadataDirty();
+                m_mainWorkspace.markChanged();
                 AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.place_node.name");
             }
 
@@ -797,14 +821,20 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewDataProcessor::drawNode(dp::Node &node) const {
+    void ViewDataProcessor::drawNode(dp::Node &node) {
         // If a node position update is pending, update the node position
         int nodeId = node.getId();
         if (m_updateNodePositions) {
             ImNodes::SetNodeGridSpacePos(nodeId, node.getPosition());
         } else {
-            if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Nodes, nodeId) >= 0)
-                node.setPosition(ImNodes::GetNodeGridSpacePos(nodeId));
+            if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Nodes, nodeId) >= 0) {
+                const auto position = ImNodes::GetNodeGridSpacePos(nodeId);
+                const auto oldPosition = node.getPosition();
+                if (position.x != oldPosition.x || position.y != oldPosition.y) {
+                    node.setPosition(position);
+                    m_mainWorkspace.markChanged();
+                }
+            }
         }
 
         // Draw the node
@@ -820,7 +850,8 @@ namespace hex::plugin::builtin {
             // Draw the node's body
             ImGui::PopStyleVar();
             if (!m_evaluationTask.isRunning()) {
-                node.draw();
+                if (node.draw())
+                    m_mainWorkspace.markChanged();
             }
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0F, 1.0F));
 
@@ -1061,6 +1092,8 @@ namespace hex::plugin::builtin {
                     // Add the link to the attributes that are connected by it
                     fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
                     toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
+
+                    m_mainWorkspace.markChanged();
 
                     AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.create_connection.name");
                 } while (false);

@@ -1,7 +1,7 @@
 #include <hex/api/content_registry/file_type_handler.hpp>
-#include <hex/api/project_file_manager.hpp>
-
 #include <hex/helpers/default_paths.hpp>
+
+#include <fonts/vscode_icons.hpp>
 
 #include <toasts/toast_notification.hpp>
 
@@ -9,9 +9,6 @@ namespace hex::plugin::builtin {
 
     void registerFileHandlers() {
 
-        ContentRegistry::FileTypeHandler::add({ ".hexproj" }, [](const std::fs::path &path) {
-            return ProjectFile::load(path);
-        });
 
         ContentRegistry::FileTypeHandler::add({ ".hexlyt" }, [](const std::fs::path &path) {
             for (const auto &folder : paths::Layouts.write()) {
@@ -20,7 +17,7 @@ namespace hex::plugin::builtin {
             }
 
             return false;
-        });
+        }, ICON_VS_LAYOUT);
 
         ContentRegistry::FileTypeHandler::add({ ".mgc" }, [](const auto &path) {
             for (const auto &destPath : paths::Magic.write()) {
@@ -31,7 +28,7 @@ namespace hex::plugin::builtin {
             }
 
             return false;
-        });
+        }, ICON_VS_DATABASE);
     }
 
 }

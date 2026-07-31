@@ -332,6 +332,11 @@ namespace hex::ui {
             m_encodingLineStartAddresses.clear();
         }
 
+        void clearCustomEncoding() {
+            m_currCustomEncoding.reset();
+            m_encodingLineStartAddresses.clear();
+        }
+
         void forceUpdateScrollPosition() {
             m_shouldUpdateScrollPosition = true;
         }

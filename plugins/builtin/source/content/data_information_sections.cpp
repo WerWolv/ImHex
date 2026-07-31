@@ -250,14 +250,13 @@ namespace hex::plugin::builtin {
         }
 
         void process(Task &task, prv::Provider *provider, Region region) override {
-            if (m_inputChunkSize == 0)
-                m_inputChunkSize = 256;
+            const auto inputChunkSize = m_inputChunkSize == 0 ? 256 : m_inputChunkSize;
 
             m_blockSize = std::max<u32>(std::ceil(region.getSize() / 2048.0F), 256);
 
             m_byteDistribution.reset();
             m_byteTypesDistribution.reset(region.getStartAddress(), region.getEndAddress(), provider->getBaseAddress(), provider->getActualSize());
-            m_chunkBasedEntropy.reset(m_inputChunkSize, region.getStartAddress(), region.getEndAddress(),
+            m_chunkBasedEntropy.reset(inputChunkSize, region.getStartAddress(), region.getEndAddress(),
                 provider->getBaseAddress(), provider->getActualSize());
 
             m_chunkBasedEntropy.enableAnnotations(m_showAnnotations);
@@ -291,9 +290,10 @@ namespace hex::plugin::builtin {
             m_plainTextCharacterPercentage = -1.0;
         }
 
-        void drawSettings() override {
-            ImGuiExt::SliderBytes("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize, 0, 1_MiB);
-            ImGui::Checkbox("hex.builtin.information_section.info_analysis.show_annotations"_lang, &m_showAnnotations);
+        bool drawSettings() override {
+            bool changed = ImGuiExt::SliderBytes("hex.builtin.information_section.info_analysis.block_size"_lang, &m_inputChunkSize, 0, 1_MiB);
+            changed = ImGui::Checkbox("hex.builtin.information_section.info_analysis.show_annotations"_lang, &m_showAnnotations) || changed;
+            return changed;
         }
 
         void drawContent() override {
@@ -502,18 +502,23 @@ class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformat
             updateSettings();
         }
 
-        void drawSettings() override {
+        bool drawSettings() override {
+            bool changed = false;
             if (ImGuiExt::InputHexadecimal("hex.builtin.information_section.relationship_analysis.sample_size"_lang, &m_sampleSize)) {
                 updateSettings();
+                changed = true;
             }
 
             if (ImGui::SliderFloat("hex.builtin.information_section.relationship_analysis.brightness"_lang, &m_brightness, 0.0F, 1.0F)) {
                 updateSettings();
+                changed = true;
             }
 
             if (ImGui::Combo("hex.builtin.information_section.relationship_analysis.filter"_lang, reinterpret_cast<int*>(&m_filter), "Linear Interpolation\0Nearest Neighbour\0\0")) {
                 updateSettings();
+                changed = true;
             }
+            return changed;
         }
 
         void drawContent() override {

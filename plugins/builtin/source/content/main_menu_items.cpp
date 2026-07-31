@@ -11,7 +11,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/api/shortcut_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
@@ -430,15 +430,15 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.open" }, ICON_VS_ROOT_FOLDER_OPENED, 1410,
                                                 CTRL + ALT + Keys::O + AllowWhileTyping,
-                                                openProject, noRunningTasks);
+                                                 openProject, noRunningTasks);
 
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save" }, ICON_VS_SAVE, 1450,
-                                                CTRL + ALT + Keys::S + AllowWhileTyping,
-                                                saveProject, [&] { return noRunningTaskAndValidProvider() && ProjectFile::hasPath(); });
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.create" }, ICON_VS_NEW_FOLDER, 1500,
+                                                 ALT + SHIFT + Keys::S + AllowWhileTyping,
+                                                 saveProjectAs, [&] { return noRunningTasks() && !ProjectManager::hasPath(); });
 
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save_as" }, ICON_VS_SAVE_AS, 1500,
-                                                ALT + SHIFT + Keys::S + AllowWhileTyping,
-                                                saveProjectAs, noRunningTaskAndValidProvider);
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.close" }, ICON_VS_CLOSE, 1510,
+                                                 Shortcut::None,
+                                                 closeProject, [&] { return noRunningTasks() && ProjectManager::isFolderProject(); });
 
 
         ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 2000);

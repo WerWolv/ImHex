@@ -4,6 +4,8 @@
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
 #include <hex/data_processor/link.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 
 #include <imnodes_internal.h>
 
@@ -50,8 +52,8 @@ namespace hex::plugin::builtin {
         static std::unique_ptr<dp::Node> loadNode(nlohmann::json data);
         void loadNodes(Workspace &workspace, nlohmann::json data);
 
-        static void eraseLink(Workspace &workspace, int id);
-        static void eraseNodes(Workspace &workspace, const std::vector<int> &ids);
+        void eraseLink(Workspace &workspace, int id);
+        void eraseNodes(Workspace &workspace, const std::vector<int> &ids);
         void processNodes(Workspace &workspace);
 
         void reloadCustomNodes();
@@ -61,7 +63,7 @@ namespace hex::plugin::builtin {
 
     private:
         void drawContextMenus(ViewDataProcessor::Workspace &workspace);
-        void drawNode(dp::Node &node) const;
+        void drawNode(dp::Node &node);
 
     private:
         bool m_updateNodePositions = false;
@@ -77,8 +79,9 @@ namespace hex::plugin::builtin {
 
         std::vector<CustomNode> m_customNodes;
 
-        PerProvider<Workspace> m_mainWorkspace;
+        FileBackedProviderData<Workspace> m_mainWorkspace;
         PerProvider<std::vector<Workspace*>> m_workspaceStack;
+        PerProvider<ImNodesContext*> m_mainWorkspaceContexts;
         TaskHolder m_evaluationTask;
     };
 

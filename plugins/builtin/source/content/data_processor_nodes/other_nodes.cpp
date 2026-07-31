@@ -419,7 +419,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputText("##name", m_name);
+            if (ImGui::InputText("##name", m_name))
+                this->markPersistentDataChanged();
             ImGui::PopItemWidth();
         }
 

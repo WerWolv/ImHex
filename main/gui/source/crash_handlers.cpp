@@ -1,6 +1,6 @@
 #include <crash_handlers.hpp>
 
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
@@ -37,7 +37,7 @@
 
 namespace hex::crash {
 
-    constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
+    constexpr static auto CrashBackupFileName = "crash_backup";
     constexpr static auto Signals = { SIGSEGV, SIGILL, SIGABRT, SIGFPE };
 
     void resetCrashHandlers();
@@ -243,7 +243,7 @@ namespace hex::crash {
                 // Create crash backup if any providers are open
                 if (ImHexApi::Provider::isValid()) {
                     for (const auto &path : paths::Config.write()) {
-                        if (ProjectFile::store(path / CrashBackupFileName, false)) {
+                        if (ProjectManager::store(path / CrashBackupFileName, false)) {
                             s_crashBackupPath = path / CrashBackupFileName;
                             log::fatal("Saved crash backup to '{}'", wolv::util::toUTF8String(s_crashBackupPath));
                             break;

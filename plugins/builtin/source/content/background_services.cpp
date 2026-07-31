@@ -4,7 +4,7 @@
 #include <hex/api/content_registry/background_services.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/default_paths.hpp>
@@ -91,8 +91,8 @@ namespace hex::plugin::builtin {
                     }
 
                     for (const auto &path : paths::Backups.write()) {
-                        const auto backupPath = path / fmt::format("auto_backup.{:%y%m%d_%H%M%S}.hexproj", fmt::gmtime(std::chrono::system_clock::now()));
-                        if (ProjectFile::store(backupPath, false)) {
+                        const auto backupPath = path / fmt::format("auto_backup.{:%y%m%d_%H%M%S}", fmt::gmtime(std::chrono::system_clock::now()));
+                        if (ProjectManager::store(backupPath, false)) {
                             log::info("Created auto-backup file '{}'", wolv::util::toUTF8String(backupPath));
                             break;
                         }

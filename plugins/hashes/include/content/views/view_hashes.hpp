@@ -4,8 +4,12 @@
 #include <hex/api/content_registry/hashes.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/providers/memory_provider.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 
 #include <hex/ui/view.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::hashes {
 
@@ -57,6 +61,10 @@ namespace hex::plugin::hashes {
                 return m_task.isRunning();
             }
 
+            void wait() const {
+                m_task.wait();
+            }
+
             const ContentRegistry::Hashes::Hash::Function& getFunction() const {
                 return m_hashFunction;
             }
@@ -70,8 +78,22 @@ namespace hex::plugin::hashes {
         };
 
     private:
-        bool importHashes(prv::Provider *provider, const nlohmann::json &json);
-        bool exportHashes(prv::Provider *provider, nlohmann::json &json);
+        struct HashDefinition {
+            std::string name;
+            std::string type;
+            nlohmann::json settings;
+
+            bool operator==(const HashDefinition &) const = default;
+        };
+
+        using HashDefinitions = std::vector<HashDefinition>;
+
+        static FileBackedProviderData<HashDefinitions>::SerializedData encodeHashes(const HashDefinitions &hashes);
+        static std::optional<HashDefinitions> decodeHashes(std::span<const u8> data);
+        static std::optional<HashDefinitions> importHashes(const nlohmann::json &json);
+        static nlohmann::json exportHashes(const HashDefinitions &hashes);
+
+        void refreshHashFunctions(prv::Provider *provider);
 
         void drawAddHashPopup();
         void invalidate(prv::Provider *provider);
@@ -80,8 +102,10 @@ namespace hex::plugin::hashes {
         PerProvider<ContentRegistry::Hashes::Hash*> m_selectedHash;
         std::string m_newHashName;
 
+        FileBackedProviderData<HashDefinitions> m_hashDefinitions;
         PerProvider<std::list<Function>> m_hashFunctions;
         PerProvider<Region> m_hashedRegion;
+        PerProvider<HashDefinitions> m_runtimeHashDefinitions;
 
     };
 

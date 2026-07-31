@@ -43,7 +43,7 @@ namespace hex::dp {
             m_overlay = overlay;
         }
 
-        void draw();
+        [[nodiscard]] bool draw();
         virtual void process() = 0;
         virtual void reset() { }
 
@@ -92,6 +92,8 @@ namespace hex::dp {
 
     protected:
         virtual void drawNode() { }
+        // Call when node state returned by store() changes.
+        void markPersistentDataChanged() { m_persistentDataChanged = true; }
 
     private:
         int m_id;
@@ -100,6 +102,7 @@ namespace hex::dp {
         std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;
         ImVec2 m_position;
+        bool m_persistentDataChanged = false;
 
         static int s_idCounter;
 

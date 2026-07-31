@@ -7,6 +7,7 @@
     #include <hex/api/imhex_api/system.hpp>
     #include <hex/api/imhex_api/provider.hpp>
     #include <hex/api/events/events_gui.hpp>
+    #include <hex/api/events/events_lifecycle.hpp>
     #include <hex/api/events/requests_gui.hpp>
     #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/task_manager.hpp>
@@ -119,19 +120,10 @@ namespace hex {
             });
         });
 
-        ProjectFile::registerHandler({
-            .basePath = "",
-            .required = true,
-            .load = [](const std::fs::path &, Tar &) {
-                return true;
-            },
-            .store = [this](const std::fs::path &, Tar &) {
-                TaskManager::doLater([this] {
-                    macosMarkContentEdited(m_window, false);
-                });
-
-                return true;
-            }
+        EventProjectSaved::subscribe(this, [this] {
+            TaskManager::doLater([this] {
+                macosMarkContentEdited(m_window, false);
+            });
         });
 
         if (themeFollowSystem)

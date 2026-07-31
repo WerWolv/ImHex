@@ -31,6 +31,7 @@ module;
 #include <hex/api/event_manager.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 #include <hex/data_processor/node.hpp>
 #include <hex/data_processor/link.hpp>
 #include <hex/data_processor/attribute.hpp>
