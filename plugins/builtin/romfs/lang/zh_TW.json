@@ -375,8 +375,6 @@
     "hex.builtin.popup.error.project.save": "無法儲存專案！",
     "hex.builtin.popup.error.read_only": "無法取得寫入權限。檔案已以唯讀模式開啟。",
     "hex.builtin.popup.error.task_exception": "工作 '{}' 擲回了例外狀況：\n\n{}",
-    "hex.builtin.popup.exit_application.desc": "您的專案有未儲存的更動。\n您確定要離開嗎？",
-    "hex.builtin.popup.exit_application.title": "離開應用程式？",
     "hex.builtin.popup.safety_backup.delete": "不用，請刪除",
     "hex.builtin.popup.safety_backup.desc": "喔不，ImHex 上次崩潰了。\n您要復原您的工作階段嗎？",
     "hex.builtin.popup.safety_backup.log_file": "記錄檔：",

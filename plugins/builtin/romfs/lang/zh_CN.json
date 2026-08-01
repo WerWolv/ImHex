@@ -390,8 +390,6 @@
     "hex.builtin.popup.error.project.load.invalid_magic": "项目文件中的魔术字文件无效",
     "hex.builtin.popup.error.read_only": "无法获得写权限，文件以只读方式打开。",
     "hex.builtin.popup.error.task_exception": "任务 '{}' 异常：\n\n{}",
-    "hex.builtin.popup.exit_application.desc": "工程还有未保存的更改。\n确定要退出吗？",
-    "hex.builtin.popup.exit_application.title": "退出？",
     "hex.builtin.popup.waiting_for_tasks.title": "等待任务进行",
     "hex.builtin.popup.crash_recover.title": "崩溃恢复",
     "hex.builtin.popup.crash_recover.message": "抛出了异常，但 ImHex 能够捕获它并报告崩溃。",

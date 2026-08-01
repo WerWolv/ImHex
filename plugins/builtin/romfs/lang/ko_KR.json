@@ -375,8 +375,6 @@
     "hex.builtin.popup.error.project.save": "프로젝트를 저장하지 못했습니다!",
     "hex.builtin.popup.error.read_only": "쓰기 권한을 가져올 수 없습니다. 파일이 읽기 전용 모드로 열렸습니다.",
     "hex.builtin.popup.error.task_exception": "작업 '{}'에서 예외가 발생했습니다:\n\n{}",
-    "hex.builtin.popup.exit_application.desc": "프로젝트에 저장하지 않은 변경 사항이 있습니다.\n정말 종료하시겠습니까?",
-    "hex.builtin.popup.exit_application.title": "프로그램을 종료하시겠습니까?",
     "hex.builtin.popup.safety_backup.delete": "아니요, 삭제",
     "hex.builtin.popup.safety_backup.desc": "이전에 ImHex가 비정상적으로 종료된 것 같습니다.\n이전 작업을 복구하시겠습니까?",
     "hex.builtin.popup.safety_backup.log_file": "로그 파일: ",
@@ -1259,5 +1257,6 @@
     "hex.builtin.information_section.magic.pattern_info.no_description": "더이상의 정보가 없습니다.",
     "hex.builtin.information_section.magic.pattern_info.add_description": "매칭된 데이터에 대해 더 많은 정보를 제공하려면 현재 패턴에 'fn get_data_description()' 함수를 추가하세요.",
     "hex.builtin.view.store.tab.disassemblers": "디스어셈블러",
-    "hex.builtin.welcome.nightly_build": "ImHex 나이틀리 버전을 실행하고 있습니다.\n\n버그가 발생했다면, GitHub 이슈 트래커에 보고해 주세요!"
+    "hex.builtin.welcome.nightly_build": "ImHex 나이틀리 버전을 실행하고 있습니다.\n\n버그가 발생했다면, GitHub 이슈 트래커에 보고해 주세요!",
+    "hex.builtin.setting.general.data_inspector_exact_size_only": "선택 크기와 일치하는 데이터 검사기 행만 표시"
 }

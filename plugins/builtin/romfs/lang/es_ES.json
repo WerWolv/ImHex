@@ -375,8 +375,6 @@
     "hex.builtin.popup.error.project.save": "¡Fallo al guardar proyecto!",
     "hex.builtin.popup.error.read_only": "No se pudo obtener acceso de escritura. Archivo abierto en modo de sólo lectura.",
     "hex.builtin.popup.error.task_exception": "Ocurrió un error en el Task '{}':\n\n{}",
-    "hex.builtin.popup.exit_application.desc": "Tiene cambios sin guardar en su Proyecto.\n¿Está seguro de que quiere salir?",
-    "hex.builtin.popup.exit_application.title": "¿Cerrar Aplicación?",
     "hex.builtin.popup.safety_backup.delete": "No, Borrar",
     "hex.builtin.popup.safety_backup.desc": "Oh no, ImHex se cerró de forma inesperada la última vez.\n¿Le gustaría restaurar su trabajo anterior?",
     "hex.builtin.popup.safety_backup.log_file": "",
