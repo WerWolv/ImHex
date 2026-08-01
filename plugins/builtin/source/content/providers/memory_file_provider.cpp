@@ -21,6 +21,8 @@ namespace hex::plugin::builtin {
             m_data.resize(1);
         }
 
+        this->markDataDirty();
+
         return {};
     }
 
@@ -40,9 +42,6 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::save() {
-        if (!m_name.empty())
-            return;
-
         fs::openFileBrowser(fs::DialogMode::Save, { }, [this](const std::fs::path &path) {
             if (path.empty())
                 return;
