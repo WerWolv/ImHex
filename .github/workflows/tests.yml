@@ -14,7 +14,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  ci-gate:
+    name: 🛡️ Gatekeep CI
+    if: >-
+      ${{
+        !(github.event_name == 'pull_request' && github.event.pull_request.user.login == 'WerWolvTranslationBot')
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Running CI"
+
   tests:
+    needs: ci-gate
     name: 🧪 Unit Tests
     runs-on: ubuntu-24.04
     permissions:

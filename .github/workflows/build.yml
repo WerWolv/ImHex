@@ -19,8 +19,19 @@ env:
 
 jobs:
 
+  ci-gate:
+    name: 🛡️ Gatekeep CI
+    if: >-
+      ${{
+        !(github.event_name == 'pull_request' && github.event.pull_request.user.login == 'WerWolvTranslationBot')
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Running CI"
+
   # Windows MINGW build
   win_mingw:
+    needs: ci-gate
     strategy:
       fail-fast: false
       matrix:
@@ -211,6 +222,7 @@ jobs:
           build/install/*
 
   win_msvc:
+    needs: ci-gate
     strategy:
       fail-fast: false
       matrix:
@@ -390,6 +402,7 @@ jobs:
 
   # MacOS build
   macos-x86:
+    needs: ci-gate
     runs-on: macos-15-intel
 
     permissions:
@@ -522,6 +535,7 @@ jobs:
         path: ./*.dmg
 
   macos-arm64:
+    needs: ci-gate
     runs-on: ubuntu-24.04
     name: 🍎 macOS 11 arm64
 
@@ -745,6 +759,7 @@ jobs:
 
   # AppImage build
   appimage:
+    needs: ci-gate
     strategy:
       fail-fast: false
       matrix:
@@ -815,6 +830,7 @@ jobs:
 
   # ArchLinux build
   archlinux-build:
+    needs: ci-gate
     name: 🐧 ArchLinux x86_64
     runs-on: ubuntu-26.04
 
@@ -1056,6 +1072,7 @@ jobs:
   #          imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
 
   snap-build:
+    needs: ci-gate
     strategy:
       fail-fast: false
       matrix:
@@ -1130,6 +1147,7 @@ jobs:
             *.snap
 
   flatpak-build:
+    needs: ci-gate
     strategy:
       fail-fast: false
       matrix:
@@ -1186,6 +1204,7 @@ jobs:
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
 
   webassembly-build:
+    needs: ci-gate
     runs-on: ubuntu-26.04
     name: 🌍 Web
     steps:
