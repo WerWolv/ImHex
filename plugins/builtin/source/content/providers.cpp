@@ -33,17 +33,16 @@ namespace hex::plugin::builtin {
             ContentRegistry::Provider::add<DiskProvider>();
             ContentRegistry::Provider::add<UDPProvider>();
             ContentRegistry::Provider::add<CommandProvider>();
+            ContentRegistry::Provider::add<GDBProvider>();
+            #if !defined(OS_FREEBSD)
+                ContentRegistry::Provider::add<ProcessMemoryProvider>();
+            #endif
         #endif
-        ContentRegistry::Provider::add<GDBProvider>();
         ContentRegistry::Provider::add<IntelHexProvider>();
         ContentRegistry::Provider::add<MotorolaSRECProvider>();
         ContentRegistry::Provider::add<Base64Provider>();
         ContentRegistry::Provider::add<MemoryFileProvider>(false);
         ContentRegistry::Provider::add<ViewProvider>(false);
-
-        #if defined(OS_WINDOWS) || defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
-            ContentRegistry::Provider::add<ProcessMemoryProvider>();
-        #endif
 
         ProjectFile::registerHandler({
             .basePath = "providers",
