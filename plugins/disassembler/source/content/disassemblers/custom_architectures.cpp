@@ -96,6 +96,10 @@ namespace hex::plugin::disasm {
             }
         }
 
+        bool hasSettings() override {
+            return !m_spec.getSettings().empty();
+        }
+
         std::optional<ContentRegistry::Disassemblers::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
             std::ignore = imageBaseAddress;
             std::ignore = instructionDataAddress;
