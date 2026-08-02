@@ -348,10 +348,12 @@ namespace hex::plugin::disasm {
                             }
 
                             // Draw sub-settings for each architecture
-                            if (ImGuiExt::BeginBox()) {
-                                currArchitecture->drawSettings();
+                            if (currArchitecture->hasSettings()) {
+                                if (ImGuiExt::BeginBox()) {
+                                    currArchitecture->drawSettings();
+                                }
+                                ImGuiExt::EndBox();
                             }
-                            ImGuiExt::EndBox();
                         }
                     }
                 }

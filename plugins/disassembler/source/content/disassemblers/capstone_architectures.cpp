@@ -192,6 +192,10 @@ namespace hex::plugin::disasm {
             ImGui::Separator();
         }
 
+        bool hasSettings() override {
+            return true;
+        }
+
         std::optional<ContentRegistry::Disassemblers::Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) override {
             auto ptr = code.data();
             auto size = code.size_bytes();
