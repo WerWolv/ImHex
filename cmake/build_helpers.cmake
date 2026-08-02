@@ -308,16 +308,19 @@ macro(createPackage)
 
         # Grab all dynamically linked dependencies.
         install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
+        install(CODE "set(IMHEX_RESOLVE_RUNTIME_DEPS ${IMHEX_RESOLVE_RUNTIME_DEPS})")
         install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
         install(CODE [[
-        file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES ${PLUGIN_TARGET_FILES} $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
-            RESOLVED_DEPENDENCIES_VAR _r_deps
-            UNRESOLVED_DEPENDENCIES_VAR _u_deps
-            CONFLICTING_DEPENDENCIES_PREFIX _c_deps
-            DIRECTORIES ${DEP_FOLDERS} $ENV{PATH}
-            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
-        )
+        if (IMHEX_RESOLVE_RUNTIME_DEPS)
+            file(GET_RUNTIME_DEPENDENCIES
+                EXECUTABLES ${PLUGIN_TARGET_FILES} $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
+                RESOLVED_DEPENDENCIES_VAR _r_deps
+                UNRESOLVED_DEPENDENCIES_VAR _u_deps
+                CONFLICTING_DEPENDENCIES_PREFIX _c_deps
+                DIRECTORIES ${DEP_FOLDERS} $ENV{PATH}
+                POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
+            )
+        endif()
 
         if(_c_deps_FILENAMES AND _c_deps AND NOT (_c_deps STREQUAL ""))
             message(WARNING "Conflicting dependencies for library: \"${_c_deps}\"!")

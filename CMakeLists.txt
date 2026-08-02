@@ -13,6 +13,7 @@ option(IMHEX_ENABLE_LTO                 "Enables Link Time Optimizations if poss
 option(IMHEX_USE_DEFAULT_BUILD_SETTINGS "Use default build settings"                                                                    OFF)
 option(IMHEX_BUILD_HARDENING            "Enable hardening flags for build"                                                              ON )
 option(IMHEX_GENERATE_PACKAGE           "Specify if a cpack package should be built. (Windows only)"                                    OFF)
+option(IMHEX_RESOLVE_RUNTIME_DEPS       "Resolve and bundle runtime dependencies during installation"                                  ON )
 option(IMHEX_MACOS_CREATE_BUNDLE        "Creates a macOS .app bundle when building (macOS only)"                                        ON )
 option(IMHEX_ENABLE_UNITY_BUILD         "Enables building ImHex as a unity build."                                                      OFF)
 option(IMHEX_ENABLE_PRECOMPILED_HEADERS "Enable precompiled headers"                                                                    OFF)
