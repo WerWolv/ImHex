@@ -22,8 +22,8 @@ where `<DOCKERFILE_PATH>` should be replaced by the wanted Dockerfile based on t
 |--------------|-----------------------------|--------|
 | MacOS M1     | dist/macOS/arm64.Dockerfile | -      |
 | AppImage     | dist/appimage/Dockerfile    | -      |
+| MSVC         | dist/msvc/Dockerfile        | -      |
 | Web version  | dist/web/Dockerfile         | raw    |
-| MSVC         | dist/msvc/Dockerfile        | raw    |
 
 We'll explain this command in the next section
 

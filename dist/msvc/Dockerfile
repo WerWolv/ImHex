@@ -290,5 +290,5 @@ test -n "${CRT_DIRECTORY:-}"
 cp "${CRT_DIRECTORY}"/*.dll /build/install/
 EOF
 
-FROM scratch AS raw
+FROM scratch
 COPY --from=build /build/install/ /
