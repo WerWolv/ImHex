@@ -11,7 +11,14 @@ zypper install     \
   dbus-1-devel     \
   file-devel       \
   Mesa-libGL-devel \
-  libglfw-devel    \
+  wayland-devel    \
+  libxkbcommon-devel \
+  libX11-devel     \
+  libXrandr-devel  \
+  libXinerama-devel \
+  libXcursor-devel \
+  libXi-devel      \
+  libXext-devel    \
   mbedtls-devel    \
   gtk3-devel       \
   libzstd-devel    \

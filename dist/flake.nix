@@ -23,7 +23,14 @@
 
                 pkgs.nghttp3
                 pkgs.pkg-config
-                pkgs.glfw
+                pkgs.wayland
+                pkgs.libxkbcommon
+                pkgs.xorg.libX11
+                pkgs.xorg.libXrandr
+                pkgs.xorg.libXinerama
+                pkgs.xorg.libXcursor
+                pkgs.xorg.libXi
+                pkgs.xorg.libXext
                 pkgs.fontconfig
                 pkgs.file
                 pkgs.mbedtls

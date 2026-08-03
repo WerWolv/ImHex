@@ -6,7 +6,6 @@ pacboy -S --needed --noconfirm  \
   lld:p             \
   cmake:p           \
   ccache:p          \
-  glfw:p            \
   file:p            \
   curl-winssl:p     \
   mbedtls:p         \

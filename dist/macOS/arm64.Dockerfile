@@ -25,14 +25,6 @@ RUN cp /osxcross/build/cctools-port/cctools/misc/install_name_tool /usr/bin/inst
 ### a cmake thing wants 'otool' and not '' apparently
 RUN cp /osxcross/target/bin/aarch64-apple-darwin24-otool /usr/bin/otool
 
-## Clone glfw
-RUN <<EOF
-set -xe
-if [ "$CUSTOM_GLFW" ]; then
-    git clone https://github.com/glfw/glfw /mnt/glfw
-fi
-EOF
-
 RUN --mount=type=cache,target=/cache <<EOF
 ## Download SDK is missing (it may have been removed from the image)
 set -xe
@@ -71,18 +63,6 @@ vcpkg install --triplet=arm-osx-mytriplet openssl
 vcpkg install --triplet=arm-osx-mytriplet libssh2
 EOF
 
-## Install glfw3 dep
-ARG CUSTOM_GLFW
-RUN --mount=type=cache,target=/cache <<EOF
-set -xe
-if [ "$CUSTOM_GLFW" ]; then
-    echo "Flag confirmation: using custom GLFW for software rendering"
-else
-    echo "Flag confirmation: using system GLFW"
-    vcpkg install --triplet=arm-osx-mytriplet glfw3
-fi
-EOF
-
 # -- BUILDING STUFF
 ARG JOBS 1
 ARG BUILD_TYPE Debug
@@ -109,48 +89,22 @@ RUN --mount=type=cache,target=/cache <<EOF
     
 EOF
 
-## Patch glfw
-COPY --from=imhex /dist/macOS/0001-glfw-SW.patch /tmp
-RUN <<EOF
-set -xe
-if [ "$CUSTOM_GLFW" ]; then
-    cd /mnt/glfw
-    git apply /tmp/0001-glfw-SW.patch
-fi
-EOF
-
 RUN mkdir -p /vcpkg/installed/arm-osx-mytriplet/lib/pkgconfig
 RUN mkdir -p /osxcross/target/macports/pkgs/vcpkg/installed/arm-osx-mytriplet/lib/pkgconfig
-
-## Build glfw
-RUN --mount=type=cache,target=/cache <<EOF
-set -xe
-if [ "$CUSTOM_GLFW" ]; then
-    ccache -zs
-
-    cd /mnt/glfw
-    mkdir build
-    cd build
-    CC=o64-clang CXX=o64-clang++ cmake -G "Ninja"       \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0            \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
-          -DBUILD_SHARED_LIBS=ON                        \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
-          -DCMAKE_INSTALL_PREFIX=/vcpkg/installed/arm-osx-mytriplet \
-          -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
-        ..
-    ninja -j $JOBS install
-
-    ccache -s
-fi
-EOF
 
 # Build ImHex
 ## Copy ImHex
 COPY --from=imhex / /mnt/ImHex
+## Patch the vendored GLFW for software rendering when requested
+ARG CUSTOM_GLFW
+COPY --from=imhex /dist/macOS/0001-glfw-SW.patch /tmp
+RUN <<EOF
+set -xe
+if [ "$CUSTOM_GLFW" ]; then
+    cd /mnt/ImHex
+    git apply --directory=lib/third_party/glfw /tmp/0001-glfw-SW.patch
+fi
+EOF
 ## Configure ImHex build
 RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/_deps \
     cd /mnt/ImHex && \

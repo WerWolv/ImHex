@@ -14,7 +14,17 @@ apt install -y \
   ${PKGCONF:-}          \
   cmake                 \
   ccache                \
-  libglfw3-dev          \
+  libgl-dev             \
+  libglu1-mesa-dev      \
+  libwayland-dev        \
+  libwayland-bin        \
+  libxkbcommon-dev      \
+  libx11-dev            \
+  libxrandr-dev         \
+  libxinerama-dev       \
+  libxcursor-dev        \
+  libxi-dev             \
+  libxext-dev           \
   libglm-dev            \
   libmagic-dev          \
   libmbedtls-dev        \

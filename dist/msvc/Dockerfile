@@ -262,6 +262,7 @@ cmake -S /imhex -B /build -G Ninja \
     -DVCPKG_APPLOCAL_DEPS=OFF \
     -DNATIVE_CMAKE_C_COMPILER=/opt/msvc/bin/${TARGET_ARCHITECTURE}/cl.exe \
     -DNATIVE_CMAKE_CXX_COMPILER=/opt/msvc/bin/${TARGET_ARCHITECTURE}/cl.exe \
+    -DLIBROMFS_GENERATOR_EMULATOR=/usr/local/bin/msvc-wine-emulator \
     -DLIBROMFS_COMPRESS_RESOURCES=OFF \
     -DCMAKE_INSTALL_PREFIX=/build/install \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \

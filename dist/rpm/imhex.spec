@@ -21,7 +21,14 @@ BuildRequires:  fmt-devel
 BuildRequires:  gcc-c++
 BuildRequires:  libappstream-glib
 BuildRequires:  libglvnd-devel
-BuildRequires:  glfw-devel
+BuildRequires:  wayland-devel
+BuildRequires:  libxkbcommon-devel
+BuildRequires:  libX11-devel
+BuildRequires:  libXrandr-devel
+BuildRequires:  libXinerama-devel
+BuildRequires:  libXcursor-devel
+BuildRequires:  libXi-devel
+BuildRequires:  libXext-devel
 BuildRequires:  json-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  libarchive-devel
@@ -43,8 +50,17 @@ BuildRequires:  capstone-devel
 %endif
 BuildRequires:  lunasvg-devel
 
+Requires:       wayland
+Requires:       libxkbcommon
+Requires:       libX11
+Requires:       libXrandr
+Requires:       libXinerama
+Requires:       libXcursor
+Requires:       libXi
+Requires:       libXext
 
 Provides:       bundled(gnulib)
+Provides:       bundled(glfw) = 3.5.1
 %if 0%{?rhel} == 10
 Provides:       bundled(capstone) = 5.0.1
 %endif

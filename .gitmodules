@@ -46,3 +46,6 @@
 [submodule "lib/third_party/md4c"]
 	path = lib/third_party/md4c
 	url = https://github.com/mity/md4c
+[submodule "lib/third_party/glfw"]
+	path = lib/third_party/glfw
+	url = https://github.com/WerWolv/glfw

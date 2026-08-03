@@ -16,9 +16,16 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND=""
+DEPEND="
+		dev-libs/wayland
+		x11-libs/libX11
+		x11-libs/libXcursor
+		x11-libs/libXi
+		x11-libs/libXinerama
+		x11-libs/libXrandr
+		x11-libs/libxkbcommon
+		"
 RDEPEND="${DEPEND}
-		media-libs/glfw
 		sys-apps/file
 		net-libs/mbedtls
 		sys-apps/dbus

@@ -451,7 +451,7 @@ jobs:
         HOMEBREW_TESTS: 1
       run: |
         brew install llvm automake
-        sudo -E port install mbedtls3 nlohmann-json ccache freetype libmagic pkgconfig curl glfw ninja zlib xz bzip2 zstd libssh2 md4c
+        sudo -E port install mbedtls3 nlohmann-json ccache freetype libmagic pkgconfig curl ninja zlib xz bzip2 zstd libssh2 md4c
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v4

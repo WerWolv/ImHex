@@ -10,7 +10,6 @@
         "bzip2",
         "liblzma",
         "zstd",
-        "glfw3",
         "curl",
         "libssh2",
         "md4c"

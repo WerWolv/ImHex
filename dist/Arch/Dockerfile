@@ -10,7 +10,15 @@ RUN pacman -S --needed --noconfirm      \
     base-devel                          \
     gcc                                 \
     pkg-config                          \
-    glfw-x11                            \
+    libglvnd                            \
+    wayland                             \
+    libxkbcommon                        \
+    libx11                              \
+    libxrandr                           \
+    libxinerama                         \
+    libxcursor                          \
+    libxi                               \
+    libxext                             \
     file                                \
     mbedtls                             \
     fontconfig                          \

@@ -48,7 +48,8 @@ parts:
       - g++-16
       - git
       - pkg-config
-      - libglfw3-dev
+      - libgl1-mesa-dev
+      - libglu1-mesa-dev
       - libmagic-dev
       - libmbedtls-dev
       - libfontconfig-dev
@@ -66,10 +67,23 @@ parts:
       - libwayland-dev
       - libwayland-bin
       - wayland-protocols
+      - libxkbcommon-dev
       - libx11-dev
       - libxrandr-dev
+      - libxinerama-dev
+      - libxcursor-dev
+      - libxi-dev
+      - libxext-dev
     stage-packages:
-      - libglfw3
+      - libwayland-client0
+      - libwayland-cursor0
+      - libxkbcommon0
+      - libx11-6
+      - libxrandr2
+      - libxinerama1
+      - libxcursor1
+      - libxi6
+      - libxext6
       - libmagic1t64
       - libmbedtls21
       - libfontconfig1

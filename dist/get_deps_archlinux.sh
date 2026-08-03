@@ -4,7 +4,15 @@ pacman -S $@ --needed \
   cmake         \
   gcc           \
   lld           \
-  glfw          \
+  libglvnd      \
+  wayland       \
+  libxkbcommon  \
+  libx11        \
+  libxrandr     \
+  libxinerama   \
+  libxcursor    \
+  libxi         \
+  libxext       \
   fontconfig    \
   file          \
   mbedtls       \

@@ -10,7 +10,14 @@ dnf install -y      \
   gcc-c++           \
   git               \
   mesa-libGL-devel  \
-  glfw-devel        \
+  wayland-devel     \
+  libxkbcommon-devel \
+  libX11-devel      \
+  libXrandr-devel   \
+  libXinerama-devel \
+  libXcursor-devel  \
+  libXi-devel       \
+  libXext-devel     \
   lld               \
   mbedtls-devel     \
   gtk3-devel        \
