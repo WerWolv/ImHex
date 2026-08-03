@@ -16,9 +16,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <numbers>
 #include <tuple>
 #include <unordered_map>
-#include <numbers>
 
 using namespace std::literals::string_literals;
 using namespace wolv::literals;
@@ -101,7 +102,8 @@ namespace hex::plugin::disasm {
         std::vector<FlowEdge> edges;
         for (std::size_t source = 0; source < disassembly.size(); source += 1) {
             const auto &instruction = disassembly[source];
-            if (instruction.type != ContentRegistry::Disassemblers::InstructionType::Jump || !instruction.targetAddress.has_value())
+            if ((instruction.type != ContentRegistry::Disassemblers::InstructionType::Jump &&
+                 instruction.type != ContentRegistry::Disassemblers::InstructionType::Call) || !instruction.targetAddress.has_value())
                 continue;
 
             const auto target = instructionIndices.find(*instruction.targetAddress);
@@ -123,10 +125,36 @@ namespace hex::plugin::disasm {
                    std::tuple(std::min(right.source, right.target), std::max(right.source, right.target), right.source, right.target);
         });
 
-        std::vector<std::size_t> laneEnds;
-        for (auto &edge : edges) {
+        struct DestinationGroup {
+            std::size_t target;
+            std::size_t start;
+            std::size_t end;
+            std::size_t lane;
+        };
+
+        std::vector<DestinationGroup> groups;
+        std::unordered_map<std::size_t, std::size_t> groupIndices;
+        for (const auto &edge : edges) {
             const std::size_t start = std::min(edge.source, edge.target);
             const std::size_t end = std::max(edge.source, edge.target);
+            const auto [entry, inserted] = groupIndices.emplace(edge.target, groups.size());
+            if (inserted) {
+                groups.push_back({ edge.target, start, end, 0 });
+            } else {
+                auto &group = groups[entry->second];
+                group.start = std::min(group.start, start);
+                group.end = std::max(group.end, end);
+            }
+        }
+
+        std::ranges::sort(groups, [](const auto &left, const auto &right) {
+            return std::tuple(left.start, left.end, left.target) < std::tuple(right.start, right.end, right.target);
+        });
+
+        std::vector<std::size_t> laneEnds;
+        std::vector<std::size_t> destinationLanes(disassembly.size(), 0);
+        for (auto &group : groups) {
+            const std::size_t start = group.start;
 
             auto lane = std::ranges::find_if(
                 laneEnds,
@@ -136,25 +164,40 @@ namespace hex::plugin::disasm {
             );
 
             if (lane == laneEnds.end()) {
-                edge.lane = laneEnds.size();
-                laneEnds.push_back(end);
+                group.lane = laneEnds.size();
+                laneEnds.push_back(group.end);
             } else {
-                edge.lane = std::distance(laneEnds.begin(), lane);
-                *lane = end;
+                group.lane = std::distance(laneEnds.begin(), lane);
+                *lane = group.end;
             }
+
+            destinationLanes[group.target] = group.lane;
         }
+
+        for (auto &edge : edges)
+            edge.lane = destinationLanes[edge.target];
 
         std::vector<std::size_t> endpointCounts(disassembly.size(), 0);
+        std::vector<bool> hasIncomingEdge(disassembly.size(), false);
         for (const auto &edge : edges) {
             endpointCounts[edge.source] += 1;
-            endpointCounts[edge.target] += 1;
+            hasIncomingEdge[edge.target] = true;
         }
+        for (std::size_t i = 0; i < hasIncomingEdge.size(); i += 1)
+            endpointCounts[i] += hasIncomingEdge[i] ? 1 : 0;
 
         std::vector<std::size_t> nextEndpointSlot(disassembly.size(), 0);
+        std::vector<std::size_t> destinationSlots(disassembly.size(), std::numeric_limits<std::size_t>::max());
         for (auto &edge : edges) {
-            edge.sourceSlot = nextEndpointSlot[edge.source] += 1;
+            edge.sourceSlot = nextEndpointSlot[edge.source];
+            nextEndpointSlot[edge.source] += 1;
             edge.sourceSlotCount = endpointCounts[edge.source];
-            edge.targetSlot = nextEndpointSlot[edge.target] += 1;
+
+            if (destinationSlots[edge.target] == std::numeric_limits<std::size_t>::max()) {
+                destinationSlots[edge.target] = nextEndpointSlot[edge.target];
+                nextEndpointSlot[edge.target] += 1;
+            }
+            edge.targetSlot = destinationSlots[edge.target];
             edge.targetSlotCount = endpointCounts[edge.target];
         }
 
@@ -581,13 +624,9 @@ namespace hex::plugin::disasm {
                         return (float(slot) - float(count - 1) * 0.5F) * spacing;
                     };
 
-                    std::size_t edgeIndex = 0;
                     for (const auto &edge : flowEdges) {
                         if (!hasAnchor)
                             break;
-
-                        const std::size_t currentEdgeIndex = edgeIndex;
-                        edgeIndex += 1;
 
                         const float sourceY = anchorY + rowTop(edge.source) - rowTop(anchorIndex) + rowHeight * 0.5F +
                                               endpointOffset(edge.sourceSlot, edge.sourceSlotCount);
@@ -606,7 +645,7 @@ namespace hex::plugin::disasm {
                         const ImVec2 target(edgeX, targetY);
                         const bool hovered = isSegmentHovered(source, sourceCorner) || isSegmentHovered(targetCorner, target) ||
                                              (!overflow && isSegmentHovered(sourceCorner, targetCorner));
-                        const float hue = std::fmod(float(currentEdgeIndex) * std::numbers::phi, 1.0F);
+                        const float hue = std::fmod(float(edge.target) * std::numbers::phi, 1.0F);
                         float red, green, blue;
                         ImGui::ColorConvertHSVtoRGB(hue, hovered ? 0.45F : 0.65F, 0.95F, red, green, blue);
                         const ImU32 color = ImGui::GetColorU32(ImVec4(red, green, blue, hovered ? 1.0F : 0.9F));
