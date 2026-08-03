@@ -377,17 +377,13 @@ namespace hex::plugin::disasm {
                                 m_currArchitecture = architectures.begin()->second();
                             }
 
-                            if (ImGui::BeginTabBar("Architecture", ImGuiTabBarFlags_TabListPopupButton | ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_DrawSelectedOverline)) {
+                            if (ImGuiExt::BeginWrappingTabBar("Architecture")) {
                                 for (const auto &[name, creator] : architectures) {
-                                    if (ImGui::BeginTabItem(name.c_str())) {
-                                        if (m_currArchitecture->get()->getName() != name) {
-                                            m_currArchitecture = creator();
-                                        }
-
-                                        ImGui::EndTabItem();
-                                    }
+                                    const bool selected = m_currArchitecture->get()->getName() == name;
+                                    if (ImGuiExt::WrappingTabItem(name.c_str(), selected) && !selected)
+                                        m_currArchitecture = creator();
                                 }
-                                ImGui::EndTabBar();
+                                ImGuiExt::EndWrappingTabBar();
                             }
 
                             // Draw sub-settings for each architecture

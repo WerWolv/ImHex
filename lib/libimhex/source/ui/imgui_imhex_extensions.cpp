@@ -18,6 +18,7 @@
 #include <string>
 #include <algorithm>
 #include <numbers>
+#include <vector>
 
 #include <hex/api/imhex_api/system.hpp>
 
@@ -924,6 +925,115 @@ namespace ImGuiExt {
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, symbol, g.LastItemData.StatusFlags);
         return pressed;
+    }
+
+    namespace {
+
+        struct WrappingTabBarState {
+            float availableWidth;
+            float currentRowWidth;
+            float rowStartX;
+            bool hasItems;
+        };
+
+        std::vector<WrappingTabBarState> s_wrappingTabBarStack;
+
+    }
+
+    bool BeginWrappingTabBar(const char *label, std::size_t maximumRows) {
+        ImGuiWindow *window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        IM_ASSERT(maximumRows > 0);
+        PushID(label);
+        const float tabHeight = TabItemCalcSize("##WrappingTab", false).y;
+        const float maximumHeight = tabHeight * float(maximumRows) + GetStyle().ItemSpacing.y * float(maximumRows - 1);
+        SetNextWindowSizeConstraints(ImVec2(0.0F, tabHeight), ImVec2(FLT_MAX, maximumHeight));
+        if (!BeginChild("##WrappingTabBar", ImVec2(-FLT_MIN, 0.0F), ImGuiChildFlags_AutoResizeY)) {
+            EndChild();
+            PopID();
+            return false;
+        }
+
+        BeginGroup();
+        s_wrappingTabBarStack.push_back({ GetContentRegionAvail().x, 0.0F, GetCursorScreenPos().x, false });
+        return true;
+    }
+
+    bool WrappingTabItem(const char *label, bool selected) {
+        IM_ASSERT(!s_wrappingTabBarStack.empty() && "WrappingTabItem() must be called between BeginWrappingTabBar() and EndWrappingTabBar()");
+
+        ImGuiWindow *window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        const ImVec2 labelSize = CalcTextSize(label, nullptr, true);
+        const ImVec2 size = TabItemCalcSize(label, false);
+
+        auto &state = s_wrappingTabBarStack.back();
+        bool startsNewRow = !state.hasItems;
+        if (state.hasItems) {
+            if (state.currentRowWidth + style.ItemInnerSpacing.x + size.x <= state.availableWidth) {
+                SameLine(0.0F, style.ItemInnerSpacing.x);
+                state.currentRowWidth += style.ItemInnerSpacing.x;
+            } else {
+                state.currentRowWidth = 0.0F;
+                startsNewRow = true;
+            }
+        }
+        state.currentRowWidth += size.x;
+        state.hasItems = true;
+
+        const ImRect boundingBox(window->DC.CursorPos, window->DC.CursorPos + size);
+        ItemSize(size, style.FramePadding.y);
+        if (!ItemAdd(boundingBox, id))
+            return false;
+
+        bool hovered, held;
+        const bool pressed = ButtonBehavior(boundingBox, id, &hovered, &held);
+        const ImGuiCol backgroundColor = held || hovered ? ImGuiCol_TabHovered : selected ? ImGuiCol_TabSelected : ImGuiCol_Tab;
+        ImDrawList *drawList = GetWindowDrawList();
+
+        if (startsNewRow && style.TabBarBorderSize > 0.0F) {
+            const float baselineY = boundingBox.Max.y - style.TabBarBorderSize;
+            drawList->AddLine(
+                ImVec2(state.rowStartX, baselineY),
+                ImVec2(state.rowStartX + state.availableWidth, baselineY),
+                GetColorU32(ImGuiCol_TabSelected),
+                style.TabBarBorderSize
+            );
+        }
+
+        TabItemBackground(drawList, boundingBox, ImGuiTabItemFlags_None, GetColorU32(backgroundColor));
+        RenderNavCursor(boundingBox, id);
+        if (selected && style.TabBarOverlineSize > 0.0F) {
+            const ImVec2 topLeft = boundingBox.GetTL() + ImVec2(0, g.CurrentDpiScale);
+            const ImVec2 topRight = boundingBox.GetTR() + ImVec2(0, g.CurrentDpiScale);
+            const ImU32 overlineColor = GetColorU32(ImGuiCol_TabSelectedOverline);
+            if (style.TabRounding > 0.0F) {
+                drawList->PathArcToFast(topLeft + ImVec2(style.TabRounding, style.TabRounding), style.TabRounding, 7, 9);
+                drawList->PathArcToFast(topRight + ImVec2(-style.TabRounding, style.TabRounding), style.TabRounding, 9, 11);
+                drawList->PathStroke(overlineColor, ImDrawFlags_None, style.TabBarOverlineSize);
+            } else {
+                drawList->AddLine(topLeft - ImVec2(0.5F, 0.5F), topRight - ImVec2(0.5F, 0.5F), overlineColor, style.TabBarOverlineSize);
+            }
+        }
+        RenderTextClipped(boundingBox.Min + style.FramePadding, boundingBox.Max - style.FramePadding, label, nullptr, &labelSize, ImVec2(0.5F, 0.5F), &boundingBox);
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+        return pressed;
+    }
+
+    void EndWrappingTabBar() {
+        IM_ASSERT(!s_wrappingTabBarStack.empty() && "EndWrappingTabBar() called without BeginWrappingTabBar()");
+        s_wrappingTabBarStack.pop_back();
+        EndGroup();
+        EndChild();
+        PopID();
     }
 
     bool InputPrefix(const char* label, const char *prefix, std::string &buffer, ImGuiInputTextFlags flags) {
