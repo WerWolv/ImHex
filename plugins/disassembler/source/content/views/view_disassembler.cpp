@@ -455,6 +455,7 @@ namespace hex::plugin::disasm {
             const float addressWidth = ImGui::CalcTextSize("0x0000000000000000").x + ImGui::GetStyle().ItemSpacing.x * 2;
             const float bytesWidth = ImGui::CalcTextSize("00 00 00 00 00 ...").x + ImGui::GetStyle().ItemSpacing.x * 2;
             const float typeIconWidth = rowHeight + ImGui::GetStyle().ItemSpacing.x;
+            const float mnemonicColumnWidth = ImGui::CalcTextSize("MMMM").x;
 
             const bool showOffsets = ImGui::GetIO().KeyShift;
             const auto &selectedInstruction = m_selectedInstruction.get(provider);
@@ -581,7 +582,8 @@ namespace hex::plugin::disasm {
 
                         drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(rowInstructionX, textY), ImU32(0xFFD69C56), instruction.mnemonic.data(), instruction.mnemonic.data() + instruction.mnemonic.size(), 0.0F, &instructionClip);
 
-                        const float operandsX = rowInstructionX + ImGui::CalcTextSize(instruction.mnemonic.c_str()).x + ImGui::GetStyle().ItemSpacing.x;
+                        const float mnemonicWidth = ImGui::CalcTextSize(instruction.mnemonic.c_str()).x;
+                        const float operandsX = rowInstructionX + std::max(mnemonicWidth, mnemonicColumnWidth) + ImGui::GetStyle().ItemSpacing.x;
                         if (operandsX < childMax.x)
                             drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(operandsX, textY), ImGui::GetColorU32(ImGuiCol_Text), instruction.operators.data(), instruction.operators.data() + instruction.operators.size(), 0.0F, &instructionClip);
 
