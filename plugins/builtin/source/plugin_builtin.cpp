@@ -43,6 +43,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "save-editor",     "",  "Opens a pattern file for save file editing",   hex::plugin::builtin::handleSaveEditorCommand       },
     { "file-info",       "i", "Displays information about a file",            hex::plugin::builtin::handleFileInfoCommand         },
     { "mcp",             "",  "Starts a MCP Server for AI to interact with",  hex::plugin::builtin::handleMCPCommand              },
+    { "scaling",         "",  "Sets the global scaling factor for ImHex",     hex::plugin::builtin::handleScalingCommand          }
 };
 
 IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality") {

@@ -540,6 +540,18 @@ namespace hex::plugin::builtin {
         std::exit(result);
     }
 
+    void handleScalingCommand(const std::vector<std::string> &args) {
+        if (args.size() != 1) {
+            log::println("usage: imhex --scaling <scale>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        auto scale = std::stod(args[0], nullptr);
+        EventImHexStartupFinished::subscribe([scale] {
+            ImHexApi::System::impl::setGlobalScale(scale);
+        });
+    }
+
 
     void registerCommandForwarders() {
         hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){

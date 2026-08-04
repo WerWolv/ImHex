@@ -1343,6 +1343,8 @@ namespace hex {
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
         style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
+        style.SeparatorSize = std::max(style.SeparatorSize, 1.0F);
+
 
         style.Colors[ImGuiCol_TabSelectedOverline]          = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
         style.Colors[ImGuiCol_TabDimmedSelectedOverline]    = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
