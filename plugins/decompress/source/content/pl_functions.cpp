@@ -299,20 +299,23 @@ namespace hex::plugin::decompress {
                     std::vector<u8> outBuffer(1024 * 1024);
 
                     const u8* sourcePointer = compressedData.data();
-                    size_t srcSize = compressedData.size();
+                    size_t srcRemaining = compressedData.size();
+                    size_t ret = -1;
 
-                    while (srcSize > 0) {
+                    while (ret != 0) {
                         u8* dstPtr = outBuffer.data();
                         size_t dstCapacity = outBuffer.size();
-
-                        size_t ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
+                        size_t srcSize = srcRemaining;
+                        
+                        ret = LZ4F_decompress(dctx, dstPtr, &dstCapacity, sourcePointer, &srcSize, nullptr);
                         if (LZ4F_isError(ret)) {
                             LZ4F_freeDecompressionContext(dctx);
                             return u128(sourcePointer - compressedData.data());
                         }
 
                         section.insert(section.end(), outBuffer.begin(), outBuffer.begin() + dstCapacity);
-                        sourcePointer += (compressedData.size() - srcSize);
+                        sourcePointer += srcSize;
+                        srcRemaining -= srcSize;
                     }
 
                     LZ4F_freeDecompressionContext(dctx);
