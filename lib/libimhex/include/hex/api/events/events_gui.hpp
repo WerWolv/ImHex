@@ -52,6 +52,13 @@ namespace hex {
     EVENT_DEF(EventWindowFocused, bool);
 
     /**
+     * @brief Signals a window was just opened
+     *
+     * @param window The window reference
+     */
+    EVENT_DEF(EventWindowOpening, GLFWwindow*);
+
+    /**
      * @brief Signals a window being closed.
      *
      * Allows reactive clean up of running tasks, and prevents ImHex from closing

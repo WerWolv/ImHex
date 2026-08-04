@@ -557,6 +557,10 @@ namespace hex {
                 s_mainWindowFocused = focused;
             }
 
+            static float s_scaleMultiplier = 1.0f;
+            void setScaleMultiplier(float scale) {
+                s_scaleMultiplier = scale;
+            }
 
             static float s_globalScale = 1.0;
             void setGlobalScale(float scale) {
@@ -677,7 +681,7 @@ namespace hex {
         }
 
         float getGlobalScale() {
-            return impl::s_globalScale;
+            return impl::s_globalScale * impl::s_scaleMultiplier;
         }
 
         float getNativeScale() {

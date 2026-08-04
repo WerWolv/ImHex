@@ -1077,6 +1077,8 @@ namespace hex {
         );
 
         ImHexApi::System::impl::setMainWindowHandle(m_window);
+        EventWindowOpening::post(m_window);
+
 
         glfwSetWindowUserPointer(m_window, this);
 
@@ -1343,7 +1345,7 @@ namespace hex {
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
         style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
-        style.SeparatorSize = std::max(style.SeparatorSize, 1.0F);
+        style.SeparatorSize = std::max(style.SeparatorSize, 1_scaled);
 
 
         style.Colors[ImGuiCol_TabSelectedOverline]          = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);

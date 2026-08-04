@@ -1,6 +1,4 @@
-#include <iostream>
 #include <content/command_line_interface.hpp>
-#include <hex/mcp/client.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
@@ -8,6 +6,7 @@
 #include <hex/api/content_registry/views.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
+#include <hex/api/events/events_gui.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/task_manager.hpp>
 
@@ -22,6 +21,7 @@
 
 #include <hex/subcommands/subcommands.hpp>
 #include <hex/trace/stacktrace.hpp>
+#include <hex/mcp/client.hpp>
 
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
@@ -32,6 +32,8 @@
 #include <content/providers/file_provider.hpp>
 #include <content/views/fullscreen/view_fullscreen_save_editor.hpp>
 #include <content/views/fullscreen/view_fullscreen_file_info.hpp>
+
+#include <iostream>
 
 namespace hex::plugin::builtin {
     using namespace hex::literals;
@@ -547,8 +549,8 @@ namespace hex::plugin::builtin {
         }
 
         auto scale = std::stod(args[0], nullptr);
-        EventImHexStartupFinished::subscribe([scale] {
-            ImHexApi::System::impl::setGlobalScale(scale);
+        EventWindowOpening::subscribe([scale](auto) {
+            ImHexApi::System::impl::setScaleMultiplier(scale);
         });
     }
 

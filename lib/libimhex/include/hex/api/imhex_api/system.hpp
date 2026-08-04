@@ -65,6 +65,7 @@ EXPORT_MODULE namespace hex {
             void setMainWindowFocusState(bool focused);
 
             void setGlobalScale(float scale);
+            void setScaleMultiplier(float scale);
             void setNativeScale(float scale);
 
             void setBorderlessWindowMode(bool enabled);
