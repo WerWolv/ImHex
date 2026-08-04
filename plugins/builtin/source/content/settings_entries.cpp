@@ -679,6 +679,9 @@ for (const auto &path : m_paths) {
                     return;
 
                 for (auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItemsMutable()) {
+                    if (menuItem.icon.glyph.empty()) {
+                        continue;
+                    }
                     for (const auto &[index, value] : toolbarItems) {
                         const auto &[name, color] = value;
                         if (menuItem.unlocalizedNames.back().get() == name) {
