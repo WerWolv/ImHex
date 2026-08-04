@@ -1,11 +1,10 @@
-#include <algorithm>
-#include <cwchar>
 #include <hex/helpers/utils.hpp>
 
 #include <hex/api/imhex_api/system.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
@@ -19,7 +18,8 @@
 
 #include <clocale>
 #include <sstream>
-#include <hex/helpers/auto_reset.hpp>
+#include <algorithm>
+#include <cwchar>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -38,6 +38,7 @@
     #include <spawn.h>
     #include <hex/helpers/utils_macos.hpp>
     #include <CoreFoundation/CoreFoundation.h>
+    #include <Security/SecTask.h>
 #elif defined(OS_WEB)
     #include "emscripten.h"
 #endif
@@ -929,6 +930,48 @@ namespace hex {
         }();
 
         return osLanguage;
+    }
+
+    bool isSandboxed() {
+        #if defined(OS_WINDOWS)
+            return false;
+
+        #elif defined(OS_MACOS)
+            SecTaskRef task = SecTaskCreateFromSelf(kCFAllocatorDefault);
+            if (task == nullptr)
+                return false;
+
+            CFTypeRef value = SecTaskCopyValueForEntitlement(
+                task,
+                CFSTR("com.apple.security.app-sandbox"),
+                nullptr
+            );
+
+            CFRelease(task);
+
+            if (value == nullptr)
+                return false;
+
+            const bool sandboxed =
+                CFGetTypeID(value) == CFBooleanGetTypeID() &&
+                CFBooleanGetValue(static_cast<CFBooleanRef>(value));
+
+            CFRelease(value);
+            return sandboxed;
+
+        #elif defined(OS_LINUX)
+            // Flatpak exposes this file inside the sandbox.
+            if (std::filesystem::exists("/.flatpak-info"))
+                return true;
+
+            // Snap sets SNAP to the package's mounted directory.
+            const char* snap = std::getenv("SNAP");
+            return snap != nullptr && snap[0] != '\0';
+        #elif defined(OS_WEB)
+            return true;
+        #else
+            return false;
+        #endif
     }
 
     extern "C" void macOSCloseButtonPressed() {

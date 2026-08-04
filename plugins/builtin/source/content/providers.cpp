@@ -30,13 +30,16 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<FileProvider>(false);
         ContentRegistry::Provider::add<NullProvider>(false);
         #if !defined(OS_WEB)
-            ContentRegistry::Provider::add<DiskProvider>();
             ContentRegistry::Provider::add<UDPProvider>();
-            ContentRegistry::Provider::add<CommandProvider>();
             ContentRegistry::Provider::add<GDBProvider>();
-            #if !defined(OS_FREEBSD)
-                ContentRegistry::Provider::add<ProcessMemoryProvider>();
-            #endif
+
+            if (!isSandboxed()) {
+                ContentRegistry::Provider::add<DiskProvider>();
+                ContentRegistry::Provider::add<CommandProvider>();
+                #if !defined(OS_FREEBSD)
+                    ContentRegistry::Provider::add<ProcessMemoryProvider>();
+                #endif
+            }
         #endif
         ContentRegistry::Provider::add<IntelHexProvider>();
         ContentRegistry::Provider::add<MotorolaSRECProvider>();

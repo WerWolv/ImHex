@@ -10,7 +10,6 @@ finish-args:
   - --share=network
   - --socket=wayland
   - --socket=fallback-x11
-  - --filesystem=host
   - --device=dri
 
 modules:

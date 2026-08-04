@@ -394,6 +394,8 @@ namespace hex {
 
     std::optional<std::string> getOSLanguage();
 
+    bool isSandboxed();
+
     void showErrorMessageBox(const std::string &message);
     void showToastMessage(const std::string &title, const std::string &message);
 }
