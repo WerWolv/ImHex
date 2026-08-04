@@ -92,6 +92,7 @@
                     initializationFinished();
 
                     emscripten_set_main_loop([]() {
+                        glfwPollEvents();
                         window->fullFrame();
                     }, 60, 0);
                 } else {
