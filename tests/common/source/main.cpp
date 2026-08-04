@@ -5,7 +5,10 @@
 #include <hex/test/tests.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
+
+#include <imgui.h>
 
 #include <cstdlib>
 
@@ -42,6 +45,10 @@ int test(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+    ImGui::CreateContext();
+    for (const auto &plugin : hex::PluginManager::getPlugins())
+        plugin.setImGuiContext(ImGui::GetCurrentContext());
+
     int result = test(argc, argv);
 
     if (result == EXIT_SUCCESS)
@@ -50,9 +57,12 @@ int main(int argc, char **argv) {
         hex::log::info("Failed!");
 
     hex::TaskManager::exit();
+    ImGui::GetIO().Fonts->Locked = false;
+    hex::ImHexApi::System::impl::cleanup();
     hex::EventImHexClosing::post();
     hex::EventManager::clear();
     hex::PluginManager::unload();
+    ImGui::DestroyContext();
 
     return result;
 }

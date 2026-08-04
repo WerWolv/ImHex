@@ -85,17 +85,20 @@ addBundledLibraries()
 
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
-addPluginDirectories()
-add_subdirectory(lib/trace)
 
 # Add unit tests
 if (IMHEX_ENABLE_UNIT_TESTS)
+    enable_testing()
+
     if (NOT TARGET unit_tests)
-        enable_testing()
         add_custom_target(unit_tests)
-        add_subdirectory(tests EXCLUDE_FROM_ALL)
     endif ()
+
+    add_subdirectory(tests)
 endif ()
+
+addPluginDirectories()
+add_subdirectory(lib/trace)
 
 # Configure more resources that will be added to the install package
 if (IMHEX_BUNDLE_PLUGIN_SDK)

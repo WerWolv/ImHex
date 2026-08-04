@@ -20,11 +20,18 @@ namespace hex::test {
             if(!initPluginImpl("Built-in")) return false;
         }
 
+        for (const auto &plugin : hex::PluginManager::getPlugins()) {
+            if (plugin.isLibraryPlugin() && !plugin.isInitialized() && !plugin.initializePlugin()) {
+                hex::log::fatal("Failed to initialize library plugin '{}' !", plugin.getPluginName());
+                return false;
+            }
+        }
+
         const auto *plugin = hex::PluginManager::getPlugin(name);
         if (plugin == nullptr) {
             hex::log::fatal("Plugin '{}' was not found !", name);
             return false;
-        }else if (!plugin->initializePlugin()) {
+        } else if (!plugin->isInitialized() && !plugin->initializePlugin()) {
             hex::log::fatal("Failed to initialize plugin '{}' !", name);
             return false;
         }
