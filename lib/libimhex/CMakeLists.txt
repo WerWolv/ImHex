@@ -170,6 +170,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     if (NOT EMSCRIPTEN)
         # curl is only used in non-emscripten builds
         target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} CURL::libcurl)
+    else()
+        target_link_options(libimhex PUBLIC -sFETCH)
     endif()
 
     target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})

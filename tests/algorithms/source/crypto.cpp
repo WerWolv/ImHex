@@ -38,11 +38,11 @@ TEST_SEQUENCE("EncodeDecode16") {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution dataLen(0, 1024);
-    std::uniform_int_distribution<u8> data;
+    std::uniform_int_distribution<u32> data;
 
     for (int i = 0; i < 1000; i++) {
         std::vector<u8> original(dataLen(gen));
-        std::ranges::generate(original, [&] { return data(gen); });
+        std::ranges::generate(original, [&] { return u8(data(gen) & 0xFF); });
 
         auto encoded = hex::crypt::encode16(original);
         auto decoded = hex::crypt::decode16(encoded);
