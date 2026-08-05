@@ -99,7 +99,6 @@ namespace hex::plugin::builtin {
         * Decides what to do based on user settings, or opens a popup to let them decide.
         */
         void processPasteBehaviour(const Region &selection);
-        void processPasteFromFileBehaviour(const ImHexApi::HexEditor::ProviderRegion &selection);
 
         ui::HexEditor m_hexEditor;
 
