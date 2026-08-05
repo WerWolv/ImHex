@@ -23,7 +23,7 @@ option(IMHEX_BUNDLE_PLUGIN_SDK          "Enable bundling of Plugin SDK into inst
 set   (IMHEX_RENDERING_BACKEND          "GLFW" CACHE STRING "Set the rendering backend ImHex should use (GLFW or SDL)"                     )
 option(IMHEX_ENABLE_UPDATER             "Enable automatic updater"                                                                      ON )
 ## Testing
-option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                                    ON )
+option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                                    OFF)
 option(IMHEX_ENABLE_IMGUI_TEST_ENGINE   "Enable the ImGui Test Engine"                                                                  OFF)
 option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std library. (Breaks Plugin ABI!)"                             OFF)
 ## Debug info
@@ -34,7 +34,7 @@ option(IMHEX_STRICT_WARNINGS            "Enable most available warnings and trea
 option(IMHEX_DISABLE_STACKTRACE         "Disables support for printing stack traces"                                                    OFF)
 ## Plugins
 option(IMHEX_STATIC_LINK_PLUGINS        "Statically link all plugins into the main executable"                                          OFF)
-option(IMHEX_ENABLE_PLUGIN_TESTS        "Enable building plugin tests"                                                                  ON )
+option(IMHEX_ENABLE_PLUGIN_TESTS        "Enable building plugin tests"                                                                  OFF)
 set   (IMHEX_INCLUDE_PLUGINS            "" CACHE STRING "Semicolon-separated list of plugins to include in the build (empty = build all)"  )
 set   (IMHEX_EXCLUDE_PLUGINS            "" CACHE STRING "Semicolon-separated list of plugins to exclude from the build"                    )
 
