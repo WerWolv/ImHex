@@ -288,10 +288,8 @@ for (const auto &path : m_paths) {
                 ImGui::BeginDisabled(m_drawShortcut.matches(m_defaultShortcut));
                 if (ImGuiExt::DimmedButton(ICON_VS_DISCARD, ImGui::GetStyle().FramePadding * 2 + ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()))) {
                     this->reset();
-                    if (!m_hasDuplicate) {
-                        m_shortcut = m_defaultShortcut;
-                        settingChanged = true;
-                    }
+
+                    settingChanged = true;
 
                 }
                 ImGui::EndDisabled();
@@ -364,8 +362,15 @@ for (const auto &path : m_paths) {
             void reset() {
                 m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
 
-                m_drawShortcut = m_defaultShortcut;
-                m_shortcut = m_defaultShortcut;
+                if (m_hasDuplicate) {
+                    auto shortcut = ShortcutManager::getShortcutByName(m_fullName, m_view);
+                    m_drawShortcut = shortcut;
+                    m_shortcut = shortcut;
+                    log::warn("Resetting shortcut failed: {} is already being used", m_defaultShortcut.toString());
+                } else {
+                    m_drawShortcut = m_defaultShortcut;
+                    m_shortcut = m_defaultShortcut;
+                }
             }
 
         private:
@@ -382,12 +387,22 @@ for (const auto &path : m_paths) {
 
                     auto newShortcut = Shortcut(std::move(keys));
                     m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, newShortcut, m_view);
-                    m_drawShortcut = std::move(newShortcut);
+
+                    // Remove default unassigned shortcuts from unused list.
+                    if (m_shortcut == m_defaultShortcut && m_shortcut.isUnassigned()) {
+                        auto unusedUnassignedShortcuts = ShortcutManager::getUnusedUnassignedShortcuts();
+                        if (auto shortcut_it = std::ranges::find(unusedUnassignedShortcuts, m_shortcut); shortcut_it != unusedUnassignedShortcuts.end())
+                           unusedUnassignedShortcuts.erase(shortcut_it);
+                    }
 
                     if (!m_hasDuplicate) {
+                        m_drawShortcut = std::move(newShortcut);
                         m_shortcut = m_drawShortcut;
                         log::info("Changed shortcut to {}", shortcut->toString());
                     } else {
+                        m_drawShortcut = ShortcutManager::getShortcutByName(m_fullName,m_view);
+                        m_shortcut = m_drawShortcut;
+                        m_hasDuplicate = false;
                         log::warn("Changing shortcut failed as it overlapped with another one", shortcut->toString());
                     }
 
