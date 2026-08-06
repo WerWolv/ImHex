@@ -208,7 +208,7 @@ def cmd_check_nonexistent(args: argparse.Namespace) -> int:
 
     return ret
 
-def _handle_unused(remove: bool) -> int:
+def cmd_remove_unused() -> int:
     """Shared logic for check-unused and remove-unused.
 
     Matches tests/check_langs.py: only a plugin's own en_US.json keys are checked
@@ -230,17 +230,11 @@ def _handle_unused(remove: bool) -> int:
         if not keys_to_handle:
             continue
 
-        if remove:
-            print(f"--- Removing unused keys from {lang_file}")
-            for key in keys_to_handle:
-                del lang_data[key]
-                print(f"  Removed '{key}'")
-            write_json(lang_file, lang_data)
-        else:
-            ret = 1
-            print(f"--- Unused lang keys in {lang_file}")
-            for key in keys_to_handle:
-                print(f"  {key}")
+        print(f"--- Removing unused keys from {lang_file}")
+        for key in keys_to_handle:
+            del lang_data[key]
+            print(f"  Removed '{key}'")
+        write_json(lang_file, lang_data)
 
     return ret
 
@@ -363,8 +357,7 @@ def main() -> int:
         "sync-sublangs": cmd_sync_sublangs,
         "fmtzh": cmd_fmtzh,
         "check-nonexistent": cmd_check_nonexistent,
-        "check-unused": lambda args: _handle_unused(remove=False),
-        "remove-unused": lambda args: _handle_unused(remove=True),
+        "remove-unused": lambda args: cmd_remove_unused(),
     }
 
     return commands[args.command](args)
