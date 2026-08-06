@@ -16,10 +16,8 @@
     "hex.hashes.hash.common.xor_out": "最終XOR値",
     "hex.hashes.view.hashes.function": "ハッシュ関数",
     "hex.hashes.view.hashes.hash": "",
-    "hex.hashes.view.hashes.hover_info": "",
     "hex.hashes.view.hashes.name": "ハッシュ",
     "hex.hashes.view.hashes.no_settings": "",
-    "hex.hashes.view.hashes.remove": "",
     "hex.hashes.view.hashes.table.name": "",
     "hex.hashes.view.hashes.table.result": "結果",
     "hex.hashes.view.hashes.table.type": ""

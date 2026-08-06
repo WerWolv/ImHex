@@ -7,7 +7,6 @@
     "hex.windows.view.tty_console.config": "Konfiguráció",
     "hex.windows.view.tty_console.connect": "Csatlakozás",
     "hex.windows.view.tty_console.connect_error": "Nem sikerült csatlakozni a COM porthoz!",
-    "hex.windows.view.tty_console.console": "Konzol",
     "hex.windows.view.tty_console.cts": "CTS áramlásvezérlés használata",
     "hex.windows.view.tty_console.disconnect": "Kapcsolat bontása",
     "hex.windows.view.tty_console.name": "TTY konzol",
@@ -19,6 +18,5 @@
     "hex.windows.view.tty_console.send_eot": "EOT küldése",
     "hex.windows.view.tty_console.send_etx": "EXT küldése",
     "hex.windows.view.tty_console.send_sub": "SUB küldése",
-    "hex.windows.view.tty_console.stop_bits": "Stop bitek",
-    "hex.windows.view.tty_console.task.transmitting": "Adat küldése..."
+    "hex.windows.view.tty_console.stop_bits": "Stop bitek"
 }

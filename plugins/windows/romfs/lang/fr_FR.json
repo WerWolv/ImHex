@@ -7,7 +7,6 @@
     "hex.windows.view.tty_console.config": "Configuration",
     "hex.windows.view.tty_console.connect": "Connexion",
     "hex.windows.view.tty_console.connect_error": "Échec de la connexion au port COM !",
-    "hex.windows.view.tty_console.console": "Console",
     "hex.windows.view.tty_console.cts": "Utiliser le contrôle de flux CTS",
     "hex.windows.view.tty_console.disconnect": "Déconnexion",
     "hex.windows.view.tty_console.name": "Console TTY",
@@ -19,6 +18,5 @@
     "hex.windows.view.tty_console.send_eot": "Envoyer EOT",
     "hex.windows.view.tty_console.send_etx": "Envoyer ETX",
     "hex.windows.view.tty_console.send_sub": "Envoyer SUB",
-    "hex.windows.view.tty_console.stop_bits": "Bits d'arrêt",
-    "hex.windows.view.tty_console.task.transmitting": "Transmission des données..."
+    "hex.windows.view.tty_console.stop_bits": "Bits d'arrêt"
 }
