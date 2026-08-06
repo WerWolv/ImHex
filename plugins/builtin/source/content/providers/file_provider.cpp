@@ -24,9 +24,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
-#elif defined(OS_FREEBSD)
-    #include <sys/extattr.h>
-#elif defined(OS_MACOS) || defined(OS_LINUX)
+#elif defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
     #include <sys/xattr.h>
 #endif
 
@@ -159,7 +157,7 @@ namespace hex::plugin::builtin {
             result.emplace_back("hex.builtin.provider.file.modification"_lang,  modificationTime);
         }
 
-        #if defined(OS_MACOS) || defined(OS_LINUX)
+        #if defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
             constexpr static auto getxattrs = [](const char *path, char *list, size_t size) -> ssize_t {
                 #if defined(OS_LINUX)
