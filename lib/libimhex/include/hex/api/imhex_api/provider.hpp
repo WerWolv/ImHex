@@ -4,6 +4,7 @@
 
 #include <hex/api/localization_manager.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <set>
 #include <vector>
@@ -144,7 +145,7 @@ EXPORT_MODULE namespace hex {
          * @brief Opens a provider, making its data available to ImHex and handling any error that may occur
          * @param provider The provider to open
          */
-        void openProvider(std::shared_ptr<prv::Provider> provider);
+        TaskHolder openProvider(std::shared_ptr<prv::Provider> provider);
 
     }
 

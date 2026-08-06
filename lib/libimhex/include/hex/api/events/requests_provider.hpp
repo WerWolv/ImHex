@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/api/event_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 /* Provider requests definitions */
 namespace hex {
@@ -13,7 +14,7 @@ namespace hex {
     /**
      * @brief Used internally when opening a provider through the API
     */
-    EVENT_DEF(RequestOpenProvider, std::shared_ptr<prv::Provider>);
+    EVENT_DEF(RequestOpenProvider, std::shared_ptr<prv::Provider>, TaskHolder*);
 
     /**
      * @brief Move the data from all PerProvider instances from one provider to another

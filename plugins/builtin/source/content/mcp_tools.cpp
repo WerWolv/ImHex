@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
             if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
                 fileProvider->setPickedPath(filePath);
 
-                ImHexApi::Provider::openProvider(provider);
+                ImHexApi::Provider::openProvider(provider).wait();
             }
 
             nlohmann::json result = {

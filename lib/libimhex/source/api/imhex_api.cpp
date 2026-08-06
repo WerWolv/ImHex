@@ -516,8 +516,10 @@ namespace hex {
             return result;
         }
 
-        void openProvider(std::shared_ptr<prv::Provider> provider) {
-            RequestOpenProvider::post(provider);
+        TaskHolder openProvider(std::shared_ptr<prv::Provider> provider) {
+            TaskHolder task;
+            RequestOpenProvider::post(provider, &task);
+            return task;
         }
 
     }
