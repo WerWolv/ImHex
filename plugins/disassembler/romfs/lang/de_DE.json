@@ -40,7 +40,6 @@
     "hex.disassembler.view.disassembler.mips.mips2": "MIPS II",
     "hex.disassembler.view.disassembler.mips.mips3": "MIPS III",
     "hex.disassembler.view.disassembler.mips.mips32": "MIPS32",
-    "hex.disassembler.view.disassembler.mips.mips32R6": "MIPS32R6",
     "hex.disassembler.view.disassembler.mips.mips64": "MIPS64",
     "hex.disassembler.view.disassembler.mos65xx.6502": "6502",
     "hex.disassembler.view.disassembler.mos65xx.65816": "65816",

@@ -1,4 +1,4 @@
-﻿{
+{
     "hex.hashes.achievement.misc.create_hash.name": "Hashbajnok",
     "hex.hashes.achievement.misc.create_hash.desc": "Hozz létre egy új hash függvényt a Hash lapon, válaszd ki a típust, adj neki nevet, és kattints a mellette lévő Plusz gombra.",
     "hex.hashes.view.hashes.function": "Hash-függvény",

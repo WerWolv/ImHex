@@ -1,4 +1,4 @@
-﻿{
+{
     "hex.yara.information_section.advanced_data_info": "Haladó adat információ",
     "hex.yara.information_section.advanced_data_info.no_information": "További információ nem elérhető.",
     "hex.yara_rules.view.yara.error": "Yara fordítási hiba: {0}",
