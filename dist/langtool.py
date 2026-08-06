@@ -74,35 +74,6 @@ def find_lang_keys_in_source(path: Path, mode: str) -> Generator[tuple[Path, int
                     for m in re.finditer(pattern, line):
                         yield (filepath, line_num, m.group(1))
 
-
-def verify_language_files_exist(languages_file_path: Path) -> bool:
-    """Check that a plugin's languages.json references files that exist on disk."""
-    languages_folder = languages_file_path.parent
-    if not languages_folder.exists():
-        return True
-
-    if not languages_file_path.exists():
-        print(f"Error: Languages file '{languages_file_path}' does not exist.")
-        return False
-
-    try:
-        data = json.loads(languages_file_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        print(f"Error: Languages file '{languages_file_path}' is not valid JSON: {e}")
-        return False
-
-    if not isinstance(data, list):
-        print(f"Error: Languages file '{languages_file_path}' is not a JSON array.")
-        return False
-
-    for lang in data:
-        lang_path = languages_folder.parent / lang["path"]
-        if not lang_path.exists():
-            print(f"Error: Language file '{lang['path']}' does not exist in '{languages_folder}'.")
-            return False
-
-    return True
-
 def cmd_check(args: argparse.Namespace) -> int:
     """Check that all non-English translation files have every key from en_US."""
     ret = 0
