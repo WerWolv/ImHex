@@ -398,4 +398,8 @@ namespace hex {
 
     void showErrorMessageBox(const std::string &message);
     void showToastMessage(const std::string &title, const std::string &message);
+
+    #if defined(OS_LINUX) || defined(OS_MACOS)
+        [[nodiscard]] bool hasControllingTerminal();
+    #endif
 }

@@ -31,6 +31,7 @@
     #include <unistd.h>
     #include <dlfcn.h>
     #include <spawn.h>
+    #include <fcntl.h>
     #include <hex/helpers/utils_linux.hpp>
 #elif defined(OS_MACOS)
     #include <unistd.h>
@@ -1064,5 +1065,17 @@ namespace hex {
             }, title.c_str(), message.c_str());
         #endif
     }
+
+    #if defined(OS_LINUX) || defined(OS_MACOS)
+        bool hasControllingTerminal() {
+            const int fd = ::open("/dev/tty", O_RDONLY);
+
+            if (fd == -1)
+                return false;
+
+            ::close(fd);
+            return true;
+        }
+    #endif
 
 }

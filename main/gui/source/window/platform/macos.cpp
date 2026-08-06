@@ -42,7 +42,7 @@ namespace hex {
         }
 
         // Redirect stdout to log file if we're not running in a terminal
-        if (!isatty(STDOUT_FILENO)) {
+        if (!hasControllingTerminal()) {
             log::impl::redirectToFile();
         }
 
