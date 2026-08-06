@@ -6,6 +6,7 @@ Run with --help to see available subcommands.
 Terminology:
 - langdir: a folder containing language JSON files (e.g. plugins/builtin/romfs/lang/)
 - lang: a language (en_US, fr_FR..)
+- sublang: a language which is not en_US
 - lang key: a string key used to look up a translation in a JSON file (e.g. hex.ui.common.yes)
 """
 import argparse
