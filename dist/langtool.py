@@ -156,9 +156,6 @@ def cmd_sync_sublangs(args: argparse.Namespace) -> int:
     """Sync non-English files with en_US (add missing blank entries, remove orphans)."""
 
     def sync_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> dict[str, str]:
-        for key in default_data:
-            if key not in lang_data:
-                lang_data[key] = INVALID_TRANSLATION
         _remove_orphaned_keys(lang_data, default_data, path)
         return lang_data
 
