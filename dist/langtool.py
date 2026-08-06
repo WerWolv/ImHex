@@ -75,7 +75,7 @@ def find_lang_keys_in_source(path: Path, mode: str) -> Generator[tuple[Path, int
                     for m in re.finditer(pattern, line):
                         yield (filepath, line_num, m.group(1))
 
-def cmd_check(args: argparse.Namespace) -> int:
+def cmd_check_translations(args: argparse.Namespace) -> int:
     """Check that all non-English translation files have every key from en_US."""
     ret = 0
 
@@ -307,7 +307,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Translation commands
-    _add_translation_subparser(subparsers, "check", "Check non-English files have all translations")
+    _add_translation_subparser(subparsers, "check-translations", "Check non-English files have all translations")
     p_translate = _add_translation_subparser(
         subparsers,
         "translate",
@@ -349,7 +349,7 @@ def main() -> int:
     args = parser.parse_args()
 
     commands = {
-        "check": cmd_check,
+        "check-translations": cmd_check_translations,
         "translate": lambda args: _run_translate(args, retranslate=args.retranslate),
         "untranslate": _run_untranslate,
         "sync-sublangs": cmd_sync_sublangs,
