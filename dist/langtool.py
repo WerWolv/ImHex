@@ -2,7 +2,12 @@
 """ImHex language tool.
 
 Manages translations and validates lang keys against C/C++ source code.
-Run with --help to see available subcommands."""
+Run with --help to see available subcommands.
+Terminology:
+- langdir: a folder containing language JSON files (e.g. plugins/builtin/romfs/lang/)
+- lang: a language (en_US, fr_FR..)
+- lang key: a string key used to look up a translation in a JSON file (e.g. hex.ui.common.yes)
+"""
 import argparse
 import json
 import re
@@ -223,7 +228,7 @@ def cmd_check_nonexistent(args: argparse.Namespace) -> int:
 
     ret = 0
     for source_root in source_roots:
-        print(f"--- Checking nonexistent langs at {source_root}")
+        print(f"--- Checking nonexistent lang keys at {source_root}")
         allowed_keys = common_keys | plugin_keys.get(source_root, set())
         for filepath, line, key in find_lang_keys_in_source(source_root, "lang"):
             if key not in allowed_keys:
@@ -262,7 +267,7 @@ def _handle_unused(remove: bool) -> int:
             write_json(lang_file, lang_data)
         else:
             ret = 1
-            print(f"--- Unused langs in {lang_file}")
+            print(f"--- Unused lang keys in {lang_file}")
             for key in keys_to_handle:
                 print(f"  {key}")
 
