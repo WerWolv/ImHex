@@ -121,7 +121,10 @@ namespace hex::plugin::diffing {
         m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &task) {
             task.setInterruptCallback([this]{ m_analysisInterrupted = true; });
 
-            this->reset();
+            for (auto &column : m_columns) {
+                column.diffTree.clear();
+                column.differences.clear();
+            }
 
             auto differences = m_algorithm->analyze(providerA, providerB);
 
