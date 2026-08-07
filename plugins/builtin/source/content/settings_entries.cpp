@@ -1,16 +1,20 @@
-#include <algorithm>
-#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/content_registry/experiments.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
-#include <hex/api/content_registry/experiments.hpp>
 #include <hex/api/content_registry/views.hpp>
-#include <hex/api/localization_manager.hpp>
-#include <hex/api/theme_manager.hpp>
-#include <hex/api/shortcut_manager.hpp>
+#include <hex/api/imhex_api/system.hpp>
+
 #include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_gui.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/api/localization_manager.hpp>
+#include <hex/api/shortcut_manager.hpp>
+#include <hex/api/theme_manager.hpp>
+#include <hex/api/plugin_manager.hpp>
+
 #include <hex/ui/view.hpp>
 
+#include <hex/helpers/debugging.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
 
@@ -18,15 +22,14 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/vscode_icons.hpp>
 
+#include <romfs/romfs.hpp>
 #include <wolv/literals.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <utility>
-#include <hex/api/plugin_manager.hpp>
-#include <hex/helpers/debugging.hpp>
-#include <romfs/romfs.hpp>
 
 #if defined(OS_WEB)
     #include <emscripten.h>
@@ -190,14 +193,16 @@ for (const auto &path : m_paths) {
                         return "x%.1f";
                 }();
 
-                bool changed = ImGui::SliderFloat(name.data(), &m_value, 0, 4, format.c_str());
+                ImGui::SliderFloat(name.data(), &m_value, 0, 4, format.c_str());
 
-                if (m_value < 0)
-                    m_value = 0;
-                else if (m_value > 10)
-                    m_value = 10;
+                if (m_value <= 0.0F)
+                    m_value = 0.0F;
+                else if (m_value < 0.1F)
+                    m_value = 0.1F;
+                else if (m_value > 10.0F)
+                    m_value = 10.0F;
 
-                return changed;
+                return ImGui::IsItemDeactivatedAfterEdit();
             }
 
             void load(const nlohmann::json &data) override {
@@ -210,7 +215,7 @@ for (const auto &path : m_paths) {
             }
 
             [[nodiscard]] float getValue() const {
-                return m_value;
+                return m_value == 0.0F ? ImHexApi::System::getNativeScale() : m_value;
             }
 
         private:
@@ -828,7 +833,9 @@ for (const auto &path : m_paths) {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_titlebar_backdrop", true);
 
             ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
-            .requiresRestart();
+            .setChangedCallback([](auto &widget) {
+                EventDPIChanged::post(ImHexApi::System::getGlobalScale(), static_cast<ScalingWidget&>(widget).getValue());
+            });
 
             #if defined (OS_WEB)
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.crisp_scaling", false)

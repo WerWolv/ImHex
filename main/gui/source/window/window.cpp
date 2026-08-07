@@ -1,5 +1,7 @@
 #include "window.hpp"
 
+#include "hex/api/theme_manager.hpp"
+
 #include <hex.hpp>
 
 #include <hex/api/plugin_manager.hpp>
@@ -99,6 +101,8 @@ namespace hex {
 
             ImHexApi::System::impl::setMainWindowSize(width, height);
             glfwSetWindowSize(m_window, width, height);
+
+            ThemeManager::reapplyCurrentTheme();
         });
 
         RequestSetPostProcessingShader::subscribe(this, [this](const std::string &vertexShader, const std::string &fragmentShader) {
@@ -1338,14 +1342,12 @@ namespace hex {
 
         io.UserData = &m_imguiCustomData;
 
-        style.ScaleAllSizes(ImHexApi::System::getGlobalScale());
         auto scale = ImHexApi::System::getNativeScale();
         io.DisplayFramebufferScale = ImVec2(scale, scale);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
         style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
-        style.SeparatorSize = std::max(style.SeparatorSize, 1_scaled);
 
 
         style.Colors[ImGuiCol_TabSelectedOverline]          = ImVec4(0.0F, 0.0F, 0.0F, 0.0F);
@@ -1400,6 +1402,7 @@ namespace hex {
             plugin.setImGuiContext(ImGui::GetCurrentContext());
 
         RequestInitThemeHandlers::post();
+        EventDPIChanged::post(1.0F, ImHexApi::System::getGlobalScale());
     }
 
     void Window::exitGLFW() {

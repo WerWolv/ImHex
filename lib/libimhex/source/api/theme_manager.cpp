@@ -201,12 +201,15 @@ namespace hex {
 
                     if (value.is_number_float()) {
                         if (const auto newValue = std::get_if<float*>(&style.value); newValue != nullptr && *newValue != nullptr)
-                            **newValue = value.get<float>() * scale;
+                            **newValue = std::clamp(value.get<float>() * scale, style.min, style.max);
                         else
                             log::warn("Style variable '{}' was of type ImVec2 but a float was expected.", name);
                     } else if (value.is_array() && value.size() == 2 && value[0].is_number_float() && value[1].is_number_float()) {
                         if (const auto newValue = std::get_if<ImVec2*>(&style.value); newValue != nullptr && *newValue != nullptr)
-                            **newValue = ImVec2(value[0].get<float>() * scale, value[1].get<float>() * scale);
+                            **newValue = ImVec2(
+                                std::clamp(value[0].get<float>() * scale, style.min, style.max),
+                                std::clamp(value[1].get<float>() * scale, style.min, style.max)
+                            );
                         else
                             log::warn("Style variable '{}' was of type float but a ImVec2 was expected.", name);
                     } else {
