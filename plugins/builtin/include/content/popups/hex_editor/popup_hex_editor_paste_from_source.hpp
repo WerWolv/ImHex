@@ -65,14 +65,12 @@ namespace hex::plugin::builtin {
             void setSelection(u64 start, u64 end);
             bool executePasteOperation(void) const;
             std::string elapsedTimeFormatted(void) const;
-            void restorePinStatus(void);
 
         private:
             float m_getTableWidth(void) { return (600_scaled); } // Set the same width for all tables which decides the popup width 
             struct { ProviderInfo source; ProviderInfo dest; } m_providers;
             PasteModeType m_pasteMode = PasteModeType::ModeNotSelected;
             PasteHintType m_pasteHint = PasteHintType::HintDefaultDescription;
-            bool m_savedPinStatus = false;
             bool m_inputBaseHex = true;
             bool m_modeRecommend = true;
             bool m_setSelectionTrigger = false;

@@ -12,6 +12,9 @@
 namespace hex::plugin::builtin {
 
     PopupPasteFromSource::PopupPasteFromSource(const ImHexApi::HexEditor::ProviderRegion &selection) {
+        // Pin the popup to avoid accidentally closing it
+        this->setPinned(true);
+
         auto &[source, dest] = m_providers;
 
         // Initialize source region with default values
@@ -71,7 +74,7 @@ namespace hex::plugin::builtin {
             const auto sourceColumnHeader = fmt::format("{} {}", ((ImHexApi::Provider::getCurrentProviderIndex() == source.providerIndex) ? ICON_VS_FILE_BINARY : ICON_VS_FILE),
                                                                  "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.provider.source.title"_lang);
             const auto destColumnHeader = fmt::format("{} {}", ((ImHexApi::Provider::getCurrentProviderIndex() == dest.providerIndex) ? ICON_VS_FILE_BINARY : ICON_VS_FILE),
-                                                                "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.provider.dest.title"_lang);
+                                                               "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.provider.dest.title"_lang);
             // Add two columns
             ImGui::TableSetupColumn(sourceColumnHeader.c_str());
             ImGui::TableSetupColumn(destColumnHeader.c_str());
@@ -404,20 +407,21 @@ namespace hex::plugin::builtin {
     void PopupPasteFromSource::drawPasteConfirmationPopup(ViewHexEditor *editor) {
         // Open popup at the center of current window
         ImGui::SetNextWindowPos((ImGui::GetWindowPos() + (ImGui::GetWindowSize() / 2.0f)), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowFocus();
 
         // Disable the popup transparency
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
-        if (ImGui::BeginPopupModal("paste_confirmation_popup", nullptr, (ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize))) {
+        if (ImGui::BeginPopup("paste_confirmation_popup", (ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))) {
+            // Calculate table width
+            const auto warningText = "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.warning"_lang.get();
+            const auto tableWidth = ((ImGui::CalcTextSize(ICON_VS_WARNING, nullptr, true).x + (ImGui::GetStyle().FramePadding.x * 2.0f)) +
+                                     (ImGui::GetStyle().ItemSpacing.x) +
+                                     (ImGui::CalcTextSize(warningText, strchr(warningText, '\n')).x));
+
             // Table for displaying paste warning and confirmation
-            if (ImGui::BeginTable("##table_paste_confirmation", 1, (ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingFixedFit))) {
-                // Calculate column width
-                const auto warningText = "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.warning"_lang.get();
-                const auto columnWidth = ((ImGui::CalcTextSize(ICON_VS_WARNING, nullptr, true).x + (ImGui::GetStyle().FramePadding.x * 2.0f)) +
-                                          (ImGui::GetStyle().ItemSpacing.x) + (ImGui::GetStyle().CellPadding.x * 2.0f) +
-                                          (ImGui::CalcTextSize(warningText, strchr(warningText, '\n')).x));
- 
+            if (ImGui::BeginTable("##table_paste_confirmation", 1, (ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingFixedFit), ImVec2(tableWidth, 0.0f))) { 
                 // Add single column
-                ImGui::TableSetupColumn("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.warn.title"_lang, ImGuiTableColumnFlags_WidthFixed, columnWidth);
+                ImGui::TableSetupColumn("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.warn.title"_lang);
                 // ImGui::TableHeadersRow();
 
                 // First row
@@ -430,7 +434,7 @@ namespace hex::plugin::builtin {
                 ImGui::TextColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), ICON_VS_WARNING);
                 ImGui::SameLine();
                 // Show warning text
-                ImGui::TextWrapped(warningText);
+                ImGui::TextUnformatted(warningText);
 
                 ImGui::Separator();
 
@@ -438,7 +442,7 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ((buttonWidth + ImGui::GetStyle().ItemSpacing.x) * 2.0f));
 
                 // Yes
-                if (ImGuiExt::DimmedButton("hex.ui.common.yes"_lang, ImVec2(buttonWidth, 0)) ||
+                if (ImGuiExt::DimmedButton("hex.ui.common.yes"_lang, ImVec2(buttonWidth, 0)) || 
                         (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Y)))) {
                     const auto startTime = std::chrono::steady_clock::now();
                     const auto isPasteSuccess = executePasteOperation();
@@ -450,8 +454,6 @@ namespace hex::plugin::builtin {
                         // Turn off selection toggles after paste success
                         source.providerSelectionToggle = false;
                         dest.providerSelectionToggle = false;
-                        // Restore saved pin state
-                        restorePinStatus();
                         // Jump to the end of the pasted area of destination provider in hex editor
                         dest.providerSelection.size = ((m_pasteMode != PasteModeType::ModePasteOverSelection) ? (source.providerSelection.getSize()) 
                                                                                                               : (std::min(source.providerSelection.getSize(), 
@@ -473,9 +475,7 @@ namespace hex::plugin::builtin {
 
                 // No
                 if (ImGuiExt::DimmedButton("hex.ui.common.no"_lang, ImVec2(buttonWidth, 0)) || 
-                        (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_N))) || 
-                        (!ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), (ImGui::GetWindowPos() + ImGui::GetWindowSize())) && 
-                         ImGui::IsMouseClicked(ImGuiMouseButton_Left))) {
+                        (ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_N)))) {
                     // close popup
                     ImGui::CloseCurrentPopup();
                 }
@@ -488,7 +488,7 @@ namespace hex::plugin::builtin {
             ImDrawList* drawList = ImGui::GetWindowDrawList();
             drawList->AddRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(),
                               ImGui::GetColorU32(ImGuiCol_NavWindowingHighlight), ImGui::GetStyle().WindowRounding,
-                              ImDrawFlags_None, 2_scaled);
+                              ImDrawFlags_None, 3_scaled);
 
             ImGui::EndPopup();
         }
@@ -526,11 +526,7 @@ namespace hex::plugin::builtin {
                 providerSelection.address = 0;
                 providerSelection.size = 0;
                 providerSelection.provider = nullptr;
-                if(providerSelectionToggle) {
-                    providerSelectionToggle = false;
-                    // Restore saved pin state
-                    restorePinStatus();
-                }
+                providerSelectionToggle = false;
             }
         } else {
             providerIndex = -1;
@@ -566,11 +562,7 @@ namespace hex::plugin::builtin {
                             providerSelection.address = 0;
                             providerSelection.size = 0;
                         }
-                        if(providerSelectionToggle) {
-                            providerSelectionToggle = false;
-                            // Restore saved pin state
-                            restorePinStatus();
-                        }
+                        providerSelectionToggle = false;
                         m_pasteMode = PasteModeType::ModeNotSelected;
                         m_pasteHint = PasteHintType::HintDefaultDescription;
                     }
@@ -584,11 +576,7 @@ namespace hex::plugin::builtin {
                         dest.providerSelection.address = 0;
                         dest.providerSelection.size = 0;
                         dest.providerSelection.provider = nullptr;
-                        if(dest.providerSelectionToggle) {
-                            dest.providerSelectionToggle = false;
-                            // Restore saved pin state
-                            restorePinStatus();
-                        }
+                        dest.providerSelectionToggle = false;
                     }
                     // If destination, reset source object
                     if ((providerObjectId == ObjectIdType::DestId) && (providerIndex == source.providerIndex)) {
@@ -597,11 +585,7 @@ namespace hex::plugin::builtin {
                         source.providerSelection.address = 0;
                         source.providerSelection.size = 0;
                         source.providerSelection.provider = nullptr;
-                        if(source.providerSelectionToggle) {
-                            source.providerSelectionToggle = false;
-                            // Restore saved pin state
-                            restorePinStatus();
-                        }
+                        source.providerSelectionToggle = false;
                     }
                 }
                 ImGui::PopID();
@@ -619,7 +603,6 @@ namespace hex::plugin::builtin {
         auto &providerObjectId = object.providerObjectId;
         auto &[source, dest] = m_providers;
         const auto isProviderEmpty = (!providerValidity || (providerSelection.provider->getActualSize() == 0));
-        const auto wasSelectionActive = (source.providerSelectionToggle || dest.providerSelectionToggle);
 
         ImGui::BeginDisabled(!providerValidity);
         {
@@ -627,15 +610,6 @@ namespace hex::plugin::builtin {
             ImGui::PushID(&providerSelectionToggle);
             if (ImGuiExt::DimmedIconToggle(ICON_VS_DEBUG_RESTART_FRAME, &providerSelectionToggle)) {
                 if (providerSelectionToggle) {
-                    // Save original pin state only when entering selection mode
-                    if (!wasSelectionActive) {
-                        m_savedPinStatus = this->isPinned();
-                        // Pin the popup while selecting a region
-                        if (!m_savedPinStatus) {
-                            this->setPinned(true);
-                        }
-                    }
-
                     // If source, turn off destination selection toggle
                     if (providerObjectId == ObjectIdType::SourceId) {
                         dest.providerSelectionToggle = false;
@@ -649,11 +623,6 @@ namespace hex::plugin::builtin {
                     if (!isProviderEmpty) {
                         editor->setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
                         editor->jumpToSelection();
-                    }
-                } else {
-                    // Restore saved pin state when leaving selection mode
-                    if (wasSelectionActive) {
-                        restorePinStatus();
                     }
                 }
             }
@@ -681,8 +650,6 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
-                // Restore saved pin state
-                restorePinStatus();
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                 setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
@@ -697,8 +664,6 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
-                // Restore saved pin state
-                restorePinStatus();
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                 setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
@@ -713,8 +678,6 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
-                // Restore saved pin state
-                restorePinStatus();
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                 setSelection(providerSelection.getEndAddress(), providerSelection.getStartAddress());
@@ -736,8 +699,6 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
-                // Restore saved pin state
-                restorePinStatus();
                 m_pasteMode = PasteModeType::ModeNotSelected;
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
@@ -985,10 +946,5 @@ namespace hex::plugin::builtin {
         }
 
         return fmt::format("{:.3f} ns", std::chrono::duration<double, std::nano>(m_elapsedTime).count());
-    }
-
-    void PopupPasteFromSource::restorePinStatus(void) {
-        // Restore saved pin state
-        this->setPinned(m_savedPinStatus);
     }
 }
