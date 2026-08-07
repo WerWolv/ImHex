@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                 ObjectIdType providerObjectId;
                 i64 providerIndex = -1;
                 bool providerValidity = false;
-                ImHexApi::HexEditor::ProviderRegion providerSelection = {0, 0, nullptr};
+                ImHexApi::HexEditor::ProviderRegion providerSelection = { { 0, 0 }, nullptr };
                 bool providerSelectionToggle = false;
             };
 
