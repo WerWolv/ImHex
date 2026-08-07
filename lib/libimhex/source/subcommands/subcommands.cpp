@@ -120,8 +120,8 @@ namespace hex::subcommands {
 
         if (pluginsInitialized) {
             ImHexApi::System::impl::cleanup();
-            PluginManager::unload();
             EventManager::clear();
+            PluginManager::unload();
         }
 
         // Exit the process if it's not the main instance (the commands have been forwarded to another instance)
