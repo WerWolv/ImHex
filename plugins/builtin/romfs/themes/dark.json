@@ -300,7 +300,8 @@
             "circle-tessellation-max-error": 0.3,
             "window-shadow-size": 100.0,
             "window-shadow-offset": 0.0,
-            "window-shadow-angle": 0.785398
+            "window-shadow-angle": 0.785398,
+            "separator-size": 0.5
         },
         "imnodes": {
             "grid-spacing": 24.0,

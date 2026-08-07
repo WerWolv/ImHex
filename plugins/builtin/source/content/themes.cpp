@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
                     { "window-shadow-size",                     { .value=&style.WindowShadowSize,                  .min=0.0F,    .max=100.0F,  .needsScaling=true  } },
                     { "window-shadow-offset",                   { .value=&style.WindowShadowOffsetDist,            .min=0.0F,    .max=100.0F,  .needsScaling=true  } },
                     { "window-shadow-angle",                    { .value=&style.WindowShadowOffsetAngle,           .min=0.0F,    .max=10.0F,   .needsScaling=false } },
-                    { "separator-size",                         { .value=&style.SeparatorSize,                     .min=1.0F,    .max=10.0F,   .needsScaling=true  } },
+                    { "separator-size",                         { .value=&style.SeparatorSize,                     .min=0.1F,    .max=10.0F,   .needsScaling=false  } },
                 };
 
                 ThemeManager::addStyleHandler("imgui", ImGuiStyleMap);
