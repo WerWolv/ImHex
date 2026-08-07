@@ -7,6 +7,7 @@
     "hex.windows.view.tty_console.config": "配置",
     "hex.windows.view.tty_console.connect": "连接",
     "hex.windows.view.tty_console.connect_error": "无法连接到 COM 端口！",
+    "hex.windows.view.tty_console.console": "控制台",
     "hex.windows.view.tty_console.cts": "使用 CTS 流控制",
     "hex.windows.view.tty_console.disconnect": "断开",
     "hex.windows.view.tty_console.name": "TTY 控制台",
@@ -18,5 +19,6 @@
     "hex.windows.view.tty_console.send_eot": "发送 EOT",
     "hex.windows.view.tty_console.send_etx": "发送 ETX",
     "hex.windows.view.tty_console.send_sub": "发送 SUB",
-    "hex.windows.view.tty_console.stop_bits": "终止位"
+    "hex.windows.view.tty_console.stop_bits": "终止位",
+    "hex.windows.view.tty_console.task.transmitting": "传输数据中……"
 }

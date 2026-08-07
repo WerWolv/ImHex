@@ -7,6 +7,7 @@
     "hex.windows.view.tty_console.config": "設定",
     "hex.windows.view.tty_console.connect": "連接",
     "hex.windows.view.tty_console.connect_error": "無法連接至 COM 連接埠！",
+    "hex.windows.view.tty_console.console": "終端機",
     "hex.windows.view.tty_console.cts": "使用 CTS 流量控制",
     "hex.windows.view.tty_console.disconnect": "斷開連接",
     "hex.windows.view.tty_console.name": "TTY 終端機",

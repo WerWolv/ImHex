@@ -16,8 +16,10 @@
     "hex.hashes.hash.common.xor_out": "XOR Out",
     "hex.hashes.view.hashes.function": "Função Hash",
     "hex.hashes.view.hashes.hash": "Hash",
+    "hex.hashes.view.hashes.hover_info": "Passe o mouse sobre a seleção Hex Editor e mantenha pressionada a tecla SHIFT para visualizar os hashes dessa região.",
     "hex.hashes.view.hashes.name": "Hashes",
     "hex.hashes.view.hashes.no_settings": "Nenhuma configuração disponivel",
+    "hex.hashes.view.hashes.remove": "Remover hash",
     "hex.hashes.view.hashes.table.name": "Nome",
     "hex.hashes.view.hashes.table.result": "Resultado",
     "hex.hashes.view.hashes.table.type": "Tipo"

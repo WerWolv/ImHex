@@ -8,3 +8,4 @@
     "hex.plugin.remote.ssh_provider.passphrase": "Hasło do klucza",
     "hex.plugin.remote.ssh_provider.connect": "Połącz"
 }
+

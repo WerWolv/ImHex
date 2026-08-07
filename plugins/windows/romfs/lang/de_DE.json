@@ -7,6 +7,7 @@
     "hex.windows.view.tty_console.config": "Konfiguration",
     "hex.windows.view.tty_console.connect": "Verbinden",
     "hex.windows.view.tty_console.connect_error": "Verbindung mit COM Port fehlgeschlagen!",
+    "hex.windows.view.tty_console.console": "Konsole",
     "hex.windows.view.tty_console.cts": "CTS flow control benutzen",
     "hex.windows.view.tty_console.disconnect": "Trennen",
     "hex.windows.view.tty_console.name": "TTY Konsole",
