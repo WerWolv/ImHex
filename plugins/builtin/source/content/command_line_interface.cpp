@@ -4,6 +4,7 @@
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/views.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_gui.hpp>
@@ -350,7 +351,12 @@ namespace hex::plugin::builtin {
                 processedArgs.emplace_back(fmt::format("--includes={}", wolv::util::toUTF8String(path)));
         }
 
-        std::exit(pl::cli::executeCommandLineInterface(processedArgs));
+        PluginManager::initializeNewPlugins();
+
+        pl::PatternLanguage runtime;
+        ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
+
+        std::exit(pl::cli::executeCommandLineInterface(processedArgs, runtime));
     }
 
     void handleHexdumpCommand(const std::vector<std::string> &args) {
