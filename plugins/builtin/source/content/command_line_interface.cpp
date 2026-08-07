@@ -35,11 +35,12 @@
 #include <content/views/fullscreen/view_fullscreen_file_info.hpp>
 
 #include <iostream>
+#include <span>
 
 namespace hex::plugin::builtin {
     using namespace hex::literals;
 
-    void handleVersionCommand(const std::vector<std::string> &args) {
+    int handleVersionCommand(std::span<const std::string> args) {
         std::ignore = args;
 
         hex::log::print(fmt::runtime(romfs::get("logo.ans").string()),
@@ -48,16 +49,16 @@ namespace hex::plugin::builtin {
                    __DATE__, __TIME__,
                    ImHexApi::System::isPortableVersion() ? "Portable" : "Installed");
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleVersionShortCommand(const std::vector<std::string> &args) {
+    int handleVersionShortCommand(std::span<const std::string> args) {
         std::ignore = args;
         hex::log::println("{}", ImHexApi::System::getImHexVersion().get());
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleHelpCommand(const std::vector<std::string> &args) {
+    int handleHelpCommand(std::span<const std::string> args) {
         std::ignore = args;
 
         hex::log::print(
@@ -94,13 +95,13 @@ namespace hex::plugin::builtin {
             }
         }
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleOpenCommand(const std::vector<std::string> &args) {
+    int handleOpenCommand(std::span<const std::string> args) {
         if (args.empty()) {
             hex::log::println("No files provided to open.");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         std::vector<std::string> fullPaths;
@@ -125,39 +126,44 @@ namespace hex::plugin::builtin {
 
         if (!fullPaths.empty())
             hex::subcommands::forwardSubCommand("open", fullPaths);
+
+        return EXIT_CONTINUE;
     }
 
-    void handleNewCommand(const std::vector<std::string> &) {
+    int handleNewCommand(std::span<const std::string> ) {
         hex::subcommands::forwardSubCommand("new", {});
+        return EXIT_CONTINUE;
     }
 
-    void handleSelectCommand(const std::vector<std::string> &args) {
-        if (args.size() == 1)
+    int handleSelectCommand(std::span<const std::string> args) {
+        if (args.size() == 1) {
             hex::subcommands::forwardSubCommand("select", { args[0] });
-        else if (args.size() == 2)
+        } else if (args.size() == 2) {
             hex::subcommands::forwardSubCommand("select", { args[0], args[1] });
-        else {
+        } else {
             hex::log::println("Usage: imhex --select <start> [<end>]");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
+        return EXIT_CONTINUE;
     }
 
-    void handlePatternCommand(const std::vector<std::string> &args) {
-        if (args.size() == 1)
+    int handlePatternCommand(std::span<const std::string> args) {
+        if (args.size() == 1) {
             hex::subcommands::forwardSubCommand("pattern", { args[0] });
-        else {
+        } else {
             hex::log::println("Usage: imhex --pattern <pattern source code>");
             hex::log::println("Usage: imhex --pattern <pattern file path>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
+        return EXIT_CONTINUE;
     }
 
-    void handleCalcCommand(const std::vector<std::string> &args) {
+    int handleCalcCommand(std::span<const std::string> args) {
         if (args.empty()) {
             hex::log::println("No expression provided!");
             hex::log::println("Usage:   imhex --calc <math expression>");
             hex::log::println("Example: imhex --calc \"5 * 7\"");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         wolv::math_eval::MathEvaluator<long double> evaluator;
@@ -170,10 +176,10 @@ namespace hex::plugin::builtin {
         else
             hex::log::println("{}", result.value());
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handlePluginsCommand(const std::vector<std::string> &args) {
+    int handlePluginsCommand(std::span<const std::string> args) {
 
         if (args.empty()) {
             hex::log::println("Loaded plugins:");
@@ -186,32 +192,35 @@ namespace hex::plugin::builtin {
                 hex::log::println("  \033[2;3m{}\033[0m", plugin.getPluginDescription());
             }
 
-            std::exit(EXIT_SUCCESS);
+            return EXIT_SUCCESS;
         } else {
             for (const auto &arg : args) {
                 PluginManager::addLoadPath(reinterpret_cast<const char8_t*>(arg.c_str()));
             }
+            return EXIT_CONTINUE;
         }
     }
 
-    void handleLanguageCommand(const std::vector<std::string> &args) {
+    int handleLanguageCommand(std::span<const std::string> args) {
         if (args.empty()) {
             hex::log::println("usage: imhex --language <language>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         ImHexApi::System::impl::addInitArgument("language", args[0]);
+        return EXIT_CONTINUE;
     }
 
-    void handleVerboseCommand(const std::vector<std::string> &) {
+    int handleVerboseCommand(std::span<const std::string> ) {
         hex::log::enableDebugLogging();
+        return EXIT_CONTINUE;
     }
 
-    void handleHashCommand(const std::vector<std::string> &args) {
+    int handleHashCommand(std::span<const std::string> args) {
         if (args.size() != 2) {
             hex::log::println("usage: imhex --hash <algorithm> <file>");
             hex::log::println("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         const auto &algorithm  = args[0];
@@ -220,7 +229,7 @@ namespace hex::plugin::builtin {
         wolv::io::File file(filePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
             hex::log::println("Failed to open file: {}", wolv::util::toUTF8String(filePath));
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         constexpr static auto toVector = [](const auto &data) {
@@ -243,19 +252,19 @@ namespace hex::plugin::builtin {
         } else {
             hex::log::println("Unknown algorithm: {}", algorithm);
             hex::log::println("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         hex::log::println("{}({}) = {}", algorithm, wolv::util::toUTF8String(filePath.filename()), hex::crypt::encode16(result));
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleEncodeCommand(const std::vector<std::string> &args) {
+    int handleEncodeCommand(std::span<const std::string> args) {
         if (args.size() != 2) {
             hex::log::println("usage: imhex --encode <algorithm> <string>");
             hex::log::println("Available algorithms: base64, hex");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         const auto &algorithm  = args[0];
@@ -270,18 +279,18 @@ namespace hex::plugin::builtin {
         } else {
             hex::log::println("Unknown algorithm: {}", algorithm);
             hex::log::println("Available algorithms: base64, hex");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         hex::log::println("encode_{}({}) = {}", algorithm, args[1], result);
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleDecodeCommand(const std::vector<std::string> &args) {
+    int handleDecodeCommand(std::span<const std::string> args) {
         if (args.size() != 2) {
             hex::log::println("usage: imhex --decode <algorithm> <string>");
             hex::log::println("Available algorithms: base64, hex");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         const auto &algorithm  = args[0];
@@ -297,23 +306,23 @@ namespace hex::plugin::builtin {
         } else {
             hex::log::println("Unknown algorithm: {}", algorithm);
             hex::log::println("Available algorithms: base64, hex");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         hex::log::print("decode_{}({}) = {}", algorithm, args[1], result);
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleMagicCommand(const std::vector<std::string> &args) {
+    int handleMagicCommand(std::span<const std::string> args) {
         if (args.size() != 2) {
             hex::log::println("usage: imhex --magic <operation> <file>");
             hex::log::println("Available operations: mime, desc");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         if (!magic::compile()) {
             hex::log::print("Failed to compile magic database!");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         const auto &operation  = args[0];
@@ -322,7 +331,7 @@ namespace hex::plugin::builtin {
         wolv::io::File file(filePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
             hex::log::println("Failed to open file: {}", wolv::util::toUTF8String(filePath));
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         auto data = file.readVector(std::min<size_t>(file.getSize(), 100_KiB));
@@ -336,14 +345,14 @@ namespace hex::plugin::builtin {
         } else {
             hex::log::println("Unknown operation: {}", operation);
             hex::log::println("Available operations: mime, desc");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handlePatternLanguageCommand(const std::vector<std::string> &args) {
-        std::vector<std::string> processedArgs = args;
+    int handlePatternLanguageCommand(std::span<const std::string> args) {
+        std::vector<std::string> processedArgs = { args.begin(), args.end() };
         if (processedArgs.empty()) {
             processedArgs.emplace_back("--help");
         } else {
@@ -351,24 +360,16 @@ namespace hex::plugin::builtin {
                 processedArgs.emplace_back(fmt::format("--includes={}", wolv::util::toUTF8String(path)));
         }
 
-        PluginManager::initializeNewPlugins();
-
         pl::PatternLanguage runtime;
         ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
 
-        int exitCode = pl::cli::executeCommandLineInterface(processedArgs, runtime);
-
-        ImHexApi::System::impl::cleanup();
-        PluginManager::unload();
-        EventManager::clear();
-
-        std::exit(exitCode);
+        return pl::cli::executeCommandLineInterface(processedArgs, runtime);
     }
 
-    void handleHexdumpCommand(const std::vector<std::string> &args) {
+    int handleHexdumpCommand(std::span<const std::string> args) {
         if (args.empty() || args.size() > 3) {
             log::println("usage: imhex --hexdump <file> <offset> <size>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         std::fs::path filePath = reinterpret_cast<const char8_t*>(args[0].data());
@@ -378,7 +379,7 @@ namespace hex::plugin::builtin {
         auto result = provider.open();
         if (result.isFailure()) {
             log::println("Failed to open file '{}': {}", args[0], result.getErrorMessage());
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         u64 startAddress = args.size() >= 2 ? std::stoull(args[1], nullptr, 0) : 0x00;
@@ -388,20 +389,20 @@ namespace hex::plugin::builtin {
 
         log::print("{}", hex::generateHexView(startAddress, size - startAddress, &provider));
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleDemangleCommand(const std::vector<std::string> &args) {
+    int handleDemangleCommand(std::span<const std::string> args) {
         if (args.size() != 1) {
             log::println("usage: imhex --demangle <identifier>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         log::println("{}", trace::demangle(args[0]));
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleSettingsResetCommand(const std::vector<std::string> &) {
+    int handleSettingsResetCommand(std::span<const std::string> ) {
         constexpr static auto ConfirmationString = "YES I AM ABSOLUTELY SURE";
 
         log::println("You're about to reset all settings back to their default. Are you sure you want to continue?");
@@ -411,7 +412,7 @@ namespace hex::plugin::builtin {
 
         log::print("> ");
         if (std::fgets(input.data(), input.size() - 1, stdin) == nullptr)
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
 
         input = input.c_str(); // Stop at first null byte
         input = wolv::util::trim(input);
@@ -421,21 +422,22 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::impl::clear();
             ContentRegistry::Settings::impl::store();
 
-            std::exit(EXIT_SUCCESS);
+            return EXIT_SUCCESS;
         } else {
             log::println("Wrong confirmation string. Settings will not be reset.");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
     }
 
-    void handleDebugModeCommand(const std::vector<std::string> &) {
+    int handleDebugModeCommand(std::span<const std::string> ) {
         dbg::setDebugModeEnabled(true);
+        return EXIT_CONTINUE;
     }
 
-    void handleValidatePluginCommand(const std::vector<std::string> &args) {
+    int handleValidatePluginCommand(std::span<const std::string> args) {
         if (args.size() != 1) {
             log::println("usage: imhex --validate-plugin <plugin path>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         log::resumeLogging();
@@ -444,25 +446,25 @@ namespace hex::plugin::builtin {
 
         if (!plugin.isLoaded()) {
             log::println("Plugin couldn't be loaded. Make sure the plugin was built using the SDK of this ImHex version!");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         if (!plugin.isValid()) {
             log::println("Plugin is missing required init function! Make sure your plugin has a IMHEX_PLUGIN_SETUP or IMHEX_LIBRARY_SETUP block!");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         if (!plugin.initializePlugin()) {
             log::println("An error occurred while trying to initialize the plugin. Check the logs for more information.");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         log::println("Plugin is valid!");
 
-        std::exit(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
-    void handleSaveEditorCommand(const std::vector<std::string> &args) {
+    int handleSaveEditorCommand(std::span<const std::string> args) {
         std::string type;
         std::string argument;
         if (args.size() == 1) {
@@ -473,116 +475,119 @@ namespace hex::plugin::builtin {
             argument = args[1];
         } else {
             log::println("usage: imhex --save-editor [file|gist] <file path|gist id>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         if (type == "file") {
             if (!wolv::io::fs::exists(argument)) {
                 log::println("Save Editor file '{}' does not exist!", argument);
-                std::exit(EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
 
             wolv::io::File file(argument, wolv::io::File::Mode::Read);
             if (!file.isValid()) {
                 log::println("Failed to open Save Editor file '{}'", argument);
-                std::exit(EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
 
             ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(file.readString());
         } else if (type == "gist") {
-            std::thread([argument] {
-                HttpRequest request("GET", "https://api.github.com/gists/" + argument);
-                auto response = request.execute().get();
+            HttpRequest request("GET", "https://api.github.com/gists/" + argument);
+            auto response = request.execute().get();
 
-                if (!response.isSuccess()) {
-                    switch (response.getStatusCode()) {
-                        case 404:
-                            log::println("Gist with ID '{}' not found!", argument);
-                            break;
-                        case 403:
-                            log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
-                            break;
-                        default:
-                            log::println("Failed to fetch Gist with ID '{}': {}", argument, response.getStatusCode());
-                            break;
-                    }
-                    std::exit(EXIT_FAILURE);
+            if (!response.isSuccess()) {
+                switch (response.getStatusCode()) {
+                    case 404:
+                        log::println("Gist with ID '{}' not found!", argument);
+                        break;
+                    case 403:
+                        log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
+                        break;
+                    default:
+                        log::println("Failed to fetch Gist with ID '{}': {}", argument, response.getStatusCode());
+                        break;
+                }
+                std::exit(EXIT_FAILURE);
+            }
+
+            try {
+                const auto json = nlohmann::json::parse(response.getData());
+                if (!json.contains("files") || json["files"].size() != 1) {
+                    log::println("Gist with ID '{}' does not have exactly one file!", argument);
+                    return EXIT_FAILURE;
                 }
 
-                try {
-                    const auto json = nlohmann::json::parse(response.getData());
-                    if (!json.contains("files") || json["files"].size() != 1) {
-                        log::println("Gist with ID '{}' does not have exactly one file!", argument);
-                        std::exit(EXIT_FAILURE);
-                    }
-
-                    auto sourceCode = (*json["files"].begin())["content"];
-                    TaskManager::doLater([sourceCode] {
-                        ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(sourceCode);
-                    });
-                } catch (const nlohmann::json::parse_error &e) {
-                    log::println("Failed to parse Gist response: {}", e.what());
-                    std::exit(EXIT_FAILURE);
-                }
-            }).detach();
+                auto sourceCode = json["files"].front()["content"];
+                TaskManager::doLater([sourceCode] {
+                    ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(sourceCode);
+                });
+            } catch (const nlohmann::json::parse_error &e) {
+                log::println("Failed to parse Gist response: {}", e.what());
+                return EXIT_FAILURE;
+            }
         } else {
             log::println("Unknown source type '{}'. Use 'file' or 'gist'.", type);
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
+
+        return EXIT_CONTINUE;
     }
 
-    void handleFileInfoCommand(const std::vector<std::string> &args) {
+    int handleFileInfoCommand(std::span<const std::string> args) {
         if (args.size() != 1) {
             log::println("usage: imhex --file-info <file>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         const auto path = std::fs::path(args[0]);
         if (!wolv::io::fs::exists(path)) {
             log::println("File '{}' does not exist!", args[0]);
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         ContentRegistry::Views::setFullScreenView<ViewFullScreenFileInfo>(path);
+        return EXIT_SUCCESS;
     }
 
-    void handleMCPCommand(const std::vector<std::string> &) {
+    int handleMCPCommand(std::span<const std::string> ) {
         mcp::Client client;
 
         auto result = client.run(std::cin, std::cout);
         fmt::print(stderr, "MCP Client disconnected!\n");
-        std::exit(result);
+        return result;
     }
 
-    void handleScalingCommand(const std::vector<std::string> &args) {
+    int handleScalingCommand(std::span<const std::string> args) {
         if (args.size() != 1) {
             log::println("usage: imhex --scaling <scale>");
-            std::exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         auto scale = std::stod(args[0], nullptr);
         EventWindowOpening::subscribe([scale](auto) {
             ImHexApi::System::impl::setScaleMultiplier(scale);
         });
+
+        return EXIT_CONTINUE;
     }
 
 
     void registerCommandForwarders() {
-        hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
+        hex::subcommands::registerSubCommand("open", [](std::span<const std::string> args){
             for (auto &arg : args) {
                 RequestOpenFile::post(arg);
             }
         });
 
-        hex::subcommands::registerSubCommand("new", [](const std::vector<std::string> &){
+        hex::subcommands::registerSubCommand("new", [](std::span<const std::string> ){
             RequestOpenWindow::post("Create File");
         });
 
-        hex::subcommands::registerSubCommand("select", [](const std::vector<std::string> &args){
+        hex::subcommands::registerSubCommand("select", [](std::span<const std::string> args){
             try {
-                if (args.size() == 1)
+                if (args.size() == 1) {
                     ImHexApi::HexEditor::setSelection(std::stoull(args[0], nullptr, 0), 1);
-                else if (args.size() == 2) {
+                } else if (args.size() == 2) {
                     const auto start = std::stoull(args[0], nullptr, 0);
                     const auto size = (std::stoull(args[1], nullptr, 0) - start) + 1;
                     ImHexApi::HexEditor::setSelection(start, size);
@@ -594,7 +599,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        hex::subcommands::registerSubCommand("pattern", [](const std::vector<std::string> &args){
+        hex::subcommands::registerSubCommand("pattern", [](std::span<const std::string> args){
             std::string patternSourceCode;
             if (std::fs::exists(args[0])) {
                 wolv::io::File file(args[0], wolv::io::File::Mode::Read);

@@ -77,9 +77,9 @@ namespace hex::subcommands {
                     subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
                 }
 
-                if (newSubCommand->type == SubCommand::Type::SubCommand) {
+                if (bool(newSubCommand->flags & SubCommand::Flags::SubCommand)) {
                     ++argsIter;
-                    std::vector<std::string> remainingArgs(argsIter, args.end());
+                    std::vector remainingArgs(argsIter, args.end());
                     subCommands.emplace_back(*newSubCommand, remainingArgs);
 
                     currentSubCommand = std::nullopt;
@@ -101,15 +101,35 @@ namespace hex::subcommands {
             subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
         }
 
+        bool pluginsInitialized = false;
+        for (const auto &[subcommand, _] : subCommands) {
+            if (bool(subcommand.flags & SubCommand::Flags::InitPlugins)) {
+                pluginsInitialized = true;
+                PluginManager::initializeNewPlugins();
+                break;
+            }
+        }
+
         // Run the subcommands
+        int exitCode = 0;
         for (const auto &[subcommand, subCommandArgs] : subCommands) {
-            subcommand.callback(subCommandArgs);
+            exitCode = subcommand.callback(subCommandArgs);
+            if (exitCode != 0)
+                break;
+        }
+
+        if (pluginsInitialized) {
+            ImHexApi::System::impl::cleanup();
+            PluginManager::unload();
+            EventManager::clear();
         }
 
         // Exit the process if it's not the main instance (the commands have been forwarded to another instance)
         if (!ImHexApi::System::isMainInstance()) {
             std::exit(0);
         }
+
+        std::exit(exitCode);
     }
 
     void forwardSubCommand(const std::string &cmdName, const std::vector<std::string> &args) {

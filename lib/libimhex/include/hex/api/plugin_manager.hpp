@@ -17,18 +17,28 @@
 EXPORT_MODULE namespace hex {
 
     struct SubCommand {
-        enum class Type : u8 {
-            Option,
-            SubCommand
+        enum class Flags : u8 {
+            Option      = 1U << 0U,
+            SubCommand  = 1U << 1U,
+            InitPlugins = 1U << 2U,
         };
 
         std::string commandLong;
         std::string commandShort;
 
         std::string commandDescription;
-        std::function<void(const std::vector<std::string>&)> callback;
-        Type type = Type::Option;
+        std::function<int(std::span<const std::string>)> callback;
+        Flags flags = Flags::Option;
     };
+
+    #define EXIT_CONTINUE 77
+
+    constexpr SubCommand::Flags operator|(SubCommand::Flags lhs, SubCommand::Flags rhs) {
+        return static_cast<SubCommand::Flags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+    }
+    constexpr SubCommand::Flags operator&(SubCommand::Flags lhs, SubCommand::Flags rhs) {
+        return static_cast<SubCommand::Flags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+    }
 
     struct Feature {
         std::string name;
