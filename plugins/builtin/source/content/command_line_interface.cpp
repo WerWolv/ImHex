@@ -356,7 +356,13 @@ namespace hex::plugin::builtin {
         pl::PatternLanguage runtime;
         ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
 
-        std::exit(pl::cli::executeCommandLineInterface(processedArgs, runtime));
+        int exitCode = pl::cli::executeCommandLineInterface(processedArgs, runtime);
+
+        ImHexApi::System::impl::cleanup();
+        PluginManager::unload();
+        EventManager::clear();
+
+        std::exit(exitCode);
     }
 
     void handleHexdumpCommand(const std::vector<std::string> &args) {
