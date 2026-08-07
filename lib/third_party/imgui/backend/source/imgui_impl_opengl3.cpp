@@ -702,8 +702,15 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                // Apply scissor/clipping rectangle (Y is inverted in OpenGL)
-                GL_CALL(glScissor((int)clip_min.x, (int)((float)fb_height - clip_max.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y)));
+                // IMHEX PATCH BEGIN
+                // Apply scissor/clipping rectangle (Y is inverted in OpenGL).
+                // Round absolute endpoints so adjacent fractional rectangles share the same framebuffer pixel boundary.
+                const int clip_min_x = (int)clip_min.x;
+                const int clip_min_y = (int)((float)fb_height - clip_max.y);
+                const int clip_max_x = (int)clip_max.x;
+                const int clip_max_y = (int)((float)fb_height - clip_min.y);
+                GL_CALL(glScissor(clip_min_x, clip_min_y, clip_max_x - clip_min_x, clip_max_y - clip_min_y));
+                // IMHEX PATCH END
 
                 // Bind texture, Draw
                 GL_CALL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID()));

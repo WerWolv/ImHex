@@ -99,7 +99,12 @@ namespace hex::plugin::builtin {
         }
 
         void drawFooter(ImDrawList *drawList, ImVec2 dockSpaceSize) {
+            const auto window = ImGui::GetCurrentWindow();
+            const auto clipRect = window->ClipRect;
+            // Match the dockspace's truncated window position instead of clipping its first fractional pixel row.
+            ImGui::PushClipRect(ImVec2(clipRect.Min.x, ImTrunc(window->DC.CursorPos.y)), clipRect.Max, false);
             auto dockId = ImGui::DockSpace(ImGui::GetID("ImHexMainDock"), dockSpaceSize);
+            ImGui::PopClipRect();
             ImHexApi::System::impl::setMainDockSpaceId(dockId);
 
             ImGui::Separator();
