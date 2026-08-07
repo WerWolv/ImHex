@@ -450,10 +450,12 @@ namespace hex::plugin::builtin {
                         // Turn off selection toggles after paste success
                         source.providerSelectionToggle = false;
                         dest.providerSelectionToggle = false;
+                        // Restore saved pin state
+                        restorePinStatus();
                         // Jump to the end of the pasted area of destination provider in hex editor
                         dest.providerSelection.size = ((m_pasteMode != PasteModeType::ModePasteOverSelection) ? (source.providerSelection.getSize()) 
-                                                                                                             : (std::min(source.providerSelection.getSize(), 
-                                                                                                                         dest.providerSelection.getSize())));
+                                                                                                              : (std::min(source.providerSelection.getSize(), 
+                                                                                                                          dest.providerSelection.getSize())));
                         ImHexApi::Provider::setCurrentProvider(dest.providerSelection.provider);
                         editor->setSelection(dest.providerSelection.getEndAddress(), dest.providerSelection.getStartAddress());
                         editor->jumpToSelection();
@@ -524,7 +526,11 @@ namespace hex::plugin::builtin {
                 providerSelection.address = 0;
                 providerSelection.size = 0;
                 providerSelection.provider = nullptr;
-                providerSelectionToggle = false;
+                if(providerSelectionToggle) {
+                    providerSelectionToggle = false;
+                    // Restore saved pin state
+                    restorePinStatus();
+                }
             }
         } else {
             providerIndex = -1;
@@ -560,7 +566,11 @@ namespace hex::plugin::builtin {
                             providerSelection.address = 0;
                             providerSelection.size = 0;
                         }
-                        providerSelectionToggle = false;
+                        if(providerSelectionToggle) {
+                            providerSelectionToggle = false;
+                            // Restore saved pin state
+                            restorePinStatus();
+                        }
                         m_pasteMode = PasteModeType::ModeNotSelected;
                         m_pasteHint = PasteHintType::HintDefaultDescription;
                     }
@@ -574,7 +584,11 @@ namespace hex::plugin::builtin {
                         dest.providerSelection.address = 0;
                         dest.providerSelection.size = 0;
                         dest.providerSelection.provider = nullptr;
-                        dest.providerSelectionToggle = false;
+                        if(dest.providerSelectionToggle) {
+                            dest.providerSelectionToggle = false;
+                            // Restore saved pin state
+                            restorePinStatus();
+                        }
                     }
                     // If destination, reset source object
                     if ((providerObjectId == ObjectIdType::DestId) && (providerIndex == source.providerIndex)) {
@@ -583,7 +597,11 @@ namespace hex::plugin::builtin {
                         source.providerSelection.address = 0;
                         source.providerSelection.size = 0;
                         source.providerSelection.provider = nullptr;
-                        source.providerSelectionToggle = false;
+                        if(source.providerSelectionToggle) {
+                            source.providerSelectionToggle = false;
+                            // Restore saved pin state
+                            restorePinStatus();
+                        }
                     }
                 }
                 ImGui::PopID();
@@ -633,9 +651,9 @@ namespace hex::plugin::builtin {
                         editor->jumpToSelection();
                     }
                 } else {
-                    // Restore original pin state when leaving selection mode
+                    // Restore saved pin state when leaving selection mode
                     if (wasSelectionActive) {
-                        this->setPinned(m_savedPinStatus);
+                        restorePinStatus();
                     }
                 }
             }
@@ -663,6 +681,8 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
+                // Restore saved pin state
+                restorePinStatus();
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                 setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
@@ -677,6 +697,8 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
+                // Restore saved pin state
+                restorePinStatus();
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                 setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
@@ -691,6 +713,8 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
+                // Restore saved pin state
+                restorePinStatus();
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                 setSelection(providerSelection.getEndAddress(), providerSelection.getStartAddress());
@@ -712,6 +736,8 @@ namespace hex::plugin::builtin {
                 // Turn off select/show region toggle
                 source.providerSelectionToggle = false;
                 dest.providerSelectionToggle = false;
+                // Restore saved pin state
+                restorePinStatus();
                 m_pasteMode = PasteModeType::ModeNotSelected;
                 // Jump to the selection in hex editor
                 ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
@@ -849,7 +875,7 @@ namespace hex::plugin::builtin {
     void PopupPasteFromSource::drawIntegerInputField(const char *inputLabel, void *inputValue, float inputWidth) {
         ImGui::SetNextItemWidth(inputWidth);
         ImGuiExt::InputIntegerPrefix(inputLabel,
-                                     (m_inputBaseHex ? "0x" : "00"),
+                                     (m_inputBaseHex ? "0x" : ""),
                                      inputValue,
                                      ImGuiDataType_U64,
                                      (m_inputBaseHex ? "%llX" : "%lld"),
@@ -959,5 +985,10 @@ namespace hex::plugin::builtin {
         }
 
         return fmt::format("{:.3f} ns", std::chrono::duration<double, std::nano>(m_elapsedTime).count());
+    }
+
+    void PopupPasteFromSource::restorePinStatus(void) {
+        // Restore saved pin state
+        this->setPinned(m_savedPinStatus);
     }
 }
