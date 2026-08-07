@@ -35,13 +35,13 @@ set -xe
 
 mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 
-/vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
-/vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
-/vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
-/vcpkg/vcpkg install --triplet=wasm32-emscripten zlib
-/vcpkg/vcpkg install --triplet=wasm32-emscripten bzip2
-/vcpkg/vcpkg install --triplet=wasm32-emscripten liblzma
-/vcpkg/vcpkg install --triplet=wasm32-emscripten zstd
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release libmagic
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release freetype
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release mbedtls
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release zlib
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release bzip2
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release liblzma
+/vcpkg/vcpkg install --triplet=wasm32-emscripten --cmake-args=-DVCPKG_BUILD_TYPE=release zstd
 EOF
 
 # Build ImHex

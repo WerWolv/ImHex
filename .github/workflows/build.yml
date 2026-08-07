@@ -298,6 +298,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$(Join-Path $PWD 'install')"                      `
             -DIMHEX_GENERATE_PACKAGE=ON                                               `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
+            -DVCPKG_BUILD_TYPE=release                                                `
             -DIMHEX_PATTERNS_PULL_MASTER=ON                                           `
             -DIMHEX_COMMIT_HASH_LONG="$env:GITHUB_SHA"                                `
             -DIMHEX_COMMIT_BRANCH="$($env:GITHUB_REF -replace '.*/', '')"             `
