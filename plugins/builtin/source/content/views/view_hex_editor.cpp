@@ -38,6 +38,7 @@
 #include <content/popups/hex_editor/popup_hex_editor_remove.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_fill.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_paste_behaviour.hpp>
+#include <content/popups/hex_editor/popup_hex_editor_paste_from_source.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_decoded_string.hpp>
 #include <content/popups/popup_blocking_task.hpp>
 #include <content/popups/hex_editor/popup_hex_editor_find.hpp>
@@ -374,7 +375,6 @@ namespace hex::plugin::builtin {
                         selectionCheck ? "selection" : "everything");
                     pasteBytes(selection, selectionCheck, false);
                 });
-
     }
 
     static void copyString(const Region &selection) {
@@ -1029,6 +1029,15 @@ namespace hex::plugin::builtin {
                                                     pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, true);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
+                                                this);
+
+        /* Paste from Source... */
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.title" }, ICON_VS_REFERENCES, 1515, Shortcut::None,
+                                                [this] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, nullptr));
+                                                    this->openPopup<PopupPasteFromSource>(selection);
+                                                },
+                                                ImHexApi::Provider::isValid,
                                                 this);
 
         /* Select */
