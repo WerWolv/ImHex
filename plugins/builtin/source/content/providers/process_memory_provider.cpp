@@ -473,44 +473,70 @@ namespace hex::plugin::builtin {
 
         #if defined(OS_WINDOWS)
             DWORD numModules = 0;
-            std::vector<HMODULE> modules;
+            std::vector<HMODULE> modules(1024);
 
-            do {
-                modules.resize(modules.size() + 1024);
-                if (EnumProcessModules(m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules) == FALSE) {
-                    modules.clear();
-                    break;
+            if (EnumProcessModules(m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules)) {
+                if (numModules > modules.size() * sizeof(HMODULE)) {
+                    modules.resize(numModules / sizeof(HMODULE));
+                    EnumProcessModules(m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules);
                 }
-            } while (numModules == modules.size() * sizeof(HMODULE));
-
-            modules.resize(numModules / sizeof(HMODULE));
+                modules.resize(numModules / sizeof(HMODULE));
+            } else {
+                modules.clear();
+            }
 
             for (auto &module : modules) {
                 MODULEINFO moduleInfo;
                 if (GetModuleInformation(m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
                     continue;
 
-                char moduleName[MAX_PATH];
-                if (GetModuleFileNameExA(m_processHandle, module, moduleName, MAX_PATH) == FALSE)
+                // Use Wide API (GetModuleFileNameExW) to correctly handle non-ASCII paths (e.g. UTF-16 / UTF-8)
+                // with extended buffer to support Windows Long Paths (beyond legacy MAX_PATH)
+                wchar_t moduleName[4096];
+                if (GetModuleFileNameExW(m_processHandle, module, moduleName, std::size(moduleName)) == 0)
                     continue;
 
-                m_memoryRegions.insert({ { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, std::fs::path(moduleName).filename().string() });
+                try {
+                    m_memoryRegions.insert({ 
+                        { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, 
+                        std::fs::path(moduleName).filename().string() 
+                    });
+                } catch (...) {
+                    m_memoryRegions.insert({ 
+                        { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, 
+                        "unknown_module" 
+                    });
+                }
             }
 
+            SYSTEM_INFO sysInfo;
+            GetSystemInfo(&sysInfo);
+            const u64 minAddress = reinterpret_cast<u64>(sysInfo.lpMinimumApplicationAddress);
+            const u64 maxAddress = reinterpret_cast<u64>(sysInfo.lpMaximumApplicationAddress);
+
             MEMORY_BASIC_INFORMATION memoryInfo;
-            for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
+            u64 address = minAddress;
+
+            while (address < maxAddress) {
                 if (VirtualQueryEx(m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
                     break;
 
-                std::string name;
-                if (memoryInfo.State & MEM_IMAGE)   continue;
-                if (memoryInfo.State & MEM_FREE)    continue;
-                if (memoryInfo.State & MEM_COMMIT)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
-                if (memoryInfo.State & MEM_RESERVE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
-                if (memoryInfo.State & MEM_PRIVATE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
-                if (memoryInfo.State & MEM_MAPPED)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
+                const size_t regionSize = memoryInfo.RegionSize ? memoryInfo.RegionSize : 0x1000;
 
-                m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
+                if (!(memoryInfo.State & MEM_FREE) && !(memoryInfo.State & MEM_IMAGE)) {
+                    std::string name;
+                    if (memoryInfo.State & MEM_COMMIT)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
+                    if (memoryInfo.State & MEM_RESERVE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
+                    if (memoryInfo.State & MEM_PRIVATE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
+                    if (memoryInfo.State & MEM_MAPPED)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
+
+                    m_memoryRegions.insert({ 
+                        { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + regionSize }, 
+                        name 
+                    });
+                }
+
+                address = reinterpret_cast<u64>(memoryInfo.BaseAddress) + regionSize;
             }
 
         #elif defined(OS_MACOS)
