@@ -111,6 +111,9 @@ namespace hex::fonts {
             }
             ImGui::PopFont();
 
+            if (!m_path.empty())
+                ImGui::SetItemTooltip("%s", wolv::util::toUTF8String(m_path).c_str());
+
             if (s_filteredFonts->empty()) {
                 for (const auto &[path, fontName] : hex::getFonts()) {
                     if (!pushPreviewFont(path))
