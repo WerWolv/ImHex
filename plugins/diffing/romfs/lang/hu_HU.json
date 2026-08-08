@@ -1,4 +1,4 @@
-﻿{
+{
     "hex.diffing.algorithm.simple.name": "Egyszerű bájtonkénti algoritmus",
     "hex.diffing.algorithm.simple.description": "Naív O(n) bájtonkénti összehasonlítás.\nCsak az adat végén tud azonosítani módosításokat / hozzáadásokat és törléseket",
     "hex.diffing.algorithm.myers.name": "Myers bit-vektor algoritmusa",
