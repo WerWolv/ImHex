@@ -112,6 +112,20 @@ namespace hex::plugin::builtin {
         m_provider->writeRaw(offset, buffer, size);
     }
 
+    void ViewProvider::markDataDirty(bool dirty) {
+        if (m_provider == nullptr)
+            return;
+
+        m_provider->markDataDirty(dirty);
+    }
+
+    void ViewProvider::markMetadataDirty(bool dirty) {
+        if (m_provider == nullptr)
+            return;
+
+        m_provider->markMetadataDirty(dirty);
+    }
+
     [[nodiscard]] u64 ViewProvider::getActualSize() const {
         return m_size;
     }

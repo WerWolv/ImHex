@@ -337,8 +337,8 @@ namespace hex::prv {
         [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings) const;
         virtual void loadSettings(const nlohmann::json &settings);
 
-        void markDataDirty(bool dirty = true) { m_dataDirty = dirty; }
-        void markMetadataDirty(bool dirty = true) { m_metadataDirty = dirty; }
+        virtual void markDataDirty(bool dirty = true) { m_dataDirty = dirty; }
+        virtual void markMetadataDirty(bool dirty = true) { m_metadataDirty = dirty; }
         [[nodiscard]] bool isDataDirty() const { return m_dataDirty; }
         [[nodiscard]] bool isMetadataDirty() const { return m_metadataDirty; }
 

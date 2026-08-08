@@ -31,6 +31,9 @@ namespace hex::plugin::builtin {
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
 
+        void markDataDirty(bool dirty = true) override;
+        void markMetadataDirty(bool dirty = true) override;
+
         [[nodiscard]] u64 getActualSize() const override;
 
         [[nodiscard]] std::string getName() const override;
