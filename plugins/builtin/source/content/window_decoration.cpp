@@ -131,6 +131,9 @@ namespace hex::plugin::builtin {
             static i32 openWindow = -1;
             u32 index = 0;
             u32 drawIndex = 1;
+
+            drawTitleBarBackDrop();
+
             ImGui::PushID("SideBarWindows");
             for (const auto &[icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
                 ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
@@ -677,11 +680,15 @@ namespace hex::plugin::builtin {
 
                 if (shouldDrawSidebar) {
                     // Draw sidebar background and separator
+                    const auto window = ImGui::GetCurrentWindow();
+                    const auto clipRect = window->ClipRect;
+                    ImGui::PushClipRect(ImVec2(clipRect.Min.x, ImTrunc(window->Pos.y + sidebarPos.y)), clipRect.Max, false);
                     drawList->AddRectFilled(
                         ImGui::GetWindowPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 1_scaled),
                         ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y + 1_scaled),
                         ImGui::GetColorU32(ImGuiCol_MenuBarBg)
                     );
+                    ImGui::PopClipRect();
 
                     ImGui::SetCursorPos(sidebarPos);
                     drawSidebar(dockSpaceSize, sidebarPos, sidebarWidth);
