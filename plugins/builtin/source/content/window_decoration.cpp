@@ -511,9 +511,13 @@ namespace hex::plugin::builtin {
             menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
                 #if defined(OS_MACOS)
-                    if (ImGui::BeginMainMenuBar()) {
+                    if (s_useNativeMenuBar) {
+                        if (ImGui::BeginMainMenuBar()) {
+                            drawTitleBarBackDrop();
+                            ImGui::EndMainMenuBar();
+                        }
+                    } else {
                         drawTitleBarBackDrop();
-                        ImGui::EndMainMenuBar();
                     }
                 #else
                     drawTitleBarBackDrop();
