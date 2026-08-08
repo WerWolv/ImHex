@@ -12,12 +12,13 @@ Terminology:
 import argparse
 import json
 import re
-from collections.abc import Callable, Generator
-from pathlib import Path
 
 # This fixes a CJK full-width character input issue
 # which makes left halves of deleted characters displayed on screen
 import readline  # noqa: F401
+import sys
+from collections.abc import Callable, Generator
+from pathlib import Path
 
 DEFAULT_LANG = "en_US"
 INVALID_TRANSLATION = ""
@@ -83,7 +84,7 @@ def cmd_check_translations(args: argparse.Namespace) -> int:
 
     def check_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> None:
         nonlocal ret
-        for key, value in default_data.items():
+        for key in default_data:
             if key in lang_data and lang_data[key] != INVALID_TRANSLATION:
                 continue
             print(f"Error: Translation {path} is missing translation for key '{key}'")
@@ -320,7 +321,7 @@ def _fmtzh(text: str) -> str:
     """Fix CJK full-width punctuation."""
     text = re.sub(r"(\.{3}|\.{6})", "……", text)
     text = text.replace("!", "！")
-    text = re.sub(r"([^\.\na-zA-Z\d])\.$", r"\1。", text, flags=re.M)
+    text = re.sub(r"([^\.\na-zA-Z\d])\.$", r"\1。", text, flags=re.MULTILINE)
     text = text.replace("?", "？")
     return text
 
@@ -388,4 +389,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())
