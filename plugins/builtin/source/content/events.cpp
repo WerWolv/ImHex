@@ -522,7 +522,7 @@ namespace hex::plugin::builtin {
                 return;
 
             #if !defined(OS_WEB)
-                if (!ImHexApi::System::isMainWindowFocused() && !task.isBackgroundTask())
+                if (!ImHexApi::System::isMainWindowFocused())
                     hex::showToastMessage("ImHex", fmt::format("hex.builtin.os_toast_message.task_finished"_lang, Lang(task.getUnlocalizedName())));
             #endif
         });
