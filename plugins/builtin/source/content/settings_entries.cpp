@@ -823,7 +823,7 @@ for (const auto &path : m_paths) {
             ContentRegistry::Settings::add<Widgets::ColorPicker>(
                 "hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.accent",
                 ImVec4(0.26f, 0.59f, 0.98f, 0.40f),
-                ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs
+                ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoDragDrop
             )
             .setChangedCallback([](auto &widget) {
                 auto colorPicker = static_cast<Widgets::ColorPicker *>(&widget);

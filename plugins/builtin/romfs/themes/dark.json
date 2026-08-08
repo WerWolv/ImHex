@@ -1,5 +1,6 @@
 {
     "base": "Dark",
+    "accent": "#4296F9FF",
     "colors": {
         "imgui": {
             "border": "#6D6D7F7F",

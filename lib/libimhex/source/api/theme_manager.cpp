@@ -17,9 +17,62 @@ namespace hex {
         AutoReset<std::map<std::string, ThemeManager::StyleHandler>> s_styleHandlers;
         AutoReset<std::string> s_imageTheme;
         AutoReset<std::string> s_currTheme;
-        AutoReset<std::optional<float>> s_accentColor;
+        AutoReset<std::optional<ImVec4>> s_accentColor;
 
         std::recursive_mutex s_themeMutex;
+
+        float remapAccentComponent(float value, float defaultAccentValue, float accentValue) {
+            if (accentValue <= 0.0F)
+                return 0.0F;
+            if (defaultAccentValue <= 0.0F)
+                return accentValue;
+            if (defaultAccentValue >= 1.0F)
+                return value * accentValue;
+
+            if (value <= defaultAccentValue)
+                return value * accentValue / defaultAccentValue;
+
+            return accentValue + (value - defaultAccentValue) * (1.0F - accentValue) / (1.0F - defaultAccentValue);
+        }
+
+        void applyAccentColor(ImColor &color, const ImVec4 &accentColor, const std::optional<ImColor> &defaultAccentColor) {
+            float sourceHue, sourceSaturation, sourceValue;
+            float accentHue, accentSaturation, accentValue;
+            ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, sourceHue, sourceSaturation, sourceValue);
+            ImGui::ColorConvertRGBtoHSV(accentColor.x, accentColor.y, accentColor.z, accentHue, accentSaturation, accentValue);
+
+            if (defaultAccentColor.has_value()) {
+                float defaultSaturation, defaultValue;
+                ImGui::ColorConvertRGBtoHSV(
+                    defaultAccentColor->Value.x, defaultAccentColor->Value.y, defaultAccentColor->Value.z,
+                    sourceHue, defaultSaturation, defaultValue
+                );
+
+                sourceSaturation = remapAccentComponent(sourceSaturation, defaultSaturation, accentSaturation);
+                sourceValue = remapAccentComponent(sourceValue, defaultValue, accentValue);
+            }
+
+            sourceHue = accentHue;
+            ImGui::ColorConvertHSVtoRGB(sourceHue, sourceSaturation, sourceValue, color.Value.x, color.Value.y, color.Value.z);
+        }
+
+        std::optional<ImColor> getDefaultAccentColor(const std::string &themeName) {
+            const auto themeIt = s_themes->find(themeName);
+            if (themeIt == s_themes->end())
+                return std::nullopt;
+
+            const auto &theme = themeIt->second;
+            if (theme.contains("accent") && theme["accent"].is_string())
+                return ThemeManager::parseColorString(theme["accent"].get<std::string>());
+
+            if (theme.contains("base") && theme["base"].is_string()) {
+                const auto baseTheme = theme["base"].get<std::string>();
+                if (baseTheme != themeName)
+                    return getDefaultAccentColor(baseTheme);
+            }
+
+            return std::nullopt;
+        }
     }
 
 
@@ -133,6 +186,7 @@ namespace hex {
         }
 
         const auto &theme = (*s_themes)[name];
+        const auto defaultAccentColor = getDefaultAccentColor(name);
 
         if (theme.contains("base")) {
             if (theme["base"].is_string()) {
@@ -159,7 +213,7 @@ namespace hex {
 
                     auto colorString = value.get<std::string>();
                     bool accentableColor = false;
-                    if (colorString.starts_with("*")) {
+                    if (colorString.starts_with('*')) {
                         colorString = colorString.substr(1);
                         accentableColor = true;
                     }
@@ -171,12 +225,7 @@ namespace hex {
                     }
 
                     if (accentableColor && s_accentColor->has_value()) {
-                        float h, s, v;
-                        ImGui::ColorConvertRGBtoHSV(color->Value.x, color->Value.y, color->Value.z, h, s, v);
-
-                        h = s_accentColor->value();
-
-                        ImGui::ColorConvertHSVtoRGB(h, s, v, color->Value.x, color->Value.y, color->Value.z);
+                        applyAccentColor(color.value(), s_accentColor->value(), defaultAccentColor);
                     }
 
                     (*s_themeHandlers)[type].setFunction((*s_themeHandlers)[type].colorMap.at(key), color.value());
@@ -258,10 +307,7 @@ namespace hex {
     }
 
     void ThemeManager::setAccentColor(const ImColor &color) {
-        float h, s, v;
-        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, h, s, v);
-
-        s_accentColor = h;
+        s_accentColor = color.Value;
         reapplyCurrentTheme();
     }
 
