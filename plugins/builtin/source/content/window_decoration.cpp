@@ -107,7 +107,9 @@ namespace hex::plugin::builtin {
             ImGui::PopClipRect();
             ImHexApi::System::impl::setMainDockSpaceId(dockId);
 
+            ImGui::PushStyleVar(ImGuiStyleVar_SeparatorSize, 1.0F);
             ImGui::Separator();
+            ImGui::PopStyleVar();
             ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::UserInterface::impl::getFooterItems()) {
                 const auto y = ImGui::GetCursorPosY();

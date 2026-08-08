@@ -300,7 +300,7 @@
             "window-shadow-size": 100.0,
             "window-shadow-offset": 0.0,
             "window-shadow-angle": 0.785398,
-            "separator-size": 0.5
+            "separator-size": 1.0
         },
         "imnodes": {
             "grid-spacing": 24.0,
