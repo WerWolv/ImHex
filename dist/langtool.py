@@ -21,6 +21,8 @@ import readline  # noqa: F401
 
 DEFAULT_LANG = "en_US"
 INVALID_TRANSLATION = ""
+# Plugin names that can share their lang keys with other plugins
+GLOBAL_LANGDIRS = ["builtin", "ui"]
 
 def resolve_lang_dirs() -> tuple[list[Path], list[Path]]:
     """Resolve langdir glob into (lang_dirs, source_roots).
@@ -207,31 +209,55 @@ def cmd_check_nonexistent(args: argparse.Namespace) -> int:
     return ret
 
 def cmd_remove_unused() -> int:
-    """Shared logic for check-unused and remove-unused.
-
-    Matches tests/check_langs.py: only a plugin's own en_US.json keys are checked
-    against hex.* string literals found in that same plugin's source."""
+    """Remove unused lang keys from en_US JSON files."""
     _, source_roots = resolve_lang_dirs()
 
+    # Collect all hex keys from each source root
+    all_hex_keys: dict[Path, set[str]] = {}
+    for root in source_roots:
+        hex_keys: set[str] = set()
+        for _, _, key in find_lang_keys_in_source(root, "hex"):
+            hex_keys.add(key)
+        all_hex_keys[root] = hex_keys
+
     ret = 0
-    for source_root in source_roots:
-        lang_file = source_root / "romfs" / "lang" / f"{DEFAULT_LANG}.json"
+    for root in source_roots:
+        lang_file = root / "romfs" / "lang" / f"{DEFAULT_LANG}.json"
         lang_data = load_json_data(lang_file)
         if not lang_data:
             continue
 
-        hex_keys: set[str] = set()
-        for _, _, key in find_lang_keys_in_source(source_root, "hex"):
-            hex_keys.add(key)
+        own_keys = all_hex_keys.get(root, set())
 
-        keys_to_handle = [k for k in lang_data if k not in hex_keys]
-        if not keys_to_handle:
+        keys_to_remove: list[str] = []
+        for key in lang_data:
+            if key in own_keys:
+                continue
+
+            used_elsewhere = []
+            for root2 in source_roots:
+                if root2 != root and root2.name and key in all_hex_keys[root2]:
+                    used_elsewhere.append(root2)
+
+            if used_elsewhere:
+                if root.name in GLOBAL_LANGDIRS:
+                    # It's fine if it's in a global plugin
+                    continue
+                else:
+                    # Else, warn and remove it
+                    names = ", ".join(root.name for root in used_elsewhere)
+                    print(f"Warning: '{key}' in {root.name} is used in other plugins ({names})")
+
+            keys_to_remove.append(key)
+
+        if not keys_to_remove:
             continue
 
+        ret = 1
         print(f"--- Removing unused keys from {lang_file}")
-        for key in keys_to_handle:
+        for key in keys_to_remove:
             del lang_data[key]
-            print(f"  Removed '{key}'")
+            print(f"  Removed '{root.name}' key '{key}'")
         write_json(lang_file, lang_data)
 
     return ret
