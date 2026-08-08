@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: ImHex
 
@@ -78,7 +78,7 @@ jobs:
       IMHEX_VERSION: ${{ steps.verify_version.outputs.IMHEX_VERSION }}
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: ImHex
           submodules: recursive
@@ -102,7 +102,7 @@ jobs:
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
 
       - name: ⬇️ Download artifacts from latest workflow
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v21
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: build.yml
@@ -135,7 +135,7 @@ jobs:
           rm artifact.tar || true
 
       - name: ⬆️ Upload Unsigned x86_64 Windows Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         id: upload-installer-x86_64
         with:
           if-no-files-found: error
@@ -145,7 +145,7 @@ jobs:
 
       - name: ⬆️ Upload Unsigned ARM64 Windows Installer
         if: false
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         id: upload-installer-arm64
         with:
           if-no-files-found: error
@@ -158,7 +158,7 @@ jobs:
           rm imhex-*-x86_64.msi
 
       - name: 🗝️ Sign x86_64 Installer
-        uses: signpath/github-action-submit-signing-request@v1
+        uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
           organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
@@ -170,7 +170,7 @@ jobs:
 
       - name: 🗝️ Sign ARM64 Installer
         if: false
-        uses: signpath/github-action-submit-signing-request@v1
+        uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
           organization-id: 'f605a0e8-86cd-411c-bb6f-e05025afcc33'
@@ -181,7 +181,7 @@ jobs:
           output-artifact-directory: '.'
 
       - name: ⬆️ Upload everything to release
-        uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           files: '*'
 
@@ -191,7 +191,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: ImHex
 
@@ -217,7 +217,7 @@ jobs:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         if: "${{ env.AUR_SSH_PRIVATE_KEY != '' }}"
 
-        uses: KSXGitHub/github-actions-deploy-aur@v2
+        uses: KSXGitHub/github-actions-deploy-aur@v4
         with:
           pkgname: imhex-bin
           pkgbuild: ./PKGBUILD
@@ -263,20 +263,17 @@ jobs:
           wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-x86_64.snap
           wget https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-arm64.snap
 
+      - name: ⬇️ Install Snapcraft
+        uses: canonical/craft-actions/snapcraft/setup@main
+
       - name: ⬆️ Publish x86_64 Snap package
         continue-on-error: true
-        uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
-        with:
-          snap: imhex-${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}-x86_64.snap
-          release: stable
+        run: snapcraft upload imhex-${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}-x86_64.snap --release stable
 
       - name: ⬆️ Publish arm64 Snap package
         continue-on-error: true
-        uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
-        with:
-          snap: imhex-${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}-arm64.snap
-          release: stable
+        run: snapcraft upload imhex-${{ needs.release-upload-artifacts.outputs.IMHEX_VERSION }}-arm64.snap --release stable

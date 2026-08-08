@@ -14,7 +14,7 @@ jobs:
     name: 🌃 Update Nightly Release
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: ImHex
           fetch-depth: 0
@@ -27,9 +27,9 @@ jobs:
           git config --global --add safe.directory $(pwd)
           if [ -z "$(git log nightly..HEAD --oneline)" ]; then
             echo "No new commits since last nightly. Exiting."
-            echo "::set-output name=should_run::false"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
           else
-            echo "::set-output name=should_run::true"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 📜 Set version variable
@@ -40,7 +40,7 @@ jobs:
       
       # TODO: Replace by Github CLI when github.com/cli/cli/pull/12435 is closed
       - name: ⬇️ Download artifacts from latest workflow
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v21
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: build.yml
@@ -112,25 +112,23 @@ jobs:
           # Upload new assets
           gh release upload nightly ../*.* --clobber
 
+      - name: ⬇️ Install Snapcraft
+        if: ${{ steps.check_commits.outputs.should_run == 'true' }}
+        uses: canonical/craft-actions/snapcraft/setup@main
+
       - name: ⬆️ Publish x86_64 Snap package
         if: ${{ steps.check_commits.outputs.should_run == 'true' }}
         continue-on-error: true
-        uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
-        with:
-          snap: imhex-${{ env.IMHEX_VERSION }}-x86_64.snap
-          release: edge
+        run: snapcraft upload imhex-${{ env.IMHEX_VERSION }}-x86_64.snap --release edge
 
       - name: ⬆️ Publish arm64 Snap package
         if: ${{ steps.check_commits.outputs.should_run == 'true' }}
         continue-on-error: true
-        uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
-        with:
-          snap: imhex-${{ env.IMHEX_VERSION }}-arm64.snap
-          release: edge
+        run: snapcraft upload imhex-${{ env.IMHEX_VERSION }}-arm64.snap --release edge
 
   website_update:
     name: 🌍 Update ImHex Landing Website

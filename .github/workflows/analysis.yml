@@ -16,24 +16,24 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: ✋ Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v4
       with:
         languages: 'cpp'
 
     - name: 📜 Setup ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.23
       with:
         key: ${{ runner.os }}-analysis-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-analysis-build
         max-size: 50M
 
     - name: 📜 Restore CMakeCache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           build/CMakeCache.txt
@@ -63,4 +63,4 @@ jobs:
         ninja install
 
     - name: 🗯️ Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v4

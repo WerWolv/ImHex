@@ -35,12 +35,12 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.23
       with:
         key: ${{ runner.os }}-tests-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-tests-build
@@ -94,7 +94,7 @@ jobs:
     #  env:
     #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     #  if: ${{ env.CODECOV_TOKEN }}
-    #  uses: codecov/codecov-action@v4
+    #  uses: codecov/codecov-action@v7
     #  with:
     #    fail_ci_if_error: true
     #    token: ${{ secrets.CODECOV_TOKEN }}
@@ -106,7 +106,7 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 

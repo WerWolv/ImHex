@@ -59,12 +59,12 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses:  hendrikmuhs/ccache-action@v1
+      uses:  hendrikmuhs/ccache-action@v1.2.23
       id:    cache-ccache
       with:
         key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
@@ -82,7 +82,7 @@ jobs:
         dist/get_deps_msys2.sh
 
     - name: ⬇️ Install .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '10.0.105'
 
@@ -172,14 +172,14 @@ jobs:
         rm -rf cv2pdb
 
     - name: 🗝️ Generate build provenance attestations
-      uses: actions/attest-build-provenance@v2
+      uses: actions/attest-build-provenance@v4
       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
       with:
         subject-path: |
           imhex-*.msi
 
     - name: ⬆️ Upload Windows Installer
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       id: upload-installer
       with:
         if-no-files-found: error
@@ -188,7 +188,7 @@ jobs:
           imhex-*.msi
 
     - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         if-no-files-found: error
         name: Windows Portable ${{ matrix.architecture_name }}
@@ -214,7 +214,7 @@ jobs:
 
     - name: ⬆️ Upload NoGPU Portable ZIP
       if: ${{ matrix.architecture_name == 'x86_64' && hashFiles('build/install/opengl32.dll') != '' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         if-no-files-found: error
         name: Windows Portable NoGPU ${{ matrix.architecture_name }}
@@ -246,7 +246,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -256,7 +256,7 @@ jobs:
           arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
-        uses:  hendrikmuhs/ccache-action@v1
+        uses:  hendrikmuhs/ccache-action@v1.2.23
         id:    cache-ccache
         with:
           key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
@@ -278,7 +278,7 @@ jobs:
         uses: lukka/get-cmake@latest
 
       - name: ⬇️ Install .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.100'
 
@@ -326,14 +326,14 @@ jobs:
           mv ImHex-*.msi ../imhex-${{ env.IMHEX_VERSION }}-Windows-MSVC-${{ matrix.architecture_name }}.msi
 
       - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             imhex-*.msi
 
       - name: ⬆️ Upload Windows Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: false # The MSVC builds should not really be used, they're still packaged for testing’s sake though
         with:
           if-no-files-found: error
@@ -356,7 +356,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout ImHex
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: imhex
 
@@ -371,14 +371,14 @@ jobs:
           imhex/dist/get_deps_msys2.sh
 
       - name: 🧰 Checkout ImHex-Plugin-Template
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: WerWolv/ImHex-Plugin-Template
           submodules: recursive
           path: template
 
       - name: ⬇️ Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: Windows Portable x86_64
           path: out
@@ -417,7 +417,7 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
@@ -426,7 +426,7 @@ jobs:
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
     - name: 📜 Setup ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.23
       with:
         key: ${{ runner.os }}-ccache-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-ccache
@@ -458,7 +458,7 @@ jobs:
         sudo -E port install mbedtls3 nlohmann-json ccache freetype libmagic pkgconfig curl ninja zlib xz bzip2 zstd libssh2 md4c
 
     - name: ⬇️ Install .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '8.0.100'
 
@@ -525,14 +525,14 @@ jobs:
         mv *.dmg ../../imhex-${{ env.IMHEX_VERSION }}-macOS-x86_64.dmg
 
     - name: 🗝️ Generate build provenance attestations
-      uses: actions/attest-build-provenance@v2
+      uses: actions/attest-build-provenance@v4
       if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
       with:
         subject-path: |
           ./*.dmg
 
     - name: ⬆️ Upload DMG
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         if-no-files-found: error
         name: macOS DMG x86_64
@@ -548,22 +548,24 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: 📁 Restore docker /cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: cache
         key: macos-arm64-cache-${{ github.run_id }}
         restore-keys: macos-arm64-cache
 
     - name: 🐳 Inject /cache into docker
-      uses: reproducible-containers/buildkit-cache-dance@v2
+      uses: reproducible-containers/buildkit-cache-dance@v3
       with:
-        cache-source: cache
-        cache-target: /cache
+        cache-map: |
+          {
+            "cache": "/cache"
+          }
 
     - name: 🛠️ Build using docker
       id: build
@@ -573,7 +575,7 @@ jobs:
         cp resources/dist/macos/Entitlements.plist out/Entitlements.plist
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: macos_arm64_intermediate
         path: out/
@@ -601,13 +603,13 @@ jobs:
 
     steps:
       - name: ⬇️ Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: macos_arm64_intermediate
           path: out
 
       - name: 🗑️ Delete artifact
-        uses: geekyeggo/delete-artifact@v5
+        uses: geekyeggo/delete-artifact@v6
         with:
           name: macos_arm64_intermediate
 
@@ -646,14 +648,14 @@ jobs:
           mv *.dmg ../imhex-${{ env.IMHEX_VERSION }}-macOS${{ matrix.file_suffix }}-arm64.dmg
 
       - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             ./*.dmg
 
       - name: ⬆️ Upload DMG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: macOS DMG arm64
@@ -692,12 +694,12 @@ jobs:
   #      run: apt update && apt install -y git curl
   #
   #    - name: 🧰 Checkout
-  #      uses: actions/checkout@v4
+  #      uses: actions/checkout@v7
   #      with:
   #        submodules: recursive
   #
   #    - name: 📜 Setup ccache
-  #      uses: hendrikmuhs/ccache-action@v1
+  #      uses: hendrikmuhs/ccache-action@v1.2.23
   #      with:
   #        key: ${{ matrix.image }}-ccache-${{ github.run_id }}
   #        restore-keys: ${{ matrix.image }}-ccache
@@ -709,7 +711,7 @@ jobs:
   #        bash dist/get_deps_debian.sh
   #
   #    - name: ⬇️ Install .NET
-  #      uses: actions/setup-dotnet@v4
+  #      uses: actions/setup-dotnet@v6
   #      with:
   #        dotnet-version: '8.0.100'
   #
@@ -748,14 +750,14 @@ jobs:
   #        mv build/DebDir.deb imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.deb
   #
   #    - name: 🗝️ Generate build provenance attestations
-  #      uses: actions/attest-build-provenance@v2
+  #      uses: actions/attest-build-provenance@v4
   #      if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
   #      with:
   #        subject-path: |
   #          ./*.deb
   #
   #    - name: ⬆️ Upload DEB
-  #      uses: actions/upload-artifact@v4
+  #      uses: actions/upload-artifact@v7
   #      with:
   #        if-no-files-found: error
   #        name: ${{ matrix.name }} ${{ matrix.release_num }} DEB x86_64
@@ -786,22 +788,24 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: 📁 Restore docker /cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: cache
           key: appimage-ccache-${{ matrix.architecture }}-${{ github.run_id }}
           restore-keys: appimage-ccache-${{ matrix.architecture }}
 
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v2
+        uses: reproducible-containers/buildkit-cache-dance@v3
         with:
-          cache-source: cache
-          cache-target: /cache
+          cache-map: |
+            {
+              "cache": "/cache"
+            }
 
       - name: 🛠️ Build using docker
         run: |
@@ -811,7 +815,7 @@ jobs:
           --output out
 
       - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
@@ -819,14 +823,14 @@ jobs:
             out/*.AppImage.zsync
 
       - name: ⬆️ Upload AppImage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: Linux AppImage ${{ matrix.architecture }}
           path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: Linux AppImage zsync ${{ matrix.architecture }}
@@ -855,7 +859,7 @@ jobs:
           pacman -Syu git ccache --noconfirm
 
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -864,12 +868,12 @@ jobs:
           dist/get_deps_archlinux.sh --noconfirm
 
       - name: ⬇️ Install .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.100'
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1
+        uses: hendrikmuhs/ccache-action@v1.2.23
         with:
           key: archlinux-ccache-${{ github.run_id }}
           restore-keys: archlinux-ccache
@@ -930,14 +934,14 @@ jobs:
           mv *.pkg.tar.zst imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: ArchLinux .pkg.tar.zst x86_64
@@ -984,14 +988,14 @@ jobs:
   #      run: dnf install git-core epel-release -y
   #
   #    - name: 🧰 Checkout
-  #      uses: actions/checkout@v4
+  #      uses: actions/checkout@v7
   #      with:
   #        path: ImHex
   #        submodules: recursive
   #
   #    - name: 📜 Setup DNF Cache
   #      if: false # Disabled for now since it fills up the cache very quickly
-  #      uses: actions/cache@v4
+  #      uses: actions/cache@v6
   #      with:
   #        path: /var/cache/dnf
   #        key: dnf-ccache-${{ matrix.mock_config }}-${{ github.run_id }}
@@ -1006,12 +1010,12 @@ jobs:
   #        ccache
   #
   #    - name: ⬇️ Install .NET
-  #      uses: actions/setup-dotnet@v4
+  #      uses: actions/setup-dotnet@v6
   #      with:
   #        dotnet-version: '8.0.100'
   #
   #    - name: 📜 Setup ccache
-  #      uses: hendrikmuhs/ccache-action@v1
+  #      uses: hendrikmuhs/ccache-action@v1.2.23
   #      with:
   #        key: ${{ matrix.mock_config }}-rpm-${{ github.run_id }}
   #        restore-keys: ${{ matrix.mock_config }}-rpm
@@ -1061,14 +1065,14 @@ jobs:
   #        $GITHUB_WORKSPACE/imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
   #
   #    - name: 🗝️ Generate build provenance attestations
-  #      uses: actions/attest-build-provenance@v2
+  #      uses: actions/attest-build-provenance@v4
   #      if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
   #      with:
   #        subject-path: |
   #          imhex-${{ env.IMHEX_VERSION }}-${{ matrix.name }}-${{ matrix.release_num }}-x86_64.rpm
   #
   #    - name: ⬆️ Upload RPM
-  #      uses: actions/upload-artifact@v4
+  #      uses: actions/upload-artifact@v7
   #      with:
   #        if-no-files-found: error
   #        name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
@@ -1096,11 +1100,8 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y git curl snapd ccache
 
-      - name: ⬇️ Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v3
-
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -1122,7 +1123,7 @@ jobs:
           envsubst '${IMHEX_VERSION_STRING},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1
+        uses: hendrikmuhs/ccache-action@v1.2.23
         with:
           key: ${{ matrix.architecture }}-snap-${{ github.run_id }}
           restore-keys: ${{ matrix.architecture }}-snap
@@ -1136,14 +1137,14 @@ jobs:
           mv *.snap imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.snap
 
       - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             *.snap
 
       - name: ⬆️ Upload Snap
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: Snap ${{ matrix.architecture }}
@@ -1174,7 +1175,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -1193,14 +1194,14 @@ jobs:
 
 
       - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
         with:
           subject-path: |
             imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
 
       - name: ⬆️ Upload Flatpak
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: Flatpak ${{ matrix.architecture }}
@@ -1213,22 +1214,24 @@ jobs:
     name: 🌍 Web
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: 📁 Restore docker /cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: cache
           key: webassembly-ccache-${{ github.run_id }}
           restore-keys: webassembly-ccache
 
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v2
+        uses: reproducible-containers/buildkit-cache-dance@v3
         with:
-          cache-source: cache
-          cache-target: /cache
+          cache-map: |
+            {
+              "cache": "/cache"
+            }
 
       - name: 🔨 Copy necessary files
         run: |
@@ -1257,7 +1260,7 @@ jobs:
           path: out/
 
       - name: ⬆️ Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: ImHex Web
@@ -1289,7 +1292,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🌍 Deploy WebAssembly Build to GitHub Pages
         id: deployment
@@ -1312,16 +1315,16 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: ⬇️ Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ImHex Web
           path: out
 
       - name: 📜 Login to ghcr.io
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -1329,7 +1332,7 @@ jobs:
 
       - name: ⛓️ Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}/imhex-web
           tags: |
@@ -1340,7 +1343,7 @@ jobs:
             type=sha
 
       - name: 🔨 Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         env:
           DOCKER_BUILD_RECORD_UPLOAD: false
         with:
