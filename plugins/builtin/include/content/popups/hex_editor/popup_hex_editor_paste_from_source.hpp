@@ -64,6 +64,7 @@ namespace hex::plugin::builtin {
 
             void setSelection(u64 start, u64 end);
             bool executePasteOperation(void) const;
+            bool checkRegionValidity(const ImHexApi::HexEditor::ProviderRegion &region) const;
             std::string elapsedTimeFormatted(void) const;
 
         private:
