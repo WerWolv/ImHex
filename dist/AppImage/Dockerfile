@@ -15,7 +15,7 @@ apt upgrade -y
 # general deps
 apt install -y ccache git wget
 # appimage tools deps
-apt install -y python3-pip python3-venv python3-setuptools desktop-file-utils libgdk-pixbuf-xlib-2.0-dev fuse ninja-build
+apt install -y python3-pip python3-venv python3-setuptools desktop-file-utils libgdk-pixbuf-xlib-2.0-dev fuse gettext-base ninja-build
 apt install -y squashfs-tools zsync
 
 # imhex deps
@@ -88,7 +88,11 @@ export VERSION=$(cat /imhex/VERSION)
 export ARCHITECTURE_PACKAGE=${ARCHITECTURE_PACKAGE}
 export ARCHITECTURE_FILE_NAME=${ARCHITECTURE_FILE_NAME}
 export ARCHITECTURE_APPIMAGE_BUILDER=${ARCHITECTURE_APPIMAGE_BUILDER}
-appimage-builder --recipe /imhex/dist/AppImage/AppImageBuilder.yml
+export GITHUB_RELEASE_TAG=$(cat VERSION | grep -q ".WIP" && echo "nightly" || echo "latest")
+envsubst '${VERSION} ${ARCHITECTURE_PACKAGE} ${ARCHITECTURE_FILE_NAME} ${ARCHITECTURE_APPIMAGE_BUILDER} ${GITHUB_RELEASE_TAG}' \
+    < /imhex/dist/AppImage/AppImageBuilder.yml.in \
+    > /tmp/AppImageBuilder.yml
+appimage-builder --recipe /tmp/AppImageBuilder.yml
 EOF
 
 FROM scratch

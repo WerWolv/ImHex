@@ -6,12 +6,12 @@ AppDir:
     id: imhex
     name: ImHex
     icon: imhex
-    version: "{{VERSION}}"
+    version: "${VERSION}"
     exec: usr/bin/imhex
     exec_args: $@
   apt:
     arch:
-    - "{{ARCHITECTURE_PACKAGE}}"
+    - "${ARCHITECTURE_PACKAGE}"
     - all
     allow_unauthenticated: true
     sources:
@@ -120,7 +120,7 @@ AppDir:
     - usr/share/doc/*/TODO.*
   runtime:
     env:
-      APPDIR_LIBRARY_PATH: '$APPDIR/usr/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu:$APPDIR/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu:$APPDIR/usr/lib:$APPDIR/usr/lib/{{ARCHITECTURE_APPIMAGE_BUILDER}}-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders'
+      APPDIR_LIBRARY_PATH: '$APPDIR/usr/lib/${ARCHITECTURE_APPIMAGE_BUILDER}-linux-gnu:$APPDIR/lib/${ARCHITECTURE_APPIMAGE_BUILDER}-linux-gnu:$APPDIR/usr/lib:$APPDIR/usr/lib/${ARCHITECTURE_APPIMAGE_BUILDER}-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders'
       GTK_EXE_PREFIX: $APPDIR/usr
       GTK_DATA_PREFIX: $APPDIR
       XDG_DATA_DIRS: '/usr/local/share:/usr/share:$APPDIR/usr/share:$XDG_DATA_DIRS:$APPDIR/usr/local/share:$APPDIR/usr/local/lib:$APPDIR/usr/local/share'
@@ -142,7 +142,7 @@ AppDir:
       image: WerWolv/tests-env:ubuntu-noble
       command: ./AppRun
 AppImage:
-  arch: "{{ARCHITECTURE_APPIMAGE_BUILDER}}"
+  arch: "${ARCHITECTURE_APPIMAGE_BUILDER}"
   comp: zstd
-  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*-{{ARCHITECTURE_FILE_NAME}}.AppImage.zsync
-  file_name: imhex-{{VERSION}}-{{ARCHITECTURE_FILE_NAME}}.AppImage
+  update-information: gh-releases-zsync|WerWolv|ImHex|${GITHUB_RELEASE_TAG}|imhex-*-${ARCHITECTURE_FILE_NAME}.AppImage.zsync
+  file_name: imhex-${VERSION}-${ARCHITECTURE_FILE_NAME}.AppImage
