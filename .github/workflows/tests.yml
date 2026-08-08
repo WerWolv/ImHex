@@ -102,7 +102,7 @@ jobs:
 
   langs:
     name: 🧪 Langs
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
 
     steps:
     - name: 🧰 Checkout
