@@ -112,7 +112,7 @@ jobs:
 
     - name: Check langs
       run: |
-        python3 dist/langtool.py check-nonexistent
         python3 dist/langtool.py remove-unused
         python3 dist/langtool.py sync-sublangs
+        python3 dist/langtool.py check-nonexistent
         git diff --exit-code
