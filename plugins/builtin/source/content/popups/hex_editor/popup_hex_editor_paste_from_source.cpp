@@ -356,23 +356,18 @@ namespace hex::plugin::builtin {
             ImGui::Spacing();
             // Apply button
             auto &[source, dest] = m_providers;
-            auto &sourceSelection = source.providerSelection;
-            auto &destSelection = dest.providerSelection;
-            const auto isSrcRegionOffsetsValid = (source.providerValidity && 
-                                                    (sourceSelection.getStartAddress() <= sourceSelection.getEndAddress()) && 
-                                                    (sourceSelection.getEndAddress() < sourceSelection.provider->getActualSize()));
-            const auto isDstRegionOffsetsValid = (dest.providerValidity && 
-                                                    (((destSelection.getStartAddress() <= destSelection.getEndAddress()) && 
-                                                      (destSelection.getEndAddress() < destSelection.provider->getActualSize())) || 
-                                                     (destSelection.provider->getActualSize() == 0))); // to allow pasting in empty provider
-            const auto isApplyButtonEnabled = (isSrcRegionOffsetsValid && isDstRegionOffsetsValid);
+            const auto isSourceOffsetsValid = (source.providerValidity && !(source.providerSelection.provider->getActualSize() == 0) && // do not allow pasting if source provider is empty
+                                               checkRegionValidity(source.providerSelection));
+            const auto isDestOffsetsValid = (dest.providerValidity && ((dest.providerSelection.provider->getActualSize() == 0) || // allow pasting in empty destination provider
+                                             checkRegionValidity(dest.providerSelection)));
+            const auto isApplyButtonEnabled = (isSourceOffsetsValid && isDestOffsetsValid);
 
             ImGui::BeginDisabled(!isApplyButtonEnabled);
             {
                 if ((ImGuiExt::DimmedButton("hex.ui.common.apply"_lang, ImVec2(decisionButtonWidth, 0))) || 
                             (isApplyButtonEnabled && ImGui::IsWindowFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))) {
                     // Check if destination is writable
-                    if (isDstRegionOffsetsValid && dest.providerSelection.provider->isWritable()) {
+                    if (dest.providerSelection.provider->isWritable()) {
                         const auto isPasteModeValid = ((m_pasteMode > PasteModeType::ModeNotSelected) && (m_pasteMode < PasteModeType::ModeCount));
                         // Execute paste operation
                         if (isPasteModeValid) {
@@ -739,7 +734,7 @@ namespace hex::plugin::builtin {
 
         const auto providerStartAddress = (providerValidity ? providerSelection.provider->getBaseAddress() : 0);
         const auto providerActualSize   = (providerValidity ? providerSelection.provider->getActualSize() : 0);
-        const auto providerEndAddress = ((providerActualSize == 0) ? providerStartAddress : (providerStartAddress + (providerActualSize - 1)));
+        const auto providerEndAddress = ((providerActualSize == 0) ? providerStartAddress : (providerStartAddress + providerActualSize - 1));
 
         ImGui::BeginDisabled(!providerValidity);
         {
@@ -857,6 +852,10 @@ namespace hex::plugin::builtin {
             return false; // Invalid source or destination
         }
 
+        // Calculate provider relative offsets
+        auto sourceOffset = (source.providerSelection.getStartAddress() - source.providerSelection.provider->getBaseAddress());
+        auto destOffset = (dest.providerSelection.getStartAddress() - dest.providerSelection.provider->getBaseAddress());
+
         // Process paste mode
         switch (m_pasteMode) {
             case PasteModeType::ModePasteOverSelection: {
@@ -867,27 +866,25 @@ namespace hex::plugin::builtin {
 
             case PasteModeType::ModePasteEverything: {
                 // Calculate available size from selected destination begin to end
-                u64 availSize = (dest.providerSelection.provider->getActualSize() - dest.providerSelection.getStartAddress());
-
+                u64 availSize = (dest.providerSelection.provider->getActualSize() - destOffset);
                 // Size of the data to be pasted is same as selected source region size
                 pasteSize = source.providerSelection.getSize();
                 // Resize the provider size to accommodate selected source region data
                 if (availSize < pasteSize) {
-                    dest.providerSelection.provider->insertRaw(dest.providerSelection.getStartAddress(), (pasteSize - availSize));
+                    dest.providerSelection.provider->insertRaw(destOffset, (pasteSize - availSize));
                 }
                 break;
             }
 
             case PasteModeType::ModeReplaceSelection: {
-                i64 sizeDiff = (dest.providerSelection.getSize() - source.providerSelection.getSize());
-
                 // Size of the data to be pasted is same as selected source region size
                 pasteSize = source.providerSelection.getSize();
                 // Resize selected destination region to match the selected source region size
+                i64 sizeDiff = (dest.providerSelection.getSize() - pasteSize);
                 if (sizeDiff < 0) {
-                    dest.providerSelection.provider->insertRaw(dest.providerSelection.getStartAddress(), -sizeDiff);
+                    dest.providerSelection.provider->insertRaw(destOffset, -sizeDiff);
                 } else if (sizeDiff > 0) {
-                    dest.providerSelection.provider->removeRaw(dest.providerSelection.getStartAddress(), sizeDiff);
+                    dest.providerSelection.provider->removeRaw(destOffset, sizeDiff);
                 } else {
                     // Same size
                 }
@@ -898,7 +895,7 @@ namespace hex::plugin::builtin {
                 // Size of the data to be pasted is same as selected source region size
                 pasteSize = source.providerSelection.getSize();
                 // Insert selected source region size of data bytes at destination region start address
-                dest.providerSelection.provider->insertRaw(dest.providerSelection.getStartAddress(), source.providerSelection.getSize());
+                dest.providerSelection.provider->insertRaw(destOffset, pasteSize);
                 break;
             }
 
@@ -911,9 +908,6 @@ namespace hex::plugin::builtin {
         using namespace hex::literals;
         constexpr static size_t ChunkSize = 4_KiB;
         std::array<u8, ChunkSize> buffer{};
-
-        auto sourceOffset = source.providerSelection.getStartAddress();
-        auto destOffset = dest.providerSelection.getStartAddress();
         auto bytesLeft = pasteSize;
 
         while (bytesLeft > 0) {
@@ -930,6 +924,20 @@ namespace hex::plugin::builtin {
         dest.providerSelection.provider->markDataDirty();
 
         return true; // Paste successfull
+    }
+
+    bool PopupPasteFromSource::checkRegionValidity(const ImHexApi::HexEditor::ProviderRegion &region) const {
+        if (region.provider == nullptr) {
+            return false;
+        } else {
+            const auto providerStartAddress = region.provider->getBaseAddress();
+            const auto providerActualSize = region.provider->getActualSize();
+            const auto providerEndAddress = ((providerActualSize == 0) ? providerStartAddress : (providerStartAddress + providerActualSize - 1));
+
+            return ((region.getStartAddress() >= providerStartAddress) && 
+                    (region.getStartAddress() <= region.getEndAddress()) && 
+                    (region.getEndAddress() <= providerEndAddress));
+        }
     }
 
     std::string PopupPasteFromSource::elapsedTimeFormatted(void) const {
