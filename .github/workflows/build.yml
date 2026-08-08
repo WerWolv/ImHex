@@ -771,12 +771,12 @@ jobs:
       matrix:
         include:
           - architecture: "x86_64"
-            architecture_package: "amd64"
             architecture_appimage_builder: "x86_64"
+            vcpkg_triplet: "x64-linux-release"
             image: ubuntu-26.04
           - architecture: "arm64"
-            architecture_package: "arm64"
             architecture_appimage_builder: "aarch64"
+            vcpkg_triplet: "arm64-linux-release"
             image: ubuntu-26.04-arm
 
     runs-on: ${{ matrix.image }}
@@ -811,7 +811,7 @@ jobs:
         run: |
           docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
           --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
-          --build-arg "ARCHITECTURE_PACKAGE=${{ matrix.architecture_package }}" --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" \
+          --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" --build-arg "VCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}" \
           --output out
 
       - name: 🗝️ Generate build provenance attestations
