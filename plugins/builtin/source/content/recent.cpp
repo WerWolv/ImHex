@@ -420,6 +420,6 @@ namespace hex::plugin::builtin::recent {
             }
         }, [] {
             return TaskManager::getRunningTaskCount() == 0 && !s_recentEntriesUpdating && !s_recentEntries.empty();
-        }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"), true);
+        }, nullptr, true);
     }
 }
