@@ -510,7 +510,14 @@ namespace hex::plugin::builtin {
             auto window = ImHexApi::System::getMainWindowHandle();
             menu::enableNativeMenuBar(s_useNativeMenuBar);
             if (menu::beginMainMenuBar()) {
-                drawTitleBarBackDrop();
+                #if defined(OS_MACOS)
+                    if (ImGui::BeginMainMenuBar()) {
+                        drawTitleBarBackDrop();
+                        ImGui::EndMainMenuBar();
+                    }
+                #else
+                    drawTitleBarBackDrop();
+                #endif
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     #if defined(OS_WINDOWS)
                         ImGui::SetCursorPosX(5_scaled);
