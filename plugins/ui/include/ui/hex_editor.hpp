@@ -367,7 +367,7 @@ namespace hex::ui {
 
             m_editingBytes.resize(m_currDataVisualizer->getBytesPerCell());
             if (m_mode == Mode::Overwrite) {
-                m_provider->read(address + m_provider->getBaseAddress(), m_editingBytes.data(), m_editingBytes.size());
+                m_provider->read(address, m_editingBytes.data(), m_editingBytes.size());
             } else if (m_mode == Mode::Insert) {
                 std::memset(m_editingBytes.data(), 0x00, m_editingBytes.size());
                 m_provider->insert(address, m_editingBytes.size());
