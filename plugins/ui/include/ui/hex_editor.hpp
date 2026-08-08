@@ -203,6 +203,8 @@ namespace hex::ui {
             return m_selectionStart.has_value() && m_selectionEnd.has_value();
         }
 
+        u64 getNumberOfRows() const;
+
         void jumpToSelection(float pivot = 0.0F) {
             m_shouldJumpToSelection = true;
             m_jumpPivot = pivot;
@@ -357,7 +359,8 @@ namespace hex::ui {
         }
 
         void setScrollPosition(i64 scrollPosition) {
-            m_scrollPosition.get() = scrollPosition;
+            const auto numberOfRows = getNumberOfRows();
+            m_scrollPosition.get() = std::clamp<i64>(scrollPosition, 0x00, numberOfRows == 0x00 ? 0x00 : (numberOfRows - 1));
         }
 
         void setEditingAddress(u64 address) {

@@ -478,19 +478,21 @@ namespace hex::plugin::builtin {
         });
 
         ShortcutManager::addShortcut(this, Keys::Home, "hex.builtin.view.hex_editor.shortcut.cursor_start", [this] {
-            auto selection = getSelection();
-            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+            const auto selection = getSelection();
+            const auto baseAddress = m_hexEditor.getProvider()->getBaseAddress();
+            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress()) - baseAddress;
 
-            auto pos = cursor - cursor % m_hexEditor.getBytesPerRow();
+            auto pos = (cursor - cursor % m_hexEditor.getBytesPerRow()) + baseAddress;
             this->setSelection(pos, (pos + m_hexEditor.getBytesPerCell()) - 1);
             m_hexEditor.jumpIfOffScreen();
         });
 
         ShortcutManager::addShortcut(this, Keys::End, "hex.builtin.view.hex_editor.shortcut.cursor_end", [this] {
-            auto selection = getSelection();
-            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+            const auto selection = getSelection();
+            const auto baseAddress = m_hexEditor.getProvider()->getBaseAddress();
+            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress()) - baseAddress;
 
-            auto pos = cursor - cursor % m_hexEditor.getBytesPerRow() + m_hexEditor.getBytesPerRow() - m_hexEditor.getBytesPerCell();
+            auto pos = (cursor - cursor % m_hexEditor.getBytesPerRow() + m_hexEditor.getBytesPerRow() - m_hexEditor.getBytesPerCell()) + baseAddress;
             this->setSelection(pos, (pos + m_hexEditor.getBytesPerCell()) - 1);
             m_hexEditor.jumpIfOffScreen();
         });

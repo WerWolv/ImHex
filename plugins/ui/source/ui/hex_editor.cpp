@@ -224,11 +224,17 @@ namespace hex::ui {
         ImGui::PopStyleVar();
     }
 
-    void HexEditor::drawScrollbar(ImVec2 characterSize) {
+    u64 HexEditor::getNumberOfRows() const {
+        if (m_provider == nullptr)
+            return 0;
+
         const auto bytesPerCell = m_currDataVisualizer->getBytesPerCell();
         const auto bytesPerRow  =  m_bytesPerRow / bytesPerCell * bytesPerCell;
+        return (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0LLU : 1LLU);
+    }
 
-        ImS64 numRows = m_provider == nullptr ? 0LLU : (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0LLU : 1LLU);
+    void HexEditor::drawScrollbar(ImVec2 characterSize) {
+        const ImS64 numRows = getNumberOfRows();
 
         auto window = ImGui::GetCurrentWindowRead();
         const auto outerRect = window->Rect();
