@@ -231,8 +231,8 @@ jobs:
             vs_arch: "amd64"
             runner_os: "windows-2025"
           - architecture_name: "arm64"
-            vs_arch: "amd64_arm64"
-            runner_os: "windows-11-arm"
+            vs_arch: "arm64"
+            runner_os: "windows-11-vs2026-arm"
 
     runs-on: ${{ matrix.runner_os }}
     name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
@@ -249,11 +249,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           submodules: recursive
-
-      - name: 🫧 Setup Visual Studio Dev Environment
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.vs_arch }}
 
       - name: 📜 Setup ccache
         uses:  hendrikmuhs/ccache-action@v1.2.23
@@ -276,7 +271,7 @@ jobs:
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
-
+      
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -289,8 +284,9 @@ jobs:
       # Windows cmake build
       - name: 🛠️ Configure CMake
         run: |
+          & 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\Common7\Tools\Launch-VsDevShell.ps1' -Arch ${{ matrix.vs_arch }}
           mkdir -p build
-                    
+            
           cmake -G "Ninja" -B build                                                   `
             --preset vs2022                                                           `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
@@ -311,6 +307,7 @@ jobs:
 
       - name: 🛠️ Build
         run: |
+          & 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\Common7\Tools\Launch-VsDevShell.ps1' -Arch ${{ matrix.vs_arch }}
           cd build
           ninja install
 
