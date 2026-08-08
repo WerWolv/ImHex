@@ -502,14 +502,13 @@ namespace hex::plugin::builtin {
                     )
                 )
             );
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0F, 0.0F));
             if (ImGui::BeginChild("##pattern_editor_resizer", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
                 m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), true);
                 m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
             }
             ImGui::EndChild();
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar();
             fonts::CodeEditor().pop();
 
             m_consoleHoverBox = ImGui::GetCurrentWindow()->Rect();
