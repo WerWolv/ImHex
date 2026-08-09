@@ -116,8 +116,8 @@ var Module = {
         // Triggered when the wasm module is loaded and ready to use.
         let loading = document.getElementById("loading");
         if (loading != null)
-            document.getElementById("loading").style.display = "none"
-        document.getElementById("canvas").style.display = "initial"
+            document.getElementById("loading").classList.add("hidden");
+        document.getElementById("canvas-wrapper").classList.remove("hidden");
 
         clearTimeout(notWorkingTimer);
     },
