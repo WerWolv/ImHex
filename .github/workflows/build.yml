@@ -288,8 +288,6 @@ jobs:
           & 'C:\Program Files\Microsoft Visual Studio\18\Enterprise\Common7\Tools\Launch-VsDevShell.ps1' -Arch ${{ matrix.vs_arch }}
           $env:VCPKG_ROOT, $env:VCPKG_DEFAULT_BINARY_CACHE = $VCPKG_ROOT_BAK, $VCPKG_DEFAULT_BINARY_CACHE_BAK
           mkdir -p build
-          Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
-          Write-Host "VCPKG_DEFAULT_BINARY_CACHE: $env:VCPKG_DEFAULT_BINARY_CACHE"
             
           cmake -G "Ninja" -B build                                                   `
             --preset vs2022                                                           `
