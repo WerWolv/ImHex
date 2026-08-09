@@ -202,9 +202,11 @@ bool macosBeginMenu(const char* label, const char *icon, bool enabled) {
             NSString *iconString = [NSString stringWithUTF8String:icon];
             NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
             [menuItem setImage:iconImage];
-            if (@available(macOS 27.0, *)) {
-                menuItem.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
-            }
+            #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_27_0
+                if (@available(macOS 27.0, *)) {
+                    menuItem.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
+                }
+            #endif
         }
 
         // Add the new menu to the end of the list
@@ -245,9 +247,11 @@ bool macosMenuItem(const char* label, const char *icon, struct KeyEquivalent key
             NSString *iconString = [NSString stringWithUTF8String:icon];
             NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
             [menuItem setImage:iconImage];
-            if (@available(macOS 27.0, *)) {
-                menuItem.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
-            }
+            #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_27_0
+                if (@available(macOS 27.0, *)) {
+                    menuItem.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
+                }
+            #endif
         }
 
         [menuItem setTag:s_currTag];
