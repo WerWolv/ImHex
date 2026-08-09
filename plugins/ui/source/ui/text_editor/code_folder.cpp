@@ -146,6 +146,8 @@ namespace hex::ui {
 
                 if (interval == NotValid)
                     break;
+                if (interval.m_end < block.m_start)
+                    break;
 
                 Coordinates endCoord, startCoord = Coordinates(m_tokens[interval.m_start].location);
 
@@ -832,6 +834,9 @@ namespace hex::ui {
             if (foldInterval.m_start.m_line > size() || foldInterval.m_end.m_line > size())
                 return;
             std::pair<char, char> foldDelimiters = {};
+            if (size_t(foldInterval.m_end.m_line) >= m_unfoldedLines.size())
+                break;
+
             foldDelimiters.second = m_unfoldedLines[foldInterval.m_end.m_line].m_chars[foldInterval.m_end.m_column];
             if (foldDelimiters.second == '\0')
                 continue;
