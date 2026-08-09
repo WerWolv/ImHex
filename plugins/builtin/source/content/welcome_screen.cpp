@@ -300,9 +300,13 @@ namespace hex::plugin::builtin {
 
         void drawEmptyProjectWelcomeScreen() {
             const auto centerText = [](std::string_view text) {
-                const auto textWidth = ImGui::CalcTextSize(&*text.begin(), &*text.end()).x;
+                const auto begin = text.data();
+                const auto end = text.data() + text.size();
+
+                const auto textWidth = ImGui::CalcTextSize(begin, end).x;
+
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.0F, (ImGui::GetContentRegionAvail().x - textWidth) / 2));
-                ImGui::TextUnformatted(text.begin(), text.end());
+                ImGui::TextUnformatted(begin, end);
             };
 
             const auto contentHeight = ImGui::GetTextLineHeightWithSpacing() * 6 + ImGui::GetFrameHeight();
