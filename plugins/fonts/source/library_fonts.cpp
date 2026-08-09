@@ -1,6 +1,5 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/events/events_gui.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
@@ -35,7 +34,4 @@ IMHEX_LIBRARY_SETUP("Fonts") {
         hex::ImHexApi::Fonts::setDefaultFont(hex::fonts::Default());
     });
 
-    hex::EventDPIChanged::subscribe([](float, float newScale) {
-        ImGui::GetIO().ConfigDpiScaleFonts = newScale;
-    });
 }

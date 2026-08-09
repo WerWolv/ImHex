@@ -15,6 +15,7 @@
         bool isMacosSystemDarkModeEnabled();
         bool isMacosFullScreenModeEnabled(GLFWwindow *window);
         float getBackingScaleFactor();
+        float getWindowBackingScaleFactor(GLFWwindow *window);
 
         void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
 

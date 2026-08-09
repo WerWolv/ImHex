@@ -53,6 +53,12 @@
         return [[NSScreen mainScreen] backingScaleFactor];
     }
 
+    float getWindowBackingScaleFactor(GLFWwindow *window) {
+        NSWindow *cocoaWindow = glfwGetCocoaWindow(window);
+        NSScreen *screen = [cocoaWindow screen];
+        return screen ? [screen backingScaleFactor] : getBackingScaleFactor();
+    }
+
     void macOSCloseButtonPressed(void);
 
     @interface CloseButtonHandler : NSObject

@@ -3,9 +3,11 @@
 #if defined(OS_LINUX)
 
     #include <hex/api/imhex_api/system.hpp>
+    #include <hex/api/content_registry/settings.hpp>
     #include <hex/api/events/events_gui.hpp>
     #include <hex/api/events/events_interaction.hpp>
     #include <hex/api/events/requests_gui.hpp>
+    #include <hex/api/task_manager.hpp>
 
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/utils_linux.hpp>
@@ -20,13 +22,58 @@
 
     #include <GLFW/glfw3.h>
     #include <imgui_impl_glfw.h>
+    #include <cmath>
+    #include <numeric>
+    #include <optional>
     #include <ranges>
+    #include <utility>
 
     #if defined(IMHEX_HAS_FONTCONFIG)
         #include <fontconfig/fontconfig.h>
     #endif
 
 namespace hex {
+
+    namespace {
+
+        std::optional<std::pair<float, float>> s_pendingDpiChange;
+
+        void scheduleDpiChange(float oldScale, float newScale) {
+            if (s_pendingDpiChange.has_value()) {
+                s_pendingDpiChange->second = newScale;
+                return;
+            }
+
+            s_pendingDpiChange = std::pair(oldScale, newScale);
+            TaskManager::doLater([] {
+                if (!s_pendingDpiChange.has_value())
+                    return;
+
+                const auto [firstScale, lastScale] = s_pendingDpiChange.value();
+                s_pendingDpiChange.reset();
+                EventDPIChanged::post(firstScale, lastScale);
+            });
+        }
+
+        void updateContentScale(float xScale, float yScale) {
+            const auto newScale = std::midpoint(xScale, yScale);
+            if (!std::isfinite(newScale) || newScale <= 0.0F)
+                return;
+
+            const auto oldScale = ImHexApi::System::getNativeScale();
+            if (std::abs(oldScale - newScale) < 0.001F)
+                return;
+
+            ImHexApi::System::impl::setNativeScale(newScale);
+
+            const auto interfaceScale = ContentRegistry::Settings::read<float>(
+                "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F
+            );
+            if (interfaceScale == 0.0F)
+                scheduleDpiChange(oldScale, newScale);
+        }
+
+    }
 
     bool isFileInPath(const std::fs::path &filename) {
         auto optPathVar = hex::getEnvironmentVariable("PATH");
@@ -140,6 +187,8 @@ namespace hex {
     }
 
     void Window::setupNativeWindow() {
+        s_pendingDpiChange.reset();
+
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
@@ -172,6 +221,18 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->fullFrame();
         });
+
+        glfwSetWindowContentScaleCallback(m_window, [](GLFWwindow *, float xScale, float yScale) {
+            updateContentScale(xScale, yScale);
+        });
+
+        #if GLFW_VERSION_MAJOR > 3 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 4)
+            if (glfwGetPlatform() == GLFW_PLATFORM_X11) {
+                float xScale, yScale;
+                glfwGetWindowContentScale(m_window, &xScale, &yScale);
+                updateContentScale(xScale, yScale);
+            }
+        #endif
 
         if (themeFollowSystem)
             EventOSThemeChanged::post();

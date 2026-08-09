@@ -3,6 +3,7 @@
 #if defined(OS_MACOS)
 
     #include <hex/api/project_file_manager.hpp>
+    #include <hex/api/content_registry/settings.hpp>
     #include <hex/api/imhex_api/system.hpp>
     #include <hex/api/imhex_api/provider.hpp>
     #include <hex/api/events/events_gui.hpp>
@@ -17,10 +18,60 @@
 
     #include <unistd.h>
 
+    #include <cmath>
+    #include <numeric>
+    #include <optional>
+    #include <utility>
+
     #include <GLFW/glfw3.h>
     #include <imgui_impl_glfw.h>
 
 namespace hex {
+
+    namespace {
+
+        std::optional<std::pair<float, float>> s_pendingDpiChange;
+
+        void scheduleDpiChange(float oldScale, float newScale) {
+            if (s_pendingDpiChange.has_value()) {
+                s_pendingDpiChange->second = newScale;
+                return;
+            }
+
+            s_pendingDpiChange = std::pair(oldScale, newScale);
+            TaskManager::doLater([] {
+                if (!s_pendingDpiChange.has_value())
+                    return;
+
+                const auto [firstScale, lastScale] = s_pendingDpiChange.value();
+                s_pendingDpiChange.reset();
+                EventDPIChanged::post(firstScale, lastScale);
+            });
+        }
+
+        void updateContentScale(GLFWwindow *window, float xScale, float yScale) {
+            auto newScale = std::midpoint(xScale, yScale);
+            const auto backingScale = ::getWindowBackingScaleFactor(window);
+            if (backingScale > 0.0F)
+                newScale /= backingScale;
+
+            if (!std::isfinite(newScale) || newScale <= 0.0F)
+                return;
+
+            const auto oldScale = ImHexApi::System::getNativeScale();
+            if (std::abs(oldScale - newScale) < 0.001F)
+                return;
+
+            ImHexApi::System::impl::setNativeScale(newScale);
+
+            const auto interfaceScale = ContentRegistry::Settings::read<float>(
+                "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F
+            );
+            if (interfaceScale == 0.0F)
+                scheduleDpiChange(oldScale, newScale);
+        }
+
+    }
 
     void Window::configureGLFW() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -51,6 +102,8 @@ namespace hex {
     }
 
     void Window::setupNativeWindow() {
+        s_pendingDpiChange.reset();
+
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
@@ -97,6 +150,10 @@ namespace hex {
         glfwSetWindowRefreshCallback(m_window, [](GLFWwindow *window) {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->fullFrame();
+        });
+
+        glfwSetWindowContentScaleCallback(m_window, [](GLFWwindow *window, float xScale, float yScale) {
+            updateContentScale(window, xScale, yScale);
         });
     }
 
