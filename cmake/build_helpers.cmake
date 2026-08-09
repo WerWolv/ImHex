@@ -967,33 +967,11 @@ macro(addBundledLibraries)
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
     set(LIBPL_ENABLE_PRECOMPILED_HEADERS ${IMHEX_ENABLE_PRECOMPILED_HEADERS} CACHE BOOL "" FORCE)
 
-    set(LIBPL_SHARED_LIBRARY OFF CACHE BOOL "" FORCE)
-
-    add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
-    add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler EXCLUDE_FROM_ALL)
-
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
 
-    if (LIBPL_SHARED_LIBRARY)
-        install(
-            TARGETS
-                libpl
-            DESTINATION
-                "${CMAKE_INSTALL_LIBDIR}"
-            PERMISSIONS
-                OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-        )
-    endif()
-
-    if (WIN32)
-        set_target_properties(
-                libpl
-                PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-                    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-        )
-    endif()
+    add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     enableUnityBuild(libpl)
+    setupCompilerFlags(libpl)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
     find_package(Magic 5.39 REQUIRED)

@@ -19,6 +19,9 @@ else()
     find_package(Capstone REQUIRED)
 endif()
 
+add_subdirectory(${EXTERNAL_LIBS_FOLDER}/disassembler ${CMAKE_CURRENT_BINARY_DIR}/disassembler EXCLUDE_FROM_ALL)
+setupCompilerFlags(libdisassembler)
+
 add_imhex_plugin(
     NAME
         disassembler
