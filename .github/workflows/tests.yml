@@ -102,7 +102,7 @@ jobs:
 
   langs:
     name: 🧪 Langs
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
 
     steps:
     - name: 🧰 Checkout
@@ -111,5 +111,8 @@ jobs:
         submodules: recursive
 
     - name: Check langs
-      run:
-        python3 tests/check_langs.py
+      run: |
+        python3 dist/langtool.py remove-unused
+        python3 dist/langtool.py sync-sublangs
+        python3 dist/langtool.py check-nonexistent
+        git diff --exit-code

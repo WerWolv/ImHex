@@ -16,10 +16,8 @@
     "hex.hashes.hash.common.xor_out": "XOR Out",
     "hex.hashes.view.hashes.function": "雜湊函式",
     "hex.hashes.view.hashes.hash": "雜湊",
-    "hex.hashes.view.hashes.hover_info": "懸停在十六進位編輯器的選取範圍上，並按住 Shift 以查看該區域的雜湊。",
     "hex.hashes.view.hashes.name": "雜湊",
     "hex.hashes.view.hashes.no_settings": "無可用設定",
-    "hex.hashes.view.hashes.remove": "移除雜湊",
     "hex.hashes.view.hashes.table.name": "名稱",
     "hex.hashes.view.hashes.table.result": "結果",
     "hex.hashes.view.hashes.table.type": "類型"
