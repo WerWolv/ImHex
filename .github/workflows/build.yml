@@ -267,7 +267,8 @@ jobs:
         uses: friendlyanon/setup-vcpkg@v1
         with:
           committish: 66c0373dc7fca549e5803087b9487edfe3aca0a1
-          cache-key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-vcpkg
+          cache-key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-vcpkg-${{ github.run_id }}-${{ github.run_attempt }}
+          cache-restore-keys: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-vcpkg-
 
 
       - name: ⬇️ Install dependencies
