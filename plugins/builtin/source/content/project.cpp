@@ -101,7 +101,8 @@ namespace hex::plugin::builtin {
 
             try {
                 const auto settings = nlohmann::json::parse(readProjectFile(root, ProjectSettingsPath));
-                for (const auto &[providerId, entries] : settings.value("associations", nlohmann::json::object()).items()) {
+                const auto association = settings.value("associations", nlohmann::json::object());
+                for (const auto &[providerId, entries] : association.items()) {
                     for (const auto &[handler, pathValue] : entries.items()) {
                         auto path = std::fs::path(pathValue.get<std::string>());
                         if (isSafeProjectPath(path) && !path.generic_string().starts_with(".imhex/"))
