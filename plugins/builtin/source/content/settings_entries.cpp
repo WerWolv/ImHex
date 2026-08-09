@@ -776,8 +776,11 @@ for (const auto &path : m_paths) {
                 .setTooltip("hex.builtin.setting.general.mcp_server.desc");
 
             #if !defined(OS_WEB)
-                ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
+                const auto trackingAllowed = ImHexApi::System::anonymousTrackingAllowed();
+                ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact")
+                    .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true)
+                    .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
             #endif
 
 

@@ -392,6 +392,12 @@ EXPORT_MODULE namespace hex {
          */
         void setPostProcessingShader(const std::string &vertexShader, const std::string &fragmentShader);
 
+        /**
+         * @brief Checks if anonymous statistic tracking are allowed by the system
+         * @return True if anonymous statistic tracking are allowed, false otherwise
+         */
+        bool anonymousTrackingAllowed();
+
     }
 
 }

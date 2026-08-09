@@ -31,6 +31,9 @@ namespace hex::plugin::builtin {
                 if (checkForUpdates != 1)
                     return true;
 
+                if (!ImHexApi::System::anonymousTrackingAllowed())
+                    return true;
+
                 // Check if we should check for updates
                 TaskManager::createBackgroundTask("Update Check", [] {
                     const auto updateString = ImHexApi::System::checkForUpdate();
@@ -57,13 +60,6 @@ namespace hex::plugin::builtin {
                 }
 
                 TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics", [uuid](auto&) {
-                    // To avoid potentially flooding our database with lots of dead users
-                    // from people just visiting the website, don't send telemetry data from
-                    // the web version
-                    #if defined(OS_WEB)
-                        return;
-                    #endif
-
                     // Make telemetry request
                     nlohmann::json telemetry = {
                             { "uuid", uuid },

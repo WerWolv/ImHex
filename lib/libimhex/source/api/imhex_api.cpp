@@ -1133,6 +1133,18 @@ namespace hex {
             RequestSetPostProcessingShader::post(vertexShader, fragmentShader);
         }
 
+        bool anonymousTrackingAllowed() {
+            #if defined(OS_WEB)
+                // To avoid potentially flooding our database with lots of dead users
+                // from people just visiting the website, don't send telemetry data from
+                // the web version
+                return false;
+            #else
+                // Respect DO_NOT_TRACK environment variable
+                // See https://donottrack.sh for more information
+                return hex::getEnvironmentVariable("DO_NOT_TRACK") != "1";
+            #endif
+        }
 
     }
 

@@ -297,6 +297,11 @@ namespace hex::plugin::builtin {
                         static ImVec2 subWindowSize = { 0, 0 };
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
 
+                        if (!ImHexApi::System::anonymousTrackingAllowed()) {
+                            page += 1;
+                            break;
+                        }
+
                         // Draw telemetry subwindow
                         ImGui::SetCursorPos((windowSize - subWindowSize) / 2);
                         if (ImGuiExt::BeginSubWindow("hex.builtin.oobe.server_contact"_lang, nullptr, subWindowSize, ImGuiChildFlags_AutoResizeY)) {
