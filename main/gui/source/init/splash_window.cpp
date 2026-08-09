@@ -16,6 +16,7 @@
 
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_freetype.h>
 #include <GLFW/glfw3.h>
 #include <opengl_support.h>
 
@@ -567,13 +568,12 @@ namespace hex::init {
         // Load fonts necessary for the splash screen
         {
             io.Fonts->Clear();
+            io.Fonts->SetFontLoader(ImGuiFreeType::GetFontLoader());
 
-            ImFontConfig cfg = {};
-            cfg.PixelSnapH = true;
-            cfg.OversampleH = 2;
-            cfg.OversampleV = 1;
-            cfg.RasterizerDensity = 2.0F;
-            io.Fonts->AddFontDefaultBitmap(&cfg);
+            ImFontConfig config = {};
+            config.OversampleH = 3;
+            config.OversampleV = 2;
+            io.Fonts->AddFontDefaultVector(&config);
         }
 
         // Don't save window settings for the splash screen
