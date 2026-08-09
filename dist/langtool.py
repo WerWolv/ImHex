@@ -9,6 +9,7 @@ Terminology:
 - sublang: a language which is not en_US
 - lang key: a string key used to look up a translation in a JSON file (e.g. hex.ui.common.yes)
 """
+
 import argparse
 import json
 import re
@@ -24,6 +25,7 @@ DEFAULT_LANG = "en_US"
 INVALID_TRANSLATION = ""
 # Plugin names that can share their lang keys with other plugins
 GLOBAL_LANGDIRS = ["builtin", "ui"]
+
 
 def resolve_lang_dirs() -> tuple[list[Path], list[Path]]:
     """Resolve langdir glob into (lang_dirs, source_roots).
@@ -55,7 +57,9 @@ def write_json(filepath: Path, data: dict[str, str]) -> None:
         f.write("\n")
 
 
-def find_lang_keys_in_source(path: Path, mode: str) -> Generator[tuple[Path, int, str], None, None]:
+def find_lang_keys_in_source(
+    path: Path, mode: str
+) -> Generator[tuple[Path, int, str], None, None]:
     """Walk C/C++ files under path and yield (filepath, line_number, key).
 
     mode="lang": match "..."_lang patterns.
@@ -78,11 +82,14 @@ def find_lang_keys_in_source(path: Path, mode: str) -> Generator[tuple[Path, int
                     for m in re.finditer(pattern, line):
                         yield (filepath, line_num, m.group(1))
 
+
 def cmd_check_translations(args: argparse.Namespace) -> int:
     """Check that all non-English translation files have every key from en_US."""
     ret = 0
 
-    def check_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> None:
+    def check_callback(
+        lang_data: dict[str, str], default_data: dict[str, str], path: Path
+    ) -> None:
         nonlocal ret
         for key in default_data:
             if key in lang_data and lang_data[key] != INVALID_TRANSLATION:
@@ -95,7 +102,9 @@ def cmd_check_translations(args: argparse.Namespace) -> int:
 
 
 # Print one interactive translation prompt line with optional existing value.
-def _print_translation_prompt(key: str, value: str, current_value: str | None = None) -> None:
+def _print_translation_prompt(
+    key: str, value: str, current_value: str | None = None
+) -> None:
     """Print a formatted prompt line for translation operations."""
     print(f"\033[1m'{key}' '{value}'\033[0m => ", end="")
     if current_value is not None:
@@ -108,7 +117,9 @@ def _run_translate(args: argparse.Namespace, retranslate: bool = False) -> int:
     key_pattern = re.compile(args.keys)
 
     # Iterate keys and prompt for translated values.
-    def translate_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> dict[str, str]:
+    def translate_callback(
+        lang_data: dict[str, str], default_data: dict[str, str], path: Path
+    ) -> dict[str, str]:
         for key, value in default_data.items():
             has_translation = key in lang_data and lang_data[key] != INVALID_TRANSLATION
 
@@ -141,7 +152,9 @@ def _run_untranslate(args: argparse.Namespace) -> int:
     key_pattern = re.compile(args.keys)
 
     # Limit clearing to keys that are translated and regex-matched.
-    def untranslate_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> dict[str, str]:
+    def untranslate_callback(
+        lang_data: dict[str, str], default_data: dict[str, str], path: Path
+    ) -> dict[str, str]:
         for key, value in default_data.items():
             has_translation = key in lang_data and lang_data[key] != INVALID_TRANSLATION
             if not has_translation or not key_pattern.fullmatch(key):
@@ -159,7 +172,9 @@ def _run_untranslate(args: argparse.Namespace) -> int:
 def cmd_sync_sublangs(args: argparse.Namespace) -> int:
     """Sync non-English files with en_US (add missing blank entries, remove orphans)."""
 
-    def sync_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> dict[str, str]:
+    def sync_callback(
+        lang_data: dict[str, str], default_data: dict[str, str], path: Path
+    ) -> dict[str, str]:
         _remove_orphaned_keys(lang_data, default_data, path)
         return lang_data
 
@@ -170,7 +185,9 @@ def cmd_sync_sublangs(args: argparse.Namespace) -> int:
 def cmd_fmtzh(args: argparse.Namespace) -> int:
     """Fix CJK full-width punctuation in translations."""
 
-    def fmtzh_callback(lang_data: dict[str, str], default_data: dict[str, str], path: Path) -> dict[str, str]:
+    def fmtzh_callback(
+        lang_data: dict[str, str], default_data: dict[str, str], path: Path
+    ) -> dict[str, str]:
         for key in default_data:
             if key not in lang_data or lang_data[key] == INVALID_TRANSLATION:
                 continue
@@ -179,6 +196,7 @@ def cmd_fmtzh(args: argparse.Namespace) -> int:
 
     _for_each_lang_file(args.lang, fmtzh_callback)
     return 0
+
 
 def cmd_check_nonexistent(args: argparse.Namespace) -> int:
     """Verify every "_lang" key in C++ source has a matching JSON entry.
@@ -196,7 +214,9 @@ def cmd_check_nonexistent(args: argparse.Namespace) -> int:
     plugin_keys: dict[Path, set[str]] = {}
     for lang_dir in lang_dirs:
         plugin_root = lang_dir.parent.parent
-        plugin_keys[plugin_root] = set(load_json_data(lang_dir / f"{DEFAULT_LANG}.json").keys())
+        plugin_keys[plugin_root] = set(
+            load_json_data(lang_dir / f"{DEFAULT_LANG}.json").keys()
+        )
 
     ret = 0
     for source_root in source_roots:
@@ -208,6 +228,7 @@ def cmd_check_nonexistent(args: argparse.Namespace) -> int:
                 print(f"Problem: Lang '{key}' at {filepath}:{line} not found")
 
     return ret
+
 
 def cmd_remove_unused() -> int:
     """Remove unused lang keys from en_US JSON files."""
@@ -247,7 +268,9 @@ def cmd_remove_unused() -> int:
                 else:
                     # Else, warn and remove it
                     names = ", ".join(root.name for root in used_elsewhere)
-                    print(f"Warning: '{key}' in {root.name} is used in other plugins ({names})")
+                    print(
+                        f"Warning: '{key}' in {root.name} is used in other plugins ({names})"
+                    )
 
             keys_to_remove.append(key)
 
@@ -262,6 +285,7 @@ def cmd_remove_unused() -> int:
         write_json(lang_file, lang_data)
 
     return ret
+
 
 def _for_each_lang_file(
     lang: str,
@@ -309,7 +333,9 @@ def _get_target_lang_files(lang_folder: Path, lang: str) -> list[Path]:
     return results
 
 
-def _remove_orphaned_keys(lang_data: dict[str, str], default_data: dict[str, str], lang_file_path: Path) -> None:
+def _remove_orphaned_keys(
+    lang_data: dict[str, str], default_data: dict[str, str], lang_file_path: Path
+) -> None:
     """Remove keys from lang_data that don't exist in default_data."""
     keys_to_remove = [k for k in lang_data if k not in default_data]
     for key in keys_to_remove:
@@ -325,6 +351,7 @@ def _fmtzh(text: str) -> str:
     text = text.replace("?", "？")
     return text
 
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="langtool",
@@ -334,7 +361,11 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Translation commands
-    _add_translation_subparser(subparsers, "check-translations", "Check non-English files have all translations")
+    _add_translation_subparser(
+        subparsers,
+        "check-translations",
+        "Check non-English files have all translations",
+    )
     p_translate = _add_translation_subparser(
         subparsers,
         "translate",
@@ -346,25 +377,46 @@ def build_parser() -> argparse.ArgumentParser:
         help="Only edit keys that already have a translation",
     )
     p_translate.add_argument(
-        "-k", "--keys", default=".*",
+        "-k",
+        "--keys",
+        default=".*",
         help="Regex pattern used with --retranslate (default: %(default)s)",
     )
-    _add_translation_subparser(subparsers, "sync-sublangs", "Sync non-English files with en_US (Both adds and removes entries)")
-    _add_translation_subparser(subparsers, "fmtzh", "Fix CJK punctuation in translations")
+    _add_translation_subparser(
+        subparsers,
+        "sync-sublangs",
+        "Sync non-English files with en_US (Both adds and removes entries)",
+    )
+    _add_translation_subparser(
+        subparsers, "fmtzh", "Fix CJK punctuation in translations"
+    )
 
     # Untranslate needs --keys
-    p_untranslate = _add_translation_subparser(subparsers, "untranslate", "Clear translations matching a regex")
-    p_untranslate.add_argument("-k", "--keys", required=True, help="Regex pattern to match keys")
+    p_untranslate = _add_translation_subparser(
+        subparsers, "untranslate", "Clear translations matching a regex"
+    )
+    p_untranslate.add_argument(
+        "-k", "--keys", required=True, help="Regex pattern to match keys"
+    )
 
     # Source-checking commands (no --lang needed)
-    subparsers.add_parser("check-nonexistent", help="Report _lang keys in C++ source that do not exist in JSON")
-    subparsers.add_parser("check-unused", help="Report JSON keys not referenced in C++ source")
-    subparsers.add_parser("remove-unused", help="Remove JSON keys not referenced in C++ source")
+    subparsers.add_parser(
+        "check-nonexistent",
+        help="Report _lang keys in C++ source that do not exist in JSON",
+    )
+    subparsers.add_parser(
+        "check-unused", help="Report JSON keys not referenced in C++ source"
+    )
+    subparsers.add_parser(
+        "remove-unused", help="Remove JSON keys not referenced in C++ source"
+    )
 
     return parser
 
 
-def _add_translation_subparser(subparsers, name: str, help_text: str) -> argparse.ArgumentParser:
+def _add_translation_subparser(
+    subparsers, name: str, help_text: str
+) -> argparse.ArgumentParser:
     """Add a subparser for a translation command with standard translation args."""
     p = subparsers.add_parser(name, help=help_text)
     p.add_argument("-l", "--lang", default="", help="Target language (e.g. de_DE)")
