@@ -255,7 +255,6 @@ cmake -S /imhex -B /build -G Ninja \
     -DCMAKE_JOB_POOLS=link_pool=1 \
     -DCMAKE_JOB_POOL_LINK=link_pool \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake \
-    -DVCPKG_BUILD_TYPE=release \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
     -DVCPKG_INSTALLED_DIR=/build/vcpkg_installed \
     -DVCPKG_MANIFEST_DIR=/imhex/dist \
