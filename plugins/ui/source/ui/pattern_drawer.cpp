@@ -1046,6 +1046,8 @@ namespace hex::ui {
 
         u64 chunkCount = 0;
         for (u64 i = 0; i < iterable.getEntryCount(); i += ChunkSize) {
+            ImGui::PushID(i + 1);
+            ON_SCOPE_EXIT { ImGui::PopID(); };
             chunkCount++;
 
             auto &displayEnd = this->getDisplayEnd(pattern);
