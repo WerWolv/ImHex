@@ -345,8 +345,6 @@ macro(createPackage)
     elseif(UNIX AND NOT APPLE)
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
 
-        configure_file(${IMHEX_BASE_FOLDER}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
-
         install(FILES ${IMHEX_BASE_FOLDER}/LICENSE              DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${IMHEX_BASE_FOLDER}/dist/imhex.desktop   DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${IMHEX_BASE_FOLDER}/dist/imhex.mime.xml  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mime/packages RENAME imhex.xml)
