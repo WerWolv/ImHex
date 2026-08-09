@@ -425,6 +425,9 @@ jobs:
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
+    - name: 🧹 Remove unused Homebrew tap
+      run: brew untap --force aws/tap || true
+
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2.23
       with:
@@ -602,6 +605,9 @@ jobs:
       attestations: write
 
     steps:
+      - name: 🧹 Remove unused Homebrew tap
+        run: brew untap --force aws/tap || true
+
       - name: ⬇️ Download artifact
         uses: actions/download-artifact@v8
         with:
