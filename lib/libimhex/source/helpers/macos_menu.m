@@ -202,7 +202,7 @@ bool macosBeginMenu(const char* label, const char *icon, bool enabled) {
             NSString *iconString = [NSString stringWithUTF8String:icon];
             NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
             [menuItem setImage:iconImage];
-            #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_27_0
+            #if defined(MAC_OS_X_VERSION_27_0) && (__MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_27_0)
                 if (@available(macOS 27.0, *)) {
                     menuItem.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
                 }
@@ -247,7 +247,7 @@ bool macosMenuItem(const char* label, const char *icon, struct KeyEquivalent key
             NSString *iconString = [NSString stringWithUTF8String:icon];
             NSImage* iconImage = imageFromIconFont(iconString, 16.0, [NSColor blackColor]);
             [menuItem setImage:iconImage];
-            #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_27_0
+            #if defined(MAC_OS_X_VERSION_27_0) && (__MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_27_0)
                 if (@available(macOS 27.0, *)) {
                     menuItem.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
                 }
