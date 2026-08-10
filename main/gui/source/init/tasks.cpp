@@ -26,8 +26,18 @@ namespace hex::init {
 
     using namespace std::literals::string_literals;
 
+    static std::atomic_bool exitCompleted = false;
+
     bool setupEnvironment() {
+        exitCompleted = false;
         hex::log::debug("Using romfs: '{}'", romfs::name());
+
+        std::atexit([] {
+            for (const auto &task : getExitTasks()) {
+                std::ignore = task.callback();
+            }
+            exitCompleted = true;
+        });
 
         return true;
     }
@@ -295,6 +305,9 @@ namespace hex::init {
     }
 
     std::vector<Task> getExitTasks() {
+        if (exitCompleted)
+            return {};
+
         return {
             { "Prepare exit",            prepareExit,      false, false },
             { "Unloading plugins",       unloadPlugins,    false, false },
