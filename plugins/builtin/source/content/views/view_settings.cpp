@@ -102,7 +102,7 @@ namespace hex::plugin::builtin {
                         if (subCategory.entries.empty())
                             continue;
 
-                        if (ImGuiExt::BeginSubWindow(Lang(subCategory.unlocalizedName))) {
+                        if (ImGuiExt::BeginSubWindow(Lang(subCategory.unlocalizedName), nullptr, ImVec2(0, 0), ImGuiChildFlags_NavFlattened)) {
                             for (auto &setting : subCategory.entries) {
                                 ImGui::BeginDisabled(!setting.widget->isEnabled());
                                 auto title = Lang(setting.unlocalizedName);

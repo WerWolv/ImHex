@@ -36,6 +36,8 @@ EXPORT_MODULE namespace hex {
         u32 m_key = 0;
     };
 
+    constexpr static auto UnassignedMin         = Key(static_cast<Keys>(0x0001'0000));
+    constexpr static auto UnassignedMax         = Key(static_cast<Keys>(0x0080'0000));
 
     constexpr static auto CTRL                  = Key(static_cast<Keys>(0x0100'0000));
     constexpr static auto ALT                   = Key(static_cast<Keys>(0x0200'0000));
@@ -64,12 +66,13 @@ EXPORT_MODULE namespace hex {
         bool operator<(const Shortcut &other) const;
         bool operator==(const Shortcut &other) const;
 
-        bool isLocal() const;
-        std::string toString() const;
-        KeyEquivalent toKeyEquivalent() const;
-        const std::set<Key>& getKeys() const;
-        bool has(Key key) const;
-        bool matches(const Shortcut &other) const;
+        [[nodiscard]] bool isLocal() const;
+        [[nodiscard]] std::string toString() const;
+        [[nodiscard]] KeyEquivalent toKeyEquivalent() const;
+        [[nodiscard]] const std::set<Key>& getKeys() const;
+        [[nodiscard]] bool has(Key key) const;
+        [[nodiscard]] bool matches(const Shortcut &other) const;
+        [[nodiscard]] bool isUnassigned() const;
 
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);
@@ -165,8 +168,10 @@ EXPORT_MODULE namespace hex {
 
         [[nodiscard]] static std::vector<ShortcutEntry> getGlobalShortcuts();
         [[nodiscard]] static std::vector<ShortcutEntry> getViewShortcuts(const View *view);
+        [[nodiscard]] static std::vector<Shortcut> &getUnusedUnassignedShortcuts();
 
         [[nodiscard]] static bool updateShortcut(const Shortcut &oldShortcut, Shortcut newShortcut, View *view = nullptr);
+        [[nodiscard]] static Shortcut generateUnassignedShortcut();
     };
 
 }
