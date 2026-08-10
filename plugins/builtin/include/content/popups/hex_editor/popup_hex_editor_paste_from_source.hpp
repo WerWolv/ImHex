@@ -40,6 +40,16 @@ namespace hex::plugin::builtin {
                 DestId = 1
             };
 
+            enum class AddressFormat : u8 {
+                Hexadecimal = 0,
+                Decimal
+            };
+
+            enum class InsertBehaviour : u8 {
+                InsertAt = 0,
+                InsertAfter
+            };
+
             struct ProviderInfo {
                 ObjectIdType providerObjectId;
                 i64 providerIndex = -1;
@@ -61,6 +71,7 @@ namespace hex::plugin::builtin {
             void drawPasteModeButton(const char *buttonLabel, PasteModeType buttonMode, PasteHintType buttonHint, bool buttonDisable, float buttonWidth);
             void drawIntegerInputField(const char *inputLabel, void *inputValue, float inputWidth);
             void drawPasteConfirmationPopup(ViewHexEditor *editor);
+            void drawPopupBorderHighlight(void) const;
 
             void setSelection(u64 start, u64 end);
             bool executePasteOperation(void) const;
@@ -72,7 +83,8 @@ namespace hex::plugin::builtin {
             struct { ProviderInfo source; ProviderInfo dest; } m_providers;
             PasteModeType m_pasteMode = PasteModeType::ModeNotSelected;
             PasteHintType m_pasteHint = PasteHintType::HintDefaultDescription;
-            bool m_inputBaseHex = true;
+            AddressFormat m_addressFormat = AddressFormat::Hexadecimal;
+            InsertBehaviour m_insertBehaviour = InsertBehaviour::InsertAt;
             bool m_modeRecommend = true;
             bool m_setSelectionTrigger = false;
             u64 m_setSelectionStart = 0;

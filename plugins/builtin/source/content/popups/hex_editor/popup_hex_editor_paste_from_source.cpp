@@ -100,11 +100,15 @@ namespace hex::plugin::builtin {
             const auto hoveredColumn = ImGui::TableGetHoveredColumn();
             // Source column header [0, 0]
             if ((hoveredRow == 0 && hoveredColumn == 0) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                if (source.providerValidity) ImHexApi::Provider::setCurrentProvider(source.providerSelection.provider);
+                if (source.providerValidity) {
+                    ImHexApi::Provider::setCurrentProvider(source.providerSelection.provider);
+                }
             }
             // Destination column header [0, 1]
             if ((hoveredRow == 0 && hoveredColumn == 1) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                if (dest.providerValidity) ImHexApi::Provider::setCurrentProvider(dest.providerSelection.provider);
+                if (dest.providerValidity) {
+                    ImHexApi::Provider::setCurrentProvider(dest.providerSelection.provider);
+                }
             }
 
             ImGui::EndTable();
@@ -338,6 +342,7 @@ namespace hex::plugin::builtin {
             // First column
             ImGui::TableSetColumnIndex(0);
             ImGui::Spacing();
+            // Mode Recommend
             if (ImGuiExt::DimmedIconToggle(ICON_VS_SPARKLE_FILLED, &m_modeRecommend)) {
                 // Clear paste mode and hint
                 m_pasteMode = PasteModeType::ModeNotSelected;
@@ -346,8 +351,57 @@ namespace hex::plugin::builtin {
             ImGuiExt::InfoTooltip("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.toggle.tip.mode_recommend"_lang);
 
             ImGui::SameLine();
-            ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &m_inputBaseHex);
-            ImGuiExt::InfoTooltip("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.toggle.tip.hex_input"_lang);
+
+            // Address format
+            if (ImGuiExt::DimmedIconButton(ICON_VS_SYMBOL_NUMERIC, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                ImGui::OpenPopup("address_format_selector");
+            }
+            ImGuiExt::InfoTooltip("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.tip.address_format"_lang);
+
+            ImGui::SetNextWindowPos(ImVec2(ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y - 3_scaled), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+            if (ImGui::BeginPopup("address_format_selector", (ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))) {
+                auto isSelected = (m_addressFormat == AddressFormat::Hexadecimal);
+                if (ImGui::Selectable("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.selectable.hex"_lang, isSelected)) {
+                    m_addressFormat = AddressFormat::Hexadecimal;
+                }
+
+                isSelected = (m_addressFormat == AddressFormat::Decimal);
+                if (ImGui::Selectable("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.selectable.dec"_lang, isSelected)) {
+                    m_addressFormat = AddressFormat::Decimal;
+                }
+
+                // Highlight popup border
+                drawPopupBorderHighlight();
+
+                ImGui::EndPopup();
+            }
+
+            ImGui::SameLine();
+
+            // Insert behaviour
+            if (ImGuiExt::DimmedIconButton(ICON_VS_INSERT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                ImGui::OpenPopup("insert_position_selector");
+            }
+            ImGuiExt::InfoTooltip("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.tip.insert_behaviour"_lang);
+
+            ImGui::SetNextWindowPos(ImVec2(ImGui::GetItemRectMin().x, ImGui::GetItemRectMin().y - 3_scaled), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+            if (ImGui::BeginPopup("insert_position_selector", (ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar))) {
+                auto isSelected = (m_insertBehaviour == InsertBehaviour::InsertAt);
+                if (ImGui::Selectable("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.selectable.insert_at"_lang, isSelected)) {
+                    m_insertBehaviour = InsertBehaviour::InsertAt;
+                }
+
+                isSelected = (m_insertBehaviour == InsertBehaviour::InsertAfter);
+                if (ImGui::Selectable("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.selectable.insert_after"_lang, isSelected)) {
+                    m_insertBehaviour = InsertBehaviour::InsertAfter;
+                }
+
+                // Highlight popup border
+                drawPopupBorderHighlight();
+
+                ImGui::EndPopup();
+            }
+            ImGui::Spacing();
 
             // Second column
             ImGui::TableSetColumnIndex(1);
@@ -414,7 +468,7 @@ namespace hex::plugin::builtin {
                                      (ImGui::CalcTextSize(warningText, strchr(warningText, '\n')).x));
 
             // Table for displaying paste warning and confirmation
-            if (ImGui::BeginTable("##table_paste_confirmation", 1, (ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingFixedFit), ImVec2(tableWidth, 0.0f))) { 
+            if (ImGui::BeginTable("##table_paste_confirmation", 1, (ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingFixedFit), ImVec2(tableWidth, 0.0f))) {
                 // Add single column
                 ImGui::TableSetupColumn("hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.warn.title"_lang);
                 // ImGui::TableHeadersRow();
@@ -450,9 +504,12 @@ namespace hex::plugin::builtin {
                         source.providerSelectionToggle = false;
                         dest.providerSelectionToggle = false;
                         // Jump to the end of the pasted area of destination provider in hex editor
+                        // Adjust destination selection offset for "Insert After" behaviour
+                        if ((m_pasteMode == PasteModeType::ModeInsertEverything) && (m_insertBehaviour == InsertBehaviour::InsertAfter)) {
+                            dest.providerSelection.address++;
+                        }
                         dest.providerSelection.size = ((m_pasteMode != PasteModeType::ModePasteOverSelection) ? (source.providerSelection.getSize()) 
-                                                                                                              : (std::min(source.providerSelection.getSize(), 
-                                                                                                                          dest.providerSelection.getSize())));
+                                                                                                              : (std::min(source.providerSelection.getSize(), dest.providerSelection.getSize())));
                         ImHexApi::Provider::setCurrentProvider(dest.providerSelection.provider);
                         editor->setSelection(dest.providerSelection.getEndAddress(), dest.providerSelection.getStartAddress());
                         editor->jumpToSelection();
@@ -480,10 +537,7 @@ namespace hex::plugin::builtin {
             }
 
             // Highlight popup border
-            ImDrawList* drawList = ImGui::GetWindowDrawList();
-            drawList->AddRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(),
-                              ImGui::GetColorU32(ImGuiCol_NavWindowingHighlight), ImGui::GetStyle().WindowRounding,
-                              ImDrawFlags_None, 3_scaled);
+            drawPopupBorderHighlight();
 
             ImGui::EndPopup();
         }
@@ -542,7 +596,8 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginCombo("", providerPreview.c_str())) {
             for (size_t i = 0; i < providerList.size(); i++) {
                 ImGui::PushID(i+1);
-                if (ImGui::Selectable(providerList[i]->getName().c_str())) {
+                const auto isSelected = (providerIndex == static_cast<int>(i));
+                if (ImGui::Selectable(providerList[i]->getName().c_str(), isSelected)) {
                     const bool isProviderChanged = (providerIndex != static_cast<int>(i));
                     // Set selected provider
                     providerSelection.provider = providerList[i];
@@ -829,13 +884,24 @@ namespace hex::plugin::builtin {
     }
 
     void PopupPasteFromSource::drawIntegerInputField(const char *inputLabel, void *inputValue, float inputWidth) {
+        const auto isHexFormat = (m_addressFormat == AddressFormat::Hexadecimal);
+
         ImGui::SetNextItemWidth(inputWidth);
         ImGuiExt::InputIntegerPrefix(inputLabel,
-                                     (m_inputBaseHex ? "0x" : ""),
+                                     (isHexFormat ? "0x" : ""),
                                      inputValue,
                                      ImGuiDataType_U64,
-                                     (m_inputBaseHex ? "%llX" : "%lld"),
-                                     ((m_inputBaseHex ? ImGuiInputTextFlags_CharsHexadecimal : ImGuiInputTextFlags_CharsDecimal) | ImGuiInputTextFlags_AutoSelectAll));
+                                     (isHexFormat ? "%llX" : "%lld"),
+                                     ((isHexFormat ? ImGuiInputTextFlags_CharsHexadecimal : ImGuiInputTextFlags_CharsDecimal) | ImGuiInputTextFlags_AutoSelectAll));
+    }
+
+    void PopupPasteFromSource::drawPopupBorderHighlight(void) const {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+        // Draw border highlight
+        drawList->AddRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(),
+                          ImGui::GetColorU32(ImGuiCol_NavWindowingHighlight), ImGui::GetStyle().WindowRounding,
+                          ImDrawFlags_None, 3_scaled);
     }
 
     void PopupPasteFromSource::setSelection(u64 start, u64 end) {
@@ -846,45 +912,51 @@ namespace hex::plugin::builtin {
 
     bool PopupPasteFromSource::executePasteOperation(void) const {
         auto &[source, dest] = m_providers;
-        u64 pasteSize = 0;
 
-        if ((source.providerSelection.provider == nullptr) || (dest.providerSelection.provider == nullptr)) {
+        auto *sourceProvider = source.providerSelection.provider;
+        auto *destProvider = dest.providerSelection.provider;
+
+        if ((sourceProvider == nullptr) || (destProvider == nullptr)) {
             return false; // Invalid source or destination
         }
 
         // Calculate provider relative offsets
-        auto sourceOffset = (source.providerSelection.getStartAddress() - source.providerSelection.provider->getBaseAddress());
-        auto destOffset = (dest.providerSelection.getStartAddress() - dest.providerSelection.provider->getBaseAddress());
+        auto sourceOffset = (source.providerSelection.getStartAddress() - sourceProvider->getBaseAddress());
+        auto destOffset = (dest.providerSelection.getStartAddress() - destProvider->getBaseAddress());
+
+        const auto sourceSize = source.providerSelection.getSize();
+        const auto destSize = dest.providerSelection.getSize();
+        u64 pasteSize = 0;
 
         // Process paste mode
         switch (m_pasteMode) {
             case PasteModeType::ModePasteOverSelection: {
                 // Size of the data to be pasted is the smallest of source and destination region size
-                pasteSize = std::min(source.providerSelection.getSize(), dest.providerSelection.getSize());
+                pasteSize = std::min(sourceSize, destSize);
                 break;
             }
 
             case PasteModeType::ModePasteEverything: {
                 // Calculate available size from selected destination begin to end
-                u64 availSize = (dest.providerSelection.provider->getActualSize() - destOffset);
+                u64 availSize = (destProvider->getActualSize() - destOffset);
                 // Size of the data to be pasted is same as selected source region size
-                pasteSize = source.providerSelection.getSize();
+                pasteSize = sourceSize;
                 // Resize the provider size to accommodate selected source region data
                 if (availSize < pasteSize) {
-                    dest.providerSelection.provider->insertRaw(destOffset, (pasteSize - availSize));
+                    destProvider->insertRaw(destOffset, (pasteSize - availSize));
                 }
                 break;
             }
 
             case PasteModeType::ModeReplaceSelection: {
                 // Size of the data to be pasted is same as selected source region size
-                pasteSize = source.providerSelection.getSize();
+                pasteSize = sourceSize;
                 // Resize selected destination region to match the selected source region size
-                i64 sizeDiff = (dest.providerSelection.getSize() - pasteSize);
+                i64 sizeDiff = (static_cast<i64>(destSize) - static_cast<i64>(pasteSize));
                 if (sizeDiff < 0) {
-                    dest.providerSelection.provider->insertRaw(destOffset, -sizeDiff);
+                    destProvider->insertRaw(destOffset, -sizeDiff);
                 } else if (sizeDiff > 0) {
-                    dest.providerSelection.provider->removeRaw(destOffset, sizeDiff);
+                    destProvider->removeRaw(destOffset, sizeDiff);
                 } else {
                     // Same size
                 }
@@ -893,9 +965,13 @@ namespace hex::plugin::builtin {
 
             case PasteModeType::ModeInsertEverything: {
                 // Size of the data to be pasted is same as selected source region size
-                pasteSize = source.providerSelection.getSize();
-                // Insert selected source region size of data bytes at destination region start address
-                dest.providerSelection.provider->insertRaw(destOffset, pasteSize);
+                pasteSize = sourceSize;
+                // Adjust destination offset for "Insert After" behaviour
+                if (m_insertBehaviour == InsertBehaviour::InsertAfter) {
+                    destOffset++;
+                }
+                // Insert selected source region size of data bytes at destination offset address
+                destProvider->insertRaw(destOffset, pasteSize);
                 break;
             }
 
@@ -913,15 +989,15 @@ namespace hex::plugin::builtin {
         while (bytesLeft > 0) {
             const size_t chunk = std::min<u64>(bytesLeft, ChunkSize);
 
-            source.providerSelection.provider->readRaw(sourceOffset, buffer.data(), chunk);
-            dest.providerSelection.provider->writeRaw(destOffset, buffer.data(), chunk);
+            sourceProvider->readRaw(sourceOffset, buffer.data(), chunk);
+            destProvider->writeRaw(destOffset, buffer.data(), chunk);
 
             sourceOffset += chunk;
             destOffset += chunk;
             bytesLeft -= chunk;
         }
 
-        dest.providerSelection.provider->markDataDirty();
+        destProvider->markDataDirty();
 
         return true; // Paste successfull
     }
