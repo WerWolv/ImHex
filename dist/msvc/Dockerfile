@@ -134,25 +134,8 @@ RUN git init /vcpkg && \
 
 ENV PATH="/opt/msvc/bin/${TARGET_ARCHITECTURE}:${PATH}"
 ENV VCPKG_DEFAULT_BINARY_CACHE=/cache/vcpkg
-ENV VCPKG_TARGET_TRIPLET=${TARGET_ARCHITECTURE}-windows-msvc-wine
+ENV VCPKG_TARGET_TRIPLET=${TARGET_ARCHITECTURE}-windows-msvc
 ENV WINEDEBUG=-all
-
-# vcpkg needs an explicit triplet when Visual Studio is provided by msvc-wine.
-RUN <<EOF
-cat > /vcpkg/triplets/community/${VCPKG_TARGET_TRIPLET}.cmake <<TRIPLET
-set(VCPKG_TARGET_ARCHITECTURE ${TARGET_ARCHITECTURE})
-set(VCPKG_CRT_LINKAGE dynamic)
-set(VCPKG_LIBRARY_LINKAGE dynamic)
-set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE \${VCPKG_ROOT_DIR}/scripts/toolchains/windows.cmake)
-set(VCPKG_C_FLAGS "-I/build/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include")
-set(VCPKG_CXX_FLAGS "-I/build/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include")
-set(VCPKG_CONFIGURE_MAKE_OPTIONS lt_cv_deplibs_check_method=pass_all)
-
-set(ENV{CC} cl.exe)
-set(ENV{CXX} cl.exe)
-set(ENV{PATH} "/usr/share/automake-1.16:/vcpkg/scripts/buildsystems/make_wrapper:/opt/msvc/bin/${TARGET_ARCHITECTURE}:\$ENV{PATH}")
-TRIPLET
-EOF
 
 # Source the target environment before running generated Windows tools so Wine
 # can also locate the MSVC runtime DLLs.
@@ -211,6 +194,7 @@ sed 's/"libssh2"/{"name":"libssh2","default-features":false,"features":["zlib"]}
 wineserver -p
 /vcpkg/vcpkg install \
     --triplet=${VCPKG_TARGET_TRIPLET} \
+    --overlay-triplets=/imhex/dist/msvc/vcpkg-triplets \
     --x-manifest-root=/manifest \
     --x-install-root=/build/vcpkg_installed
 wineserver -k
@@ -256,6 +240,7 @@ cmake -S /imhex -B /build -G Ninja \
     -DCMAKE_JOB_POOL_LINK=link_pool \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
+    -DVCPKG_OVERLAY_TRIPLETS=/imhex/dist/msvc/vcpkg-triplets \
     -DVCPKG_INSTALLED_DIR=/build/vcpkg_installed \
     -DVCPKG_MANIFEST_DIR=/imhex/dist \
     -DVCPKG_MANIFEST_INSTALL=OFF \

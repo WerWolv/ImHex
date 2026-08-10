@@ -230,9 +230,11 @@ jobs:
           - architecture_name: "x86_64"
             vs_arch: "amd64"
             runner_os: "windows-2025"
+            vcpkg_triplet: "x64-windows-msvc"
           - architecture_name: "arm64"
             vs_arch: "arm64"
             runner_os: "windows-11-vs2026-arm"
+            vcpkg_triplet: "arm64-windows-msvc"
 
     runs-on: ${{ matrix.runner_os }}
     name: 🪟 Windows MSVC ${{ matrix.architecture_name }}
@@ -298,6 +300,8 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                                        `
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                      `
             -DCMAKE_INSTALL_PREFIX="$(Join-Path $PWD 'install')"                      `
+            -DVCPKG_TARGET_TRIPLET="${{ matrix.vcpkg_triplet }}"                      `
+            -DVCPKG_OVERLAY_TRIPLETS="$(Join-Path $PWD 'dist/msvc/vcpkg-triplets')"  `
             -DIMHEX_GENERATE_PACKAGE=ON                                               `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"                                      `
             -DVCPKG_BUILD_TYPE=release                                                `
