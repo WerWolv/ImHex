@@ -331,78 +331,87 @@ namespace hex::plugin::builtin {
 
 
     void DiskProvider::reloadDrives() {
-#if defined(OS_WINDOWS)
+        #if defined(OS_WINDOWS)
 
-        m_availableDrives.clear();
+            m_availableDrives.clear();
 
-        std::array<WCHAR, MAX_DEVICE_ID_LEN> deviceInstanceId = {};
-        std::array<WCHAR, 1024> description = {};
+            std::array<WCHAR, MAX_DEVICE_ID_LEN> deviceInstanceId = {};
+            std::array<WCHAR, 1024> description = {};
 
-        const GUID hddClass = GUID_DEVINTERFACE_DISK;
+            const GUID hddClass = GUID_DEVINTERFACE_DISK;
 
-        HDEVINFO hDevInfo = SetupDiGetClassDevs(&hddClass, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-        if (hDevInfo == INVALID_HANDLE_VALUE)
-            return;
+            HDEVINFO hDevInfo = SetupDiGetClassDevs(&hddClass, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+            if (hDevInfo == INVALID_HANDLE_VALUE)
+                return;
 
-        // Add all physical drives
-        for (u32 i = 0; ; i++) {
-            SP_DEVINFO_DATA deviceInfoData;
-            deviceInfoData.cbSize = sizeof(deviceInfoData);
+            // Add all physical drives
+            for (u32 i = 0; ; i++) {
+                SP_DEVINFO_DATA deviceInfoData;
+                deviceInfoData.cbSize = sizeof(deviceInfoData);
 
-            if (SetupDiEnumDeviceInfo(hDevInfo, i, &deviceInfoData) == FALSE)
-                break;
+                if (SetupDiEnumDeviceInfo(hDevInfo, i, &deviceInfoData) == FALSE)
+                    break;
 
-            SP_DEVICE_INTERFACE_DATA interfaceData;
-            interfaceData.cbSize = sizeof(SP_INTERFACE_DEVICE_DATA);
+                SP_DEVICE_INTERFACE_DATA interfaceData;
+                interfaceData.cbSize = sizeof(SP_INTERFACE_DEVICE_DATA);
 
-            if (!SetupDiEnumInterfaceDevice(hDevInfo, nullptr, &hddClass, i, &interfaceData))
-                break;
+                if (!SetupDiEnumInterfaceDevice(hDevInfo, nullptr, &hddClass, i, &interfaceData))
+                    break;
 
-            if (CM_Get_Device_IDW(deviceInfoData.DevInst, deviceInstanceId.data(), MAX_PATH, 0) != CR_SUCCESS)
-                continue;
+                if (CM_Get_Device_IDW(deviceInfoData.DevInst, deviceInstanceId.data(), MAX_PATH, 0) != CR_SUCCESS)
+                    continue;
 
-            // Get the required size of the device path
-            DWORD requiredSize = 0;
-            SetupDiGetDeviceInterfaceDetail(hDevInfo, &interfaceData, nullptr, 0, &requiredSize, nullptr);
+                // Get the required size of the device path
+                DWORD requiredSize = 0;
+                SetupDiGetDeviceInterfaceDetail(hDevInfo, &interfaceData, nullptr, 0, &requiredSize, nullptr);
 
-            // Query the device path
-            std::vector<u8> dataBuffer(requiredSize);
-            auto data = reinterpret_cast<SP_INTERFACE_DEVICE_DETAIL_DATA*>(dataBuffer.data());
-            data->cbSize = sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
+                // Query the device path
+                std::vector<u8> dataBuffer(requiredSize);
+                auto data = reinterpret_cast<SP_INTERFACE_DEVICE_DETAIL_DATA*>(dataBuffer.data());
+                data->cbSize = sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
 
-            if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &interfaceData, data, requiredSize, nullptr, nullptr))
-                continue;
+                if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &interfaceData, data, requiredSize, nullptr, nullptr))
+                    continue;
 
-            auto path = reinterpret_cast<const WCHAR*>(data->DevicePath);
+                auto path = reinterpret_cast<const WCHAR*>(data->DevicePath);
 
-            // Query the friendly name of the device
-            DWORD size = 0;
-            DWORD propertyRegDataType = SPDRP_PHYSICAL_DEVICE_OBJECT_NAME;
-            SetupDiGetDeviceRegistryPropertyW(hDevInfo, &deviceInfoData, SPDRP_FRIENDLYNAME,
-                                             &propertyRegDataType, reinterpret_cast<BYTE*>(description.data()),
-                                             sizeof(description),
-                                             &size);
+                // Query the friendly name of the device
+                DWORD size = 0;
+                DWORD propertyRegDataType = SPDRP_PHYSICAL_DEVICE_OBJECT_NAME;
+                SetupDiGetDeviceRegistryPropertyW(hDevInfo, &deviceInfoData, SPDRP_FRIENDLYNAME,
+                                                 &propertyRegDataType, reinterpret_cast<BYTE*>(description.data()),
+                                                 sizeof(description),
+                                                 &size);
 
-            auto friendlyName = description.data();
+                auto friendlyName = description.data();
 
-            m_availableDrives.insert({ utf16ToUtf8(path), utf16ToUtf8(friendlyName) });
-        }
-
-        // Add all logical drives
-        std::bitset<32> drives = ::GetLogicalDrives();
-        for (char i = 0; i < 26; i++) {
-            if (drives[i]) {
-                char letter = 'A' + i;
-                m_availableDrives.insert({ fmt::format(R"(\\.\{:c}:)", letter), fmt::format(R"({:c}:/)", letter) });
+                m_availableDrives.insert({ utf16ToUtf8(path), utf16ToUtf8(friendlyName) });
             }
-        }
 
-#endif
+            // Add all logical drives
+            std::bitset<32> drives = ::GetLogicalDrives();
+            for (char i = 0; i < 26; i++) {
+                if (drives[i]) {
+                    char letter = 'A' + i;
+                    m_availableDrives.insert({ fmt::format(R"(\\.\{:c}:)", letter), fmt::format(R"({:c}:/)", letter) });
+                }
+            }
+
+        #else
+            for (const auto &basePath : { "/dev", "/dev/mapper" }) {
+                if (!std::fs::is_directory(basePath))
+                    continue;
+
+                for (const auto &path : std::fs::directory_iterator(basePath)) {
+                    if (std::fs::is_block_file(path)) {
+                        m_availableDrives.insert({ path.path().string(), path.path().string() });
+                    }
+                }
+            }
+        #endif
     }
 
     bool DiskProvider::drawLoadInterface() {
-        #if defined(OS_WINDOWS)
-
             if (m_availableDrives.empty()) {
                 this->reloadDrives();
                 m_elevated = hex::isProcessElevated();
@@ -437,15 +446,6 @@ namespace hex::plugin::builtin {
             if (ImGui::Button("hex.builtin.provider.disk.reload"_lang)) {
                 this->reloadDrives();
         }
-
-        #else
-
-            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, m_pathBuffer.data(), m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGuiExt::UpdateStringSizeCallback, &m_pathBuffer)) {
-                m_path = m_pathBuffer;
-                m_friendlyName = m_pathBuffer;
-            }
-
-        #endif
 
         return !m_path.empty();
     }
