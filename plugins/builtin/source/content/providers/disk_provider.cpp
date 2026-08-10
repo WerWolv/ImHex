@@ -166,9 +166,9 @@ namespace hex::plugin::builtin {
 
             const auto &path = m_path.native();
 
-            m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+            m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
             if (m_diskHandle == INVALID_HANDLE_VALUE) {
-                m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+                m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
                 m_writable   = false;
 
                 if (m_diskHandle == INVALID_HANDLE_VALUE) {
@@ -179,7 +179,10 @@ namespace hex::plugin::builtin {
             {
                 DISK_GEOMETRY_EX diskGeometry = { };
                 DWORD bytesRead               = 0;
-                if (DeviceIoControl(
+                OVERLAPPED operation           = { };
+                operation.hEvent               = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+                auto success = operation.hEvent != nullptr && DeviceIoControl(
                         m_diskHandle,
                         IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
                         nullptr,
@@ -187,7 +190,14 @@ namespace hex::plugin::builtin {
                         &diskGeometry,
                         sizeof(DISK_GEOMETRY_EX),
                         &bytesRead,
-                        nullptr)) {
+                        &operation);
+                if (!success && operation.hEvent != nullptr && ::GetLastError() == ERROR_IO_PENDING)
+                    success = ::GetOverlappedResult(m_diskHandle, &operation, &bytesRead, TRUE);
+
+                if (operation.hEvent != nullptr)
+                    ::CloseHandle(operation.hEvent);
+
+                if (success) {
                     m_diskSize   = diskGeometry.DiskSize.QuadPart;
                     m_sectorSize = diskGeometry.Geometry.BytesPerSector;
                 }
@@ -225,10 +235,13 @@ namespace hex::plugin::builtin {
 
         #endif
 
+        this->setCacheBlockSize(m_sectorSize);
         return result;
     }
 
     void DiskProvider::close() {
+        CachedProvider::close();
+
         #if defined(OS_WINDOWS)
 
             if (m_diskHandle != INVALID_HANDLE_VALUE)
@@ -246,118 +259,58 @@ namespace hex::plugin::builtin {
         #endif
     }
 
-    static std::mutex s_mutex;
-    void DiskProvider::readRaw(u64 offset, void *buffer, size_t size) {
+    void DiskProvider::readFromSource(u64 offset, void *buffer, size_t size) {
         #if defined(OS_WINDOWS)
+            OVERLAPPED operation = { };
+            operation.Offset     = static_cast<DWORD>(offset & 0xFFFF'FFFF);
+            operation.OffsetHigh = static_cast<DWORD>(offset >> 32);
+            operation.hEvent     = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+            if (operation.hEvent == nullptr)
+                return;
 
             DWORD bytesRead = 0;
+            auto success = ::ReadFile(m_diskHandle, buffer, size, &bytesRead, &operation);
+            if (!success && ::GetLastError() == ERROR_IO_PENDING)
+                std::ignore = ::GetOverlappedResult(m_diskHandle, &operation, &bytesRead, TRUE);
 
-            u64 startOffset = offset;
-
-            std::vector<char> sectorBuffer(m_sectorSize);
-            while (size > 0) {
-                LARGE_INTEGER seekPosition;
-                seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
-                seekPosition.HighPart = LONG(offset >> 32);
-
-                {
-                    std::scoped_lock lock(s_mutex);
-                    ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
-                    ::ReadFile(m_diskHandle, sectorBuffer.data(), sectorBuffer.size(), &bytesRead, nullptr);
-                }
-
-                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), sectorBuffer.data() + (offset & (m_sectorSize - 1)), std::min<u64>(m_sectorSize, size));
-
-                size = std::max<i64>(static_cast<i64>(size) - m_sectorSize, 0);
-                offset += m_sectorSize;
-            }
+            ::CloseHandle(operation.hEvent);
 
         #else
-
-            u64 startOffset    = offset;
-
-            std::vector<char> sectorBuffer(m_sectorSize);
-            while (size > 0) {
-                u64 seekPosition = offset - (offset % m_sectorSize);
-
-                {
-                    std::scoped_lock lock(s_mutex);
-                    ::lseek(m_diskHandle, seekPosition, SEEK_SET);
-                    if (::read(m_diskHandle, sectorBuffer.data(), sectorBuffer.size()) == -1)
-                        break;
-                }
-
-                std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset),
-                            sectorBuffer.data() + (offset & (m_sectorSize - 1)),
-                            std::min<u64>(m_sectorSize, size));
-
-                size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
-                offset += m_sectorSize;
-            }
+            std::ignore = ::pread(m_diskHandle, buffer, size, static_cast<off_t>(offset));
 
         #endif
     }
 
-    void DiskProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
+    void DiskProvider::writeToSource(u64 offset, const void *buffer, size_t size) {
+        const auto sectorOffset = offset % m_sectorSize;
+        const auto sectorBase   = offset - sectorOffset;
+        std::vector<u8> sectorData(m_sectorSize);
+        if (sectorOffset != 0 || size != m_sectorSize)
+            this->readFromSource(sectorBase, sectorData.data(), sectorData.size());
+        std::memcpy(sectorData.data() + sectorOffset, buffer, size);
+
         #if defined(OS_WINDOWS)
+            OVERLAPPED operation = { };
+            operation.Offset     = static_cast<DWORD>(sectorBase & 0xFFFF'FFFF);
+            operation.OffsetHigh = static_cast<DWORD>(sectorBase >> 32);
+            operation.hEvent     = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+            if (operation.hEvent == nullptr)
+                return;
 
             DWORD bytesWritten = 0;
+            auto success = ::WriteFile(m_diskHandle, sectorData.data(), sectorData.size(), &bytesWritten, &operation);
+            if (!success && ::GetLastError() == ERROR_IO_PENDING)
+                std::ignore = ::GetOverlappedResult(m_diskHandle, &operation, &bytesWritten, TRUE);
 
-            u64 startOffset = offset;
-
-            std::vector<u8> modifiedSectorBuffer;
-            modifiedSectorBuffer.resize(m_sectorSize);
-
-            while (size > 0) {
-                u64 sectorBase  = offset - (offset % m_sectorSize);
-                size_t currSize = std::min<u64>(size, m_sectorSize);
-
-                this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), static_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
-
-                LARGE_INTEGER seekPosition;
-                seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
-                seekPosition.HighPart = offset >> 32;
-
-                {
-                    std::scoped_lock lock(s_mutex);
-                    ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
-                    ::WriteFile(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size(), &bytesWritten, nullptr);
-                }
-
-                offset += currSize;
-                size -= currSize;
-            }
+            ::CloseHandle(operation.hEvent);
 
         #else
-
-            u64 startOffset = offset;
-
-            std::vector<u8> modifiedSectorBuffer;
-            modifiedSectorBuffer.resize(m_sectorSize);
-
-            while (size > 0) {
-                u64 sectorBase  = offset - (offset % m_sectorSize);
-                size_t currSize = std::min<u64>(size, m_sectorSize);
-
-                this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
-
-                {
-                    std::scoped_lock lock(s_mutex);
-                    ::lseek(m_diskHandle, sectorBase, SEEK_SET);
-                    if (::write(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
-                        break;
-                }
-
-                offset += currSize;
-                size -= currSize;
-            }
+            std::ignore = ::pwrite(m_diskHandle, sectorData.data(), sectorData.size(), static_cast<off_t>(sectorBase));
 
         #endif
     }
 
-    u64 DiskProvider::getActualSize() const {
+    u64 DiskProvider::getSourceSize() const {
         return m_diskSize;
     }
 

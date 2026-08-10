@@ -37,6 +37,7 @@ namespace hex::prv {
         virtual u64 getSourceSize() const = 0;
 
         void clearCache();
+        void setCacheBlockSize(size_t cacheBlockSize);
 
         struct Block {
             uint64_t index;
@@ -48,6 +49,7 @@ namespace hex::prv {
         size_t m_maxBlocks;
         mutable std::shared_mutex m_cacheMutex;
         std::vector<std::optional<Block>> m_cache;
+        mutable std::vector<std::shared_mutex> m_cacheSlotMutexes;
         mutable u64 m_cachedSize = 0;
 
         constexpr u64 calcBlockIndex(u64 offset) const { return offset / m_cacheBlockSize; }

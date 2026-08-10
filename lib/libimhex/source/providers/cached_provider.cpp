@@ -5,7 +5,7 @@
 namespace hex::prv {
 
     CachedProvider::CachedProvider(size_t cacheBlockSize, size_t maxBlocks)
-        : m_cacheBlockSize(cacheBlockSize), m_maxBlocks(maxBlocks), m_cache(maxBlocks) {}
+        : m_cacheBlockSize(cacheBlockSize), m_maxBlocks(maxBlocks), m_cache(maxBlocks), m_cacheSlotMutexes(maxBlocks) {}
 
     CachedProvider::~CachedProvider() {
         clearCache();
@@ -24,6 +24,7 @@ namespace hex::prv {
         if (!isAvailable() || !isReadable())
             return;
 
+        std::shared_lock cacheLock(m_cacheMutex);
         auto out = static_cast<u8 *>(buffer);
         while (size > 0) {
             const auto blockIndex = calcBlockIndex(offset);
@@ -32,7 +33,7 @@ namespace hex::prv {
             const auto cacheSlot = blockIndex % m_maxBlocks;
 
             {
-                std::shared_lock lock(m_cacheMutex);
+                std::shared_lock lock(m_cacheSlotMutexes[cacheSlot]);
                 const auto &slot = m_cache[cacheSlot];
                 if (slot && slot->index == blockIndex) {
                     std::copy_n(slot->data.begin() + blockOffset, toRead, out);
@@ -44,13 +45,16 @@ namespace hex::prv {
                 }
             }
 
-            std::vector<uint8_t> blockData(m_cacheBlockSize);
-            readFromSource(blockIndex * m_cacheBlockSize, blockData.data(), m_cacheBlockSize);
-
             {
-                std::unique_lock lock(m_cacheMutex);
-                m_cache[cacheSlot] = Block{.index=blockIndex, .data=std::move(blockData), .dirty=false};
-                std::copy_n(m_cache[cacheSlot]->data.begin() + blockOffset, toRead, out);
+                std::unique_lock lock(m_cacheSlotMutexes[cacheSlot]);
+                auto &slot = m_cache[cacheSlot];
+                if (!slot || slot->index != blockIndex) {
+                    std::vector<uint8_t> blockData(m_cacheBlockSize);
+                    readFromSource(blockIndex * m_cacheBlockSize, blockData.data(), m_cacheBlockSize);
+                    slot = Block{.index=blockIndex, .data=std::move(blockData), .dirty=false};
+                }
+
+                std::copy_n(slot->data.begin() + blockOffset, toRead, out);
             }
 
             out += toRead;
@@ -63,6 +67,7 @@ namespace hex::prv {
         if (!isAvailable() || !isWritable())
             return;
 
+        std::shared_lock cacheLock(m_cacheMutex);
         auto in = static_cast<const u8 *>(buffer);
         while (size > 0) {
             const auto blockIndex = calcBlockIndex(offset);
@@ -71,7 +76,7 @@ namespace hex::prv {
             const auto cacheSlot = blockIndex % m_maxBlocks;
 
             {
-                std::unique_lock lock(m_cacheMutex);
+                std::unique_lock lock(m_cacheSlotMutexes[cacheSlot]);
                 auto& slot = m_cache[cacheSlot];
                 if (!slot || slot->index != blockIndex) {
                     std::vector<uint8_t> blockData(m_cacheBlockSize);
@@ -81,9 +86,9 @@ namespace hex::prv {
 
                 std::copy_n(in, toWrite, slot->data.begin() + blockOffset);
                 slot->dirty = true;
-            }
 
-            writeToSource(offset, in, toWrite);
+                writeToSource(offset, in, toWrite);
+            }
 
             in += toWrite;
             offset += toWrite;
@@ -102,10 +107,15 @@ namespace hex::prv {
         if (!isAvailable())
             return 0;
 
-        if (m_cachedSize == 0) {
-            std::unique_lock lock(m_cacheMutex);
-            m_cachedSize = getSourceSize();
+        {
+            std::shared_lock lock(m_cacheMutex);
+            if (m_cachedSize != 0)
+                return m_cachedSize;
         }
+
+        std::unique_lock lock(m_cacheMutex);
+        if (m_cachedSize == 0)
+            m_cachedSize = getSourceSize();
 
         return m_cachedSize;
     }
@@ -117,6 +127,16 @@ namespace hex::prv {
         for (auto& slot : m_cache)
             slot.reset();
 
+        m_cachedSize = 0;
+    }
+
+    void CachedProvider::setCacheBlockSize(size_t cacheBlockSize) {
+        std::unique_lock lock(m_cacheMutex);
+
+        for (auto &slot : m_cache)
+            slot.reset();
+
+        m_cacheBlockSize = cacheBlockSize;
         m_cachedSize = 0;
     }
 

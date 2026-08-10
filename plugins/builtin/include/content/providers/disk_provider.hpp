@@ -1,7 +1,7 @@
 #pragma once
 #if !defined(OS_WEB)
 
-#include <hex/providers/provider.hpp>
+#include <hex/providers/cached_provider.hpp>
 
 #include <set>
 #include <string>
@@ -11,7 +11,7 @@
 
 namespace hex::plugin::builtin {
 
-    class DiskProvider : public prv::Provider,
+    class DiskProvider : public prv::CachedProvider,
                          public prv::IProviderDataDescription,
                          public prv::IProviderLoadInterface {
     public:
@@ -23,10 +23,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isWritable() const override;
         [[nodiscard]] bool isResizable() const override;
         [[nodiscard]] bool isSavable() const override;
-
-        void readRaw(u64 offset, void *buffer, size_t size) override;
-        void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        [[nodiscard]] u64 getActualSize() const override;
 
         void setPath(const std::fs::path &path);
 
@@ -54,6 +50,10 @@ namespace hex::plugin::builtin {
 
     protected:
         void reloadDrives();
+
+        void readFromSource(u64 offset, void *buffer, size_t size) override;
+        void writeToSource(u64 offset, const void *buffer, size_t size) override;
+        [[nodiscard]] u64 getSourceSize() const override;
 
         struct DriveInfo {
             std::string path;
