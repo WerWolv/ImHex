@@ -122,6 +122,8 @@ namespace hex {
                 });
             }
         });
+
+        EventDPIChanged::post(1.0F, ImHexApi::System::getGlobalScale());
     }
 
     void Window::setupEmergencyPopups() {
@@ -1402,7 +1404,6 @@ namespace hex {
             plugin.setImGuiContext(ImGui::GetCurrentContext());
 
         RequestInitThemeHandlers::post();
-        EventDPIChanged::post(1.0F, ImHexApi::System::getGlobalScale());
     }
 
     void Window::exitGLFW() {
