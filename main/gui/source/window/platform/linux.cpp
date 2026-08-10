@@ -178,8 +178,8 @@ namespace hex {
             setenv("LD_LIBRARY_PATH", fmt::format("{}:{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
 
-        // Redirect stdout to log file if we're not running in a terminal
-        if (!hasControllingTerminal()) {
+        // Redirect stdout to log file in release builds if we're not running in a terminal
+        if (!ImHexApi::System::isDebugBuild() && !hasControllingTerminal()) {
             log::impl::redirectToFile();
         }
 
