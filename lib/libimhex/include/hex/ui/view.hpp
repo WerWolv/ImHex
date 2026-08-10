@@ -108,6 +108,8 @@ namespace hex {
         void setWindowJustClosed(bool state);
 
         void trackViewState();
+
+        static void clearLastFocus();
         void setFocused(bool focused);
 
     protected:

@@ -29,6 +29,12 @@
 #include <random>
 #include <unordered_set>
 
+#if defined(OS_MACOS)
+    extern "C" {
+        void macosClearMenu();
+    }
+#endif
+
 namespace hex::plugin::builtin {
 
     // Function that draws the provider popup, defined in the ui_items.cpp file
@@ -335,11 +341,26 @@ namespace hex::plugin::builtin {
         }
 
         bool isMenuItemVisible(const View *lastFocusedView, const ContentRegistry::UserInterface::impl::MenuItem &menuItem) {
-            if (!menuItem.view)
+            if (menuItem.view == nullptr)
                 return true;
-            if (!lastFocusedView)
+            if (lastFocusedView == nullptr) {
+                if (ImHexApi::Provider::isValid())
+                    return false;
+
                 return menuItem.shortcut.has(ShowOnWelcomeScreen);
-            return menuItem.view == lastFocusedView || menuItem.view == lastFocusedView->getMenuItemInheritView();
+            }
+
+            if (menuItem.view == lastFocusedView)
+                return true;
+
+            const auto inheritedView = lastFocusedView->getMenuItemInheritView();
+            if (inheritedView == nullptr)
+                return false;
+
+            if (menuItem.view == inheritedView)
+                return true;
+
+            return false;
         }
 
         std::set<UnlocalizedString> getVisibleMainMenus() {
@@ -352,6 +373,10 @@ namespace hex::plugin::builtin {
 
             prevLastFocusedView = lastFocusedView;
             result.clear();
+
+            #if defined(OS_MACOS)
+                macosClearMenu();
+            #endif
 
             for (const auto &[priority, menuItem] : ContentRegistry::UserInterface::impl::getMenuItems()) {
                 if (result.contains(menuItem.unlocalizedNames.front())) [[likely]]
