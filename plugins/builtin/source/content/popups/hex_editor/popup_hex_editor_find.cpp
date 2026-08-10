@@ -68,8 +68,8 @@ namespace hex::plugin::builtin {
             s_inputString->clear();
         }
 
-        const auto doSearch = [this, editor](auto &) {
-            auto region = this->findByteSequence(m_searchByteSequence);
+        const auto doSearch = [this, editor](Task &task) {
+            auto region = this->findByteSequence(m_searchByteSequence, task);
 
             if (region.has_value()) {
                 m_foundRegion = region.value();
@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    std::optional<Region> PopupFind::findByteSequence(const std::vector<u8> &sequence) const {
+    std::optional<Region> PopupFind::findByteSequence(const std::vector<u8> &sequence, Task &task) const {
         if (sequence.empty())
             return std::nullopt;
 
@@ -234,9 +234,33 @@ namespace hex::plugin::builtin {
         auto startAbsolutePosition = provider->getBaseAddress();
         auto endAbsolutePosition = provider->getBaseAddress() + providerSize - 1;
 
-        constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd,
-                                                  const auto &needleBegin, const auto &needleEnd) {
-            return std::search(haystackBegin, haystackEnd, needleBegin, needleEnd);
+        const auto searchFunction = [&](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
+            if (needleBegin == needleEnd)
+                return haystackBegin;
+
+            for (auto current = haystackBegin; current != haystackEnd; ++current) {
+                auto haystackIt = current;
+                auto needleIt = needleBegin;
+
+                while (haystackIt != haystackEnd && needleIt != needleEnd && *haystackIt == *needleIt) {
+                    ++haystackIt;
+                    ++needleIt;
+                }
+
+                if (needleIt == needleEnd)
+                    return current;
+
+                if (haystackIt == haystackEnd)
+                    return haystackEnd;
+
+                using namespace hex::literals;
+                // Important: Keep this aligned to a power of 2 so it gets optimized nicely
+                if (const auto address = current.getAddress(); (address % 16_MiB) == 0) [[unlikely]] {
+                    task.update(address);
+                }
+            }
+
+            return haystackEnd;
         };
 
         if (!m_searchBackwards) {

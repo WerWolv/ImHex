@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         void drawSearchDirectionButtons();
         void drawTabContents();
 
-        std::optional<Region> findByteSequence(const std::vector<u8> &sequence) const;
+        std::optional<Region> findByteSequence(const std::vector<u8> &sequence, Task &task) const;
 
         std::vector<u8> m_searchByteSequence;
         std::optional<Region> m_foundRegion = std::nullopt;
