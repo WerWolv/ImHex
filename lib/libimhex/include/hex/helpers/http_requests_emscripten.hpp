@@ -74,7 +74,7 @@
             data.resize(fetch->numBytes);
             std::copy(fetch->data, fetch->data + fetch->numBytes, data.begin());
 
-            return Result<T>(HTTPStatus(fetch->status), { data.begin(), data.end() });
+            return Result<T>(HttpStatus(fetch->status), { data.begin(), data.end() });
         }
 
     }

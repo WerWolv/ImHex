@@ -11,7 +11,7 @@ namespace hex {
             [](BackendStatus status) -> std::string {
                 return "fetch() error " + std::to_string(u32(status));
             },
-            [](HTTPStatus status) -> std::string {
+            [](HttpStatus status) -> std::string {
                 return fmt::format("HTTP {}", u32(status));
             },
             [](auto) -> std::string {
