@@ -134,6 +134,24 @@ namespace {
             "f69f2445df4f9b17ad2b417be66c3710")
     };
 
+    const AesDecryptVector Ctr = {
+        .mode = hex::crypt::AESMode::CTR,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
+        .nonce = { 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 },
+        .iv = { 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF },
+        .input = fromHex(
+            "874d6191b620e3261bef6864990db6ce"
+            "9806f66b7970fdff8617187bb9fffdff"
+            "5ae4df3edbd5d35e5b4f09020db03eab"
+            "1e031dda2fbe03d1792170a0f3009cee"),
+        .expected = fromHex(
+            "6bc1bee22e409f96e93d7e117393172a"
+            "ae2d8a571e03ac9c9eb76fac45af8e51"
+            "30c81c46a35ce411e5fbc1191a0a52ef"
+            "f69f2445df4f9b17ad2b417be66c3710")
+    };
+
     const AesDecryptVector Ecb192 = makeSp80038aVector(
         hex::crypt::AESMode::ECB,
         hex::crypt::KeyLength::Key192Bits,
@@ -191,6 +209,25 @@ namespace {
         "df10132415e54b92a13ed0a8267ae2f9"
         "75a385741ab9cef82031623d55b1e471");
 
+    const AesDecryptVector Ctr192 = makeSp80038aVector(
+        hex::crypt::AESMode::CTR,
+        hex::crypt::KeyLength::Key192Bits,
+        "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+        "1abc932417521ca24f2b0459fe7e6e0b"
+        "090339ec0aa6faefd5ccc2c6f4ce8e94"
+        "1e36b26bd1ebc670d1bd1d665620abf7"
+        "4f78a7f6d29809585a97daec58c6b050");
+
+    const AesDecryptVector Ctr256 = makeSp80038aVector(
+        hex::crypt::AESMode::CTR,
+        hex::crypt::KeyLength::Key256Bits,
+        "603deb1015ca71be2b73aef0857d7781"
+        "1f352c073b6108d72d9810a30914dff4",
+        "601ec313775789a5b7a7f504bbf3d228"
+        "f443e3ca4d62b59aca84e990cacaf5c5"
+        "2b0930daa23de94ce87017ba2d84988d"
+        "dfc9c58db67aada613c2dd08457941a6");
+
 
 }
 
@@ -198,7 +235,8 @@ TEST_SEQUENCE("AESDecrypt") {
     const std::array vectors = {
         &Ecb, &Ecb192, &Ecb256,
         &Cbc, &Cbc192, &Cbc256, &CbcPkcs7,
-        &Cfb128, &Cfb128192, &Cfb128256
+        &Cfb128, &Cfb128192, &Cfb128256,
+        &Ctr, &Ctr192, &Ctr256
     };
 
     for (const auto *vector : vectors) {
