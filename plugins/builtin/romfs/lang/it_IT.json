@@ -690,7 +690,6 @@
     "hex.builtin.view.help.about.thanks": "Se ti piace il mio lavoro, per favore considera di fare una donazione. Grazie mille <3",
     "hex.builtin.view.help.about.translator": "Tradotto da CrustySeanPro",
     "hex.builtin.view.help.documentation": "Documentazione di ImHex",
-    "hex.builtin.view.help.documentation_search": "",
     "hex.builtin.view.hex_editor.copy.address": "",
     "hex.builtin.view.hex_editor.copy.ascii": "",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

@@ -750,7 +750,6 @@
     "hex.builtin.view.help.about.thanks": "如果您喜欢我的工作，请赞助以帮助此项目继续前进。非常感谢 <3",
     "hex.builtin.view.help.about.translator": "由 xtex 翻译，York Waugh 修改",
     "hex.builtin.view.help.documentation": "ImHex 文档",
-    "hex.builtin.view.help.documentation_search": "搜索文档",
     "hex.builtin.view.hex_editor.copy.address": "地址",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII 文本",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

@@ -88,25 +88,9 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.help" }, 3000, [] {
-            if (menu::isNativeMenuBarUsed())
-                return;
-
-            static std::string content;
-            ImGui::PushStyleVarY(ImGuiStyleVar_FramePadding, 2_scaled);
-            if (ImGui::InputTextWithHint("##search", "hex.builtin.view.help.documentation_search"_lang, content, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                openWebpage(fmt::format("https://docs.werwolv.net/imhex?q={}", content));
-                content.clear();
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::PopStyleVar();
-        });
-
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
-
 
         // Add documentation link to the help menu
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, ICON_VS_BOOK, 5000, Shortcut::None, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, ICON_VS_BOOK, 3000, Shortcut::None, [] {
             hex::openWebpage("https://docs.werwolv.net/imhex");
             AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
         });

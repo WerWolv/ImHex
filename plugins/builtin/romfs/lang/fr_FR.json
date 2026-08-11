@@ -746,7 +746,6 @@
     "hex.builtin.view.help.about.thanks": "Si vous aimez mon travail, envisagez de faire un don pour soutenir le projet. Merci beaucoup <3",
     "hex.builtin.view.help.about.translator": "Traduit par GekySan",
     "hex.builtin.view.help.documentation": "Documentation ImHex",
-    "hex.builtin.view.help.documentation_search": "Rechercher dans la documentation",
     "hex.builtin.view.hex_editor.copy.address": "Adresse",
     "hex.builtin.view.hex_editor.copy.ascii": "Chaîne ASCII",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

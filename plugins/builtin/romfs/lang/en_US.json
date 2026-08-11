@@ -827,7 +827,6 @@
     "hex.builtin.view.help.about.thanks": "If you like my work, please consider donating to keep the project going. Thanks a lot <3",
     "hex.builtin.view.help.about.translator": "Translated by WerWolv",
     "hex.builtin.view.help.documentation": "ImHex Documentation",
-    "hex.builtin.view.help.documentation_search": "Search Documentation",
     "hex.builtin.view.hex_editor.copy.address": "Address",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII String",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

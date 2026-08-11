@@ -748,7 +748,6 @@
     "hex.builtin.view.help.about.thanks": "Jeśli podoba Ci się moja praca, rozważ darowiznę aby utrzymać projekt. Dziękuję bardzo <3",
     "hex.builtin.view.help.about.translator": "Przetłumaczone przez WerWolv",
     "hex.builtin.view.help.documentation": "Dokumentacja ImHex",
-    "hex.builtin.view.help.documentation_search": "Przeszukaj dokumentację",
     "hex.builtin.view.hex_editor.copy.address": "Adres",
     "hex.builtin.view.hex_editor.copy.ascii": "Ciąg ASCII",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

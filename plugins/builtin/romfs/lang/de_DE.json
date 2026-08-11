@@ -694,7 +694,6 @@
     "hex.builtin.view.help.about.thanks": "Wenn dir meine Arbeit gefällt, bitte ziehe eine Spende in Betracht, um das Projekt am Laufen zu halten. Vielen Dank <3",
     "hex.builtin.view.help.about.translator": "Von WerWolv übersetzt",
     "hex.builtin.view.help.documentation": "ImHex Dokumentation",
-    "hex.builtin.view.help.documentation_search": "Dokumentation durchsuchen",
     "hex.builtin.view.hex_editor.copy.address": "Adresse",
     "hex.builtin.view.hex_editor.copy.ascii": "Text Area",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

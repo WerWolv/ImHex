@@ -745,7 +745,6 @@
     "hex.builtin.view.help.about.source": "Програмний код доступний на GitHub:",
     "hex.builtin.view.help.about.translator": "Переклад українською мовою: Rutar Andriy",
     "hex.builtin.view.help.documentation": "ImHex документація",
-    "hex.builtin.view.help.documentation_search": "Шукати в документації",
     "hex.builtin.view.hex_editor.copy.address": "Адреса",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII рядок",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

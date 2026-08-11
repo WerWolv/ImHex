@@ -720,7 +720,6 @@
     "hex.builtin.view.help.about.thanks": "Если вам нравится программа, просим поддержать её автора.\nБольшое спасибо <3",
     "hex.builtin.view.help.about.translator": "Перевод на русский язык: Lemon4ksan",
     "hex.builtin.view.help.documentation": "Документация",
-    "hex.builtin.view.help.documentation_search": "Искать в документации",
     "hex.builtin.view.hex_editor.copy.address": "Адрес",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII строку",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

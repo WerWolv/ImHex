@@ -690,7 +690,6 @@
     "hex.builtin.view.help.about.thanks": "ご使用いただきありがとうございます。もし気に入って頂けたなら、プロジェクトを継続するための寄付をご検討ください。",
     "hex.builtin.view.help.about.translator": "Translated by gnuhead-chieb",
     "hex.builtin.view.help.documentation": "ImHexドキュメント",
-    "hex.builtin.view.help.documentation_search": "",
     "hex.builtin.view.hex_editor.copy.address": "",
     "hex.builtin.view.hex_editor.copy.ascii": "",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

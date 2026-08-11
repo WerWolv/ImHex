@@ -690,7 +690,6 @@
     "hex.builtin.view.help.about.thanks": "이 작업물이 마음에 든다면 프로젝트가 계속 진행될 수 있도록 후원해주세요. 감사합니다 <3",
     "hex.builtin.view.help.about.translator": "Translated by mirusu400",
     "hex.builtin.view.help.documentation": "ImHex 설명서",
-    "hex.builtin.view.help.documentation_search": "문서 검색",
     "hex.builtin.view.hex_editor.copy.address": "주소",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII 문자열",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

@@ -690,7 +690,6 @@
     "hex.builtin.view.help.about.thanks": "如果您喜歡 ImHex，請考慮贊助使專案能夠永續運營。感謝您 <3",
     "hex.builtin.view.help.about.translator": "由 5idereal 翻譯",
     "hex.builtin.view.help.documentation": "ImHex 說明文件",
-    "hex.builtin.view.help.documentation_search": "",
     "hex.builtin.view.hex_editor.copy.address": "位址",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII 字串",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",

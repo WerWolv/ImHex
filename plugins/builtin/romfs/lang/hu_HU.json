@@ -686,7 +686,6 @@
     "hex.builtin.view.help.about.thanks": "Ha tetszik a munkám, kérlek fontold meg az adományozást, hogy a projekt továbbra is működhessen. Nagyon köszönöm <3",
     "hex.builtin.view.help.about.translator": "Fordította: SparkyTD és MrClock",
     "hex.builtin.view.help.documentation": "ImHex dokumentáció",
-    "hex.builtin.view.help.documentation_search": "Keresés a dokumentációban",
     "hex.builtin.view.hex_editor.copy.address": "Cím",
     "hex.builtin.view.hex_editor.copy.ascii": "ASCII karakterlánc",
     "hex.builtin.view.hex_editor.copy.base64": "Base64",
