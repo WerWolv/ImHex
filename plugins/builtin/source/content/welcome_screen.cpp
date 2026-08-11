@@ -329,7 +329,10 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItemEx("File", ICON_VS_GO_TO_FILE))
                     RequestOpenWindow::post("Open File");
                 ImGui::Separator();
-                for (const auto &[unlocalizedProviderName, icon, _] : ContentRegistry::Provider::impl::getEntries()) {
+                for (const auto &[unlocalizedProviderName, icon, _, hidden] : ContentRegistry::Provider::impl::getEntries()) {
+                    if (hidden)
+                        continue;
+
                     if (ImGui::MenuItemEx(Lang(unlocalizedProviderName), icon))
                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                 }
