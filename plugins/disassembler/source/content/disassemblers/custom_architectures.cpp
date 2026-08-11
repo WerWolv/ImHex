@@ -128,6 +128,13 @@ namespace hex::plugin::disasm {
             return disassembly;
         }
 
+        std::string getFormattedPatternLanguageType(u64 imageBaseAddress, u64 instructionLoadAddress) override {
+            std::ignore = imageBaseAddress;
+            std::ignore = instructionLoadAddress;
+
+            return "Unsupported";
+        }
+
     private:
         std::fs::path m_path;
         ::disasm::spec::Spec m_spec;

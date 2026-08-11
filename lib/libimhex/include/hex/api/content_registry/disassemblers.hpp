@@ -48,6 +48,7 @@ EXPORT_MODULE namespace hex {
             virtual std::optional<Instruction> disassemble(u64 imageBaseAddress, u64 instructionLoadAddress, u64 instructionDataAddress, std::span<const u8> code) = 0;
             virtual void drawSettings() = 0;
             virtual bool hasSettings() { return false; }
+            virtual std::string getFormattedPatternLanguageType(u64 imageBaseAddress, u64 instructionLoadAddress) = 0;
 
             [[nodiscard]] const std::string& getName() const { return m_name; }
 

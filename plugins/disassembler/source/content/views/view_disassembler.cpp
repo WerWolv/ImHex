@@ -397,6 +397,23 @@ namespace hex::plugin::disasm {
                     }
                 }
                 ImGui::EndDisabled();
+
+                {
+                    const auto patternLanguageTypeString = m_currArchitecture.get(provider)->getFormattedPatternLanguageType(m_imageBaseAddress, m_imageLoadAddress);
+                    ImGui::PushID(patternLanguageTypeString.c_str());
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_MenuBarBg));
+
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                    ImGui::InputText("##", const_cast<char *>(patternLanguageTypeString.c_str()), patternLanguageTypeString.size() + 1, ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll);
+                    ImGui::PopItemWidth();
+
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar(1);
+
+                    ImGui::PopID();
+                }
             }
             ImGuiExt::EndSubWindow();
 

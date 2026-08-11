@@ -234,6 +234,24 @@ namespace hex::plugin::disasm {
             return disassembly;
         }
 
+        std::string getFormattedPatternLanguageType(u64 imageBaseAddress, u64 instructionLoadAddress) override {
+            const auto settingsString = CapstoneDisassembler::settingsToString(
+                CapstoneDisassembler::toCapstoneArchitecture(m_architecture),
+                cs_mode(m_mode | (m_endian == std::endian::little ? CS_MODE_LITTLE_ENDIAN : CS_MODE_BIG_ENDIAN))
+            );
+
+            return fmt::format("hex::type::Instruction<\"{}\", \"{}\", 0x{:02X}, 0x{:02X}>",
+                settingsString,
+                m_syntaxMode == CS_OPT_SYNTAX_INTEL     ? "intel"    :
+                m_syntaxMode == CS_OPT_SYNTAX_ATT       ? "at&t"     :
+                m_syntaxMode == CS_OPT_SYNTAX_MASM      ? "masm"     :
+                m_syntaxMode == CS_OPT_SYNTAX_MOTOROLA  ? "motorola" :
+                m_syntaxMode == CS_OPT_SYNTAX_DEFAULT   ? "default"  : "???",
+                imageBaseAddress,
+                instructionLoadAddress
+            );
+        }
+
     private:
         BuiltinArchitecture m_architecture;
         csh m_handle = 0;
@@ -337,6 +355,7 @@ namespace hex::plugin::disasm {
                 ImGui::Checkbox("hex.disassembler.view.disassembler.mips.ptr64"_lang, &m_ptr64);
 
                 m_mode = cs_mode(
+                    m_mode |
                     (m_nofloats ? CS_MODE_MIPS_NOFLOAT : cs_mode(0)) |
                     (m_ptr64    ? CS_MODE_MIPS_PTR64   : cs_mode(0))
                 );
@@ -824,12 +843,14 @@ namespace hex::plugin::disasm {
         void drawSettings() override {
             CapstoneArchitecture::drawSettings();
 
-            ImGui::RadioButton("hex.disassembler.view.disassembler.32bit"_lang, &m_mode, CS_MODE_LOONGARCH32);
+            ImGui::RadioButton("hex.disassembler.view.disassembler.32bit"_lang, &m_arch, CS_MODE_LOONGARCH32);
             ImGui::SameLine();
-            ImGui::RadioButton("hex.disassembler.view.disassembler.64bit"_lang, &m_mode, CS_MODE_LOONGARCH64);
+            ImGui::RadioButton("hex.disassembler.view.disassembler.64bit"_lang, &m_arch, CS_MODE_LOONGARCH64);
+
+            m_mode = cs_mode(m_arch);
         }
 
-        int m_mode = CS_MODE_LOONGARCH64;
+        int m_arch = CS_MODE_LOONGARCH64;
     };
 
     class ArchitectureXtensa : public CapstoneArchitecture {

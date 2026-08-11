@@ -404,5 +404,376 @@ namespace hex::plugin::disasm {
 
             return { cs_arch(arch), cs_mode(mode) };
         }
+
+        static std::string settingsToString(cs_arch arch, cs_mode mode) {
+            std::string archName;
+            std::vector<std::string_view> options;
+
+            u32 remaining = static_cast<u32>(mode);
+
+            const auto has = [&](cs_mode value) {
+                const auto bits = static_cast<u32>(value);
+                return bits != 0 && (remaining & bits) == bits;
+            };
+
+            const auto consume = [&](std::string_view name, cs_mode value) {
+                const auto bits = static_cast<u32>(value);
+
+                if (bits != 0 && (remaining & bits) == bits) {
+                    options.push_back(name);
+                    remaining &= ~bits;
+                }
+            };
+
+            // Architecture.
+            //
+            // Prefer architecture spellings which already encode a mode,
+            // e.g. "thumb" instead of "arm;thumb" and "x86_64" instead of
+            // "x86;64bit".
+            switch (arch) {
+                case CS_ARCH_ARM:
+                    if (has(CS_MODE_THUMB)) {
+                        archName = "thumb";
+                        remaining &= ~static_cast<u32>(CS_MODE_THUMB);
+                    } else {
+                        archName = "arm";
+                    }
+                    break;
+
+                case CS_ARCH_ARM64:
+                    archName = "aarch64";
+                    break;
+
+                case CS_ARCH_MIPS:
+                    archName = "mips";
+                    break;
+
+                case CS_ARCH_X86:
+                    if (has(CS_MODE_64)) {
+                        archName = "x86_64";
+                        remaining &= ~static_cast<u32>(CS_MODE_64);
+                    } else {
+                        archName = "x86";
+                    }
+                    break;
+
+                case CS_ARCH_PPC:
+                    archName = "ppc";
+                    break;
+
+                case CS_ARCH_SPARC:
+                    archName = "sparc";
+                    break;
+
+                case CS_ARCH_SYSZ:
+                    archName = "sysz";
+                    break;
+
+                case CS_ARCH_XCORE:
+                    archName = "xcore";
+                    break;
+
+                case CS_ARCH_M68K:
+                    archName = "m68k";
+                    break;
+
+                case CS_ARCH_M680X:
+                    archName = "m680x";
+                    break;
+
+                case CS_ARCH_TMS320C64X:
+                    archName = "tms320c64x";
+                    break;
+
+                case CS_ARCH_EVM:
+                    archName = "evm";
+                    break;
+
+                case CS_ARCH_WASM:
+                    archName = "wasm";
+                    break;
+
+                case CS_ARCH_RISCV:
+                    archName = "riscv";
+                    break;
+
+                case CS_ARCH_MOS65XX:
+                    archName = "mos65xx";
+                    break;
+
+                case CS_ARCH_BPF:
+                    archName = "bpf";
+                    break;
+
+                case CS_ARCH_SH:
+                    archName = "sh";
+                    break;
+
+                case CS_ARCH_TRICORE:
+                    archName = "tricore";
+                    break;
+
+            #if CS_API_MAJOR >= 6
+                case CS_ARCH_ALPHA:
+                    archName = "alpha";
+                    break;
+
+                case CS_ARCH_HPPA:
+                    archName = "hppa";
+                    break;
+
+                case CS_ARCH_LOONGARCH:
+                    archName = "loongarch";
+                    break;
+
+                case CS_ARCH_XTENSA:
+                    archName = "xtensa";
+                    break;
+
+                case CS_ARCH_ARC:
+                    archName = "arc";
+                    break;
+            #endif
+
+                default:
+                    throw std::runtime_error("Invalid disassembler architecture");
+            }
+
+            // Endianness is encoded as an architecture suffix by stringToSettings().
+            if (has(CS_MODE_BIG_ENDIAN)) {
+                archName += "be";
+                remaining &= ~static_cast<u32>(CS_MODE_BIG_ENDIAN);
+            }
+
+            // Architecture-specific modes are consumed BEFORE the common modes.
+            //
+            // This is important because Capstone reuses bit positions between
+            // architectures. For example CS_MODE_16 and CS_MODE_RISCV64 are both
+            // bit 1 in current Capstone, so blindly iterating every option would
+            // produce bogus aliases.
+            switch (arch) {
+                case CS_ARCH_ARM:
+                    consume("cortex-m", CS_MODE_MCLASS);
+                    consume("armv8",    CS_MODE_V8);
+                    // CS_MODE_THUMB was consumed by the architecture name.
+                    break;
+
+                case CS_ARCH_ARM64:
+                #if CS_API_MAJOR >= 6
+                    consume("apple", CS_MODE_APPLE_PROPRIETARY);
+                #endif
+                    break;
+
+                case CS_ARCH_SPARC:
+                    consume("sparcv9", CS_MODE_V9);
+                    break;
+
+                case CS_ARCH_PPC:
+                    consume("qpx",   CS_MODE_QPX);
+                    consume("spe",   CS_MODE_SPE);
+                    consume("ps",    CS_MODE_PS);
+                    consume("booke", CS_MODE_BOOKE);
+
+                #if CS_API_MAJOR >= 6
+                    consume("aixos",  CS_MODE_AIX_OS);
+                    consume("pwr7",   CS_MODE_PWR7);
+                    consume("pwr8",   CS_MODE_PWR8);
+                    consume("pwr9",   CS_MODE_PWR9);
+                    consume("pwr10",  CS_MODE_PWR10);
+                    consume("future", CS_MODE_PPC_ISA_FUTURE);
+                    consume("aixas",  CS_MODE_MODERN_AIX_AS);
+                    consume("msync",  CS_MODE_MSYNC);
+                #endif
+                    break;
+
+                case CS_ARCH_M68K:
+                    consume("68000", CS_MODE_M68K_000);
+                    consume("68010", CS_MODE_M68K_010);
+                    consume("68020", CS_MODE_M68K_020);
+                    consume("68030", CS_MODE_M68K_030);
+                    consume("68040", CS_MODE_M68K_040);
+                    consume("68060", CS_MODE_M68K_060);
+                    break;
+
+                case CS_ARCH_MIPS:
+                    consume("micromips", CS_MODE_MICRO);
+                    consume("mips2",     CS_MODE_MIPS2);
+                    consume("mips3",     CS_MODE_MIPS3);
+                    consume("mips32r6",  CS_MODE_MIPS32R6);
+
+                #if CS_API_MAJOR >= 6
+                    consume("mips1",     CS_MODE_MIPS1);
+                    consume("mips4",     CS_MODE_MIPS4);
+                    consume("mips5",     CS_MODE_MIPS5);
+                    consume("mips32r2",  CS_MODE_MIPS32R2);
+                    consume("mips32r3",  CS_MODE_MIPS32R3);
+                    consume("mips32r5",  CS_MODE_MIPS32R5);
+                    consume("mips64r2",  CS_MODE_MIPS64R2);
+                    consume("mips64r3",  CS_MODE_MIPS64R3);
+                    consume("mips64r5",  CS_MODE_MIPS64R5);
+                    consume("mips64r6",  CS_MODE_MIPS64R6);
+                    consume("octeon",    CS_MODE_OCTEON);
+                    consume("octeonp",   CS_MODE_OCTEONP);
+                    consume("nanomips",  CS_MODE_NANOMIPS);
+                    consume("nms1",      CS_MODE_NMS1);
+                    consume("i7200",     CS_MODE_I7200);
+                    consume("nofloat",   CS_MODE_MIPS_NOFLOAT);
+                    consume("ptr64",     CS_MODE_MIPS_PTR64);
+                    consume("micro32r3", CS_MODE_MICRO32R3);
+                    consume("micro32r6", CS_MODE_MICRO32R6);
+                #endif
+                    break;
+
+                case CS_ARCH_M680X:
+                    consume("6301",  CS_MODE_M680X_6301);
+                    consume("6309",  CS_MODE_M680X_6309);
+                    consume("6800",  CS_MODE_M680X_6800);
+                    consume("6801",  CS_MODE_M680X_6801);
+                    consume("6805",  CS_MODE_M680X_6805);
+                    consume("6808",  CS_MODE_M680X_6808);
+                    consume("6809",  CS_MODE_M680X_6809);
+                    consume("6811",  CS_MODE_M680X_6811);
+                    consume("cpu12", CS_MODE_M680X_CPU12);
+                    consume("hcs08", CS_MODE_M680X_HCS08);
+                    break;
+
+                case CS_ARCH_BPF:
+                    consume("bpfe", CS_MODE_BPF_EXTENDED);
+                    break;
+
+                case CS_ARCH_RISCV:
+                    consume("rv32g", CS_MODE_RISCV32);
+                    consume("rv64g", CS_MODE_RISCV64);
+
+                #if CS_API_MAJOR >= 6
+                    consume("c",             CS_MODE_RISCV_C);
+                    consume("fd",            CS_MODE_RISCV_FD);
+                    consume("v",             CS_MODE_RISCV_V);
+                    consume("zfinx",         CS_MODE_RISCV_ZFINX);
+                    consume("zcmp-zcmt-zce", CS_MODE_RISCV_ZCMP_ZCMT_ZCE);
+                    consume("zicfiss",       CS_MODE_RISCV_ZICFISS);
+                    consume("e",             CS_MODE_RISCV_E);
+                    consume("a",             CS_MODE_RISCV_A);
+                    consume("corev",         CS_MODE_RISCV_COREV);
+                    consume("thead",         CS_MODE_RISCV_THEAD);
+                    consume("sifive",        CS_MODE_RISCV_SIFIVE);
+                    consume("bitmanip",      CS_MODE_RISCV_BITMANIP);
+                    consume("zba",           CS_MODE_RISCV_ZBA);
+                    consume("zbb",           CS_MODE_RISCV_ZBB);
+                    consume("zbc",           CS_MODE_RISCV_ZBC);
+                    consume("zbkb",          CS_MODE_RISCV_ZBKB);
+                    consume("zbkc",          CS_MODE_RISCV_ZBKC);
+                    consume("zbkx",          CS_MODE_RISCV_ZBKX);
+                    consume("zbs",           CS_MODE_RISCV_ZBS);
+                    consume("ventana",       CS_MODE_RISCV_VENTANA);
+                #else
+                    consume("riscv", CS_MODE_RISCVC);
+                #endif
+                    break;
+
+                case CS_ARCH_MOS65XX:
+                    consume("6502",   CS_MODE_MOS65XX_6502);
+                    consume("65c02",  CS_MODE_MOS65XX_65C02);
+                    consume("w65c02", CS_MODE_MOS65XX_W65C02);
+                    consume("65816",  CS_MODE_MOS65XX_65816);
+                    consume("long-m", CS_MODE_MOS65XX_65816_LONG_M);
+                    consume("long-x", CS_MODE_MOS65XX_65816_LONG_X);
+                    break;
+
+                case CS_ARCH_SH:
+                    consume("sh2",   CS_MODE_SH2);
+                    consume("sh2a",  CS_MODE_SH2A);
+                    consume("sh3",   CS_MODE_SH3);
+                    consume("sh4",   CS_MODE_SH4);
+                    consume("sh4a",  CS_MODE_SH4A);
+                    consume("shfpu", CS_MODE_SHFPU);
+                    consume("shdsp", CS_MODE_SHDSP);
+                    break;
+
+                case CS_ARCH_TRICORE:
+                    consume("tc1.1",   CS_MODE_TRICORE_110);
+                    consume("tc1.2",   CS_MODE_TRICORE_120);
+                    consume("tc1.3",   CS_MODE_TRICORE_130);
+                    consume("tc1.3.1", CS_MODE_TRICORE_131);
+                    consume("tc1.6",   CS_MODE_TRICORE_160);
+                    consume("tc1.6.1", CS_MODE_TRICORE_161);
+                    consume("tc1.6.2", CS_MODE_TRICORE_162);
+                    break;
+
+            #if CS_API_MAJOR >= 6
+                case CS_ARCH_HPPA:
+                    // CS_MODE_HPPA_20W is composite, so consume it first.
+                    consume("hppa2.0w", CS_MODE_HPPA_20W);
+                    consume("hppa1.1",  CS_MODE_HPPA_11);
+                    consume("hppa2.0",  CS_MODE_HPPA_20);
+                    break;
+
+                case CS_ARCH_LOONGARCH:
+                    consume("loongarch32", CS_MODE_LOONGARCH32);
+                    consume("loongarch64", CS_MODE_LOONGARCH64);
+                    break;
+
+                case CS_ARCH_SYSZ:
+                    consume("arch8",   CS_MODE_SYSTEMZ_ARCH8);
+                    consume("arch9",   CS_MODE_SYSTEMZ_ARCH9);
+                    consume("arch10",  CS_MODE_SYSTEMZ_ARCH10);
+                    consume("arch11",  CS_MODE_SYSTEMZ_ARCH11);
+                    consume("arch12",  CS_MODE_SYSTEMZ_ARCH12);
+                    consume("arch13",  CS_MODE_SYSTEMZ_ARCH13);
+                    consume("arch14",  CS_MODE_SYSTEMZ_ARCH14);
+                    consume("z10",     CS_MODE_SYSTEMZ_Z10);
+                    consume("z196",    CS_MODE_SYSTEMZ_Z196);
+                    consume("zec12",   CS_MODE_SYSTEMZ_ZEC12);
+                    consume("z13",     CS_MODE_SYSTEMZ_Z13);
+                    consume("z14",     CS_MODE_SYSTEMZ_Z14);
+                    consume("z15",     CS_MODE_SYSTEMZ_Z15);
+                    consume("z16",     CS_MODE_SYSTEMZ_Z16);
+                    consume("generic", CS_MODE_SYSTEMZ_GENERIC);
+                    break;
+
+                case CS_ARCH_XTENSA:
+                    consume("esp32",   CS_MODE_XTENSA_ESP32);
+                    consume("esp32s2", CS_MODE_XTENSA_ESP32S2);
+                    consume("esp8266", CS_MODE_XTENSA_ESP8266);
+                    break;
+            #endif
+
+                default:
+                    break;
+            }
+
+            // Anything left that coincides with one of your generic modes.
+            //
+            // Do this last because those bit values overlap with many
+            // architecture-specific modes.
+            consume("16bit", CS_MODE_16);
+            consume("32bit", CS_MODE_32);
+            consume("64bit", CS_MODE_64);
+
+            // Don't silently lose flags that stringToSettings() could not recreate.
+            if (remaining != 0) {
+                throw std::runtime_error(
+                    fmt::format(
+                        "Cannot stringify disassembler mode bits {:#x} for architecture '{}'",
+                        remaining, archName
+                    )
+                );
+            }
+
+            std::string result = archName;
+
+            if (!options.empty()) {
+                result += ';';
+
+                for (std::size_t i = 0; i < options.size(); ++i) {
+                    if (i != 0)
+                        result += ',';
+
+                    result += options[i];
+                }
+            }
+
+            return result;
+        }
     };
 }
