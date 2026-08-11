@@ -188,6 +188,24 @@ namespace {
         .expected = fromHex("20212223")
     };
 
+    const AesDecryptVector Ofb = {
+        .mode = hex::crypt::AESMode::OFB,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
+        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
+        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .input = fromHex(
+            "3b3fd92eb72dad20333449f8e83cfb4a"
+            "7789508d16918f03f53c52dac54ed825"
+            "9740051e9c5fecf64344f7a82260edcc"
+            "304c6528f659c77866a510d9c1d6ae5e"),
+        .expected = fromHex(
+            "6bc1bee22e409f96e93d7e117393172a"
+            "ae2d8a571e03ac9c9eb76fac45af8e51"
+            "30c81c46a35ce411e5fbc1191a0a52ef"
+            "f69f2445df4f9b17ad2b417be66c3710")
+    };
+
     const AesDecryptVector Ecb192 = makeSp80038aVector(
         hex::crypt::AESMode::ECB,
         hex::crypt::KeyLength::Key192Bits,
@@ -263,6 +281,25 @@ namespace {
         "f443e3ca4d62b59aca84e990cacaf5c5"
         "2b0930daa23de94ce87017ba2d84988d"
         "dfc9c58db67aada613c2dd08457941a6");
+
+    const AesDecryptVector Ofb192 = makeSp80038aVector(
+        hex::crypt::AESMode::OFB,
+        hex::crypt::KeyLength::Key192Bits,
+        "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+        "cdc80d6fddf18cab34c25909c99a4174"
+        "fcc28b8d4c63837c09e81700c1100401"
+        "8d9a9aeac0f6596f559c6d4daf59a5f2"
+        "6d9f200857ca6c3e9cac524bd9acc92a");
+
+    const AesDecryptVector Ofb256 = makeSp80038aVector(
+        hex::crypt::AESMode::OFB,
+        hex::crypt::KeyLength::Key256Bits,
+        "603deb1015ca71be2b73aef0857d7781"
+        "1f352c073b6108d72d9810a30914dff4",
+        "dc7e84bfda79164b7ecd8486985d3860"
+        "4febdc6740d20b3ac88f6ad82a4fb08d"
+        "71ab47a086e86eedf39d1c5bba97c408"
+        "0126141d67f37be8538f5a8be740e484");
 
     const AesDecryptVector Gcm192 = {
         .mode = hex::crypt::AESMode::GCM,
@@ -343,7 +380,8 @@ TEST_SEQUENCE("AESDecrypt") {
         &Cfb128, &Cfb128192, &Cfb128256,
         &Ctr, &Ctr192, &Ctr256,
         &Gcm, &Gcm192, &Gcm256,
-        &Ccm, &Ccm192, &Ccm256
+        &Ccm, &Ccm192, &Ccm256,
+        &Ofb, &Ofb192, &Ofb256
     };
 
     for (const auto *vector : vectors) {
