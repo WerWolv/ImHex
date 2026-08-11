@@ -730,7 +730,6 @@ namespace hex {
             // Loop through all views and draw them
             static ImGuiWindow *nextFocusWindow = nullptr;
 
-            View::clearLastFocus();
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries() | std::views::reverse) {
                 ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 

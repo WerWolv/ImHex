@@ -109,7 +109,6 @@ namespace hex {
 
         void trackViewState();
 
-        static void clearLastFocus();
         void setFocused(bool focused);
 
     protected:

@@ -104,10 +104,6 @@ namespace hex {
         return fmt::format("{}###{}", Lang(unlocalizedName), unlocalizedName.get());
     }
 
-    void View::clearLastFocus() {
-        s_lastFocusedView = nullptr;
-    }
-
     void View::setFocused(bool focused) {
         m_focused = focused;
         if (focused)
