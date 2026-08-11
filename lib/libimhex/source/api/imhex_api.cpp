@@ -1001,7 +1001,7 @@ namespace hex {
 
                     // Query the GitHub API for the latest release version
                     auto response = request.execute().get();
-                    if (response.getStatusCode() != 200)
+                    if (!response.isSuccess())
                         return std::nullopt;
 
                     nlohmann::json releases;
@@ -1035,7 +1035,7 @@ namespace hex {
 
                     // Query the GitHub API for the latest release version
                     auto response = request.execute().get();
-                    if (response.getStatusCode() != 200)
+                    if (!response.isSuccess())
                         return std::nullopt;
 
                     nlohmann::json releases;
