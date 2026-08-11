@@ -12,9 +12,11 @@ namespace {
         hex::crypt::AESMode mode;
         hex::crypt::KeyLength keyLength;
         std::vector<u8> key;
-        std::array<u8, 8> nonce;
-        std::array<u8, 8> iv;
+        std::vector<u8> nonce;
+        std::vector<u8> iv;
+        std::vector<u8> aad;
         std::vector<u8> input;
+        std::vector<u8> tag;
         std::vector<u8> expected;
     };
 
@@ -152,6 +154,40 @@ namespace {
             "f69f2445df4f9b17ad2b417be66c3710")
     };
 
+    const AesDecryptVector Gcm = {
+        .mode = hex::crypt::AESMode::GCM,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("feffe9928665731c6d6a8f9467308308"),
+        .iv = fromHex("cafebabefacedbaddecaf888"),
+        .aad = fromHex(
+            "3ad77bb40d7a3660a89ecaf32466ef97"
+            "f5d3d58503b9699de785895a96fdbaaf"
+            "43b1cd7f598ece23881b00e3ed030688"
+            "7b0c785e27e8ad3f8223207104725dd4"),
+        .input = fromHex(
+            "42831ec2217774244b7221b784d0d49c"
+            "e3aa212f2c02a4e035c17e2329aca12e"
+            "21d514b25466931c7d8f6a5aac84aa05"
+            "1ba30b396a0aac973d58e091473f5985"),
+        .tag = fromHex("64c0232904af398a5b67c10b53a5024d"),
+        .expected = fromHex(
+            "d9313225f88406e5a55909c5aff5269a"
+            "86a7a9531534f7da2e4c303d8a318a72"
+            "1c3c0c95956809532fcf0e2449a6b525"
+            "b16aedf5aa0de657ba637b391aafd255")
+    };
+
+    const AesDecryptVector Ccm = {
+        .mode = hex::crypt::AESMode::CCM,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("404142434445464748494a4b4c4d4e4f"),
+        .nonce = fromHex("10111213141516"),
+        .aad = fromHex("0001020304050607"),
+        .input = fromHex("7162015b"),
+        .tag = fromHex("4dac255d"),
+        .expected = fromHex("20212223")
+    };
+
     const AesDecryptVector Ecb192 = makeSp80038aVector(
         hex::crypt::AESMode::ECB,
         hex::crypt::KeyLength::Key192Bits,
@@ -228,6 +264,75 @@ namespace {
         "2b0930daa23de94ce87017ba2d84988d"
         "dfc9c58db67aada613c2dd08457941a6");
 
+    const AesDecryptVector Gcm192 = {
+        .mode = hex::crypt::AESMode::GCM,
+        .keyLength = hex::crypt::KeyLength::Key192Bits,
+        .key = fromHex(
+            "feffe9928665731c6d6a8f9467308308"
+            "feffe9928665731c"),
+        .iv = fromHex("cafebabefacedbaddecaf888"),
+        .aad = fromHex(
+            "3ad77bb40d7a3660a89ecaf32466ef97"
+            "f5d3d58503b9699de785895a96fdbaaf"
+            "43b1cd7f598ece23881b00e3ed030688"
+            "7b0c785e27e8ad3f8223207104725dd4"),
+        .input = fromHex(
+            "3980ca0b3c00e841eb06fac4872a2757"
+            "859e1ceaa6efd984628593b40ca1e19c"
+            "7d773d00c144c525ac619d18c84a3f47"
+            "18e2448b2fe324d9ccda2710acade256"),
+        .tag = fromHex("3b9153b4e7318a5f3bbeac108f8a8edb"),
+        .expected = fromHex(
+            "d9313225f88406e5a55909c5aff5269a"
+            "86a7a9531534f7da2e4c303d8a318a72"
+            "1c3c0c95956809532fcf0e2449a6b525"
+            "b16aedf5aa0de657ba637b391aafd255")
+    };
+
+    const AesDecryptVector Gcm256 = {
+        .mode = hex::crypt::AESMode::GCM,
+        .keyLength = hex::crypt::KeyLength::Key256Bits,
+        .key = fromHex(
+            "feffe9928665731c6d6a8f9467308308"
+            "feffe9928665731c6d6a8f9467308308"),
+        .iv = fromHex("cafebabefacedbaddecaf888"),
+        .aad = fromHex(
+            "3ad77bb40d7a3660a89ecaf32466ef97"
+            "f5d3d58503b9699de785895a96fdbaaf"
+            "43b1cd7f598ece23881b00e3ed030688"
+            "7b0c785e27e8ad3f8223207104725dd4"),
+        .input = fromHex(
+            "522dc1f099567d07f47f37a32a84427d"
+            "643a8cdcbfe5c0c97598a2bd2555d1aa"
+            "8cb08e48590dbb3da7b08b1056828838"
+            "c5f61e6393ba7a0abcc9f662898015ad"),
+        .tag = fromHex("c06d76f31930fef37acae23ed465ae62"),
+        .expected = fromHex(
+            "d9313225f88406e5a55909c5aff5269a"
+            "86a7a9531534f7da2e4c303d8a318a72"
+            "1c3c0c95956809532fcf0e2449a6b525"
+            "b16aedf5aa0de657ba637b391aafd255")
+    };
+
+    const AesDecryptVector Ccm192 = {
+        .mode = hex::crypt::AESMode::CCM,
+        .keyLength = hex::crypt::KeyLength::Key192Bits,
+        .key = fromHex("19ebfde2d5468ba0a3031bde629b11fd4094afcb205393fa"),
+        .nonce = fromHex("5a8aa485c316e9"),
+        .input = fromHex("411986d04d6463100bff03f7d0bde7ea2c3488784378138c"),
+        .tag = fromHex("ddc93a54"),
+        .expected = fromHex("3796cf51b8726652a4204733b8fbb047cf00fb91a9837e22")
+    };
+
+    const AesDecryptVector Ccm256 = {
+        .mode = hex::crypt::AESMode::CCM,
+        .keyLength = hex::crypt::KeyLength::Key256Bits,
+        .key = fromHex("af063639e66c284083c5cf72b70d8bc277f5978e80d9322d99f2fdc718cda569"),
+        .nonce = fromHex("a544218dadd3c1"),
+        .input = fromHex("64a1341679972dc5869fcf69b19d5c5ea50aa0b5e985f5b7"),
+        .tag = fromHex("22aa8d59"),
+        .expected = fromHex("d3d5424e20fbec43ae495353ed830271515ab104f8860c98")
+    };
 
 }
 
@@ -236,7 +341,9 @@ TEST_SEQUENCE("AESDecrypt") {
         &Ecb, &Ecb192, &Ecb256,
         &Cbc, &Cbc192, &Cbc256, &CbcPkcs7,
         &Cfb128, &Cfb128192, &Cfb128256,
-        &Ctr, &Ctr192, &Ctr256
+        &Ctr, &Ctr192, &Ctr256,
+        &Gcm, &Gcm192, &Gcm256,
+        &Ccm, &Ccm192, &Ccm256
     };
 
     for (const auto *vector : vectors) {
@@ -246,10 +353,52 @@ TEST_SEQUENCE("AESDecrypt") {
             vector->key,
             vector->nonce,
             vector->iv,
-            vector->input);
+            vector->input,
+            vector->tag,
+            vector->aad);
 
         TEST_ASSERT(actual.has_value());
         TEST_ASSERT(actual.value() == vector->expected);
+
+        if (vector->mode == hex::crypt::AESMode::GCM || vector->mode == hex::crypt::AESMode::CCM) {
+            auto alteredTag = vector->tag;
+            alteredTag.front() ^= 0x01;
+            TEST_ASSERT(!hex::crypt::aesDecrypt(
+                vector->mode,
+                vector->keyLength,
+                vector->key,
+                vector->nonce,
+                vector->iv,
+                vector->input,
+                alteredTag,
+                vector->aad).has_value());
+
+            TEST_ASSERT(!hex::crypt::aesDecrypt(
+                vector->mode,
+                vector->keyLength,
+                vector->key,
+                vector->nonce,
+                vector->iv,
+                vector->input,
+                { },
+                vector->aad).has_value());
+
+            auto alteredAad = vector->aad;
+            if (alteredAad.empty())
+                alteredAad.push_back(0x00);
+            else
+                alteredAad.front() ^= 0x01;
+
+            TEST_ASSERT(!hex::crypt::aesDecrypt(
+                vector->mode,
+                vector->keyLength,
+                vector->key,
+                vector->nonce,
+                vector->iv,
+                vector->input,
+                vector->tag,
+                alteredAad).has_value());
+        }
     }
 
     TEST_SUCCESS();

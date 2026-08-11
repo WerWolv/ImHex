@@ -17,7 +17,9 @@ namespace hex::plugin::builtin {
                                          dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.iv"),
                                          dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.nonce"),
                                          dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"),
-                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.tag"),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.aad") }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
@@ -30,9 +32,7 @@ namespace hex::plugin::builtin {
             const auto mode = static_cast<crypt::AESMode>(m_mode);
             const auto keyLength = static_cast<crypt::KeyLength>(m_keyLength);
 
-            const auto &key   = this->getBufferOnInput(0);
-            const auto &iv    = this->getBufferOnInput(1);
-            const auto &nonce = this->getBufferOnInput(2);
+            const auto &key = this->getBufferOnInput(0);
             const auto &input = this->getBufferOnInput(3);
 
             if (key.empty())
@@ -41,20 +41,29 @@ namespace hex::plugin::builtin {
             if (input.empty())
                 throwNodeError("Input cannot be empty");
 
-            std::array<u8, 8> ivData = { 0 }, nonceData = { 0 };
+            const bool isAuthenticatedMode = mode == crypt::AESMode::GCM || mode == crypt::AESMode::CCM;
+            const bool requiresIv = mode != crypt::AESMode::ECB && mode != crypt::AESMode::CCM;
+            const bool requiresNonce = mode != crypt::AESMode::ECB && mode != crypt::AESMode::GCM;
+            const std::vector<u8> empty;
 
-            if (mode != crypt::AESMode::ECB) {
-                if (iv.empty())
-                    throwNodeError("IV cannot be empty");
+            const auto &iv = requiresIv ? this->getBufferOnInput(1) : empty;
+            const auto &nonce = requiresNonce ? this->getBufferOnInput(2) : empty;
 
-                if (nonce.empty())
-                    throwNodeError("Nonce cannot be empty");
+            if (requiresIv && iv.empty())
+                throwNodeError("IV cannot be empty");
 
-                std::ranges::copy(iv, ivData.begin());
-                std::ranges::copy(nonce, nonceData.begin());
-            }
+            if (requiresNonce && nonce.empty())
+                throwNodeError("Nonce cannot be empty");
 
-            auto output = crypt::aesDecrypt(mode, keyLength, key, nonceData, ivData, input);
+            const auto &tag = isAuthenticatedMode ? this->getBufferOnInput(5) : empty;
+            if (isAuthenticatedMode && tag.empty())
+                throwNodeError("Tag cannot be empty");
+
+            const auto &aad = isAuthenticatedMode && !this->getAttributes()[6].getConnectedAttributes().empty()
+                ? this->getBufferOnInput(6)
+                : empty;
+
+            auto output = crypt::aesDecrypt(mode, keyLength, key, nonce, iv, input, tag, aad);
             if (!output) {
                 switch (output.error()) {
                     case CRYPTO_ERROR_INVALID_KEY_LENGTH:
