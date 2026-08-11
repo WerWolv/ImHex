@@ -67,11 +67,14 @@
 
             // Send request
             emscripten_fetch_t* fetch = emscripten_fetch(&m_attr, m_url.c_str());
+            if (fetch == nullptr) {
+                return Result<T>(BackendStatus(0));
+            }
 
             data.resize(fetch->numBytes);
             std::copy(fetch->data, fetch->data + fetch->numBytes, data.begin());
 
-            return Result<T>(fetch->status, { data.begin(), data.end() });
+            return Result<T>(HTTPStatus(fetch->status), { data.begin(), data.end() });
         }
 
     }

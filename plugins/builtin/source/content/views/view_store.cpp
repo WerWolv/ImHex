@@ -395,7 +395,7 @@ namespace hex::plugin::builtin {
 
             category.downloadCallback();
         } else {
-            log::error("Download failed! HTTP Code {}", response.getStatusCode());
+            log::error("Download failed! {}", response.getStatusCode().toString());
         }
 
         m_download = {};

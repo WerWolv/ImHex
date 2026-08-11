@@ -5,10 +5,13 @@
 #include <future>
 #include <map>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+
+#include "wolv/utils/core.hpp"
 
 #if defined(OS_WEB)
     #include <emscripten/fetch.h>
@@ -21,17 +24,42 @@ namespace hex {
     class HttpRequest {
     public:
 
+        enum class BackendStatus : u32 {};
+        enum class HTTPStatus : u32 {};
+
+        struct StatusCode : std::variant<std::monostate, BackendStatus, HTTPStatus> {
+            using std::variant<std::monostate, BackendStatus, HTTPStatus>::variant;
+
+            std::string toString() const;
+        };
+
         class ResultBase {
         public:
             ResultBase() = default;
-            explicit ResultBase(u32 statusCode) : m_statusCode(statusCode), m_valid(true) { }
+            explicit ResultBase(BackendStatus statusCode) : m_backendResult(statusCode), m_valid(true) { }
+            explicit ResultBase(HTTPStatus statusCode) : m_httpResult(statusCode), m_valid(true) { }
 
-            [[nodiscard]] u32 getStatusCode() const {
-                return m_statusCode;
+            [[nodiscard]] StatusCode getStatusCode() const {
+                if (m_httpResult.has_value())
+                    return m_httpResult.value();
+                else if (m_backendResult.has_value())
+                    return m_backendResult.value();
+                else
+                    return {};
             }
 
             [[nodiscard]] bool isSuccess() const {
-                return this->getStatusCode() == 200;
+                return std::visit(wolv::util::overloaded {
+                    [](BackendStatus status) {
+                        return u32(status) == 0;
+                    },
+                    [](HTTPStatus status) {
+                        return u32(status) == 200;
+                    },
+                    [](auto) {
+                        return false;
+                    }
+                }, getStatusCode());
             }
 
             [[nodiscard]] bool isValid() const {
@@ -39,7 +67,8 @@ namespace hex {
             }
 
         private:
-            u32 m_statusCode = 0;
+            std::optional<BackendStatus> m_backendResult;
+            std::optional<HTTPStatus> m_httpResult;
             bool m_valid = false;
         };
 
@@ -47,7 +76,8 @@ namespace hex {
         class Result : public ResultBase {
         public:
             Result() = default;
-            Result(u32 statusCode, T data) : ResultBase(statusCode), m_data(std::move(data)) { }
+            Result(BackendStatus errorCode) : ResultBase(errorCode) {}
+            Result(HTTPStatus statusCode, T data) : ResultBase(statusCode), m_data(std::move(data)) { }
 
             [[nodiscard]]
             const T& getData() const {

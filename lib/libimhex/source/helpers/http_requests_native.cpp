@@ -12,6 +12,20 @@ namespace hex {
 
     }
 
+    std::string HttpRequest::StatusCode::toString() const {
+        return std::visit(wolv::util::overloaded {
+            [](BackendStatus status) -> std::string {
+                return curl_easy_strerror(CURLcode(status));
+            },
+            [](HTTPStatus status) -> std::string {
+                return fmt::format("HTTP {}", u32(status));
+            },
+            [](auto) -> std::string {
+                return "";
+            }
+        }, *this);
+    }
+
     int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
         auto &request = *static_cast<HttpRequest *>(contents);
 
@@ -191,11 +205,11 @@ namespace hex {
             return 0;
         }
 
-        long getStatusCode(CURL *curl) {
+        HttpRequest::HTTPStatus getStatusCode(CURL *curl) {
             long statusCode = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
 
-            return statusCode;
+            return HttpRequest::HTTPStatus(statusCode);
         }
 
         std::string getStatusText(int result) {

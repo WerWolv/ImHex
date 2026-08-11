@@ -496,7 +496,11 @@ namespace hex::plugin::builtin {
             auto response = request.execute().get();
 
             if (!response.isSuccess()) {
-                switch (response.getStatusCode()) {
+                const auto code = response.getStatusCode();
+                if (std::holds_alternative<HttpRequest::BackendStatus>(code)) {
+                    log::println("{}", code.toString());
+                } else if (auto httpCode = std::get_if<HttpRequest::HTTPStatus>(&code); httpCode != nullptr) {
+                    switch (u32(*httpCode)) {
                     case 404:
                         log::println("Gist with ID '{}' not found!", argument);
                         break;
@@ -504,9 +508,11 @@ namespace hex::plugin::builtin {
                         log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
                         break;
                     default:
-                        log::println("Failed to fetch Gist with ID '{}': {}", argument, response.getStatusCode());
+                        log::println("Failed to fetch Gist with ID '{}': {}", argument, u32(*httpCode));
                         break;
+                    }
                 }
+
                 std::exit(EXIT_FAILURE);
             }
 

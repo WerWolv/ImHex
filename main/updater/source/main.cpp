@@ -25,7 +25,7 @@ std::string getArtifactUrl(std::string_view artifactEnding, hex::ImHexApi::Syste
 
     // Make sure we got a valid response
     if (!response.isSuccess()) {
-        hex::log::error("Failed to get latest version info: ({}) {}", response.getStatusCode(), data);
+        hex::log::error("Failed to get latest version info: ({}) {}", response.getStatusCode().toString(), data);
 
         return { };
     }

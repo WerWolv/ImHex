@@ -56,7 +56,8 @@ namespace hex::plugin::builtin {
         if (searchProcess.valid() && searchProcess.wait_for(0s) == std::future_status::ready) {
             try {
                 auto response = searchProcess.get();
-                if (response.getStatusCode() != 200) throw std::runtime_error("Invalid response");
+                if (!response.isSuccess())
+                    throw std::runtime_error(response.getStatusCode().toString());
 
                 auto json = nlohmann::json::parse(response.getData());
 

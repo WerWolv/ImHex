@@ -126,8 +126,8 @@ namespace hex::plugin::builtin {
             const auto result = response.get();
             const auto& data = result.getData();
 
-            if (const auto status = result.getStatusCode(); status != 0)
-                responseText = "Status: " + std::to_string(result.getStatusCode()) + "\n\n" + data;
+            if (result.isValid())
+                responseText = "Status: " + result.getStatusCode().toString() + "\n\n" + data;
             else
                 responseText = "Status: No Response";
         }

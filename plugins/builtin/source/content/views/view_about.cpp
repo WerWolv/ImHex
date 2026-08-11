@@ -549,7 +549,7 @@ namespace hex::plugin::builtin {
 
         if (!response.isSuccess()) {
             // An error occurred, display it
-            notes.markdown = std::make_shared<ui::Markdown>("## HTTP Error: " + std::to_string(response.getStatusCode()));
+            notes.markdown = std::make_shared<ui::Markdown>(response.getStatusCode().toString());
 
             return notes;
         }
@@ -621,7 +621,7 @@ namespace hex::plugin::builtin {
             // An error occurred, display it
             commits.emplace_back(
                     "hex.ui.common.error"_lang,
-                    "HTTP " + std::to_string(response.getStatusCode()),
+                    response.getStatusCode().toString(),
                     "",
                     "",
                     ""

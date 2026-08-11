@@ -20,7 +20,7 @@
             void setupFileUpload(CURL *curl, wolv::io::File &file, const std::string &fileName, const std::string &mimeName);
             void setupFileUpload(CURL *curl, const std::vector<u8> &data, const std::fs::path &fileName, const std::string &mimeName);
             int executeCurl(CURL *curl, const std::string &url, const std::string &method, const std::string &body, std::map<std::string, std::string> &headers);
-            long getStatusCode(CURL *curl);
+            HttpRequest::HTTPStatus getStatusCode(CURL *curl);
             std::string getStatusText(int result);
 
         }
@@ -85,6 +85,7 @@
             if (auto result = impl::executeCurl(m_curl, m_url, m_method, m_body, m_headers); result != 0) {
                 log::error("Http request '{0} {1}' failed with error {2}: '{3}'", m_method, m_url, u32(result), impl::getStatusText(result));
                 checkProxyErrors();
+                return Result<T>(BackendStatus(result));
             }
 
             return Result<T>(impl::getStatusCode(m_curl), { data.begin(), data.end() });

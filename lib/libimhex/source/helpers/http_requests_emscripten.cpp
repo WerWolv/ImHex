@@ -2,7 +2,23 @@
 
 #include <hex/helpers/http_requests.hpp>
 
+#include <fmt/format.h>
+
 namespace hex {
+
+    std::string HttpRequest::StatusCode::toString() const {
+        return std::visit(wolv::util::overloaded {
+            [](BackendStatus status) -> std::string {
+                return "fetch() error " + std::to_string(u32(status));
+            },
+            [](HTTPStatus status) -> std::string {
+                return fmt::format("HTTP {}", u32(status));
+            },
+            [](auto) -> std::string {
+                return "";
+            }
+        }, *this);
+    }
 
     HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
         emscripten_fetch_attr_init(&m_attr);
