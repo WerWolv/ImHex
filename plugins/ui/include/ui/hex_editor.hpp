@@ -166,7 +166,7 @@ namespace hex::ui {
 
             m_selectionStart = std::clamp<u64>(start, 0, maxAddress);
             m_selectionEnd = std::clamp<u64>(end, 0, maxAddress);
-            m_cursorPosition = m_selectionStart;
+            m_cursorPosition = m_selectionEnd;
 
             if (m_selectionChanged) {
                 auto selection = this->getSelection();
@@ -179,6 +179,8 @@ namespace hex::ui {
                 m_cursorBlinkTimer = -0.3F;
             }
         }
+
+        void swapCursorStartEnd();
 
         [[nodiscard]] Region getSelection() const {
             if (!isSelectionValid())

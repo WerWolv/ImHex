@@ -233,6 +233,21 @@ namespace hex::ui {
         return (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0LLU : 1LLU);
     }
 
+    void HexEditor::swapCursorStartEnd() {
+        std::swap(m_selectionStart, m_selectionEnd);
+
+        if (m_cursorPosition == m_selectionStart)
+            m_cursorPosition = m_selectionEnd;
+        else
+            m_cursorPosition = m_selectionStart;
+
+        const auto bytesPerRow = getBytesPerRow();
+        if (m_cursorPosition < u64(m_scrollPosition * bytesPerRow))
+            this->jumpToSelection(0.0F);
+        if (m_cursorPosition > u64((m_scrollPosition + m_visibleRowCount) * bytesPerRow))
+            this->jumpToSelection(1.0F);
+    }
+
     void HexEditor::drawScrollbar(ImVec2 characterSize) {
         const ImS64 numRows = getNumberOfRows();
 
@@ -567,6 +582,12 @@ namespace hex::ui {
 
         if (!Region { .address=byteAddress, .size=1 }.isWithin(region))
             return;
+
+        // Blink the cell the cursor is currently at
+        bool cursorVisible = (!ImGui::GetIO().ConfigInputTextCursorBlink) || (m_cursorBlinkTimer <= 0.0F) || std::fmod(m_cursorBlinkTimer, 1.20F) <= 0.80F;
+        if (cursorVisible && byteAddress == m_cursorPosition) {
+            drawList->AddRectFilled(cellPos, cellPos + cellSize, ImColor(frameColor * ImVec4(1, 1, 1, 0.075)));
+        }
 
         // Draw vertical line at the left of first byte and the start of the line
         if (x == 0 || byteAddress == region.getStartAddress())
