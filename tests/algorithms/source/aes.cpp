@@ -60,11 +60,9 @@ namespace {
         };
 
         if (mode == hex::crypt::AESMode::CTR) {
-            vector.nonce = { 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 };
-            vector.iv = { 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF };
+            vector.iv = fromHex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
         } else if (mode != hex::crypt::AESMode::ECB) {
-            vector.nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
-            vector.iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
+            vector.iv = fromHex("000102030405060708090a0b0c0d0e0f");
         }
 
         return vector;
@@ -90,8 +88,7 @@ namespace {
         .mode = hex::crypt::AESMode::CBC,
         .keyLength = hex::crypt::KeyLength::Key128Bits,
         .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
-        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
-        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .iv = fromHex("000102030405060708090a0b0c0d0e0f"),
         .input = fromHex(
             "7649abac8119b246cee98e9b12e9197d"
             "5086cb9b507219ee95db113a917678b2"
@@ -108,8 +105,7 @@ namespace {
         .mode = hex::crypt::AESMode::CBC,
         .keyLength = hex::crypt::KeyLength::Key128Bits,
         .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
-        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
-        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .iv = fromHex("000102030405060708090a0b0c0d0e0f"),
         .input = fromHex(
             "7649abac8119b246cee98e9b12e9197d"
             "8964e0b149c10b7b682e6e39aaeb731c"),
@@ -122,8 +118,7 @@ namespace {
         .mode = hex::crypt::AESMode::CFB128,
         .keyLength = hex::crypt::KeyLength::Key128Bits,
         .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
-        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
-        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .iv = fromHex("000102030405060708090a0b0c0d0e0f"),
         .input = fromHex(
             "3b3fd92eb72dad20333449f8e83cfb4a"
             "c8a64537a0b3a93fcde3cdad9f1ce58b"
@@ -140,8 +135,7 @@ namespace {
         .mode = hex::crypt::AESMode::CTR,
         .keyLength = hex::crypt::KeyLength::Key128Bits,
         .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
-        .nonce = { 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 },
-        .iv = { 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF },
+        .iv = fromHex("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"),
         .input = fromHex(
             "874d6191b620e3261bef6864990db6ce"
             "9806f66b7970fdff8617187bb9fffdff"
@@ -192,8 +186,7 @@ namespace {
         .mode = hex::crypt::AESMode::OFB,
         .keyLength = hex::crypt::KeyLength::Key128Bits,
         .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
-        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
-        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .iv = fromHex("000102030405060708090a0b0c0d0e0f"),
         .input = fromHex(
             "3b3fd92eb72dad20333449f8e83cfb4a"
             "7789508d16918f03f53c52dac54ed825"

@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
 
             const bool isAuthenticatedMode = mode == crypt::AESMode::GCM || mode == crypt::AESMode::CCM;
             const bool requiresIv = mode != crypt::AESMode::ECB && mode != crypt::AESMode::CCM;
-            const bool requiresNonce = mode != crypt::AESMode::ECB && mode != crypt::AESMode::GCM;
+            const bool requiresNonce = mode == crypt::AESMode::CCM;
             const std::vector<u8> empty;
 
             const auto &iv = requiresIv ? this->getBufferOnInput(1) : empty;

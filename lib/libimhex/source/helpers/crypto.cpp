@@ -545,10 +545,6 @@ namespace hex::crypt {
         if (input.empty())
             return {};
 
-        std::array<u8, 16> nonceCounter = { 0 };
-        std::ranges::copy_n(nonce.begin(), std::min(nonce.size(), size_t(8)), nonceCounter.begin());
-        std::ranges::copy_n(iv.begin(), std::min(iv.size(), size_t(8)), nonceCounter.begin() + 8);
-
         size_t outputSize = input.size() + mbedtls_cipher_get_block_size(&ctx);
         std::vector<u8> output(outputSize, 0x00);
 
@@ -568,7 +564,7 @@ namespace hex::crypt {
                 outputSize += blockOutputSize;
             }
         } else {
-            cryptResult = mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
+            cryptResult = mbedtls_cipher_crypt(&ctx, iv.data(), iv.size(), input.data(), input.size(), output.data(), &outputSize);
         }
 
         if (cryptResult != 0) {
