@@ -12,8 +12,11 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <fonts/vscode_icons.hpp>
+#include <fonts/tabler_icons.hpp>
 
 #include <wolv/literals.hpp>
+
+#include <random>
 
 using namespace wolv::literals;
 
@@ -24,10 +27,21 @@ namespace hex::plugin::builtin {
     void PopupFill::draw(ViewHexEditor *editor) {
         ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
         ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
+        auto width = ImGui::GetItemRectSize().x;
 
         ImGui::Separator();
 
-        ImGuiExt::InputTextIcon("hex.ui.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, m_input);
+        const auto padding = ImGui::GetStyle().FramePadding.x;
+        ImGui::PushItemWidth(width - (ImGui::GetStyle().ItemSpacing.x * 2 + ImGui::CalcTextSize(ICON_TA_ARROWS_SHUFFLE).x + padding * 3));
+        ImGui::BeginDisabled(m_randomBytes);
+        ImGuiExt::InputTextIcon("##Bytes", ICON_VS_SYMBOL_NAMESPACE, m_input);
+        ImGui::EndDisabled();
+        ImGui::PopItemWidth();
+        ImGui::SameLine(0, padding);
+        ImGuiExt::DimmedIconToggle(ICON_TA_ARROWS_SHUFFLE, &m_randomBytes);
+        ImGui::SetItemTooltip("%s", "hex.builtin.view.hex_editor.menu.edit.fill.random"_lang.get());
+        ImGui::SameLine(0, padding);
+        ImGui::TextUnformatted("hex.ui.common.bytes"_lang);
 
         ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
         [&, this] {
@@ -52,33 +66,52 @@ namespace hex::plugin::builtin {
         if (!ImHexApi::Provider::isValid())
             return;
 
-        std::erase(input, ' ');
-
-        auto bytes = crypt::decode16(input);
-        if (bytes.empty())
-            return;
-
         auto provider = ImHexApi::Provider::get();
         u32 patchCount = 0;
 
-        // Group the fill pattern into a larger chunk
         constexpr static auto BatchFillSize = 1_MiB;
-        std::vector<u8> batchData;
-        if (bytes.size() < BatchFillSize) {
-            batchData.resize(std::min<u64>(alignTo<u64>(BatchFillSize, bytes.size()), size));
-            for (u64 i = 0; i < batchData.size(); i += bytes.size()) {
-                auto remainingSize = std::min<size_t>(batchData.size() - i, bytes.size());
-                std::copy_n(bytes.begin(), remainingSize, batchData.begin() + i);
+        if (!m_randomBytes) {
+            std::erase(input, ' ');
+
+            auto bytes = crypt::decode16(input);
+            if (bytes.empty())
+                return;
+
+            // Group the fill pattern into a larger chunk
+            std::vector<u8> batchData;
+            if (bytes.size() < BatchFillSize) {
+                batchData.resize(std::min<u64>(alignTo<u64>(BatchFillSize, bytes.size()), size));
+                for (u64 i = 0; i < batchData.size(); i += bytes.size()) {
+                    auto remainingSize = std::min<size_t>(batchData.size() - i, bytes.size());
+                    std::copy_n(bytes.begin(), remainingSize, batchData.begin() + i);
+                }
+            } else {
+                batchData = std::move(bytes);
+            }
+
+            const auto startAddress = provider->getBaseAddress() + address;
+            for (u64 i = 0; i < size; i += batchData.size()) {
+                const auto remainingSize = std::min<size_t>(size - i, batchData.size());
+                provider->write(startAddress + i, batchData.data(), remainingSize);
+                patchCount += 1;
             }
         } else {
-            batchData = std::move(bytes);
-        }
+            std::random_device r;
+            std::default_random_engine randomEngine(r());
+            std::uniform_int_distribution uniformDist(std::numeric_limits<u8>::min(), std::numeric_limits<u8>::max());
 
-        const auto startAddress = provider->getBaseAddress() + address;
-        for (u64 i = 0; i < size; i += batchData.size()) {
-            auto remainingSize = std::min<size_t>(size - i, batchData.size());
-            provider->write(startAddress + i, batchData.data(), remainingSize);
-            patchCount += 1;
+            std::vector<u8> batchData(BatchFillSize);
+            const auto startAddress = provider->getBaseAddress() + address;
+            for (u64 i = 0; i < size; i += batchData.size()) {
+                const auto remainingSize = std::min<size_t>(size - i, batchData.size());
+
+                std::generate_n(batchData.begin(), remainingSize, [&uniformDist, &randomEngine] () -> u8 {
+                    return uniformDist(randomEngine);
+                });
+
+                provider->write(startAddress + i, batchData.data(), remainingSize);
+                patchCount += 1;
+            }
         }
         provider->getUndoStack().groupOperations(patchCount, "hex.builtin.undo_operation.fill");
 

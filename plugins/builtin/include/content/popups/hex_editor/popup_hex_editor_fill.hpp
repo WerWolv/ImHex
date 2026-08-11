@@ -13,9 +13,10 @@ namespace hex::plugin::builtin {
         [[nodiscard]] UnlocalizedString getTitle() const override;
 
     private:
-        static void fill(u64 address, size_t size, std::string input);
+        void fill(u64 address, size_t size, std::string input);
         u64 m_address;
         u64 m_size;
         std::string m_input;
+        bool m_randomBytes = false;
     };
 }

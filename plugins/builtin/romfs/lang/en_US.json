@@ -854,6 +854,7 @@
     "hex.builtin.view.hex_editor.menu.edit.copy_as": "Copy as",
     "hex.builtin.view.hex_editor.menu.edit.copy_as.preview": "Copy Preview",
     "hex.builtin.view.hex_editor.menu.edit.fill": "Fill...",
+    "hex.builtin.view.hex_editor.menu.edit.fill.random": "Random Bytes",
     "hex.builtin.view.hex_editor.menu.edit.insert": "Insert...",
     "hex.builtin.view.hex_editor.menu.edit.insert_mode": "Insert Mode",
     "hex.builtin.view.hex_editor.menu.edit.jump_to": "Follow selection",
