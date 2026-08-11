@@ -38,6 +38,8 @@ namespace hex::prv {
 
         [[nodiscard]] std::string getName() const override { return m_name; }
 
+        void setName(std::string name) { m_name = std::move(name); }
+
         [[nodiscard]] UnlocalizedString getTypeName() const override { return "MemoryProvider"; }
 
         [[nodiscard]] const char* getIcon() const override {
