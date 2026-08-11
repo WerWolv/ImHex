@@ -225,8 +225,8 @@ namespace hex::ui {
     float Lines::getMaxDisplayedRow() {
         auto maxRow = getGlobalRowMax();
         if (maxRow - m_topRow < m_numberOfLinesDisplayed)
-            return maxRow;
-        return m_topRow + m_numberOfLinesDisplayed;
+            return maxRow + 1;
+        return m_topRow + m_numberOfLinesDisplayed + 1;
     }
 
     float Lines::getGlobalRowMax() {
@@ -1173,7 +1173,7 @@ namespace hex::ui {
         if (m_lines.m_setTopRow)
             m_lines.setFirstRow();
         else
-            m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
+            m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y - 1);
 
         float row = m_lines.m_topRow;
         float maxDisplayedRow = m_lines.getMaxDisplayedRow();
