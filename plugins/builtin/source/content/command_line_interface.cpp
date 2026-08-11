@@ -499,7 +499,7 @@ namespace hex::plugin::builtin {
                 const auto code = response.getStatusCode();
                 if (std::holds_alternative<HttpRequest::BackendStatus>(code)) {
                     log::println("{}", code.toString());
-                } else if (auto httpCode = std::get_if<HttpRequest::HTTPStatus>(&code); httpCode != nullptr) {
+                } else if (auto httpCode = std::get_if<HttpRequest::HttpStatus>(&code); httpCode != nullptr) {
                     switch (u32(*httpCode)) {
                     case 404:
                         log::println("Gist with ID '{}' not found!", argument);

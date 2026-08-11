@@ -17,7 +17,7 @@ namespace hex {
             [](BackendStatus status) -> std::string {
                 return curl_easy_strerror(CURLcode(status));
             },
-            [](HTTPStatus status) -> std::string {
+            [](HttpStatus status) -> std::string {
                 return fmt::format("HTTP {}", u32(status));
             },
             [](auto) -> std::string {
@@ -205,11 +205,11 @@ namespace hex {
             return 0;
         }
 
-        HttpRequest::HTTPStatus getStatusCode(CURL *curl) {
+        HttpRequest::HttpStatus getStatusCode(CURL *curl) {
             long statusCode = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &statusCode);
 
-            return HttpRequest::HTTPStatus(statusCode);
+            return HttpRequest::HttpStatus(statusCode);
         }
 
         std::string getStatusText(int result) {

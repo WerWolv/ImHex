@@ -25,19 +25,31 @@ namespace hex {
     public:
 
         enum class BackendStatus : u32 {};
-        enum class HTTPStatus : u32 {};
+        enum class HttpStatus : u32 {};
 
-        struct StatusCode : std::variant<std::monostate, BackendStatus, HTTPStatus> {
-            using std::variant<std::monostate, BackendStatus, HTTPStatus>::variant;
+        struct StatusCode : std::variant<std::monostate, BackendStatus, HttpStatus> {
+            using std::variant<std::monostate, BackendStatus, HttpStatus>::variant;
 
-            std::string toString() const;
+            bool operator==(HttpStatus httpStatus) const {
+                if (auto *status = std::get_if<HttpStatus>(this))
+                    return *status == httpStatus;
+                return false;
+            }
+
+            bool operator==(BackendStatus backendStatus) const {
+                if (auto *status = std::get_if<BackendStatus>(this))
+                    return *status == backendStatus;
+                return false;
+            }
+
+            [[nodiscard]] std::string toString() const;
         };
 
         class ResultBase {
         public:
             ResultBase() = default;
             explicit ResultBase(BackendStatus statusCode) : m_backendResult(statusCode), m_valid(true) { }
-            explicit ResultBase(HTTPStatus statusCode) : m_httpResult(statusCode), m_valid(true) { }
+            explicit ResultBase(HttpStatus statusCode) : m_httpResult(statusCode), m_valid(true) { }
 
             [[nodiscard]] StatusCode getStatusCode() const {
                 if (m_httpResult.has_value())
@@ -53,7 +65,7 @@ namespace hex {
                     [](BackendStatus status) {
                         return u32(status) == 0;
                     },
-                    [](HTTPStatus status) {
+                    [](HttpStatus status) {
                         return u32(status) == 200;
                     },
                     [](auto) {
@@ -68,7 +80,7 @@ namespace hex {
 
         private:
             std::optional<BackendStatus> m_backendResult;
-            std::optional<HTTPStatus> m_httpResult;
+            std::optional<HttpStatus> m_httpResult;
             bool m_valid = false;
         };
 
@@ -77,7 +89,7 @@ namespace hex {
         public:
             Result() = default;
             Result(BackendStatus errorCode) : ResultBase(errorCode) {}
-            Result(HTTPStatus statusCode, T data) : ResultBase(statusCode), m_data(std::move(data)) { }
+            Result(HttpStatus statusCode, T data) : ResultBase(statusCode), m_data(std::move(data)) { }
 
             [[nodiscard]]
             const T& getData() const {

@@ -98,7 +98,7 @@ namespace hex::plugin::builtin {
         } else {
             std::random_device r;
             std::default_random_engine randomEngine(r());
-            std::uniform_int_distribution uniformDist(std::numeric_limits<u8>::min(), std::numeric_limits<u8>::max());
+            std::uniform_int_distribution<u16> uniformDist(std::numeric_limits<u8>::min(), std::numeric_limits<u8>::max());
 
             std::vector<u8> batchData(BatchFillSize);
             const auto startAddress = provider->getBaseAddress() + address;

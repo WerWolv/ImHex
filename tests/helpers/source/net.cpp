@@ -11,7 +11,7 @@ TEST_SEQUENCE("StoreAPI") {
 
     auto result = request.execute().get();
 
-    if (result.getStatusCode() != 200)
+    if (result.getStatusCode() != hex::HttpRequest::HttpStatus(200))
         TEST_FAIL();
 
     if (result.getData().empty())
@@ -25,7 +25,7 @@ TEST_SEQUENCE("TipsAPI") {
 
     auto result = request.execute().get();
 
-    if (result.getStatusCode() != 200)
+    if (result.getStatusCode() != hex::HttpRequest::HttpStatus(200))
         TEST_FAIL();
 
     if (result.getData().empty())
@@ -41,7 +41,7 @@ TEST_SEQUENCE("ContentAPI") {
 
     auto result = request.downloadFile(FilePath).get();
 
-    TEST_ASSERT(result.getStatusCode() == 200);
+    TEST_ASSERT(result.getStatusCode() == hex::HttpRequest::HttpStatus(200));
 
     wolv::io::File file(FilePath, wolv::io::File::Mode::Read);
     if (!file.isValid())
