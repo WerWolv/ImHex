@@ -10,6 +10,7 @@ set(AVAILABLE_TESTS
         64BitFloatEndianSwap
 
     # Crypto
+        AESDecrypt
         EncodeDecode16
         EncodeDecode64
         EncodeDecodeLEB128
@@ -31,6 +32,7 @@ set(AVAILABLE_TESTS
 add_executable(${PROJECT_NAME}
         source/endian.cpp
         source/crypto.cpp
+        source/aes.cpp
 )
 
 

@@ -1,0 +1,128 @@
+#include <hex/helpers/crypto.hpp>
+#include <hex/test/tests.hpp>
+
+#include <array>
+#include <cstdlib>
+#include <string_view>
+#include <vector>
+
+namespace {
+
+    struct AesDecryptVector {
+        hex::crypt::AESMode mode;
+        hex::crypt::KeyLength keyLength;
+        std::vector<u8> key;
+        std::array<u8, 8> nonce;
+        std::array<u8, 8> iv;
+        std::vector<u8> input;
+        std::vector<u8> expected;
+    };
+
+    u8 fromHexDigit(char digit) {
+        if (digit >= '0' && digit <= '9')
+            return digit - '0';
+        if (digit >= 'a' && digit <= 'f')
+            return digit - 'a' + 10;
+        if (digit >= 'A' && digit <= 'F')
+            return digit - 'A' + 10;
+
+        std::abort();
+    }
+
+    std::vector<u8> fromHex(std::string_view value) {
+        if ((value.size() % 2) != 0)
+            std::abort();
+
+        std::vector<u8> result(value.size() / 2);
+        for (size_t index = 0; index < result.size(); ++index)
+            result[index] = (fromHexDigit(value[index * 2]) << 4) | fromHexDigit(value[index * 2 + 1]);
+
+        return result;
+    }
+
+    AesDecryptVector makeSp80038aVector(
+        hex::crypt::AESMode mode,
+        hex::crypt::KeyLength keyLength,
+        std::string_view key,
+        std::string_view input) {
+        AesDecryptVector vector = {
+            .mode = mode,
+            .keyLength = keyLength,
+            .key = fromHex(key),
+            .input = fromHex(input),
+            .expected = fromHex(
+                "6bc1bee22e409f96e93d7e117393172a"
+                "ae2d8a571e03ac9c9eb76fac45af8e51"
+                "30c81c46a35ce411e5fbc1191a0a52ef"
+                "f69f2445df4f9b17ad2b417be66c3710")
+        };
+
+        if (mode == hex::crypt::AESMode::CTR) {
+            vector.nonce = { 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7 };
+            vector.iv = { 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF };
+        } else if (mode != hex::crypt::AESMode::ECB) {
+            vector.nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+            vector.iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
+        }
+
+        return vector;
+    }
+
+    const AesDecryptVector Ecb = {
+        .mode = hex::crypt::AESMode::ECB,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
+        .input = fromHex(
+            "3ad77bb40d7a3660a89ecaf32466ef97"
+            "f5d3d58503b9699de785895a96fdbaaf"
+            "43b1cd7f598ece23881b00e3ed030688"
+            "7b0c785e27e8ad3f8223207104725dd4"),
+        .expected = fromHex(
+            "6bc1bee22e409f96e93d7e117393172a"
+            "ae2d8a571e03ac9c9eb76fac45af8e51"
+            "30c81c46a35ce411e5fbc1191a0a52ef"
+            "f69f2445df4f9b17ad2b417be66c3710")
+    };
+
+    const AesDecryptVector Ecb192 = makeSp80038aVector(
+        hex::crypt::AESMode::ECB,
+        hex::crypt::KeyLength::Key192Bits,
+        "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+        "bd334f1d6e45f25ff712a214571fa5cc"
+        "974104846d0ad3ad7734ecb3ecee4eef"
+        "ef7afd2270e2e60adce0ba2face6444e"
+        "9a4b41ba738d6c72fb16691603c18e0e");
+
+    const AesDecryptVector Ecb256 = makeSp80038aVector(
+        hex::crypt::AESMode::ECB,
+        hex::crypt::KeyLength::Key256Bits,
+        "603deb1015ca71be2b73aef0857d7781"
+        "1f352c073b6108d72d9810a30914dff4",
+        "f3eed1bdb5d2a03c064b5a7e3db181f8"
+        "591ccb10d410ed26dc5ba74a31362870"
+        "b6ed21b99ca6f4f9f153e7b1beafed1d"
+        "23304b7a39f9f3ff067d8d8f9e24ecc7");
+
+
+}
+
+TEST_SEQUENCE("AESDecrypt") {
+    const std::array vectors = {
+        &Ecb, &Ecb192, &Ecb256
+    };
+
+    for (const auto *vector : vectors) {
+        const auto actual = hex::crypt::aesDecrypt(
+            vector->mode,
+            vector->keyLength,
+            vector->key,
+            vector->nonce,
+            vector->iv,
+            vector->input);
+
+        TEST_ASSERT(actual.has_value());
+        TEST_ASSERT(actual.value() == vector->expected);
+    }
+
+    TEST_SUCCESS();
+};

@@ -527,7 +527,19 @@ namespace hex::crypt {
 
         int cryptResult = 0;
         if (mode == MBEDTLS_MODE_ECB) {
-            cryptResult = mbedtls_cipher_crypt(&ctx, nullptr, 0, input.data(), input.size(), output.data(), &outputSize);
+            const auto blockSize = static_cast<size_t>(mbedtls_cipher_get_block_size(&ctx));
+            outputSize = 0;
+
+            for (size_t inputOffset = 0; inputOffset < input.size(); inputOffset += blockSize) {
+                const auto inputSize = std::min(blockSize, input.size() - inputOffset);
+                size_t blockOutputSize = 0;
+
+                cryptResult = mbedtls_cipher_crypt(&ctx, nullptr, 0, input.data() + inputOffset, inputSize, output.data() + outputSize, &blockOutputSize);
+                if (cryptResult != 0)
+                    break;
+
+                outputSize += blockOutputSize;
+            }
         } else {
             cryptResult = mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
         }
