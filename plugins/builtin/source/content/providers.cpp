@@ -27,8 +27,8 @@ namespace hex::plugin::builtin {
 
     void registerProviders() {
 
-        ContentRegistry::Provider::add<FileProvider>(false);
-        ContentRegistry::Provider::add<NullProvider>(false);
+        ContentRegistry::Provider::add<FileProvider>(true);
+        ContentRegistry::Provider::add<NullProvider>(true);
         #if !defined(OS_WEB)
             ContentRegistry::Provider::add<UDPProvider>();
             ContentRegistry::Provider::add<GDBProvider>();
@@ -44,8 +44,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<IntelHexProvider>();
         ContentRegistry::Provider::add<MotorolaSRECProvider>();
         ContentRegistry::Provider::add<Base64Provider>();
-        ContentRegistry::Provider::add<MemoryFileProvider>(false);
-        ContentRegistry::Provider::add<ViewProvider>(false);
+        ContentRegistry::Provider::add<MemoryFileProvider>(true);
+        ContentRegistry::Provider::add<ViewProvider>(true);
 
         ProjectFile::registerHandler({
             .basePath = "providers",

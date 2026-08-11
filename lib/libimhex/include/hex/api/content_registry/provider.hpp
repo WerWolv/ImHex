@@ -17,7 +17,7 @@ EXPORT_MODULE namespace hex {
 
         namespace impl {
 
-            void addProviderName(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions);
+            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions, bool hidden);
 
             using ProviderCreationFunction = std::function<std::shared_ptr<prv::Provider>()>;
             void add(const std::string &typeName, ProviderCreationFunction creationFunction);
@@ -26,6 +26,7 @@ EXPORT_MODULE namespace hex {
                 UnlocalizedString unlocalizedName;
                 const char *icon;
                 std::vector<fs::ItemFilter> validFileExtensions;
+                bool hidden;
             };
 
             const std::vector<Entry>& getEntries();
@@ -35,10 +36,10 @@ EXPORT_MODULE namespace hex {
         /**
          * @brief Adds a new provider to the list of providers
          * @tparam T The provider type that extends hex::prv::Provider
-         * @param addToList Whether to display the provider in the Other Providers list in the welcome screen and File menu
+         * @param hidden Whether to hide the provider in the Other Providers list in the welcome screen and File menu
          */
         template<std::derived_from<prv::Provider> T>
-        void add(bool addToList = true) {
+        void add(bool hidden = false) {
             const T provider;
             const auto typeName = provider.getTypeName();
 
@@ -46,15 +47,13 @@ EXPORT_MODULE namespace hex {
                 return std::make_unique<T>();
             });
 
-            if (addToList) {
-                std::vector<fs::ItemFilter> validFileExtensions = {};
+            std::vector<fs::ItemFilter> validFileExtensions = {};
 
-                if constexpr (std::derived_from<T, prv::IProviderFilePicker>) {
-                    validFileExtensions = static_cast<const prv::IProviderFilePicker&>(provider).getValidExtensions();
-                }
-
-                impl::addProviderName(typeName, provider.getIcon(), std::move(validFileExtensions));
+            if constexpr (std::derived_from<T, prv::IProviderFilePicker>) {
+                validFileExtensions = static_cast<const prv::IProviderFilePicker&>(provider).getValidExtensions();
             }
+
+            impl::addProviderMetadata(typeName, provider.getIcon(), std::move(validFileExtensions), hidden);
         }
 
     }

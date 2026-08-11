@@ -370,7 +370,10 @@ namespace hex::plugin::builtin {
                             ImGui::SameLine(0, 2_scaled);
 
                             if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, nullptr, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 5.8), ImGuiChildFlags_AutoResizeX)) {
-                                for (const auto &[unlocalizedProviderName, icon, _] : ContentRegistry::Provider::impl::getEntries()) {
+                                for (const auto &[unlocalizedProviderName, icon, _, hidden] : ContentRegistry::Provider::impl::getEntries()) {
+                                    if (hidden)
+                                        continue;
+
                                     if (ImGuiExt::IconHyperlink(icon, Lang(unlocalizedProviderName))) {
                                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                                         otherProvidersVisible = false;

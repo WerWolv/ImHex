@@ -7,6 +7,7 @@
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/provider.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
@@ -289,6 +290,15 @@ namespace hex::plugin::builtin::recent {
         }
     }
 
+    static const char* getProviderIcon(const UnlocalizedString &unlocalizedName) {
+        for (const auto &provider : ContentRegistry::Provider::impl::getEntries()) {
+            if (provider.unlocalizedName == unlocalizedName) {
+                return provider.icon;
+            }
+        }
+
+        return ICON_VS_WORKSPACE_UNKNOWN;
+    }
 
     void draw() {
         if (s_recentEntries.empty() && !s_autoBackupsFound)
@@ -310,7 +320,7 @@ namespace hex::plugin::builtin::recent {
                     if (isProject) {
                         icon = ICON_VS_NOTEBOOK;
                     } else {
-                        icon = ICON_VS_FILE_BINARY;
+                        icon = getProviderIcon(recentEntry.type);
                     }
                   
                     if (ImGuiExt::IconHyperlink(icon, hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
@@ -400,7 +410,7 @@ namespace hex::plugin::builtin::recent {
                 // Copy to avoid changing list while iteration
                 auto recentEntries = s_recentEntries;
                 for (auto &recentEntry : recentEntries) {
-                    if (menu::menuItem(recentEntry.displayName.c_str())) {
+                    if (menu::menuItemEx(recentEntry.displayName.c_str(), getProviderIcon(recentEntry.type))) {
                         loadRecentEntry(recentEntry);
                     }
                 }

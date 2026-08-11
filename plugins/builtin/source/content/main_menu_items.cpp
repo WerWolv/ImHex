@@ -404,7 +404,10 @@ namespace hex::plugin::builtin {
 
         /* Open Other */
         ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, ICON_VS_TELESCOPE, 1150, [] {
-            for (const auto &[unlocalizedProviderName, icon, _] : ContentRegistry::Provider::impl::getEntries()) {
+            for (const auto &[unlocalizedProviderName, icon, _, hidden] : ContentRegistry::Provider::impl::getEntries()) {
+                if (hidden)
+                    continue;
+
                 if (menu::menuItemEx(Lang(unlocalizedProviderName), icon))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }

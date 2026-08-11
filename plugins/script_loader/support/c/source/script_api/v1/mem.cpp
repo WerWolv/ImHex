@@ -111,5 +111,5 @@ SCRIPT_API(void registerProvider, const char *typeName, const char *name, Script
         provider->setFunctions(readFunc, writeFunc, getSizeFunc);
         return provider;
     });
-    hex::ContentRegistry::Provider::impl::addProviderName(typeNameString, "", {});
+    hex::ContentRegistry::Provider::impl::addProviderMetadata(typeNameString, "", {}, false);
 }
