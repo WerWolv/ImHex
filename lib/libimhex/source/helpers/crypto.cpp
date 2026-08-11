@@ -516,6 +516,14 @@ namespace hex::crypt {
 
         auto mode = mbedtls_cipher_get_cipher_mode(&ctx);
 
+        if (mode == MBEDTLS_MODE_CBC) {
+            int paddingResult = mbedtls_cipher_set_padding_mode(&ctx, MBEDTLS_PADDING_NONE);
+            if (paddingResult != 0) {
+                mbedtls_cipher_free(&ctx);
+                return wolv::util::Unexpected(paddingResult);
+            }
+        }
+
         // if we are in ECB mode, we don't need to set the nonce
         if (mode != MBEDTLS_MODE_ECB) {
             std::ranges::copy(nonce, nonceCounter.begin());
@@ -551,7 +559,7 @@ namespace hex::crypt {
             return wolv::util::Unexpected(cryptResult);
         }
 
-        output.resize(input.size());
+        output.resize(outputSize);
 
         return output;
     }

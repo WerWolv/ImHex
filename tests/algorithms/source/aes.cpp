@@ -84,6 +84,38 @@ namespace {
             "f69f2445df4f9b17ad2b417be66c3710")
     };
 
+    const AesDecryptVector Cbc = {
+        .mode = hex::crypt::AESMode::CBC,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
+        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
+        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .input = fromHex(
+            "7649abac8119b246cee98e9b12e9197d"
+            "5086cb9b507219ee95db113a917678b2"
+            "73bed6b8e3c1743b7116e69e22229516"
+            "3ff1caa1681fac09120eca307586e1a7"),
+        .expected = fromHex(
+            "6bc1bee22e409f96e93d7e117393172a"
+            "ae2d8a571e03ac9c9eb76fac45af8e51"
+            "30c81c46a35ce411e5fbc1191a0a52ef"
+            "f69f2445df4f9b17ad2b417be66c3710")
+    };
+
+    const AesDecryptVector CbcPkcs7 = {
+        .mode = hex::crypt::AESMode::CBC,
+        .keyLength = hex::crypt::KeyLength::Key128Bits,
+        .key = fromHex("2b7e151628aed2a6abf7158809cf4f3c"),
+        .nonce = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 },
+        .iv = { 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F },
+        .input = fromHex(
+            "7649abac8119b246cee98e9b12e9197d"
+            "8964e0b149c10b7b682e6e39aaeb731c"),
+        .expected = fromHex(
+            "6bc1bee22e409f96e93d7e117393172a"
+            "10101010101010101010101010101010")
+    };
+
     const AesDecryptVector Ecb192 = makeSp80038aVector(
         hex::crypt::AESMode::ECB,
         hex::crypt::KeyLength::Key192Bits,
@@ -103,12 +135,32 @@ namespace {
         "b6ed21b99ca6f4f9f153e7b1beafed1d"
         "23304b7a39f9f3ff067d8d8f9e24ecc7");
 
+    const AesDecryptVector Cbc192 = makeSp80038aVector(
+        hex::crypt::AESMode::CBC,
+        hex::crypt::KeyLength::Key192Bits,
+        "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+        "4f021db243bc633d7178183a9fa071e8"
+        "b4d9ada9ad7dedf4e5e738763f69145a"
+        "571b242012fb7ae07fa9baac3df102e0"
+        "08b0e27988598881d920a9e64f5615cd");
+
+    const AesDecryptVector Cbc256 = makeSp80038aVector(
+        hex::crypt::AESMode::CBC,
+        hex::crypt::KeyLength::Key256Bits,
+        "603deb1015ca71be2b73aef0857d7781"
+        "1f352c073b6108d72d9810a30914dff4",
+        "f58c4c04d6e5f1ba779eabfb5f7bfbd6"
+        "9cfc4e967edb808d679f777bc6702c7d"
+        "39f23369a9d9bacfa530e26304231461"
+        "b2eb05e2c39be9fcda6c19078c6a9d1b");
+
 
 }
 
 TEST_SEQUENCE("AESDecrypt") {
     const std::array vectors = {
-        &Ecb, &Ecb192, &Ecb256
+        &Ecb, &Ecb192, &Ecb256,
+        &Cbc, &Cbc192, &Cbc256, &CbcPkcs7
     };
 
     for (const auto *vector : vectors) {
