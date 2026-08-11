@@ -72,9 +72,12 @@ namespace hex::plugin::hashes {
 
     ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY) {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
-            if (providerRegion.getProvider() != nullptr)
-                for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
-                    function.update(providerRegion.getRegion(), providerRegion.getProvider());
+            const auto provider = providerRegion.getProvider();
+            if (provider == nullptr)
+                return;
+
+            m_hashedRegion.get(provider) = providerRegion;
+            this->invalidate(provider);
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
@@ -152,9 +155,21 @@ namespace hex::plugin::hashes {
         EventRegionSelected::unsubscribe(this);
     }
 
+    void ViewHashes::invalidate(prv::Provider *provider) {
+        if (provider == nullptr)
+            return;
+
+        const auto region = m_hashedRegion.get(provider);
+
+        if (region != Region::Invalid()) {
+            for (auto &function : m_hashFunctions.get(provider))
+                function.update(region, provider);
+        }
+    }
 
     void ViewHashes::drawAddHashPopup() {
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
+        const auto provider = ImHexApi::Provider::get();
 
         if (m_selectedHash == nullptr && !hashes.empty()) {
             m_selectedHash = hashes.front().get();
@@ -170,7 +185,7 @@ namespace hex::plugin::hashes {
 
             ImGui::NewLine();
 
-            if (ImGui::BeginCombo("hex.hashes.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash->getUnlocalizedName()) : "")) {
+            if (ImGui::BeginCombo("hex.hashes.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash.get(provider)->getUnlocalizedName()) : "")) {
                 for (const auto &hash : hashes) {
                     if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), m_selectedHash == hash.get())) {
                         m_selectedHash = hash.get();
@@ -182,12 +197,12 @@ namespace hex::plugin::hashes {
             }
 
             if (m_newHashName.empty() && m_selectedHash != nullptr)
-                m_newHashName = fmt::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
+                m_newHashName = fmt::format("{} {}", Lang(m_selectedHash.get(provider)->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
 
-            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 100 }))) {
+            if (ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang, nullptr, scaled({ 0, 200 }))) {
                 if (m_selectedHash != nullptr) {
                     auto startPos = ImGui::GetCursorPosY();
-                    m_selectedHash->draw();
+                    m_selectedHash.get(provider)->draw();
 
                     // Check if no elements have been added
                     if (startPos == ImGui::GetCursorPosY()) {
@@ -200,7 +215,8 @@ namespace hex::plugin::hashes {
             ImGui::BeginDisabled(m_newHashName.empty() || m_selectedHash == nullptr);
             if (ImGuiExt::DimmedButton("hex.hashes.view.hashes.add"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 if (m_selectedHash != nullptr) {
-                    m_hashFunctions->emplace_back(m_selectedHash->create(m_newHashName));
+                    m_hashFunctions.get(provider).emplace_back(m_selectedHash.get(provider)->create(m_newHashName));
+                    this->invalidate(provider);
                     AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
                     ImGui::CloseCurrentPopup();
                 }

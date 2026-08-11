@@ -74,12 +74,14 @@ namespace hex::plugin::hashes {
         bool exportHashes(prv::Provider *provider, nlohmann::json &json);
 
         void drawAddHashPopup();
+        void invalidate(prv::Provider *provider);
 
     private:
-        ContentRegistry::Hashes::Hash *m_selectedHash = nullptr;
+        PerProvider<ContentRegistry::Hashes::Hash*> m_selectedHash;
         std::string m_newHashName;
 
         PerProvider<std::list<Function>> m_hashFunctions;
+        PerProvider<Region> m_hashedRegion;
 
     };
 
