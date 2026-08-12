@@ -26,6 +26,7 @@ namespace hex::plugin::builtin {
     void registerMCPTools();
     void registerFileHandlers();
     void registerProjectHandlers();
+    void registerLegacyProjectImporter();
     void registerAchievements();
     void registerReportGenerators();
     void registerTutorials();

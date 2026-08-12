@@ -108,7 +108,7 @@ namespace hex {
         m_valid = false;
     }
 
-    std::vector<u8> Tar::readVector(const std::fs::path &path) const {
+    std::vector<u8> Tar::readVector(const std::fs::path &path, size_t maxSize) const {
         mtar_header_t header;
 
         const auto fixedPath = wolv::io::fs::toNormalizedPathString(path);
@@ -118,15 +118,20 @@ namespace hex {
                 path.string(), m_path.string(), mtar_strerror(ret));
             return {};
         }
+        if (header.size > maxSize) {
+            log::warn("Refusing to read oversized entry {} from tarred file {}", path.string(), m_path.string());
+            return {};
+        }
         
         std::vector<u8> result(header.size, 0x00);
-        mtar_read_data(m_ctx.get(), result.data(), result.size());
+        if (mtar_read_data(m_ctx.get(), result.data(), result.size()) != MTAR_ESUCCESS)
+            return {};
 
         return result;
     }
 
-    std::string Tar::readString(const std::fs::path &path) const {
-        auto result = this->readVector(path);
+    std::string Tar::readString(const std::fs::path &path, size_t maxSize) const {
+        auto result = this->readVector(path, maxSize);
         return { result.begin(), result.end() };
     }
 

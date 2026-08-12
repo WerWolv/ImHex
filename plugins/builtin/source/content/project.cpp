@@ -4,6 +4,8 @@
 #include <map>
 #include <set>
 
+#include <content/project.hpp>
+
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
 
@@ -574,7 +576,7 @@ namespace hex::plugin::builtin {
                 provider->setID(id);
                 provider->loadSettings(providerSettings.at("settings"));
                 const auto result = provider->open();
-                if (result.isFailure() || !provider->isAvailable() || !provider->isReadable()) {
+                if (result.isFailure() || result.isRedirecting() || !provider->isAvailable() || !provider->isReadable()) {
                     removeProviderForProjectLoad(provider.get());
                     return false;
                 }
@@ -652,7 +654,7 @@ namespace hex::plugin::builtin {
                     provider->setID(id);
                     provider->loadSettings(providerSettings.at("settings"));
                     const auto result = provider->open();
-                    if (result.isFailure() || !provider->isAvailable() || !provider->isReadable()) {
+                    if (result.isFailure() || result.isRedirecting() || !provider->isAvailable() || !provider->isReadable()) {
                         removeProviderForProjectLoad(provider.get());
                         failedProviderIds.push_back(id);
                         continue;
@@ -730,18 +732,21 @@ namespace hex::plugin::builtin {
             scheduleProjectMetadataSave();
         }
 
-        void persistProjectMetadata() {
+        bool persistProjectMetadata() {
             if (s_loadingProject || !ProjectManager::isFolderProject())
-                return;
+                return false;
 
             const auto root = ProjectManager::getProjectRoot();
-            if (!storeProviders(root) || !storeAssociations(root))
+            if (!storeProviders(root) || !storeAssociations(root)) {
                 log::error("Failed to update project metadata at {}", root.string());
+                return false;
+            }
+            return true;
         }
 
         void scheduleProjectMetadataSave() {
             TaskManager::doLaterOnce([] {
-                persistProjectMetadata();
+                std::ignore = persistProjectMetadata();
             });
         }
 
@@ -1104,6 +1109,206 @@ namespace hex::plugin::builtin {
             EventProjectSaved::post();
         }
 
+        return result;
+    }
+
+    project::ImportResult project::importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
+        ImportResult result;
+        if (!ProjectManager::isFolderProject()) {
+            result.error = "No folder project is open";
+            return result;
+        }
+
+        std::set<u32> usedIds = s_projectProviderIds;
+        for (const auto *provider : ImHexApi::Provider::getProviders())
+            usedIds.insert(provider->getID());
+
+        std::set<u32> legacyIds;
+        std::map<u32, u32> remappedIds;
+        u32 nextId = 0;
+        for (const auto &provider : providers) {
+            if (!legacyIds.insert(provider.id).second) {
+                result.error = fmt::format("Duplicate provider ID {} in legacy project", provider.id);
+                return result;
+            }
+            if (!provider.descriptor.contains("type") || !provider.descriptor["type"].is_string() ||
+                !provider.descriptor.contains("settings") || !provider.descriptor["settings"].is_object()) {
+                result.error = fmt::format("Invalid settings for provider {}", provider.id);
+                return result;
+            }
+
+            auto id = provider.id;
+            if (id == std::numeric_limits<u32>::max()) {
+                result.error = "Legacy project uses a reserved provider ID";
+                return result;
+            }
+            if (usedIds.contains(id)) {
+                while (usedIds.contains(nextId) && nextId != std::numeric_limits<u32>::max())
+                    nextId += 1;
+                if (nextId == std::numeric_limits<u32>::max()) {
+                    result.error = "No provider IDs are available for import";
+                    return result;
+                }
+                id = nextId++;
+            }
+            usedIds.insert(id);
+            remappedIds[provider.id] = id;
+        }
+
+        for (auto &provider : providers) {
+            if (provider.descriptor["type"] == "hex.builtin.provider.view") {
+                auto &settings = provider.descriptor["settings"];
+                if (settings.contains("id")) {
+                    const auto sourceId = settings["id"].get<u32>();
+                    if (const auto remapped = remappedIds.find(sourceId); remapped != remappedIds.end())
+                        settings["id"] = remapped->second;
+                }
+            }
+            provider.id = remappedIds.at(provider.id);
+        }
+
+        const auto root = ProjectManager::getProjectRoot();
+        struct PreparedFile {
+            u32 providerId;
+            std::string typeId;
+            std::fs::path relativePath;
+        };
+        std::vector<PreparedFile> preparedFiles;
+        std::vector<std::fs::path> preparedProjectFiles;
+        std::set<std::fs::path> reservedPaths;
+        for (const auto &importedProvider : providers) {
+            auto stem = fmt::format("provider-{}", importedProvider.id);
+            if (const auto settings = importedProvider.descriptor.find("settings"); settings != importedProvider.descriptor.end()) {
+                auto name = settings->value("displayName", std::string());
+                if (name.empty())
+                    name = settings->value("name", std::string());
+                for (auto &character : name) {
+                    const auto value = static_cast<unsigned char>(character);
+                    if (!std::isalnum(value) && character != '-' && character != '_')
+                        character = '-';
+                }
+                if (!name.empty())
+                    stem = fmt::format("{}-{}", name, importedProvider.id);
+            }
+
+            for (const auto &file : importedProvider.files) {
+                if (file.typeId.empty() || file.extension.empty())
+                    continue;
+
+                auto relativePath = std::fs::path(fmt::format("{}.{}", stem, file.extension));
+                for (u32 suffix = 2; ; suffix += 1) {
+                    std::error_code statusError;
+                    const auto status = std::fs::symlink_status(root / relativePath, statusError);
+                    if (statusError && statusError != std::errc::no_such_file_or_directory) {
+                        result.error = fmt::format("Failed to inspect import path '{}': {}",
+                            relativePath.generic_string(), statusError.message());
+                        return result;
+                    }
+                    if (status.type() == std::fs::file_type::not_found && !reservedPaths.contains(relativePath))
+                        break;
+                    relativePath = std::fs::path(fmt::format("{}-{}.{}", stem, suffix, file.extension));
+                }
+                reservedPaths.insert(relativePath);
+
+                wolv::io::File output(root / relativePath, wolv::io::File::Mode::Create);
+                if (!output.isValid() || output.writeVector(file.contents) != static_cast<i64>(file.contents.size()) || !output.flush()) {
+                    std::error_code currentFileError;
+                    std::fs::remove(root / relativePath, currentFileError);
+                    for (const auto &prepared : preparedFiles) {
+                        std::error_code error;
+                        std::fs::remove(root / prepared.relativePath, error);
+                    }
+                    result.error = fmt::format("Failed to write imported project file '{}'", relativePath.generic_string());
+                    return result;
+                }
+
+                preparedFiles.push_back({ importedProvider.id, file.typeId, std::move(relativePath) });
+            }
+        }
+
+        for (const auto &file : projectFiles) {
+            auto relativePath = std::fs::path(file.name).filename();
+            if (relativePath.empty())
+                continue;
+            const auto stem = relativePath.stem().string();
+            const auto extension = relativePath.extension().string();
+            for (u32 suffix = 2; ; suffix += 1) {
+                std::error_code statusError;
+                const auto status = std::fs::symlink_status(root / relativePath, statusError);
+                if (statusError && statusError != std::errc::no_such_file_or_directory) {
+                    result.error = fmt::format("Failed to inspect import path '{}': {}",
+                        relativePath.generic_string(), statusError.message());
+                    return result;
+                }
+                if (status.type() == std::fs::file_type::not_found && !reservedPaths.contains(relativePath))
+                    break;
+                relativePath = std::fs::path(fmt::format("{}-{}{}", stem, suffix, extension));
+            }
+            reservedPaths.insert(relativePath);
+
+            wolv::io::File output(root / relativePath, wolv::io::File::Mode::Create);
+            if (!output.isValid() || output.writeVector(file.contents) != static_cast<i64>(file.contents.size()) || !output.flush()) {
+                std::error_code currentFileError;
+                std::fs::remove(root / relativePath, currentFileError);
+                for (const auto &prepared : preparedFiles) {
+                    std::error_code error;
+                    std::fs::remove(root / prepared.relativePath, error);
+                }
+                for (const auto &prepared : preparedProjectFiles) {
+                    std::error_code error;
+                    std::fs::remove(root / prepared, error);
+                }
+                result.error = fmt::format("Failed to write imported project file '{}'", relativePath.generic_string());
+                return result;
+            }
+            preparedProjectFiles.push_back(std::move(relativePath));
+        }
+
+        result.importedProviderCount = providers.size();
+        result.importedFileCount = preparedFiles.size() + preparedProjectFiles.size();
+        std::ranges::stable_sort(providers, [](const auto &left, const auto &right) {
+            return left.descriptor["type"] != "hex.builtin.provider.view" &&
+                right.descriptor["type"] == "hex.builtin.provider.view";
+        });
+        for (auto &importedProvider : providers) {
+            const auto id = importedProvider.id;
+            s_projectProviderIds.insert(id);
+            s_projectProviderSettings[id] = importedProvider.descriptor.dump(4);
+
+            std::ignore = openStoredProjectProvider(id);
+            auto *provider = getProviderById(id);
+            if (provider == nullptr)
+                result.failedProviderIds.push_back(id);
+
+            for (const auto &file : preparedFiles) {
+                if (file.providerId != id)
+                    continue;
+                s_associations[id][file.typeId] = file.relativePath;
+                if (provider != nullptr && FileBackedProviderDataRegistry::get(file.typeId) != nullptr &&
+                    !FileBackedProviderDataRegistry::bind(provider, file.typeId, root / file.relativePath)) {
+                    log::warn("Failed to bind imported project file '{}' to provider {}", file.relativePath.string(), id);
+                }
+            }
+
+            if (provider != nullptr && provider->isWritable() && !importedProvider.patches.empty()) {
+                size_t appliedPatches = 0;
+                for (const auto &[address, value] : importedProvider.patches)
+                    if (provider->getRegionValidity(address).second) {
+                        provider->write(address, &value, sizeof(value));
+                        appliedPatches += 1;
+                    }
+                if (appliedPatches > 0)
+                    provider->getUndoStack().groupOperations(appliedPatches, "hex.builtin.undo_operation.patches");
+                if (appliedPatches != importedProvider.patches.size())
+                    result.warnings.push_back(fmt::format("Some patches for provider {} could not be applied", id));
+            } else if (!importedProvider.patches.empty()) {
+                result.warnings.push_back(fmt::format("Patches for provider {} could not be imported", id));
+            }
+        }
+
+        result.success = persistProjectMetadata();
+        if (!result.success)
+            result.error = "Failed to save imported project metadata";
         return result;
     }
 

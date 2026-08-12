@@ -445,7 +445,9 @@ namespace hex::plugin::builtin {
 
         /* Import */
         {
-            ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 5140, []{}, noRunningTaskAndValidProvider);
+            ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, ICON_VS_SIGN_IN, 5140, []{}, [] {
+                return noRunningTasks() && (ImHexApi::Provider::isValid() || ProjectManager::isFolderProject());
+            });
 
             /* IPS */
             ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES, 5150,
