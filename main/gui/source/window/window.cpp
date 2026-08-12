@@ -1056,8 +1056,10 @@ namespace hex {
             }
         }
 
-        float maxWindowCreationWidth = monitorWidth / 1_scaled;
-        float maxWindowCreationHeight = monitorHeight / 1_scaled;
+
+        const auto nativeScale = ImHexApi::System::getNativeScale();
+        float maxWindowCreationWidth = monitorWidth / nativeScale;
+        float maxWindowCreationHeight = monitorHeight / nativeScale;
 
         // Wayland auto-maximizes windows that take up 80% or more of the monitor size
         // Limit the size to take up slightly less than that at max
@@ -1105,6 +1107,8 @@ namespace hex {
         if (monitorWidth != std::numeric_limits<int>::max() && monitorHeight != std::numeric_limits<int>::max()) {
             int windowWidth, windowHeight;
             glfwGetWindowSize(m_window, &windowWidth, &windowHeight);
+            windowWidth  = std::min<int>(monitorWidth  * 0.9F, windowWidth);
+            windowHeight = std::min<int>(monitorHeight * 0.9F, windowHeight);
 
             glfwSetWindowPos(m_window, monitorX + (monitorWidth - windowWidth) / 2, monitorY + (monitorHeight - windowHeight) / 2);
         }
