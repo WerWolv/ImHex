@@ -877,7 +877,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste_all": "Paste all",
     "hex.builtin.view.hex_editor.menu.edit.paste_all_string": "Paste all as string",
     "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.title": "Paste from Source...",
-    "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.description": "ImHex provides multiple methods for pasting data from another source. Select the desired paste mode after choosing the source and destination providers.\nNote: You can turn off the paste mode recommendation in the settings below.",
+    "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.description": "ImHex provides multiple methods for pasting data from another source. Select the desired paste mode after choosing the source and destination.\nNote: You can turn off the paste mode suggestion in the settings below.",
     "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.warning": "This operation does not support undo or redo.\nWould you like to proceed?",
     "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.provider.source.title": "Source",
     "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.provider.dest.title": "Destination",
