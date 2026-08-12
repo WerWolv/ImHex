@@ -48,6 +48,7 @@ set(LIBIMHEX_SOURCES
 
         source/providers/provider.cpp
         source/providers/cached_provider.cpp
+        source/providers/concatenated_provider.cpp
         source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp
 

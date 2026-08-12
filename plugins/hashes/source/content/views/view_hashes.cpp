@@ -337,9 +337,8 @@ namespace hex::plugin::hashes {
 
             for (const auto &newHash : hashes) {
                 if (newHash->getUnlocalizedName() == hash["type"].get<std::string>()) {
-
+                    newHash->load(hash["settings"]);
                     auto newFunction = newHash->create(hash["name"]);
-                    newFunction.getType()->load(hash["settings"]);
 
                     m_hashFunctions.get(provider).emplace_back(std::move(newFunction));
                     break;
