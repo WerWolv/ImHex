@@ -1,6 +1,13 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/test/tests.hpp>
 
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+    #include <mbedtls/ccm.h>
+    #include <mbedtls/cipher.h>
+    #include <mbedtls/error.h>
+    #include <mbedtls/gcm.h>
+#endif
+
 #include <array>
 #include <cstdlib>
 #include <string_view>
@@ -394,7 +401,7 @@ TEST_SEQUENCE("AESDecrypt") {
         if (vector->mode == hex::crypt::AESMode::GCM || vector->mode == hex::crypt::AESMode::CCM) {
             auto alteredTag = vector->tag;
             alteredTag.front() ^= 0x01;
-            TEST_ASSERT(!hex::crypt::aesDecrypt(
+            const auto alteredTagResult = hex::crypt::aesDecrypt(
                 vector->mode,
                 vector->keyLength,
                 vector->key,
@@ -402,7 +409,13 @@ TEST_SEQUENCE("AESDecrypt") {
                 vector->iv,
                 vector->input,
                 alteredTag,
-                vector->aad).has_value());
+                vector->aad);
+            TEST_ASSERT(!alteredTagResult.has_value());
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+            TEST_ASSERT(alteredTagResult.error() == MBEDTLS_ERR_CIPHER_AUTH_FAILED);
+#else
+            TEST_ASSERT(alteredTagResult.error() == CRYPTO_ERROR_AUTHENTICATION_FAILED);
+#endif
 
             TEST_ASSERT(!hex::crypt::aesDecrypt(
                 vector->mode,
@@ -431,6 +444,76 @@ TEST_SEQUENCE("AESDecrypt") {
                 alteredAad).has_value());
         }
     }
+
+    const auto invalidKey = hex::crypt::aesDecrypt(
+        hex::crypt::AESMode::ECB, hex::crypt::KeyLength::Key128Bits,
+        { 0x00 }, { }, { }, std::vector<u8>(16), { }, { });
+    TEST_ASSERT(!invalidKey.has_value());
+    TEST_ASSERT(invalidKey.error() == CRYPTO_ERROR_INVALID_KEY_LENGTH);
+
+    const auto invalidMode = hex::crypt::aesDecrypt(
+        static_cast<hex::crypt::AESMode>(0xFF), hex::crypt::KeyLength::Key128Bits,
+        std::vector<u8>(16), { }, { }, std::vector<u8>(16), { }, { });
+    TEST_ASSERT(!invalidMode.has_value());
+    TEST_ASSERT(invalidMode.error() == CRYPTO_ERROR_INVALID_MODE);
+
+    const auto invalidBlockLength = hex::crypt::aesDecrypt(
+        hex::crypt::AESMode::ECB, hex::crypt::KeyLength::Key128Bits,
+        std::vector<u8>(16), { }, { }, std::vector<u8>(15), { }, { });
+    TEST_ASSERT(!invalidBlockLength.has_value());
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+    TEST_ASSERT(invalidBlockLength.error() == MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED);
+#else
+    TEST_ASSERT(invalidBlockLength.error() == CRYPTO_ERROR_INVALID_INPUT);
+#endif
+
+    const auto invalidIvLength = hex::crypt::aesDecrypt(
+        hex::crypt::AESMode::CTR, hex::crypt::KeyLength::Key128Bits,
+        std::vector<u8>(16), { }, std::vector<u8>(15), std::vector<u8>(16), { }, { });
+    TEST_ASSERT(!invalidIvLength.has_value());
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+    TEST_ASSERT(invalidIvLength.error() == MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA);
+#else
+    TEST_ASSERT(invalidIvLength.error() == CRYPTO_ERROR_INVALID_INPUT);
+#endif
+
+    const auto invalidTagLength = hex::crypt::aesDecrypt(
+        hex::crypt::AESMode::GCM, hex::crypt::KeyLength::Key128Bits,
+        std::vector<u8>(16), { }, std::vector<u8>(12), std::vector<u8>(16), std::vector<u8>(3), { });
+    TEST_ASSERT(!invalidTagLength.has_value());
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+    TEST_ASSERT(invalidTagLength.error() == MBEDTLS_ERR_GCM_BAD_INPUT);
+#else
+    TEST_ASSERT(invalidTagLength.error() == CRYPTO_ERROR_INVALID_INPUT);
+#endif
+
+    const auto invalidNonceLength = hex::crypt::aesDecrypt(
+        hex::crypt::AESMode::CCM, hex::crypt::KeyLength::Key128Bits,
+        std::vector<u8>(16), std::vector<u8>(6), { }, std::vector<u8>(16), std::vector<u8>(4), { });
+    TEST_ASSERT(!invalidNonceLength.has_value());
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+    TEST_ASSERT(invalidNonceLength.error() == MBEDTLS_ERR_CCM_BAD_INPUT);
+#else
+    TEST_ASSERT(invalidNonceLength.error() == CRYPTO_ERROR_INVALID_INPUT);
+#endif
+
+    const auto xtsResult = hex::crypt::aesDecrypt(
+        hex::crypt::AESMode::XTS, hex::crypt::KeyLength::Key128Bits,
+        std::vector<u8>(16), { }, std::vector<u8>(16), std::vector<u8>(16), { }, { });
+    TEST_ASSERT(!xtsResult.has_value());
+    TEST_ASSERT(!hex::crypt::getErrorString(xtsResult.error()).empty());
+
+    TEST_ASSERT(hex::crypt::getErrorString(CRYPTO_ERROR_INVALID_KEY_LENGTH) == "Invalid key length");
+    TEST_ASSERT(hex::crypt::getErrorString(CRYPTO_ERROR_INVALID_MODE) == "Invalid mode");
+#if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
+    std::array<char, 128> errorBuffer = { 0 };
+    mbedtls_strerror(CRYPTO_ERROR_INVALID_INPUT, errorBuffer.data(), errorBuffer.size());
+    TEST_ASSERT(hex::crypt::getErrorString(CRYPTO_ERROR_INVALID_INPUT) == errorBuffer.data());
+#else
+    TEST_ASSERT(hex::crypt::getErrorString(CRYPTO_ERROR_INVALID_INPUT) == "Invalid input");
+    TEST_ASSERT(hex::crypt::getErrorString(CRYPTO_ERROR_UNSUPPORTED_MODE) == "Unsupported mode");
+    TEST_ASSERT(hex::crypt::getErrorString(CRYPTO_ERROR_AUTHENTICATION_FAILED) == "Authentication failed");
+#endif
 
     TEST_SUCCESS();
 };
