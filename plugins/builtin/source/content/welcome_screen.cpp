@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
                     m_restoreCallback(restoreCallback),
                     m_deleteCallback(deleteCallback) {
 
-                m_reportError = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
+                m_reportError = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", false);
             }
 
             void drawContent() override {

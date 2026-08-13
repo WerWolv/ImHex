@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
         #if defined(IMHEX_ENABLE_UPDATER)
             bool checkForUpdatesSync() {
-                int checkForUpdates = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
+                int checkForUpdates = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
                 if (checkForUpdates != 1)
                     return true;
 

@@ -22,6 +22,7 @@ option(IMHEX_ENABLE_CPPCHECK            "Enable cppcheck static analysis"       
 option(IMHEX_BUNDLE_PLUGIN_SDK          "Enable bundling of Plugin SDK into install package"                                            ON )
 set   (IMHEX_RENDERING_BACKEND          "GLFW" CACHE STRING "Set the rendering backend ImHex should use (GLFW or SDL)"                     )
 option(IMHEX_ENABLE_UPDATER             "Enable automatic updater"                                                                      ON )
+option(IMHEX_ENABLE_TELEMETRY           "Build with telemetry support"                                                                  ON )
 ## Testing
 option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"                                                                    OFF)
 option(IMHEX_ENABLE_IMGUI_TEST_ENGINE   "Enable the ImGui Test Engine"                                                                  OFF)

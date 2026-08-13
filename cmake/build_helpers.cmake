@@ -139,6 +139,10 @@ macro(addDefines)
     if (IMHEX_ENABLE_UPDATER)
         add_compile_definitions(IMHEX_ENABLE_UPDATER)
     endif()
+
+    if (IMHEX_ENABLE_TELEMETRY)
+        add_compile_definitions(IMHEX_ENABLE_TELEMETRY)
+    endif()
 endmacro()
 
 function(addDefineToSource SOURCE DEFINE)

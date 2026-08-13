@@ -1134,7 +1134,10 @@ namespace hex {
         }
 
         bool anonymousTrackingAllowed() {
-            #if defined(OS_WEB)
+            #if !defined(IMHEX_ENABLE_TELEMETRY)
+                // Telemetry has been disabled for this build
+                return false;
+            #elif defined(OS_WEB)
                 // To avoid potentially flooding our database with lots of dead users
                 // from people just visiting the website, don't send telemetry data from
                 // the web version

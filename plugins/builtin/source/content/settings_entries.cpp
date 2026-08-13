@@ -43,9 +43,9 @@ namespace hex::plugin::builtin {
 
         /*
             Values of this setting:
-            0 - do not check for updates on startup
+            0 - default - do not check for updates on startup, this will get overridden if the user chooses so on first startup
             1 - check for updates on startup
-            2 - default value - ask the user if he wants to check for updates. This value should only be encountered on the first startup.
+            2 - legacy, assume as 0
         */
         class ServerContactWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
             }
 
         private:
-            u32 m_value = 2;
+            u32 m_value = 0;
         };
 
         class FPSWidget : public ContentRegistry::Settings::Widgets::Widget {
@@ -779,7 +779,7 @@ for (const auto &path : m_paths) {
                 const auto trackingAllowed = ImHexApi::System::anonymousTrackingAllowed();
                 ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact")
                     .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true)
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", false)
                     .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
             #endif
 
