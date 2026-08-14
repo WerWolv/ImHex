@@ -114,8 +114,9 @@ namespace hex::subcommands {
         int exitCode = 0;
         for (const auto &[subcommand, subCommandArgs] : subCommands) {
             exitCode = subcommand.callback(subCommandArgs);
-            if (exitCode != 0)
+            if (exitCode != EXIT_CONTINUE) {
                 break;
+            }
         }
 
         if (pluginsInitialized) {
@@ -129,7 +130,9 @@ namespace hex::subcommands {
             std::exit(0);
         }
 
-        std::exit(exitCode);
+        if (exitCode != EXIT_CONTINUE) {
+            std::exit(exitCode);
+        }
     }
 
     void forwardSubCommand(const std::string &cmdName, const std::vector<std::string> &args) {
