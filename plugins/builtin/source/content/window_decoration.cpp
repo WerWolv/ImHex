@@ -51,6 +51,65 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.use_native_menu_bar"> s_useNativeMenuBar = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.show_titlebar_backdrop"> s_showTitlebarBackDrop = true;
 
+        struct SidebarState {
+            i32 openWindow = -1;
+            i32 pendingClose = -1;
+            i32 suppressedActivation = -1;
+            double closeDeadline = 0.0;
+            bool pinned = false;
+            float panelWidth = 0.0F;
+        };
+
+        SidebarState s_sidebarState;
+
+        void closeSidebar() {
+            s_sidebarState.openWindow = -1;
+            s_sidebarState.pendingClose = -1;
+            s_sidebarState.suppressedActivation = -1;
+            s_sidebarState.pinned = false;
+        }
+
+        const ContentRegistry::UserInterface::impl::SidebarItem *getOpenSidebarItem() {
+            const auto &items = ContentRegistry::UserInterface::impl::getSidebarItems();
+            if (s_sidebarState.openWindow < 0 || static_cast<size_t>(s_sidebarState.openWindow) >= items.size()) {
+                closeSidebar();
+                return nullptr;
+            }
+
+            const auto &item = items[s_sidebarState.openWindow];
+            if (!item.enabledCallback()) {
+                closeSidebar();
+                return nullptr;
+            }
+
+            return &item;
+        }
+
+        void processPendingSidebarClose() {
+            if (s_sidebarState.pendingClose < 0 || ImGui::GetTime() < s_sidebarState.closeDeadline)
+                return;
+
+            if (s_sidebarState.openWindow == s_sidebarState.pendingClose)
+                closeSidebar();
+            else
+                s_sidebarState.pendingClose = -1;
+        }
+
+        float getPinnedSidebarWidth(float windowWidth, float sidebarWidth) {
+            processPendingSidebarClose();
+            if (!s_sidebarState.pinned || getOpenSidebarItem() == nullptr)
+                return 0.0F;
+
+            const auto maxWidth = std::max(0.0F, windowWidth - sidebarWidth - 100_scaled);
+            if (maxWidth == 0.0F)
+                return 0.0F;
+
+            const auto minWidth = std::min(180_scaled, maxWidth);
+            const auto width = s_sidebarState.panelWidth > 0.0F ? s_sidebarState.panelWidth : 300_scaled;
+            s_sidebarState.panelWidth = std::clamp(width, minWidth, maxWidth);
+            return s_sidebarState.panelWidth;
+        }
+
         void drawTitleBarBackDrop() {
             if (!s_showTitlebarBackDrop)
                 return;
@@ -134,9 +193,9 @@ namespace hex::plugin::builtin {
         }
 
         void drawSidebar(ImVec2 dockSpaceSize, ImVec2 sidebarPos, float sidebarWidth) {
-            static i32 openWindow = -1;
             u32 index = 0;
             u32 drawIndex = 1;
+            processPendingSidebarClose();
 
             drawTitleBarBackDrop();
 
@@ -144,10 +203,12 @@ namespace hex::plugin::builtin {
 
             ImGui::PushID("SideBarWindows");
             for (const auto &[unlocalizedName, icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
+                std::ignore = callback;
+                ImGui::PushID(index);
                 ImGui::SetCursorPosX(padding);
                 ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
 
-                bool selected = static_cast<u32>(openWindow) == index;
+                const bool selected = s_sidebarState.openWindow == static_cast<i32>(index);
 
                 ImGui::PushStyleColor(ImGuiCol_Button, selected ? ImGui::GetColorU32(ImGuiCol_ScrollbarGrab) : ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
@@ -157,56 +218,81 @@ namespace hex::plugin::builtin {
                 if (enabledCallback()) {
                     drawIndex += 1;
 
-                    if (ImGuiExt::IconButton(icon.c_str(), ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(sidebarWidth - 2 * padding, sidebarWidth - 2 * padding))) {
-                        if (!selected)
-                            openWindow = index;
-                        else
-                            openWindow = -1;
+                    const bool activated = ImGuiExt::IconButton(icon.c_str(), ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(sidebarWidth - 2 * padding, sidebarWidth - 2 * padding));
+                    const bool doubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+                    if (doubleClicked) {
+                        s_sidebarState.openWindow = index;
+                        s_sidebarState.pendingClose = -1;
+                        s_sidebarState.suppressedActivation = index;
+                        s_sidebarState.pinned = true;
+                    } else if (activated) {
+                        if (s_sidebarState.suppressedActivation == static_cast<i32>(index)) {
+                            s_sidebarState.suppressedActivation = -1;
+                        } else if (!selected) {
+                            s_sidebarState.openWindow = index;
+                            s_sidebarState.pendingClose = -1;
+                        } else {
+                            s_sidebarState.pendingClose = index;
+                            s_sidebarState.closeDeadline = ImGui::GetTime() + ImGui::GetIO().MouseDoubleClickTime;
+                        }
+                    }
+                    if (s_sidebarState.suppressedActivation == static_cast<i32>(index) &&
+                        !activated && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                        s_sidebarState.suppressedActivation = -1;
                     }
                     ImGui::SetItemTooltip("%s", Lang(unlocalizedName).get());
                 }
 
                 ImGui::PopStyleVar();
                 ImGui::PopStyleColor(3);
-
-                auto sideBarFocused = ImGui::IsWindowFocused();
-
-                bool open = static_cast<u32>(openWindow) == index;
-                if (open) {
-                    const auto &g = *ImGui::GetCurrentContext();
-                    const auto titleBarHeight = g.FontSize + g.Style.FramePadding.y * 2.0F;
-                    ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, titleBarHeight));
-                    ImGui::SetNextWindowSizeConstraints(ImVec2(0, dockSpaceSize.y + 5_scaled - titleBarHeight), ImVec2(FLT_MAX, dockSpaceSize.y + 5_scaled - titleBarHeight));
-
-                    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
-                    ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
-                    if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                        if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail(), ImGuiChildFlags_None, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
-                            fonts::Default().pushBold();
-                            ImGui::TextUnformatted(Lang(unlocalizedName).get());
-                            fonts::Default().pop();
-                            callback();
-                        }
-                        ImGui::EndChild();
-
-                        if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused) {
-                            openWindow = -1;
-                        }
-
-                        ImGuiExt::DisableWindowResize(ImGuiDir_Up);
-                        ImGuiExt::DisableWindowResize(ImGuiDir_Down);
-                        ImGuiExt::DisableWindowResize(ImGuiDir_Left);
-
-                    }
-                    ImGui::End();
-                    ImGui::PopStyleVar();
-                    ImGui::PopStyleColor();
-                }
-
                 ImGui::NewLine();
+                ImGui::PopID();
                 index += 1;
             }
             ImGui::PopID();
+
+            const auto sideBarFocused = ImGui::IsWindowFocused();
+            const auto *openItem = getOpenSidebarItem();
+            if (openItem == nullptr)
+                return;
+
+            const auto &g = *ImGui::GetCurrentContext();
+            const auto titleBarHeight = g.FontSize + g.Style.FramePadding.y * 2.0F;
+            const auto panelHeight = dockSpaceSize.y + 5_scaled - titleBarHeight;
+            const auto maxWidth = std::max(180_scaled, ImHexApi::System::getMainWindowSize().x - sidebarWidth - 100_scaled);
+            const auto initialWidth = std::min(300_scaled, maxWidth);
+            ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, titleBarHeight));
+            ImGui::SetNextWindowSizeConstraints(ImVec2(180_scaled, panelHeight), ImVec2(maxWidth, panelHeight));
+            if (s_sidebarState.panelWidth <= 0.0F)
+                ImGui::SetNextWindowSize(ImVec2(initialWidth, panelHeight), ImGuiCond_FirstUseEver);
+
+            bool open = true;
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
+            ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
+            if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                s_sidebarState.panelWidth = ImGui::GetWindowSize().x;
+                if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail(), ImGuiChildFlags_None, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
+                    fonts::Default().pushBold();
+                    ImGui::TextUnformatted(Lang(openItem->unlocalizedName).get());
+                    fonts::Default().pop();
+
+                    openItem->callback();
+                }
+                ImGui::EndChild();
+
+                if (!s_sidebarState.pinned && !ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused)
+                    closeSidebar();
+
+                ImGuiExt::DisableWindowResize(ImGuiDir_Up);
+                ImGuiExt::DisableWindowResize(ImGuiDir_Down);
+                ImGuiExt::DisableWindowResize(ImGuiDir_Left);
+            }
+            ImGui::End();
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor();
+
+            if (!open)
+                closeSidebar();
         }
 
         void drawTitleBar() {
@@ -710,6 +796,11 @@ namespace hex::plugin::builtin {
                 const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 30_scaled : 0;
+                if (!shouldDrawSidebar)
+                    closeSidebar();
+                const auto pinnedSidebarWidth = shouldDrawSidebar
+                    ? getPinnedSidebarWidth(ImHexApi::System::getMainWindowSize().x, sidebarWidth)
+                    : 0.0F;
 
                 auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + 1_scaled;
                 #if defined(OS_MACOS)
@@ -718,9 +809,9 @@ namespace hex::plugin::builtin {
                     footerHeight += ImGui::GetStyle().FramePadding.y * 2;
                 #endif
 
-                const auto dockSpaceSize = ImHexApi::System::getMainWindowSize() - ImVec2(sidebarWidth, menuBarHeight * 2 + footerHeight);
+                const auto dockSpaceSize = ImHexApi::System::getMainWindowSize() - ImVec2(sidebarWidth + pinnedSidebarWidth, menuBarHeight * 2 + footerHeight);
 
-                ImGui::SetCursorPosX(sidebarWidth);
+                ImGui::SetCursorPosX(sidebarWidth + pinnedSidebarWidth);
                 drawFooter(drawList, dockSpaceSize);
 
                 if (shouldDrawSidebar) {
@@ -730,7 +821,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushClipRect(ImVec2(clipRect.Min.x, ImTrunc(window->Pos.y + sidebarPos.y)), clipRect.Max, false);
                     drawList->AddRectFilled(
                         ImGui::GetWindowPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 1_scaled),
-                        ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y + 1_scaled),
+                        ImGui::GetWindowPos() + ImVec2(sidebarWidth + pinnedSidebarWidth, ImGui::GetWindowSize().y - footerHeight + ImGui::GetStyle().FramePadding.y - 1_scaled),
                         ImGui::GetColorU32(ImGuiCol_MenuBarBg)
                     );
                     ImGui::PopClipRect();
@@ -739,9 +830,10 @@ namespace hex::plugin::builtin {
                     drawSidebar(dockSpaceSize, sidebarPos, sidebarWidth);
 
                     if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
+                        const auto separatorX = ImGui::GetWindowPos().x + sidebarWidth - 1_scaled;
                         drawList->AddLine(
-                                ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, menuBarHeight - 2_scaled),
-                                ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y + 2_scaled + menuBarHeight),
+                                ImVec2(separatorX, ImGui::GetWindowPos().y + sidebarPos.y + menuBarHeight - 2_scaled),
+                                ImVec2(separatorX, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - footerHeight + ImGui::GetStyle().FramePadding.y - 2_scaled),
                                 ImGui::GetColorU32(ImGuiCol_Separator));
                     }
                 }
