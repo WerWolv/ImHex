@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
         const Achievement *m_currAchievement = nullptr;
         const Achievement *m_achievementToGoto = nullptr;
         float m_achievementUnlockQueueTimer = -1;
-        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup"> m_showPopup;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup"> m_showPopup = false;
 
 
         ImVec2 m_offset;
