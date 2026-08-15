@@ -21,6 +21,24 @@ namespace hex::init {
 
 }
 
+namespace {
+
+    void configureLocale() {
+        #if defined (OS_WINDOWS)
+            // MSYS2 UCRT64 runtime does not support any sort of locales except for the "C" locale.
+            // See https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/config/locale/generic/c_locale.cc#L245
+            std::setlocale(LC_ALL, "C");
+        #else
+            // Elsewhere, set the locale to en_US.UTF-8 to ensure that we can handle UTF-8 strings correctly
+            // falling back to the C locale if the rest isn't available
+            std::setlocale(LC_ALL, "en_US.UTF-8") ||
+            std::setlocale(LC_ALL, "C.UTF-8")     ||
+            std::setlocale(LC_ALL, "C");
+        #endif
+    }
+
+}
+
 /**
  * @brief Main entry point of ImHex
  * @param argc Argument count
@@ -30,7 +48,8 @@ namespace hex::init {
 int main(int argc, char **argv) {
     using namespace hex;
 
-    std::setlocale(LC_ALL, "en_US.utf8");
+    // Set the program locale
+    configureLocale();
 
     // Tell the Task Manager that we are the main thread
     TaskManager::setMainThreadId(std::this_thread::get_id());
@@ -62,6 +81,7 @@ int main(int argc, char **argv) {
     log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion().get());
     log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
     log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
+    log::info("Using Locale {}", std::setlocale(LC_ALL, nullptr));
 
     #if defined(OS_LINUX)
         if (auto distro = ImHexApi::System::getLinuxDistro(); distro.has_value()) {

@@ -867,15 +867,22 @@ namespace hex {
 
     std::optional<std::chrono::system_clock::time_point> parseTime(std::string_view format, const std::string &timeString) {
         std::istringstream input(timeString);
-        input.imbue(std::locale(std::setlocale(LC_ALL, nullptr)));
+        input.imbue(std::locale::classic());
 
-        tm time = {};
-        input >> std::get_time(&time, std::string(format).data());
-        if (input.fail()) {
+        std::tm time = {};
+        time.tm_isdst = -1;
+
+        const std::string fmt(format);
+        input >> std::get_time(&time, fmt.c_str());
+
+        if (input.fail())
             return std::nullopt;
-        }
 
-        return std::chrono::system_clock::from_time_t(std::mktime(&time));
+        const auto tt = std::mktime(&time);
+        if (tt == static_cast<std::time_t>(-1))
+            return std::nullopt;
+
+        return std::chrono::system_clock::from_time_t(tt);
     }
 
     std::optional<std::string> getOSLanguage() {

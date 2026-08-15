@@ -37,7 +37,7 @@ jobs:
       matrix:
         include:
           - architecture_name: "x86_64"
-            msystem: "mingw64"
+            msystem: "ucrt64"
             runner_os: "windows-2025"
           - architecture_name: "arm64"
             msystem: "clangarm64"
@@ -367,7 +367,7 @@ jobs:
       - name: 🟦 Install msys2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: mingw64
+          msystem: ucrt64
 
       - name: ⬇️ Install dependencies
         run: |
