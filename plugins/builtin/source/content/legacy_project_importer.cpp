@@ -255,21 +255,6 @@ namespace hex::plugin::builtin {
                 result.providers.push_back(std::move(provider));
             }
 
-            constexpr std::array ChallengeFiles = {
-                "achievements.json",
-                "description.txt",
-                "unlocked.json",
-            };
-            for (const auto *name : ChallengeFiles) {
-                const auto archivePath = std::fs::path("challenge") / name;
-                if (tar.contains(archivePath)) {
-                    result.projectFiles.push_back({
-                        .name = fmt::format("legacy-challenge-{}", name),
-                        .contents = readVector(archivePath),
-                    });
-                }
-            }
-
             for (const auto &provider : result.providers) {
                 if (provider.descriptor["type"] != "hex.builtin.provider.view")
                     continue;
