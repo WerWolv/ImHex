@@ -30,7 +30,12 @@ namespace hex::init {
 int main(int argc, char **argv) {
     using namespace hex;
 
-    std::setlocale(LC_ALL, "en_US.utf8");
+    // Set the locale to some variant of en_US with UTF-8 encoding if possible at all
+    std::setlocale(LC_ALL, "en_US.UTF-8") ||
+    std::setlocale(LC_ALL, "en_US.utf-8") ||
+    std::setlocale(LC_ALL, "C.UTF-8")     ||
+    std::setlocale(LC_ALL, "C.utf-8")     ||
+    std::setlocale(LC_ALL, "C");
 
     // Tell the Task Manager that we are the main thread
     TaskManager::setMainThreadId(std::this_thread::get_id());
@@ -62,6 +67,7 @@ int main(int argc, char **argv) {
     log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion().get());
     log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
     log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
+    log::info("Using Locale {}", std::setlocale(LC_ALL, nullptr));
 
     #if defined(OS_LINUX)
         if (auto distro = ImHexApi::System::getLinuxDistro(); distro.has_value()) {
