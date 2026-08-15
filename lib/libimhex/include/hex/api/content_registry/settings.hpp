@@ -388,6 +388,10 @@ EXPORT_MODULE namespace hex {
                 );
             }
 
+            void setDefault(T value) {
+                m_defaultValue = std::move(value);
+            }
+
             explicit(false) operator T() const {
                 return get();
             }

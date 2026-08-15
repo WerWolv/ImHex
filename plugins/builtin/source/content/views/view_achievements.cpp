@@ -36,12 +36,12 @@ namespace hex::plugin::builtin {
         });
 
 
-        // Load settings
+        // Set default state for popups
         {
             #if defined(OS_WEB)
-                m_showPopup = false;
+                m_showPopup.setDefault(false);
             #else
-                m_showPopup = true;
+                m_showPopup.setDefault(true);
             #endif
         }
     }
