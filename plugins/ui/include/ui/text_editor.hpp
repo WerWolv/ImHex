@@ -714,6 +714,7 @@ namespace hex::ui {
             Coordinates unfoldedToFoldedCoords(const Coordinates &coords);
             Coordinates foldedToUnfoldedCoords(const Coordinates &coords);
             void setScrollY();
+            void setScrollX();
             Coordinates findPreviousWord(const Coordinates &from);
             Coordinates findNextWord(const Coordinates &from);
             Line &insertLine(i32 index);
@@ -736,7 +737,7 @@ namespace hex::ui {
             void insertText(const std::string &value);
             void insertText(const char *value);
             Interval findBlockInRange(Interval interval);
-            RangeFromCoordinates getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters);
+            Range getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters);
             void nonDelimitedFolds();
             std::pair<i32,char> findFoldDelimiters(i32 from, bool isOpenFound);
             void tokensFromSource();
@@ -760,6 +761,9 @@ namespace hex::ui {
             i32 findNextDelimiter(bool openOnly);
             void resetCodeFoldStates();
             void setIndentBlocks();
+            void setScroll(ImVec2 scroll);
+            ImVec2 getScroll() const {return m_scroll;}
+            void swapSelectionEnds();
 
             constexpr static u32 Normal = 0;
             constexpr static u32 Not    = 1;
@@ -845,6 +849,8 @@ namespace hex::ui {
             Coordinates m_focusAtCoords;
             bool m_updateFocus = false;
             float m_oldTopMargin = 0.0F;
+            float m_scrollXIncrement = 0.0F;
+            bool m_setScrollX = false;
             float m_scrollYIncrement = 0.0F;
             bool m_setScrollY = false;
             bool m_breakPointsChanged = false;
@@ -861,6 +867,10 @@ namespace hex::ui {
             IndentBlocks m_indentBlocks;
             i32 m_cachedGlobalRowMax{};
             bool m_globalRowMaxChanged = true;
+            bool m_setScroll = false;
+            ImVec2 m_scroll;
+            bool m_hasHorizScroll = false;
+            bool m_hasVertScroll = false;
         };
 
     private:
@@ -919,7 +929,7 @@ namespace hex::ui {
         void drawCodeFolds(float lineIndex, ImDrawList *drawList);
         void drawCursor(float lineIndex, const ImVec2 &contentSize, bool focused, ImDrawList *drawList);
         void drawButtons(float lineNumber);
-        void drawText(Coordinates &lineStart, u32 tokenLength, char color);
+        void drawText(Coordinates &lineStart, u32 tokenLength, unsigned char color);
         i64 drawColoredText(i32 lineIndex, const ImVec2 &textEditorSize);
         void drawBlockIndicators(ImDrawList *drawList);
         void drawMatchedDelimiter();
@@ -999,8 +1009,6 @@ namespace hex::ui {
         void setCursorPosition(const Coordinates &position, bool unfoldIfNeeded = true, bool scrollToCursor = true) {
             m_lines.setCursorPosition(position, unfoldIfNeeded, scrollToCursor);
         };
-        void setScroll(ImVec2 scroll);
-        ImVec2 getScroll() const {return m_scroll;}
         Coordinates getCursorPosition() { return m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition); }
         void setFocus(bool scrollTOCursor);
 
@@ -1016,6 +1024,7 @@ namespace hex::ui {
         void selectAll();
         bool hasSelection() { return m_lines.hasSelection(); }
         std::string getSelectedText() { return m_lines.getSelectedText(); }
+        void swapSelectionEnds();
         u32 getfirstNonWhite(u32 lineIndex);
         i32 getTotalLines() const;
         FindReplaceHandler *getFindReplaceHandler() { return m_lines.getFindReplaceHandler(); }
@@ -1058,8 +1067,6 @@ namespace hex::ui {
 
         TextEditor *m_sourceCodeEditor = nullptr;
         float m_shiftedScrollY = 0;
-        bool m_setScroll = false;
-        ImVec2 m_scroll;
         float m_scrollOffset = 0;
         float m_maxScroll =0;
         bool m_scrollFromLines = false;
@@ -1068,6 +1075,8 @@ namespace hex::ui {
         bool m_showCursor = true;
         bool m_showLineNumbers = true;
         bool m_raiseContextMenu = false;
+        bool m_scrollX = false;
+        bool m_scrollY = true;
 
 
         constexpr static char inComment = 7;
@@ -1079,6 +1088,7 @@ namespace hex::ui {
         inline static const std::string s_delimiters = "()[]{}<>";
         inline static const std::string s_separators = "()[]{}";
         inline static const std::string s_operators = "<>";
+        inline static const i32 s_largestI32 = std::numeric_limits<i32>::max(); // 0x7FFFFFFF
         inline static const Coordinates Invalid = Coordinates(0x80000000, 0x80000000);
         inline static const Interval NotValid = Interval(0x80000000, 0x80000000);
         inline static const Range NoCodeFoldSelected = Range(Invalid, Invalid);

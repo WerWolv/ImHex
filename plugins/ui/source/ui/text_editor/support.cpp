@@ -624,6 +624,33 @@ namespace hex::ui {
         return !isEmpty() && m_state.m_selection.m_end > m_state.m_selection.m_start;
     }
 
+    void Lines::swapSelectionEnds() {
+        if (m_state.m_cursorPosition == m_interactiveSelection.m_end) {
+            m_interactiveSelection.m_end = m_interactiveSelection.m_start;
+            m_interactiveSelection.m_start = m_state.m_cursorPosition;
+            m_state.m_cursorPosition = m_interactiveSelection.m_end;
+            setSelection(m_interactiveSelection);
+        } else if (m_state.m_cursorPosition == m_interactiveSelection.m_start) {
+            m_interactiveSelection.m_start = m_interactiveSelection.m_end;
+            m_interactiveSelection.m_end = m_state.m_cursorPosition;
+            m_state.m_cursorPosition = m_interactiveSelection.m_start;
+            setSelection(m_interactiveSelection);
+        } else if (m_state.m_cursorPosition == m_state.m_selection.m_end) {
+            m_state.m_selection.m_end = m_state.m_selection.m_start;
+            m_state.m_selection.m_start = m_state.m_cursorPosition;
+            m_state.m_cursorPosition = m_state.m_selection.m_end;
+        } else if (m_state.m_cursorPosition == m_state.m_selection.m_start) {
+            m_state.m_selection.m_start = m_state.m_selection.m_end;
+            m_state.m_selection.m_end = m_state.m_cursorPosition;
+            m_state.m_cursorPosition = m_state.m_selection.m_start;
+        }
+    }
+
+
+    void TextEditor::swapSelectionEnds() {
+        m_lines.swapSelectionEnds();
+    }
+
     void Lines::addUndo(std::vector<UndoRecord> value) {
         if (m_readOnly)
             return;
