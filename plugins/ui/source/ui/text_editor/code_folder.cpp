@@ -12,7 +12,7 @@ namespace hex::ui {
     using Interval              = TextEditor::Interval;
     using Token                 = pl::core::Token;
     using Coordinates           = TextEditor::Coordinates;
-    using RangeFromCoordinates  = TextEditor::RangeFromCoordinates;
+    using Range                 = TextEditor::Range;
     using CodeFoldState         = TextEditor::CodeFoldState;
     using Lines                 = TextEditor::Lines;
     using CodeFoldBlocks        = TextEditor::CodeFoldBlocks;
@@ -164,14 +164,17 @@ namespace hex::ui {
         }
     }
 
-    RangeFromCoordinates Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
-        RangeFromCoordinates result = {Invalid, Invalid};
+    Range Lines::getDelimiterLineNumbers(i32 start, i32 end, const std::string &delimiters) {
+        Range result = {Invalid, Invalid};
         Coordinates first;
-        auto tokenStart = SafeTokenIterator(m_tokens.begin(), m_tokens.end());
-
-        if (delimiters.empty() || !s_openDelimiters.contains(delimiters[0]) || (delimiters.size() > 1 && !s_closeDelimiters.contains(delimiters[1])))
+        if (start < 0 || end < 0 || start >= (i32) m_tokens.size() || end >= (i32) m_tokens.size())
             return result;
-        m_curr = tokenStart + start;
+
+        auto tokenStart = SafeTokenIterator(m_tokens.begin() + start, m_tokens.end());
+        auto tokenEnd = SafeTokenIterator(m_tokens.begin() + end, m_tokens.end());
+        if (!s_openDelimiters.contains(delimiters[0]) || (delimiters.size() > 1 && !s_closeDelimiters.contains(delimiters[1])))
+            return result;
+        m_curr = tokenStart;
         const Token openDelimiter = s_delimiterTokens[delimiters[0]].first;
         const Token closeDelimiter = s_delimiterTokens[delimiters[0]].second;
 
@@ -183,16 +186,14 @@ namespace hex::ui {
         if (start > 0) {
             Location location1 = m_curr->location;
             Location location2;
+            auto save = m_curr;
+            while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1)) {
+                if (getTokenId() == 0)
+                    break;
+                next(-1);
+            }
+            next(-1);
             if (openDelimiter.value == tkn::Separator::LeftParenthesis.value) {
-                auto save = m_curr;
-                while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1)) {
-                    if (getTokenId() == 0)
-                        break;
-                    next(-1);
-                }
-                if (getTokenId() > 0)
-                    next(-1);
-
                 if (const auto *separator2 = const_cast<Token::Separator *>(getValue<Token::Separator>(0)); separator2 != nullptr && (*separator2 == Token::Separator::Semicolon || *separator2 == Token::Separator::LeftBrace || *separator2 == Token::Separator::RightBrace)) {
                     m_curr = save;
                     location2 = m_curr->location;
@@ -200,9 +201,10 @@ namespace hex::ui {
                     location2 = m_curr->location;
                     m_curr = save;
                 }
-            } else
+            } else {
                 location2 = m_curr->location;
-
+                m_curr = save;
+            }
             if (location1.line != location2.line) {
                 Coordinates coord(location2);
                 first = coord + Coordinates(0, location2.length);
@@ -210,15 +212,18 @@ namespace hex::ui {
                 first = Coordinates(location1);
         } else
             first = Coordinates(m_curr->location);
-        m_curr = tokenStart + end;
-        if (!peek(closeDelimiter) && !peek(tkn::Separator::EndOfProgram)) {
-             return result;
-        }
-        if (!m_curr->location.source->mainSource)
-            return result;
 
-        result.first = first;
-        result.second = Coordinates(m_curr->location);
+        m_curr = tokenEnd;
+        if ((!peek(closeDelimiter) && !peek(tkn::Separator::EndOfProgram)) || !m_curr->location.source->mainSource) {
+            return result;
+        }
+
+        if (peek(tkn::Separator::EndOfProgram))
+            result.m_end = Coordinates(s_largestI32, 0);
+        else
+            result.m_end = Coordinates(m_curr->location);
+
+        result.m_start = first;
         return result;
     }
 
@@ -365,7 +370,7 @@ namespace hex::ui {
                             auto start = currentTokenId;
                             auto end = findFoldDelimiters(currentTokenId, true);
                             std::string value;
-                            std::pair<Coordinates, Coordinates> lineBased;
+                            Range lineBased;
                             i64 currTokenId;
                             if (end.first < 0) {
                                 value = currentChar;
@@ -376,8 +381,8 @@ namespace hex::ui {
                                 lineBased = getDelimiterLineNumbers(start, end.first, value);
                                 currTokenId = end.first;
                             }
-                            if (lineBased.first.getLine() != lineBased.second.getLine())
-                                m_foldPoints[lineBased.first] = lineBased.second;
+                            if (!lineBased.isSingleLine())
+                                m_foldPoints[lineBased.m_start] = lineBased.m_end;
 
                             if (currentTokenId = getTokenId(tokenStart + currTokenId); currentTokenId < 0 || currentTokenId >= (i32) m_tokens.size())
                                 return result;

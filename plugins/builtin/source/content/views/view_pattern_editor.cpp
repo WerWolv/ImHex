@@ -1995,13 +1995,13 @@ namespace hex::plugin::builtin {
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (oldProvider != nullptr) {
                 m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).getText();
-                m_scroll.get(oldProvider) = m_textEditor.get(oldProvider).getScroll();
-                m_consoleScroll.get(oldProvider) = m_consoleEditor.get(oldProvider).getScroll();
+                m_scroll.get(oldProvider) = m_textEditor.get(oldProvider).getLines().getScroll();
+                m_consoleScroll.get(oldProvider) = m_consoleEditor.get(oldProvider).getLines().getScroll();
             }
 
             if (newProvider != nullptr) {
                 m_textEditor.get(newProvider).setText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
-                m_textEditor.get(newProvider).setScroll(m_scroll.get(newProvider));
+                m_textEditor.get(newProvider).getLines().setScroll(m_scroll.get(newProvider));
                 m_textEditor.get(newProvider).setTextChanged(false);
                 m_textEditor.get(newProvider).setTabSize(m_tabSize);
                 m_textEditor.get(newProvider).setEnableHighlighting(m_colorizeSyntax);
@@ -2010,7 +2010,7 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(newProvider).setAutoIndent(m_autoIndent);
                 m_hasUnparsedChanges.get(newProvider) = true;
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
-                m_consoleEditor.get(newProvider).setScroll(m_consoleScroll.get(newProvider));
+                m_consoleEditor.get(newProvider).getLines().setScroll(m_consoleScroll.get(newProvider));
             }
         });
 
@@ -2460,7 +2460,7 @@ namespace hex::plugin::builtin {
 
                 auto sourceCode = m_textEditor.get(provider).getText(true);
 
-                tar.writeString(basePath, wolv::util::trim(sourceCode));
+                tar.writeString(basePath, sourceCode);
                 return true;
             }
         });
@@ -2518,7 +2518,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
-                editor->moveUp(editor->getPageSize() - 4, true);
+                editor->moveUp(editor->getPageSize(), true);
         });
 
         ShortcutManager::addShortcut(this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down", [this] {
@@ -2528,7 +2528,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
-                editor->moveDown(editor->getPageSize() - 4, true);
+                editor->moveDown(editor->getPageSize(), true);
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top", [this] {
@@ -2581,9 +2581,19 @@ namespace hex::plugin::builtin {
                 editor->moveRight(1, false, true);
         });
 
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::T + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.swap_selection_end", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->swapSelectionEnds();
+        });
+
         ShortcutManager::addShortcut(this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveRight(1, false, false);
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_right", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->moveRight(-1, false, false);
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left", [this] {
@@ -2594,6 +2604,11 @@ namespace hex::plugin::builtin {
         ShortcutManager::addShortcut(this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveLeft(1, false, false);
+        });
+
+        ShortcutManager::addShortcut(this, ALT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_left", [this] {
+            if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
+                editor->moveLeft(-1, false, false);
         });
 
         ShortcutManager::addShortcut(this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
@@ -2608,7 +2623,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
-                editor->moveUp(editor->getPageSize() - 4, false);
+                editor->moveUp(editor->getPageSize(), false);
         });
 
         ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
@@ -2623,7 +2638,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
-                editor->moveDown(editor->getPageSize() - 4, false);
+                editor->moveDown(editor->getPageSize(), false);
         });
 
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top", [this] {
@@ -2853,7 +2868,7 @@ namespace hex::plugin::builtin {
             fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
             [this, provider, trackFile](const auto &path) {
                 wolv::io::File file(path, wolv::io::File::Mode::Create);
-                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
+                file.writeString(m_textEditor.get(provider).getText(true));
                 m_patternFileDirty.get(provider) = false;
                 auto loadedPath = m_sourceCode.getTracker(provider).getPath();
                 if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile) || loadedPath == path)
@@ -2876,7 +2891,7 @@ namespace hex::plugin::builtin {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
         if (file.isValid() && trackFile) {
             if (isPatternDirty(provider)) {
-                file.writeString(wolv::util::trim(m_textEditor.get(provider).getText(true)));
+                file.writeString(m_textEditor.get(provider).getText(true));
                 m_patternFileDirty.get(provider) = false;
                 m_sourceCode.getIgnoreNextChangeEvent(provider) = true;
             }

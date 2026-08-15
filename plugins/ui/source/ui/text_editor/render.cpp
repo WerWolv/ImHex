@@ -1,5 +1,6 @@
 #include "imgui.h"
 #include "fonts/fonts.hpp"
+#include "hex/ui/imgui_imhex_extensions.h"
 #include <ui/text_editor.hpp>
 #include <hex/helpers/scaling.hpp>
 #include <wolv/utils/string.hpp>
@@ -174,7 +175,7 @@ namespace hex::ui {
     }
 
     float TextEditor::getPageSize() const {
-        return ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() / m_lines.m_charAdvance.y;
+        return m_lines.m_numberOfLinesDisplayed;
     }
 
     bool Lines::isEndOfLine()  {
@@ -224,9 +225,9 @@ namespace hex::ui {
 
     float Lines::getMaxDisplayedRow() {
         auto maxRow = getGlobalRowMax();
-        if (maxRow - m_topRow < m_numberOfLinesDisplayed)
-            return maxRow + 1;
-        return m_topRow + m_numberOfLinesDisplayed + 1;
+        if (maxRow - m_topRow <= m_numberOfLinesDisplayed)
+            return maxRow;
+        return m_topRow + m_numberOfLinesDisplayed - 1;
     }
 
     float Lines::getGlobalRowMax() {
@@ -308,6 +309,7 @@ namespace hex::ui {
         ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImGui::ColorConvertFloat4ToU32(scrollBg));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, scrollBarSize);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
         m_lines.m_lineNumbersStartPos = ImGui::GetCursorScreenPos();
         if (m_showLineNumbers) {
@@ -329,8 +331,10 @@ namespace hex::ui {
         ImVec2 textEditorSize = size;
         textEditorSize.x -= m_lines.m_lineNumberFieldWidth;
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(m_palette[(i32) PaletteIndex::Background]));
-        bool scroll_x = m_longestDrawnLineLength * m_lines.m_charAdvance.x >= textEditorSize.x;
-        bool scroll_y = m_lines.size() > 1;
+        m_scrollX = m_longestDrawnLineLength * m_lines.m_charAdvance.x >= textEditorSize.x;
+        m_scrollY = m_lines.size() > 1;
+        m_lines.m_hasHorizScroll = m_scrollX;
+        m_lines.m_hasVertScroll = m_scrollY;
         ImGui::SetCursorScreenPos(ImVec2(m_lines.m_lineNumbersStartPos.x + m_lines.m_lineNumberFieldWidth, m_lines.m_lineNumbersStartPos.y));
         ImGuiChildFlags childFlags = border ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
@@ -338,6 +342,8 @@ namespace hex::ui {
             ImGui::BeginChild(title, textEditorSize, childFlags, windowFlags);
 
         ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+
         if (m_handleKeyboardInputs) {
             handleKeyboardInputs();
         }
@@ -350,14 +356,14 @@ namespace hex::ui {
         renderText(textEditorSize);
 
         auto window = ImGui::GetCurrentWindow();
-        window->ScrollbarSizes = ImVec2(scrollBarSize * scroll_x, scrollBarSize * scroll_y);
-        ImGui::GetCurrentWindowRead()->ScrollbarSizes = ImVec2(scrollBarSize * scroll_y, scrollBarSize * scroll_x);
-        if (scroll_y) {
+        window->ScrollbarSizes = ImVec2(scrollBarSize * m_scrollX, scrollBarSize * m_scrollY);
+        ImGui::GetCurrentWindowRead()->ScrollbarSizes = ImVec2(scrollBarSize * m_scrollY, scrollBarSize * m_scrollX);
+        if (m_scrollY) {
             ImGui::GetCurrentWindow()->ScrollbarY = true;
             ImGui::Scrollbar(ImGuiAxis_Y);
             ImGui::GetCurrentWindow()->ScrollbarY = false;
         }
-        if (scroll_x) {
+        if (m_scrollX) {
             ImGui::GetCurrentWindow()->ScrollbarX = true;
             ImGui::Scrollbar(ImGuiAxis_X);
             ImGui::GetCurrentWindow()->ScrollbarX = false;
@@ -416,34 +422,31 @@ namespace hex::ui {
             return;
         }
 
-        auto scrollBarSize = ImGui::GetStyle().ScrollbarSize;
         float scrollX = ImGui::GetScrollX();
         float scrollY = ImGui::GetScrollY();
 
-        auto windowPadding = ImGui::GetStyle().FramePadding * 2.0f;
+        float height = ImGui::GetWindowHeight() - m_topMargin  - (m_hasHorizScroll ? ImGui::GetStyle().ScrollbarSize : 0.0f);
+        float width = ImGui::GetWindowWidth()   - m_leftMargin - (m_hasVertScroll ? ImGui::GetStyle().ScrollbarSize : 0.0f);
 
-        auto height = ImGui::GetWindowHeight() - m_topMargin - scrollBarSize;
-        auto width = ImGui::GetWindowWidth() - windowPadding.x - scrollBarSize;
+        float top = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
+        float topRow = top / m_charAdvance.y;
+        float bottomRow = ((top + height) / m_charAdvance.y) - 1;
 
-        auto top = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
-        auto topRow = (i32) rint(top / m_charAdvance.y);
-        auto bottomRow = (i32) rint((top + height) / m_charAdvance.y);
-
-        auto leftColumnIndex = (i32) rint(scrollX / m_charAdvance.x);
-        auto rightColumnIndex = (i32) rint((scrollX + width) / m_charAdvance.x);
+        float leftColumnIndex = scrollX / m_charAdvance.x;
+        float rightColumnIndex = ((scrollX + width) / m_charAdvance.x) - 1;
 
         pos = lineCoordinates(unfoldedToFoldedCoords(m_state.m_cursorPosition));
 
-        auto posColumnIndex = (i32) rint(textDistanceToLineStart(pos) / m_charAdvance.x);
-        auto posRow = lineIndexToRow(pos.m_line);
+        float posColumnIndex = textDistanceToLineStart(pos) / m_charAdvance.x;
+        float posRow = lineIndexToRow(pos.m_line);
         bool scrollToCursorX = true;
         bool scrollToCursorY = true;
 
-        if ((posRow > topRow && posRow < bottomRow) ||
-            (posRow == topRow && topRow == top  && scrollY == ImGui::GetScrollMaxY()))
+        if ((posRow > topRow && posRow <= bottomRow) ||
+            (posRow == topRow && topRow == getGlobalRowMax()  && scrollY == ImGui::GetScrollMaxY()))
             scrollToCursorY = false;
 
-        if ((posColumnIndex >= leftColumnIndex) && (posColumnIndex <= rightColumnIndex))
+        if ((posColumnIndex >= leftColumnIndex) && (posColumnIndex < rightColumnIndex))
             scrollToCursorX = false;
 
         if ((!scrollToCursorX && !scrollToCursorY && m_oldTopMargin == m_topMargin) || pos.m_line < 0) {
@@ -458,7 +461,7 @@ namespace hex::ui {
                     m_scrollToCursor = false;
                     return;
                 }
-                ImGui::SetScrollY((posRow - 1) * m_charAdvance.y);
+                ImGui::SetScrollY(posRow * m_charAdvance.y);
                 m_scrollToCursor = true;
             }
             if (posRow >= bottomRow) {
@@ -832,6 +835,7 @@ namespace hex::ui {
     }
 
     void TextEditor::CodeFoldTooltip::callback()  {
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, ImGui::ColorConvertU32ToFloat4(m_palette[(i32) PaletteIndex::Background]));
         ImGui::BeginChild("##lineNumbers");
         ImGui::BeginTooltip();
         i32 textWindowWidth = (m_lines->operator[](m_key.m_start.m_line)).lineTextSize();
@@ -849,6 +853,7 @@ namespace hex::ui {
         ImGui::EndChild();
         ImGui::EndTooltip();
         ImGui::EndChild();
+        ImGui::PopStyleColor();
     }
 
     void TextEditor::Lines::printCodeFold(const Range &key) {
@@ -1160,20 +1165,32 @@ namespace hex::ui {
         m_topLineNumber = getTopLineNumber();
         float lineIndex = m_topLineNumber;
 
+        float scrollX;
+        if (m_lines.m_setScrollX)
+            m_lines.setScrollX();
+        else
+            scrollX = ImGui::GetScrollX();
+
         float scrollY;
-        if (m_setScroll) {
-            setScroll(m_scroll);
-            scrollY = m_scroll.y;
+        if (m_lines.m_setScrollY)
+            m_lines.setScrollY();
+        else
+            scrollY = ImGui::GetScrollY();
+
+        if (m_lines.m_setScroll) {
+            m_lines.setScroll(m_lines.m_scroll);
+            scrollY = m_lines.m_scroll.y;
+            scrollX = m_lines.m_scroll.x;
         } else {
             scrollY = ImGui::GetScrollY();
-            float scrollX = ImGui::GetScrollX();
-            m_scroll = ImVec2(scrollX, scrollY);
+            scrollX = ImGui::GetScrollX();
+            m_lines.m_scroll = ImVec2(scrollX, scrollY);
         }
 
         if (m_lines.m_setTopRow)
             m_lines.setFirstRow();
         else
-            m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y - 1);
+            m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
 
         float row = m_lines.m_topRow;
         float maxDisplayedRow = m_lines.getMaxDisplayedRow();
@@ -1190,7 +1207,7 @@ namespace hex::ui {
             }
 
             bool focused = ImGui::IsWindowFocused();
-            while (std::floor(row) <= maxDisplayedRow) {
+            while (std::floor(row) <= std::floor(maxDisplayedRow)) {
                 if (!focused && m_lines.m_updateFocus) {
                     m_lines.m_state.m_cursorPosition = m_lines.m_focusAtCoords;
                     m_lines.resetCursorBlinkTime();
@@ -1339,7 +1356,10 @@ namespace hex::ui {
             color.w *= ImGui::GetStyle().Alpha;
             m_palette[i] = ImGui::ColorConvertFloat4ToU32(color);
         }
-        m_lines.m_numberOfLinesDisplayed = getPageSize();
+        auto windowHeight = ImGui::GetWindowHeight();
+        if (m_scrollX)
+            windowHeight -= ImGui::GetStyle().ScrollbarSize;
+        m_lines.m_numberOfLinesDisplayed = windowHeight / m_lines.m_charAdvance.y;
     }
 
     void TextEditor::drawSelection(float lineIndex, ImDrawList *drawList) {
@@ -1589,7 +1609,7 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::drawText(Coordinates &lineStart, u32 tokenLength, char color) {
+    void TextEditor::drawText(Coordinates &lineStart, u32 tokenLength, unsigned char color) {
         auto row = m_lines.lineIndexToRow(lineStart.m_line);
         auto begin = m_lines.getLineStartScreenPos(0,row);
         i32 renderColor = color;
@@ -1668,23 +1688,21 @@ namespace hex::ui {
         auto rowMax = 0;
         if (globalRowMax > 0)
             rowMax = std::clamp(row + m_lines.m_numberOfLinesDisplayed, 0.0F, globalRowMax - 1.0F);
-
+        float xPadding = (m_longestDrawnLineLength + 1) * m_lines.m_charAdvance.x;
+        float yPadding = (globalRowMax - rowMax) * m_lines.m_charAdvance.y + ImGui::GetWindowHeight();
         if (!m_lines.m_ignoreImGuiChild) {
             ImGui::EndChild();
             if (m_showLineNumbers) {
                 ImGui::BeginChild(title.c_str());
                 ImGui::SetCursorScreenPos(ImVec2(m_lines.m_lineNumbersStartPos.x, lineStartScreenPos.y));
-                ImGui::Dummy(ImVec2(m_lines.m_lineNumberFieldWidth, (globalRowMax - rowMax) * m_lines.m_charAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight() - m_lines.m_charAdvance.y));
+                ImGui::Dummy(ImVec2(m_lines.m_lineNumberFieldWidth, yPadding));
                 ImGui::EndChild();
             }
             ImGui::BeginChild(m_lines.m_title.c_str());
         }
 
         ImGui::SetCursorScreenPos(lineStartScreenPos);
-        if (m_showLineNumbers)
-            ImGui::Dummy(ImVec2(m_longestDrawnLineLength * m_lines.m_charAdvance.x + m_lines.m_charAdvance.x, std::floor((globalRowMax - rowMax) * m_lines.m_charAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight())));
-        else
-            ImGui::Dummy(ImVec2(m_longestDrawnLineLength * m_lines.m_charAdvance.x + m_lines.m_charAdvance.x, std::floor((globalRowMax - rowMax - 1_scaled) * m_lines.m_charAdvance.y + ImGui::GetCurrentWindow()->InnerClipRect.GetHeight())));
+        ImGui::Dummy(ImVec2(xPadding, yPadding));
 
         if (m_topMarginChanged) {
             m_topMarginChanged = false;
@@ -1800,12 +1818,13 @@ namespace hex::ui {
         for (auto &range: m_lines.m_indentBlocks) {
             if (range.contains(m_lines.m_state.m_cursorPosition)) {
                 auto blockStartScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(range.m_start.m_line));
-                auto blockEndScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(range.m_end.m_line));
+                auto maxRow = std::min(m_lines.getMaxDisplayedRow(), lineIndexToRow(range.m_end.m_line));
+                auto blockEndScreenPos = m_lines.getLineStartScreenPos(0, maxRow);
 
                 if (blockStartScreenPos != ImVec2(-1, -1) && blockEndScreenPos != ImVec2(-1, -1)) {
                     float lineX = m_lines.m_lineNumbersStartPos.x + m_lines.m_lineNumberFieldWidth - m_lines.m_charAdvance.x + 1_scaled;
-                    ImVec2 p1 = ImVec2(lineX, std::min(blockStartScreenPos.y, blockEndScreenPos.y));
-                    ImVec2 p2 = ImVec2(lineX, std::max(blockStartScreenPos.y, blockEndScreenPos.y) + m_lines.m_charAdvance.y - 1_scaled);
+                    ImVec2 p1 = ImVec2(lineX, blockStartScreenPos.y);
+                    ImVec2 p2 = ImVec2(lineX, blockEndScreenPos.y + m_lines.m_charAdvance.y - 1_scaled);
                     drawList->AddLine(p1, p2, ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]), 1.0f);
                 }
                 break;

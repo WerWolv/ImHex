@@ -122,7 +122,10 @@ namespace hex::ui {
         auto lineCount = (i32) stringVector.size();
         auto state = m_state;
         state.m_cursorPosition.m_line  += lineCount - 1;
-        state.m_cursorPosition.m_column += stringCharacterCount(stringVector[lineCount - 1]);
+        state.m_cursorPosition.m_column = stringCharacterCount(stringVector[lineCount - 1]);
+        if (lineCount == 1) {
+            state.m_cursorPosition.m_column += start.m_column;
+        }
         m_state = state;
         stringVector[lineCount - 1].append(line.substr(start.m_column,(u64) -1, Line::LinePart::Utf8));
         line.erase(start.m_column, (u64) -1);

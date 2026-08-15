@@ -148,7 +148,11 @@ namespace hex::ui {
             auto position = unfoldedToFoldedCoords(m_state.m_cursorPosition);
             m_state.m_cursorPosition.m_column = position.m_column;
         }
-        row -= amount;
+        if (row < amount) {
+            row = 0;
+            m_state.m_cursorPosition.m_column = 0;
+        } else
+            row -= amount;
         if (isMultiLineRow(row)) {
             auto position = foldedToUnfoldedCoords(Coordinates( rowToLineIndex(row), m_state.m_cursorPosition.m_column));
             m_state.m_cursorPosition = position;
@@ -177,11 +181,13 @@ namespace hex::ui {
             return;
         }
 
-        if (isLastLine(oldPos.m_line)) {
-            m_topRow += amount;
-            m_topRow = std::clamp(m_topRow, 0.0F, getGlobalRowMax());
-            setFirstRow();
-            ensureCursorVisible();
+        if (isLastLine(oldPos.m_line) && m_state.m_cursorPosition.m_column == lineMaxColumn(oldPos.m_line)) {
+            if (m_topRow < getGlobalRowMax()) {
+                m_topRow += amount;
+                m_topRow = std::clamp(m_topRow, 0.0F, getGlobalRowMax());
+                setFirstRow();
+                ensureCursorVisible();
+            }
             return;
         }
 
@@ -190,7 +196,12 @@ namespace hex::ui {
             auto position = unfoldedToFoldedCoords(m_state.m_cursorPosition);
             m_state.m_cursorPosition.m_column = position.m_column;
         }
-        row += amount;
+        if (row + amount > getGlobalRowMax()) {
+            row = getGlobalRowMax();
+            m_state.m_cursorPosition.m_column = lineMaxColumn(rowToLineIndex(row));
+        } else
+            row += amount;
+
         if (isMultiLineRow(row)) {
             auto position = foldedToUnfoldedCoords(Coordinates( rowToLineIndex(row), m_state.m_cursorPosition.m_column));
             m_state.m_cursorPosition = position;
@@ -212,6 +223,12 @@ namespace hex::ui {
 
     void Lines::moveLeft(i32 amount, bool select, bool wordMode) {
         auto oldPos = m_state.m_cursorPosition;
+        if (amount < 0) {
+            m_scrollXIncrement = -1.0;
+            setScrollX();
+            return;
+        }
+
         auto foldedPos = unfoldedToFoldedCoords(oldPos);
 
         if (isEmpty() || foldedPos < Coordinates( 0, 0) || foldedPos == Invalid)
@@ -247,6 +264,12 @@ namespace hex::ui {
 
     void Lines::moveRight(i32 amount, bool select, bool wordMode) {
         auto oldPos = m_state.m_cursorPosition;
+        if (amount < 0) {
+            m_scrollXIncrement = 1.0;
+            setScrollX();
+            return;
+        }
+
         auto foldedPos = unfoldedToFoldedCoords(oldPos);
 
         if (isEmpty() || foldedPos > lineCoordinates(-1, -1) || foldedPos == Invalid)
@@ -396,8 +419,19 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::setScroll(ImVec2 scroll) {
-        if (m_lines.m_withinRender) {
+    void Lines::setScrollX() {
+        if (!m_withinRender) {
+            m_setScrollX = true;
+            return;
+        } else {
+            m_setScrollX = false;
+            auto scrollX = ImGui::GetScrollX();
+            ImGui::SetScrollX(std::clamp(scrollX + m_scrollXIncrement, 0.0f, ImGui::GetScrollMaxX()));
+        }
+    }
+
+    void Lines::setScroll(ImVec2 scroll) {
+        if (m_withinRender) {
             ImGui::SetScrollX(scroll.x);
             ImGui::SetScrollY(scroll.y);
             m_setScroll = false;
@@ -645,8 +679,8 @@ namespace hex::ui {
     bool MatchedDelimiter::checkPosition(Lines *lines, Coordinates &from) {
         auto start = lines->lineCoordinates(from);
         auto lineIndex = start.m_line;
-        auto line = lines->m_unfoldedLines[lineIndex].m_chars;
-        auto colors = lines->m_unfoldedLines[lineIndex].m_colors;
+        auto line = lines->operator[](lineIndex).m_chars;
+        auto colors = lines->operator[](lineIndex).m_colors;
         if (!line.empty() && colors.empty())
             return false;
         auto result = lines->lineCoordsIndex(start);
@@ -672,7 +706,7 @@ namespace hex::ui {
         if (start == Invalid)
             return result;
         auto lineIndex = start.m_line;
-        auto line = lines->m_unfoldedLines[lineIndex].m_chars;
+        auto line = lines->operator[](lineIndex).m_chars;
         auto charIndex = lines->lineCoordsIndex(start);
         auto ch2 = line[charIndex];
         auto idx2 = s_delimiters.find(ch2);
@@ -763,9 +797,13 @@ namespace hex::ui {
                 return true;
             }
         }
-        if (isActive() && m_nearCursor.m_line < lines->size() && m_matched.m_line < lines->size()) {
+        if (isActive() && m_nearCursor != Invalid && m_matched != Invalid &&
+                m_nearCursor.m_line > 0 && m_nearCursor.m_line < lines->size() &&
+                m_matched.m_line > 0 && m_matched.m_line < lines->size()) {
             lines->m_unfoldedLines[m_nearCursor.m_line].m_colorized = false;
             lines->m_unfoldedLines[m_matched.m_line].m_colorized = false;
+            m_nearCursor = Invalid;
+            m_matched = Invalid;
             m_active = false;
             lines->colorize();
         }
