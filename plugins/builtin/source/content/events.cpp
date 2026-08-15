@@ -22,6 +22,7 @@
 
 #include <imgui.h>
 #include <content/global_actions.hpp>
+#include <content/legacy_project_importer.hpp>
 
 #include <content/providers/file_provider.hpp>
 
@@ -79,6 +80,11 @@ namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
         TaskManager::doLater([path] {
+            if (isLegacyProjectFile(path)) {
+                openLegacyProjectMigration(path);
+                return;
+            }
+
             for (const auto &entry : ContentRegistry::Provider::impl::getEntries()) {
                 for (const auto &extension : entry.validFileExtensions) {
                     if (path.extension() == fmt::format(".{}", extension.spec)) {

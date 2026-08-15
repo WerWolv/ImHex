@@ -6,6 +6,7 @@ set(AVAILABLE_TESTS
     Providers/InvalidResize
     Project/ParseLegacy
     Project/ImportLegacy
+    Project/MigrateLegacy
 )
 
 add_library(${PROJECT_NAME} OBJECT

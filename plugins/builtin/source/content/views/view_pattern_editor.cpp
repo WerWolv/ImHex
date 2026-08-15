@@ -2469,28 +2469,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "pattern_source_code.hexpat",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                const auto sourceCode = wolv::util::preprocessText(tar.readString(basePath));
-                m_textEditor.get(provider).setText(sourceCode);
-                m_textEditor.get(provider).removeHiddenLinesFromPattern();
-                m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
-
-                m_hasUnparsedChanges.get(provider) = true;
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
-
-                auto sourceCode = m_textEditor.get(provider).getText(true);
-
-                tar.writeString(basePath, wolv::util::trim(sourceCode));
-                return true;
-            }
-        });
-
         ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();

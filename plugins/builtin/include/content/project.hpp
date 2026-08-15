@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include <map>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,7 @@ namespace hex::plugin::builtin::project {
         size_t importedFileCount = 0;
     };
 
+    std::string createEmptyProject(const std::filesystem::path &path);
     ImportResult importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles = {});
 
 }

@@ -1112,6 +1112,46 @@ namespace hex::plugin::builtin {
         return result;
     }
 
+    std::string project::createEmptyProject(const std::filesystem::path &path) {
+        if (path.empty())
+            return "No project folder was selected";
+
+        const auto metadataDirectory = path / ProjectDirectory;
+        std::error_code error;
+        std::filesystem::create_directories(path, error);
+        if (error || !std::filesystem::is_directory(path, error))
+            return fmt::format("Failed to create the project folder: {}", error ? error.message() : "Not a directory");
+
+        if (!std::filesystem::create_directory(metadataDirectory, error)) {
+            if (error)
+                return fmt::format("Failed to create project metadata: {}", error.message());
+            return "The selected folder already contains ImHex project metadata";
+        }
+
+        if (!std::filesystem::create_directory(metadataDirectory / "providers", error)) {
+            std::error_code cleanupError;
+            std::filesystem::remove(metadataDirectory, cleanupError);
+            return fmt::format("Failed to create project metadata: {}", error ? error.message() : "Directory already exists");
+        }
+
+        const bool initialized = writeProjectFile(path, ProjectSettingsPath, nlohmann::json({
+                { "version", 1 },
+                { "associations", nlohmann::json::object() }
+            }).dump(4)) &&
+            writeProjectFile(path, std::filesystem::path(ProjectDirectory) / "providers/providers.json", nlohmann::json({
+                { "providers", nlohmann::json::array() }
+            }).dump(4));
+        if (!initialized) {
+            std::filesystem::remove_all(metadataDirectory, error);
+            return "Failed to initialize the new project";
+        }
+
+        if (!load(path))
+            return "Failed to open the new project";
+
+        return {};
+    }
+
     project::ImportResult project::importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
         ImportResult result;
         if (!ProjectManager::isFolderProject()) {

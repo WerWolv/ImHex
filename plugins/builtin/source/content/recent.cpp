@@ -1,4 +1,5 @@
 #include <content/recent.hpp>
+#include <content/legacy_project_importer.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -271,10 +272,22 @@ namespace hex::plugin::builtin::recent {
     void loadRecentEntry(const RecentEntry &recentEntry) {
         if (recentEntry.type == "project") {
             std::fs::path projectPath = recentEntry.data["path"].get<std::string>();
+            if (isLegacyProjectFile(projectPath)) {
+                openLegacyProjectMigration(projectPath);
+                return;
+            }
             if (!ProjectManager::load(projectPath)) {
                 ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(projectPath)));
             }
             return;
+        }
+
+        if (const auto path = recentEntry.data.find("path"); path != recentEntry.data.end() && path->is_string()) {
+            const auto projectPath = std::fs::path(path->get<std::string>());
+            if (isLegacyProjectFile(projectPath)) {
+                openLegacyProjectMigration(projectPath);
+                return;
+            }
         }
 
         auto provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
