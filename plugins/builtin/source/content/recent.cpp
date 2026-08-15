@@ -1,4 +1,5 @@
 #include <content/recent.hpp>
+#include <content/legacy_project_importer.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -9,7 +10,7 @@
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/provider.hpp>
 #include <hex/api/imhex_api/provider.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/default_paths.hpp>
@@ -31,7 +32,7 @@
 namespace hex::plugin::builtin::recent {
 
     constexpr static auto MaxRecentEntries = 5;
-    constexpr static auto BackupFileName = "crash_backup.hexproj";
+    constexpr static auto BackupFileName = "crash_backup";
 
     namespace {
 
@@ -46,13 +47,10 @@ namespace hex::plugin::builtin::recent {
 
         for (const auto &backupPath : paths::Backups.read()) {
             for (const auto &entry : std::fs::directory_iterator(backupPath)) {
-                if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
-                    // auto_backup.{:%y%m%d_%H%M%S}.hexproj
-                    auto fileName = wolv::util::toUTF8String(entry.path().stem());
+                if (entry.is_directory()) {
+                    auto fileName = wolv::util::toUTF8String(entry.path().filename());
                     if (!fileName.starts_with("auto_backup."))
                         continue;
-
-                    wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
 
                     auto creationTimeString = fileName.substr(12);
 
@@ -101,7 +99,7 @@ namespace hex::plugin::builtin::recent {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 if (ImGui::Selectable(backup.displayName.c_str())) {
-                    ProjectFile::load(backup.path);
+                    ProjectManager::load(backup.path);
                     Popup::close();
                 }
             }
@@ -123,7 +121,7 @@ namespace hex::plugin::builtin::recent {
         }
         auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
-        auto projectFileName = ProjectFile::getPath().filename();
+        auto projectFileName = ProjectManager::getPath().filename();
         if (projectFileName == BackupFileName)
             return;
 
@@ -136,7 +134,7 @@ namespace hex::plugin::builtin::recent {
             nlohmann::json recentEntry {
                 { "type", "project" },
                 { "displayName", wolv::util::toUTF8String(projectFileName) },
-                { "path", wolv::util::toUTF8String(ProjectFile::getPath()) }
+                { "path", wolv::util::toUTF8String(ProjectManager::getPath()) }
             };
 
             recentFile.writeString(recentEntry.dump(4));
@@ -152,7 +150,7 @@ namespace hex::plugin::builtin::recent {
                 auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 // Do not save to recents if the provider is part of a project
-                if (ProjectFile::hasPath())
+                if (ProjectManager::hasPath())
                     return;
 
                 // Do not save to recents if the provider doesn't want it
@@ -166,13 +164,13 @@ namespace hex::plugin::builtin::recent {
                         continue;
 
                     {
-                        auto path = ProjectFile::getPath();
-                        ProjectFile::clearPath();
+                        auto path = ProjectManager::getPath();
+                        ProjectManager::clearPath();
 
                         if (auto settings = provider->storeSettings({}); !settings.is_null())
                             recentFile.writeString(settings.dump(4));
 
-                        ProjectFile::setPath(path);
+                        ProjectManager::setPath(path);
                     }
                 }
             }
@@ -262,7 +260,7 @@ namespace hex::plugin::builtin::recent {
             s_autoBackupsFound = false;
             for (const auto &backupPath : paths::Backups.read()) {
                 for (const auto &entry : std::fs::directory_iterator(backupPath)) {
-                    if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
+                    if (entry.is_directory() && entry.path().filename().string().starts_with("auto_backup.")) {
                         s_autoBackupsFound = true;
                         break;
                     }
@@ -274,10 +272,22 @@ namespace hex::plugin::builtin::recent {
     void loadRecentEntry(const RecentEntry &recentEntry) {
         if (recentEntry.type == "project") {
             std::fs::path projectPath = recentEntry.data["path"].get<std::string>();
-            if (!ProjectFile::load(projectPath)) {
+            if (isLegacyProjectFile(projectPath)) {
+                openLegacyProjectMigration(projectPath);
+                return;
+            }
+            if (!ProjectManager::load(projectPath)) {
                 ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(projectPath)));
             }
             return;
+        }
+
+        if (const auto path = recentEntry.data.find("path"); path != recentEntry.data.end() && path->is_string()) {
+            const auto projectPath = std::fs::path(path->get<std::string>());
+            if (isLegacyProjectFile(projectPath)) {
+                openLegacyProjectMigration(projectPath);
+                return;
+            }
         }
 
         auto provider = ImHexApi::Provider::createProvider(recentEntry.type, true);

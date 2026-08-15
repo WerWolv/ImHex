@@ -2,7 +2,6 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <nlohmann/json.hpp>
 
@@ -18,30 +17,6 @@ using namespace std::literals::string_literals;
 namespace hex::plugin::builtin {
 
     ViewPatches::ViewPatches() : View::Window("hex.builtin.view.patches.name", ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES) {
-
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "patches.json",
-            .required = false,
-            .load = [](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                auto content = tar.readString(basePath);
-                if (content.empty())
-                    return true;
-
-                auto json = nlohmann::json::parse(content);
-                auto patches = json.at("patches").get<std::map<u64, u8>>();
-
-                for (const auto &[address, value] : patches) {
-                    provider->write(address, &value, sizeof(value));
-                }
-
-                provider->getUndoStack().groupOperations(patches.size(), "hex.builtin.undo_operation.patches");
-
-                return true;
-            },
-            .store = [](prv::Provider *, const std::fs::path &, Tar &) {
-                return true;
-            }
-        });
 
         MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
              m_savedOperations.get(from) = 0;

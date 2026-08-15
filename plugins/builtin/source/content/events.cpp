@@ -10,17 +10,19 @@
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/content_registry/provider.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
 #include <hex/trace/exceptions.hpp>
 
 #include <hex/providers/provider.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 #include <hex/ui/view.hpp>
 
 #include <imgui.h>
 #include <content/global_actions.hpp>
+#include <content/legacy_project_importer.hpp>
 
 #include <content/providers/file_provider.hpp>
 
@@ -39,6 +41,29 @@
 
 namespace hex::plugin::builtin {
 
+    static bool hasPendingFileBackedData(const prv::Provider *provider) {
+        return std::ranges::any_of(FileBackedProviderDataRegistry::getTypes(), [provider](const auto *data) {
+            return data->hasPendingData(provider);
+        });
+    }
+
+    static bool flushProjectFileBackedData() {
+        if (!ProjectManager::isFolderProject())
+            return false;
+
+        bool result = true;
+        for (auto *data : FileBackedProviderDataRegistry::getTypes())
+            result = data->flush() && result;
+        return result;
+    }
+
+    static bool hasUnsavedProviderChanges(bool includeFileBackedData) {
+        return std::ranges::any_of(ImHexApi::Provider::getProviders(), [includeFileBackedData](const auto *provider) {
+            return provider->isDataDirty() || provider->isMetadataDirty() ||
+                (includeFileBackedData && hasPendingFileBackedData(provider));
+        });
+    }
+
     static void openFileWithProvider(UnlocalizedString providerName, const std::fs::path &path) {
         auto provider = ImHexApi::Provider::createProvider(providerName, true);
         if (auto *fileProvider = dynamic_cast<prv::IProviderFilePicker*>(provider.get()); fileProvider != nullptr) {
@@ -55,11 +80,8 @@ namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
         TaskManager::doLater([path] {
-            if (path.extension() == ".hexproj") {
-                if (!ProjectFile::load(path)) {
-                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-                }
-
+            if (isLegacyProjectFile(path)) {
+                openLegacyProjectMigration(path);
                 return;
             }
 
@@ -84,12 +106,14 @@ namespace hex::plugin::builtin {
         // Collects all dirty providers, shows a table with their data/metadata dirty state,
         // and offers Save / Discard / Cancel. Save persists metadata to project if any is dirty,
         // Discard removes all providers and closes the window, Cancel does nothing.
-        static auto showExitPopup = [](GLFWwindow *window) {
+        static auto showExitPopup = [](GLFWwindow *window, bool includeFileBackedData) {
             // Build list of providers that have unsaved changes
             std::vector<ProviderDirtyState> dirtyStates;
             for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                if (provider->isDataDirty() || provider->isMetadataDirty())
-                    dirtyStates.push_back({ .provider = provider, .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() });
+                const bool metadataDirty = provider->isMetadataDirty() ||
+                    (includeFileBackedData && hasPendingFileBackedData(provider));
+                if (provider->isDataDirty() || metadataDirty)
+                    dirtyStates.push_back({ .provider = provider, .dataDirty = provider->isDataDirty(), .metadataDirty = metadataDirty });
             }
 
             PopupUnsavedChanges::open(std::move(dirtyStates),
@@ -113,7 +137,7 @@ namespace hex::plugin::builtin {
                     }
 
                     // Save project metadata
-                    ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+                    ProjectManager::hasPath() ? saveProject() : saveProjectAs();
 
                     // Close
                     imhexClosing = true;
@@ -145,9 +169,10 @@ namespace hex::plugin::builtin {
 
         EventWindowClosing::subscribe([](GLFWwindow *window) {
             imhexClosing = false;
-            if ((ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty()) && !imhexClosing) {
+            const bool includeFileBackedData = !ProjectManager::isFolderProject() || !flushProjectFileBackedData();
+            if (hasUnsavedProviderChanges(includeFileBackedData) && !imhexClosing) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                showExitPopup(window);
+                showExitPopup(window, includeFileBackedData);
             } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 TaskManager::doLater([] {
@@ -162,8 +187,9 @@ namespace hex::plugin::builtin {
 
         EventCloseButtonPressed::subscribe([]() {
             if (ImHexApi::Provider::isValid()) {
-                if (ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty()) {
-                    showExitPopup(ImHexApi::System::getMainWindowHandle());
+                const bool includeFileBackedData = !ProjectManager::isFolderProject() || !flushProjectFileBackedData();
+                if (hasUnsavedProviderChanges(includeFileBackedData)) {
+                    showExitPopup(ImHexApi::System::getMainWindowHandle(), includeFileBackedData);
                 } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
                     TaskManager::doLater([] {
                         for (auto &task : TaskManager::getRunningTasks())
@@ -183,13 +209,16 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderClosing::subscribe([](const prv::Provider *provider, bool *shouldClose) {
-            if (provider->isDataDirty() || provider->isMetadataDirty()) {
+            const bool includeFileBackedData = !ProjectManager::isFolderProject() || !flushProjectFileBackedData();
+            const bool metadataDirty = provider->isMetadataDirty() ||
+                (includeFileBackedData && hasPendingFileBackedData(provider));
+            if (provider->isDataDirty() || metadataDirty) {
                 // Block the close until the user responds to the popup
                 *shouldClose = false;
 
                 // Build dirty state for the popup table (single provider in this case)
                 std::vector<ProviderDirtyState> dirtyStates = {
-                    { .provider = const_cast<prv::Provider*>(provider), .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() }
+                    { .provider = const_cast<prv::Provider*>(provider), .dataDirty = provider->isDataDirty(), .metadataDirty = metadataDirty }
                 };
 
                 PopupUnsavedChanges::open(dirtyStates,
@@ -221,7 +250,7 @@ namespace hex::plugin::builtin {
                         }
 
                         if (anyMetadataDirty)
-                            saved = ProjectFile::hasPath() ? saveProject() : saveProjectAs();
+                            saved = ProjectManager::hasPath() ? saveProject() : saveProjectAs();
 
                         if (saved) {
                             for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
@@ -275,16 +304,16 @@ namespace hex::plugin::builtin {
                     openFile(path);
                 }, {}, true);
             } else if (name == "Open Project") {
-                fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
+                fs::openFileBrowser(fs::DialogMode::Folder, { },
                     [](const auto &path) {
-                        if (!ProjectFile::load(path)) {
+                        if (!ProjectManager::load(path)) {
                             ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     });
             } else if (name == "Open Folder") {
                 fs::openFileBrowser(fs::DialogMode::Folder, {  },
                     [](const auto &path) {
-                        if (!ProjectFile::load(path)) {
+                        if (!ProjectManager::load(path)) {
                             ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     });
@@ -331,7 +360,8 @@ namespace hex::plugin::builtin {
         EventFileDropped::subscribe([](const std::fs::path &path) {
              // Check if a custom file handler can handle the file
              bool handled = false;
-             for (const auto &[extensions, handler] : ContentRegistry::FileTypeHandler::impl::getEntries()) {
+             for (const auto &[extensions, handler, icon] : ContentRegistry::FileTypeHandler::impl::getEntries()) {
+                 std::ignore = icon;
                  for (const auto &extension : extensions) {
                      if (path.extension() == extension) {
                          // Pass the file to the handler and check if it was successful

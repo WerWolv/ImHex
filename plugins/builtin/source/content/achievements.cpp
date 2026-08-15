@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fonts/tabler_icons.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
 
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
@@ -223,117 +222,6 @@ namespace hex::plugin::builtin {
             });
         }
 
-        void registerChallengeAchievementHandlers() {
-            static std::string challengeAchievement;
-            static std::string challengeDescription;
-
-            ProjectFile::registerHandler({
-                .basePath = "challenge",
-                .required = false,
-                .load = [](const std::fs::path &basePath, const Tar &tar) {
-                    if (!tar.contains(basePath / "achievements.json") || !tar.contains(basePath / "description.txt"))
-                        return true;
-
-                    challengeAchievement = tar.readString(basePath / "achievements.json");
-                    challengeDescription = tar.readString(basePath / "description.txt");
-
-                    nlohmann::json unlockedJson;
-                    if (tar.contains(basePath / "unlocked.json")) {
-                        unlockedJson = nlohmann::json::parse(tar.readString(basePath / "unlocked.json"));
-                    }
-
-                    try {
-                        auto json = nlohmann::json::parse(challengeAchievement);
-
-                        if (json.contains("achievements")) {
-                            for (const auto &achievement : json["achievements"]) {
-                                auto &newAchievement = AchievementManager::addTemporaryAchievement<Achievement>("hex.builtin.achievement.challenge", achievement["name"].get<std::string>())
-                                        .setDescription(achievement["description"]);
-
-                                if (achievement.contains("icon")) {
-                                    if (const auto &icon = achievement["icon"]; icon.is_string() && !icon.is_null()) {
-                                        auto glyph = icon.get<std::string>();
-
-                                        newAchievement.setIcon(glyph);
-                                    }
-                                }
-
-                                if (achievement.contains("requirements")) {
-                                    if (const auto &requirements = achievement["requirements"]; requirements.is_array()) {
-                                        for (const auto &requirement : requirements) {
-                                            newAchievement.addRequirement(requirement.get<std::string>());
-                                        }
-                                    }
-                                }
-
-                                if (achievement.contains("visibility_requirements")) {
-                                    if (const auto &requirements = achievement["visibility_requirements"]; requirements.is_array()) {
-                                        for (const auto &requirement : requirements) {
-                                            newAchievement.addVisibilityRequirement(requirement.get<std::string>());
-                                        }
-                                    }
-                                }
-
-                                if (achievement.contains("password")) {
-                                    if (const auto &password = achievement["password"]; password.is_string() && !password.is_null()) {
-                                        newAchievement.setClickCallback([password = password.get<std::string>()](Achievement &achievement) {
-                                            if (password.empty())
-                                                achievement.setUnlocked(true);
-                                            else
-                                                ui::PopupTextInput::open("Enter Password", "Enter the password to unlock this achievement", [password, &achievement](const std::string &input) {
-                                                    if (input == password)
-                                                        achievement.setUnlocked(true);
-                                                    else
-                                                        ui::ToastWarning::open("The password you entered was incorrect.");
-                                                });
-                                        });
-
-                                        if (unlockedJson.contains("achievements") && unlockedJson["achievements"].is_array()) {
-                                            for (const auto &unlockedAchievement : unlockedJson["achievements"]) {
-                                                if (unlockedAchievement.is_string() && unlockedAchievement.get<std::string>() == achievement["name"].get<std::string>()) {
-                                                    newAchievement.setUnlocked(true);
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } catch (const nlohmann::json::exception &e) {
-                        log::error("Failed to load challenge project: {}", e.what());
-                        return false;
-                    }
-
-                    ui::PopupInfo::open(challengeDescription);
-
-
-                    return true;
-                },
-                .store = [](const std::fs::path &basePath, const Tar &tar) {
-                    if (!challengeAchievement.empty())
-                        tar.writeString(basePath / "achievements.json", challengeAchievement);
-                    if (!challengeDescription.empty())
-                        tar.writeString(basePath / "description.txt", challengeDescription);
-
-                    nlohmann::json unlockedJson;
-
-                    unlockedJson["achievements"] = nlohmann::json::array();
-                    for (const auto &[categoryName, achievements] : AchievementManager::getAchievements()) {
-                        for (const auto &[achievementName, achievement] : achievements) {
-                            if (achievement->isTemporary() && achievement->isUnlocked()) {
-                                unlockedJson["achievements"].push_back(achievementName);
-                            }
-                        }
-                    }
-
-                    tar.writeString(basePath / "unlocked.json", unlockedJson.dump(4));
-
-                    return true;
-                }
-            });
-        }
-
     }
 
     void registerAchievements() {
@@ -345,7 +233,6 @@ namespace hex::plugin::builtin {
         registerMiscAchievements();
 
         registerEvents();
-        registerChallengeAchievementHandlers();
     }
 
 }

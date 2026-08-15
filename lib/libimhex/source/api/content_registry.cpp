@@ -1197,11 +1197,11 @@ namespace hex {
 
         }
 
-        void add(const std::vector<std::string> &extensions, const impl::Callback &callback) {
+        void add(const std::vector<std::string> &extensions, const impl::Callback &callback, std::string icon) {
             for (const auto &extension : extensions)
                 log::debug("Registered new data handler for extensions: {}", extension);
 
-            impl::s_entries->push_back({ extensions, callback });
+            impl::s_entries->push_back({ extensions, callback, std::move(icon) });
         }
 
     }

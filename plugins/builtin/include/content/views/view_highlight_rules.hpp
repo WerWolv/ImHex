@@ -1,6 +1,8 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 
 #include <list>
 
@@ -11,7 +13,7 @@ namespace hex::plugin::builtin {
     class ViewHighlightRules : public View::Floating {
     public:
         ViewHighlightRules();
-        ~ViewHighlightRules() override = default;
+        ~ViewHighlightRules() override;
 
         void drawContent() override;
         void drawHelpText() override;
@@ -69,11 +71,16 @@ namespace hex::plugin::builtin {
         };
 
     private:
+        using Rules = std::list<Rule>;
+
+        static FileBackedProviderData<Rules>::SerializedData encodeRules(const Rules &rules);
+        static std::optional<Rules> decodeRules(std::span<const u8> data);
+
         void drawRulesList();
         void drawRulesConfig();
     private:
-        PerProvider<std::list<Rule>> m_rules;
-        PerProvider<std::list<Rule>::iterator> m_selectedRule;
+        FileBackedProviderData<Rules> m_rules;
+        PerProvider<std::optional<size_t>> m_selectedRule;
     };
 
 }

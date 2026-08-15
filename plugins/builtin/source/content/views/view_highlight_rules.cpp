@@ -2,7 +2,6 @@
 
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/views.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
@@ -105,76 +104,95 @@ namespace hex::plugin::builtin {
             else
                 return std::nullopt;
         });
-        ImHexApi::Provider::markMetadataDirty();
     }
 
     void ViewHighlightRules::Rule::Expression::removeHighlight() {
         ImHexApi::HexEditor::removeForegroundHighlightingProvider(this->highlightId);
         this->highlightId = 0;
-        ImHexApi::Provider::markMetadataDirty();
     }
 
 
-    ViewHighlightRules::ViewHighlightRules() : View::Floating("hex.builtin.view.highlight_rules.name", ICON_VS_TAG) {
+    ViewHighlightRules::ViewHighlightRules()
+        : View::Floating("hex.builtin.view.highlight_rules.name", ICON_VS_TAG),
+          m_rules({
+              .typeId = "hex.builtin.highlight-rules",
+              .displayName = "hex.builtin.view.highlight_rules.name",
+              .displayIcon = ICON_VS_TAG,
+              .extensions = { { "Highlight Rules File", "hexhl" } },
+              .encode = &ViewHighlightRules::encodeRules,
+              .decode = &ViewHighlightRules::decodeRules
+          }) {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         }, ImHexApi::Provider::isValid,
         ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
 
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "highlight_rules.json",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                const auto json = nlohmann::json::parse(tar.readString(basePath));
+        m_rules.setChangedCallback([this](prv::Provider *provider) {
+            auto &selectedRule = m_selectedRule.get(provider);
+            const auto &rules = m_rules.get(provider);
+            if (selectedRule.has_value() && *selectedRule >= rules.size())
+                selectedRule.reset();
 
-                auto &rules = m_rules.get(provider);
-                rules.clear();
+            EventHighlightingChanged::post();
+        });
 
-                for (const auto &entry : json) {
-                    Rule rule(entry["name"].get<std::string>());
+        EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
+            m_selectedRule.get(provider).reset();
+        });
+    }
 
-                    rule.enabled = entry["enabled"].get<bool>();
+    ViewHighlightRules::~ViewHighlightRules() {
+        EventProviderOpened::unsubscribe(this);
+    }
 
-                    for (const auto &expression : entry["expressions"]) {
-                        rule.addExpression(Rule::Expression(
-                            expression["mathExpression"].get<std::string>(),
-                            expression["color"].get<std::array<float, 3>>()
-                        ));
-                    }
+    FileBackedProviderData<ViewHighlightRules::Rules>::SerializedData ViewHighlightRules::encodeRules(const Rules &rules) {
+        nlohmann::json result = nlohmann::json::array();
+        for (const auto &rule : rules) {
+            nlohmann::json content = {
+                { "name", rule.name },
+                { "enabled", rule.enabled },
+                { "expressions", nlohmann::json::array() }
+            };
 
-                    rules.emplace_back(std::move(rule));
-                }
-
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
-                nlohmann::json result = nlohmann::json::array();
-                for (const auto &rule : m_rules.get(provider)) {
-                    nlohmann::json content;
-
-                    content["name"]    = rule.name;
-                    content["enabled"] = rule.enabled;
-
-                    for (const auto &expression : rule.expressions) {
-                        content["expressions"].push_back({
-                            { "mathExpression", expression.mathExpression },
-                            { "color", expression.color }
-                        });
-                    }
-
-                    result.push_back(content);
-                }
-
-                tar.writeString(basePath, result.dump(4));
-
-                return true;
+            for (const auto &expression : rule.expressions) {
+                content["expressions"].push_back({
+                    { "mathExpression", expression.mathExpression },
+                    { "color", expression.color }
+                });
             }
-        });
 
-        // Initialize the selected rule iterators to point to the end of the rules lists
-        EventProviderOpened::subscribe([this](prv::Provider *provider) {
-            m_selectedRule.get(provider) = m_rules.get(provider).end();
-        });
+            result.push_back(std::move(content));
+        }
+
+        const auto data = result.dump(4);
+        return { data.begin(), data.end() };
+    }
+
+    std::optional<ViewHighlightRules::Rules> ViewHighlightRules::decodeRules(std::span<const u8> data) {
+        try {
+            const auto json = nlohmann::json::parse(data.begin(), data.end());
+            if (!json.is_array())
+                return std::nullopt;
+
+            Rules rules;
+            for (const auto &entry : json) {
+                Rule rule(entry.at("name").get<std::string>());
+                rule.enabled = entry.at("enabled").get<bool>();
+
+                for (const auto &expression : entry.at("expressions")) {
+                    rule.addExpression(Rule::Expression(
+                        expression.at("mathExpression").get<std::string>(),
+                        expression.at("color").get<std::array<float, 3>>()
+                    ));
+                }
+
+                rules.emplace_back(std::move(rule));
+            }
+
+            return rules;
+        } catch (const std::exception &) {
+            return std::nullopt;
+        }
     }
 
     void ViewHighlightRules::drawRulesList() {
@@ -183,7 +201,8 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 1);
             ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed, 15_scaled);
 
-            for (auto it = m_rules->begin(); it != m_rules->end(); ++it) {
+            size_t index = 0;
+            for (auto it = m_rules->begin(); it != m_rules->end(); ++it, ++index) {
                 auto &rule = *it;
 
                 ImGui::TableNextRow();
@@ -192,18 +211,19 @@ namespace hex::plugin::builtin {
                 // Add a selectable for each rule to be able to switch between them
                 ImGui::PushID(&rule);
                 ImGui::BeginDisabled(!rule.enabled);
-                if (ImGui::Selectable(rule.name.c_str(), m_selectedRule == it, ImGuiSelectableFlags_SpanAvailWidth)) {
-                    m_selectedRule = it;
+                if (ImGui::Selectable(rule.name.c_str(), m_selectedRule.get() == index, ImGuiSelectableFlags_SpanAvailWidth)) {
+                    m_selectedRule.get() = index;
                 }
                 ImGui::EndDisabled();
 
-                if (m_selectedRule == it && !rule.enabled)
-                    m_selectedRule = m_rules->end();
+                if (m_selectedRule.get() == index && !rule.enabled)
+                    m_selectedRule.get().reset();
 
                 // Draw enabled checkbox
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
                 if (ImGui::Checkbox("##enabled", &rule.enabled)) {
+                    m_rules.markChanged();
                     EventHighlightingChanged::post();
                 }
                 ImGui::PopStyleVar();
@@ -217,20 +237,25 @@ namespace hex::plugin::builtin {
         // Draw button to add a new rule
         if (ImGuiExt::DimmedIconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             m_rules->emplace_back("hex.builtin.view.highlight_rules.new_rule"_lang);
+            m_rules.markChanged();
 
-            if (m_selectedRule == m_rules->end())
-                m_selectedRule = m_rules->begin();
+            if (!m_selectedRule->has_value())
+                m_selectedRule.get() = 0;
         }
 
 
         ImGui::SameLine();
 
         // Draw button to remove the selected rule
-        ImGui::BeginDisabled(m_selectedRule == m_rules->end());
+        ImGui::BeginDisabled(!m_selectedRule->has_value());
         if (ImGuiExt::DimmedIconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            auto next = std::next(*m_selectedRule);
-            m_rules->erase(*m_selectedRule);
-            m_selectedRule = next;
+            auto &selectedRule = m_selectedRule.get();
+            if (selectedRule.has_value() && *selectedRule < m_rules->size()) {
+                m_rules->erase(std::next(m_rules->begin(), *selectedRule));
+                m_rules.markChanged();
+                if (*selectedRule >= m_rules->size())
+                    selectedRule.reset();
+            }
         }
         ImGui::EndDisabled();
     }
@@ -238,17 +263,18 @@ namespace hex::plugin::builtin {
 
     void ViewHighlightRules::drawRulesConfig() {
         if (ImGuiExt::BeginSubWindow("hex.builtin.view.highlight_rules.config"_lang, nullptr, ImGui::GetContentRegionAvail())) {
-            if (m_selectedRule != m_rules->end()) {
+            const auto &selectedRule = m_selectedRule.get();
+            if (selectedRule.has_value() && *selectedRule < m_rules->size()) {
+                auto rule = std::next(m_rules->begin(), *selectedRule);
 
                 // Draw text input field for the rule name
                 ImGui::PushItemWidth(-1);
-                ImGui::InputTextWithHint("##name", "Name", m_selectedRule.get()->name);
+                if (ImGui::InputTextWithHint("##name", "Name", rule->name))
+                    m_rules.markChanged();
                 ImGui::PopItemWidth();
 
-                auto &rule = *m_selectedRule;
-
                 // Draw a table containing all the expressions for the selected rule
-                ImGui::PushID(&rule);
+                ImGui::PushID(&*rule);
                 ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2());
                 if (ImGui::BeginTable("Expressions", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y))) {
                     ImGui::TableSetupColumn("Color", ImGuiTableColumnFlags_WidthFixed, 19_scaled);
@@ -278,12 +304,15 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         if (ImGuiExt::DimmedIconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                             rule->expressions.erase(it);
+                            m_rules.markChanged();
                             break;
                         }
 
                         // If any of the inputs have changed, update the highlight
-                        if (updateHighlight)
+                        if (updateHighlight) {
+                            m_rules.markChanged();
                             EventHighlightingChanged::post();
+                        }
                     }
 
                     ImGui::EndTable();
@@ -292,8 +321,8 @@ namespace hex::plugin::builtin {
 
                 // Draw button to add a new expression
                 if (ImGuiExt::DimmedIconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    m_selectedRule.get()->addExpression(Rule::Expression("", {}));
-                    ImHexApi::Provider::markMetadataDirty();
+                    rule->addExpression(Rule::Expression("", {}));
+                    m_rules.markChanged();
                 }
 
                 ImGui::SameLine();

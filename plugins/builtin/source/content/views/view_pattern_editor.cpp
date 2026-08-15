@@ -8,7 +8,6 @@
 #include <hex/api/content_registry/views.hpp>
 #include <hex/api/content_registry/reports.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
-#include <hex/api/project_file_manager.hpp>
 
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -25,7 +24,6 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 #include <hex/helpers/default_paths.hpp>
-#include <banners/banner_button.hpp>
 
 #include <hex/providers/memory_provider.hpp>
 
@@ -171,55 +169,59 @@ namespace hex::plugin::builtin {
     };
 
 
-    std::string& PatternSourceCode::get(prv::Provider* provider) {
-        if (m_synced)
-            return m_sharedSource;
-
-        return m_perProviderSource.get(provider);
-    }
+    PatternSourceCode::PatternSourceCode()
+        : m_perProviderSource({
+              .typeId = "hex.builtin.pattern-source",
+              .displayName = "hex.builtin.view.pattern_editor.name",
+              .displayIcon = ICON_VS_FILE_CODE,
+              .extensions = { { "Pattern File", "hexpat" }, { "Pattern Import File", "pat" } },
+              .encode = [](const std::string &source) {
+                  return FileBackedProviderData<std::string>::SerializedData(source.begin(), source.end());
+              },
+              .decode = [](std::span<const u8> data) -> std::optional<std::string> {
+                  return wolv::util::preprocessText(std::string(data.begin(), data.end()));
+              }
+          }) { }
 
     const std::string& PatternSourceCode::get(prv::Provider* provider) const {
-        if (m_synced)
+        if (m_synced && !m_perProviderSource.isBound(provider))
             return m_sharedSource;
 
         return m_perProviderSource.get(provider);
     }
 
-    const wolv::io::ChangeTracker& PatternSourceCode::getTracker(prv::Provider *provider) const {
-        if (m_synced)
-            return m_sharedChangeTracker;
+    void PatternSourceCode::set(prv::Provider *provider, std::string source) {
+        if (!m_synced || m_perProviderSource.isBound(provider)) {
+            if (m_perProviderSource.get(provider) != source)
+                m_perProviderSource.set(std::move(source), provider);
+            return;
+        }
 
-        return m_PPchangeTracker.get(provider);
+        m_sharedSource = std::move(source);
+        for (auto *openProvider : ImHexApi::Provider::getProviders()) {
+            if (!m_perProviderSource.isBound(openProvider) && m_perProviderSource.get(openProvider) != m_sharedSource)
+                m_perProviderSource.set(m_sharedSource, openProvider);
+        }
     }
-    wolv::io::ChangeTracker& PatternSourceCode::getTracker(prv::Provider *provider) {
-        if (m_synced)
-            return m_sharedChangeTracker;
 
-        return m_PPchangeTracker.get(provider);
+    bool PatternSourceCode::bind(prv::Provider *provider, const std::fs::path &path) {
+        return m_perProviderSource.bind(provider, path);
     }
-    const bool& PatternSourceCode::getIgnoreNextChangeEvent(prv::Provider *provider) const {
-        if (m_synced)
-            return m_sharedIgnoreNextChangeEvent;
 
-        return m_PPignoreNextChangeEvent.get(provider);
+    std::optional<std::fs::path> PatternSourceCode::getBinding(prv::Provider *provider) const {
+        return m_perProviderSource.getBinding(provider);
     }
-    bool& PatternSourceCode::getIgnoreNextChangeEvent(prv::Provider *provider) {
-        if (m_synced)
-            return m_sharedIgnoreNextChangeEvent;
 
-        return m_PPignoreNextChangeEvent.get(provider);
+    bool PatternSourceCode::flush(prv::Provider *provider) {
+        return m_perProviderSource.flush(provider);
     }
-    const bool& PatternSourceCode::getChangeEventAcknowledgementPending(prv::Provider *provider) const {
-        if (m_synced)
-            return m_sharedChangeEventAcknowledgementPending;
 
-        return m_PPchangeEventAcknowledgementPending.get(provider);
+    bool PatternSourceCode::hasPendingData(prv::Provider *provider) const {
+        return m_perProviderSource.hasPendingData(provider);
     }
-    bool& PatternSourceCode::getChangeEventAcknowledgementPending(prv::Provider *provider) {
-        if (m_synced)
-            return m_sharedChangeEventAcknowledgementPending;
 
-        return m_PPchangeEventAcknowledgementPending.get(provider);
+    void PatternSourceCode::setChangedCallback(std::function<void(prv::Provider *)> callback) {
+        m_perProviderSource.setChangedCallback(std::move(callback));
     }
 
     bool PatternSourceCode::hasProviderSpecificSource(prv::Provider* provider) const {
@@ -227,6 +229,17 @@ namespace hex::plugin::builtin {
     }
 
     void PatternSourceCode::enableSync(bool enabled) {
+        if (m_synced == enabled)
+            return;
+
+        auto *provider = ImHexApi::Provider::get();
+        if (enabled && provider != nullptr && !m_perProviderSource.isBound(provider)) {
+            auto source = m_perProviderSource.get(provider);
+            m_synced = true;
+            this->set(provider, std::move(source));
+            return;
+        }
+
         m_synced = enabled;
     }
 
@@ -347,6 +360,18 @@ namespace hex::plugin::builtin {
     ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name", ICON_VS_SYMBOL_NAMESPACE) {
         m_editorRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
+
+        m_sourceCode.setChangedCallback([this](prv::Provider *provider) {
+            auto sourceCode = m_sourceCode.get(provider);
+            auto &editor = m_textEditor.get(provider);
+            if (editor.getText(true) == sourceCode)
+                return;
+
+            editor.setText(std::move(sourceCode));
+            editor.removeHiddenLinesFromPattern();
+            editor.setTextChanged(false);
+            m_hasUnparsedChanges.get(provider) = true;
+        });
 
         registerEvents();
         registerMenuItems();
@@ -1477,10 +1502,9 @@ namespace hex::plugin::builtin {
 
             if (m_textEditor.get(provider).isTextChanged()) {
                 m_textEditor.get(provider).setTextChanged(false);
+                m_sourceCode.set(provider, m_textEditor.get(provider).getText(true));
                 m_hasUnparsedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
-                ImHexApi::Provider::markMetadataDirty();
-                markPatternFileDirty(provider);
             }
 
             if (m_hasUnparsedChanges.get(provider) && m_runningEvaluators == 0 && m_runningParsers == 0 &&
@@ -1689,32 +1713,35 @@ namespace hex::plugin::builtin {
 
 
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
-        wolv::io::File file(path, wolv::io::File::Mode::Read);
-        if (file.isValid()) {
-            auto code = wolv::util::preprocessText(file.readString());
-
-            this->evaluatePattern(code, provider);
-            m_textEditor.get(provider).setText(code, true);
-            m_textEditor.get(provider).removeHiddenLinesFromPattern();
-            m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
-            if (trackFile) {
-                m_sourceCode.getTracker(provider) = wolv::io::ChangeTracker(file);
-                m_sourceCode.getTracker(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
-            }
-            ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
-                std::ignore = runtime;
-                auto baseAddress = wolv::util::from_chars<u64>(value);
-                if (ImHexApi::Provider::isValid()) {
-                    u64 dataSize = ImHexApi::Provider::get()->getActualSize();
-                    return baseAddress.has_value() && (dataSize == 0 || dataSize - 1 <= std::numeric_limits<u64>::max() - baseAddress.value());
-                }
-                return false;
-            });
-            m_changesWereColored = false;
-            m_allStepsCompleted = false;
-            m_runningParsers += 1;
-            TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
+        std::string code;
+        if (trackFile) {
+            if (!m_sourceCode.bind(provider, path))
+                return;
+            code = m_sourceCode.get(provider);
+        } else {
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
+            if (!file.isValid())
+                return;
+            code = wolv::util::preprocessText(file.readString());
+            m_sourceCode.set(provider, code);
         }
+
+        this->evaluatePattern(code, provider);
+        m_textEditor.get(provider).setText(code, true);
+        m_textEditor.get(provider).removeHiddenLinesFromPattern();
+        ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
+            std::ignore = runtime;
+            auto baseAddress = wolv::util::from_chars<u64>(value);
+            if (ImHexApi::Provider::isValid()) {
+                u64 dataSize = ImHexApi::Provider::get()->getActualSize();
+                return baseAddress.has_value() && (dataSize == 0 || dataSize - 1 <= std::numeric_limits<u64>::max() - baseAddress.value());
+            }
+            return false;
+        });
+        m_changesWereColored = false;
+        m_allStepsCompleted = false;
+        m_runningParsers += 1;
+        TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code, prv::Provider *provider) {
@@ -1917,7 +1944,7 @@ namespace hex::plugin::builtin {
 
             m_textEditor.get(provider).setText(wolv::util::preprocessText(code));
             m_textEditor.get(provider).removeHiddenLinesFromPattern();
-            m_sourceCode.get(provider) = code;
+            m_sourceCode.set(provider, m_textEditor.get(provider).getText(true));
             m_hasUnparsedChanges.get(provider) = true;
         });
 
@@ -1994,7 +2021,6 @@ namespace hex::plugin::builtin {
 
         EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (oldProvider != nullptr) {
-                m_sourceCode.get(oldProvider) = m_textEditor.get(oldProvider).getText();
                 m_scroll.get(oldProvider) = m_textEditor.get(oldProvider).getLines().getScroll();
                 m_consoleScroll.get(oldProvider) = m_consoleEditor.get(oldProvider).getLines().getScroll();
             }
@@ -2354,7 +2380,7 @@ namespace hex::plugin::builtin {
             } else {
                 return false;
             }
-        });
+        }, ICON_VS_FILE_CODE);
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
             std::ignore = data;
@@ -2440,28 +2466,6 @@ namespace hex::plugin::builtin {
                         ImGui::EndTooltip();
                     }
                 }
-            }
-        });
-
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "pattern_source_code.hexpat",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                const auto sourceCode = wolv::util::preprocessText(tar.readString(basePath));
-                m_textEditor.get(provider).setText(sourceCode);
-                m_textEditor.get(provider).removeHiddenLinesFromPattern();
-                m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
-
-                m_hasUnparsedChanges.get(provider) = true;
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
-                m_sourceCode.get(provider) = m_textEditor.get(provider).getText();
-
-                auto sourceCode = m_textEditor.get(provider).getText(true);
-
-                tar.writeString(basePath, sourceCode);
-                return true;
             }
         });
 
@@ -2789,26 +2793,6 @@ namespace hex::plugin::builtin {
         });
     }
 
-    void ViewPatternEditor::handleFileChange(prv::Provider *provider) {
-        if (m_sourceCode.getIgnoreNextChangeEvent(provider)) {
-            if (!m_sourceCode.isSynced())
-                m_sourceCode.getIgnoreNextChangeEvent(provider) = false;
-            return;
-        }
-
-        if (m_sourceCode.getChangeEventAcknowledgementPending(provider)) {
-            return;
-        }
-
-        m_sourceCode.getChangeEventAcknowledgementPending(provider) = true;
-        hex::ui::BannerButton::open(ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this, provider] {
-            auto path = m_sourceCode.getTracker(provider).getPath();
-            loadPatternFile(path, provider, true);
-        },[this,provider] {
-            m_sourceCode.getChangeEventAcknowledgementPending(provider) = false;
-        });
-    }
-
     void ViewPatternEditor::openPatternFile(bool trackFile) {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
@@ -2868,17 +2852,13 @@ namespace hex::plugin::builtin {
             fs::DialogMode::Save, { {"Pattern File", "hexpat"}, {"Pattern Import File", "pat"} },
             [this, provider, trackFile](const auto &path) {
                 wolv::io::File file(path, wolv::io::File::Mode::Create);
-                file.writeString(m_textEditor.get(provider).getText(true));
-                m_patternFileDirty.get(provider) = false;
-                auto loadedPath = m_sourceCode.getTracker(provider).getPath();
-                if ((loadedPath.empty() && loadedPath != path) || (!loadedPath.empty() && !trackFile) || loadedPath == path)
-                    m_sourceCode.getTracker(provider).stopTracking();
+                if (!file.isValid())
+                    return;
 
-                if (trackFile) {
-                    m_sourceCode.getTracker(provider) = wolv::io::ChangeTracker(file);
-                    m_sourceCode.getTracker(provider).startTracking([this, provider]{ this->handleFileChange(provider); });
-                    m_sourceCode.getIgnoreNextChangeEvent(provider) = true;
-                }
+                file.writeString(m_textEditor.get(provider).getText(true));
+                file.flush();
+                if (trackFile)
+                    std::ignore = m_sourceCode.bind(provider, path);
             }
         );
     }
@@ -2887,14 +2867,8 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
-        auto path = m_sourceCode.getTracker(provider).getPath();
-        wolv::io::File file(path, wolv::io::File::Mode::Create);
-        if (file.isValid() && trackFile) {
-            if (isPatternDirty(provider)) {
-                file.writeString(m_textEditor.get(provider).getText(true));
-                m_patternFileDirty.get(provider) = false;
-                m_sourceCode.getIgnoreNextChangeEvent(provider) = true;
-            }
+        if (trackFile && m_sourceCode.getBinding(provider).has_value()) {
+            std::ignore = m_sourceCode.flush(provider);
             return;
         }
         savePatternAsNewFile(trackFile);

@@ -328,7 +328,7 @@ namespace hex::prv {
 
     void Provider::setID(u32 id) {
         m_id = id;
-        if (id > s_idCounter)
+        if (id >= s_idCounter)
             s_idCounter = id + 1;
     }
 

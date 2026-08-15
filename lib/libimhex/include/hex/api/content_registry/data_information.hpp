@@ -34,7 +34,7 @@ EXPORT_MODULE namespace hex {
             virtual void process(Task &task, prv::Provider *provider, Region region) = 0;
             virtual void reset() = 0;
 
-            virtual void drawSettings() { }
+            [[nodiscard]] virtual bool drawSettings() { return false; }
             virtual void drawContent() = 0;
 
             [[nodiscard]] bool isValid() const { return m_valid; }
@@ -54,7 +54,6 @@ EXPORT_MODULE namespace hex {
         private:
             UnlocalizedString m_unlocalizedName, m_unlocalizedDescription;
             bool m_hasSettings;
-
             std::atomic<bool> m_analyzing = false;
             std::atomic<bool> m_valid     = false;
             std::atomic<bool> m_enabled   = true;

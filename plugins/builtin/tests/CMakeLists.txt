@@ -4,6 +4,9 @@ project(${IMHEX_PLUGIN_NAME}_tests)
 set(AVAILABLE_TESTS
     Providers/ReadWrite
     Providers/InvalidResize
+    Project/ParseLegacy
+    Project/ImportLegacy
+    Project/MigrateLegacy
 )
 
 add_library(${PROJECT_NAME} OBJECT

@@ -4,6 +4,7 @@
 
 #include <hex/helpers/fs.hpp>
 
+#include <limits>
 #include <memory>
 
 struct mtar_t;
@@ -34,8 +35,8 @@ namespace hex {
          */
         std::string getOpenErrorString() const;
 
-        [[nodiscard]] std::vector<u8> readVector(const std::fs::path &path) const;
-        [[nodiscard]] std::string readString(const std::fs::path &path) const;
+        [[nodiscard]] std::vector<u8> readVector(const std::fs::path &path, size_t maxSize = std::numeric_limits<size_t>::max()) const;
+        [[nodiscard]] std::string readString(const std::fs::path &path, size_t maxSize = std::numeric_limits<size_t>::max()) const;
 
         void writeVector(const std::fs::path &path, const std::vector<u8> &data) const;
         void writeString(const std::fs::path &path, const std::string &data) const;

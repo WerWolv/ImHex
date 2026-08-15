@@ -4,7 +4,7 @@
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -140,37 +140,42 @@ namespace hex::plugin::builtin {
 
             drawTitleBarBackDrop();
 
+            const auto padding = 4_scaled;
+
             ImGui::PushID("SideBarWindows");
             for (const auto &[icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
+                ImGui::SetCursorPosX(padding);
                 ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
 
-                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                bool selected = static_cast<u32>(openWindow) == index;
+
+                ImGui::PushStyleColor(ImGuiCol_Button, selected ? ImGui::GetColorU32(ImGuiCol_ScrollbarGrab) : ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
-
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3_scaled);
 
                 if (enabledCallback()) {
                     drawIndex += 1;
-                    ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
-                    {
-                        if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
-                            if (static_cast<u32>(openWindow) == index)
-                                openWindow = -1;
-                            else
-                                openWindow = index;
-                        }
+
+                    if (ImGuiExt::IconButton(icon.c_str(), ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(sidebarWidth - 2 * padding, sidebarWidth - 2 * padding))) {
+                        if (!selected)
+                            openWindow = index;
+                        else
+                            openWindow = -1;
                     }
-                    ImGui::EndDisabled();
                 }
 
+                ImGui::PopStyleVar();
                 ImGui::PopStyleColor(3);
 
                 auto sideBarFocused = ImGui::IsWindowFocused();
 
                 bool open = static_cast<u32>(openWindow) == index;
                 if (open) {
-                    ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
-                    ImGui::SetNextWindowSizeConstraints(ImVec2(0, dockSpaceSize.y + 5_scaled), ImVec2(FLT_MAX, dockSpaceSize.y + 5_scaled));
+                    const auto &g = *ImGui::GetCurrentContext();
+                    const auto titleBarHeight = g.FontSize + g.Style.FramePadding.y * 2.0F;
+                    ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, titleBarHeight));
+                    ImGui::SetNextWindowSizeConstraints(ImVec2(0, dockSpaceSize.y + 5_scaled - titleBarHeight), ImVec2(FLT_MAX, dockSpaceSize.y + 5_scaled - titleBarHeight));
 
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
                     ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
@@ -289,7 +294,7 @@ namespace hex::plugin::builtin {
 
             {
                 ImGui::SetCursorPos(searchBoxPos);
-                
+
                 if (s_showSearchBar) {
                     const auto buttonColor = [](float alpha) {
                         return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
@@ -601,7 +606,7 @@ namespace hex::plugin::builtin {
                     if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
                         const auto menuUnderlaySize = ImVec2(windowSize.x, ImGui::GetCurrentWindowRead()->MenuBarHeight);
-                        
+
                         ImGui::SetCursorPos(ImVec2());
 
                         // Prevent window from being moved unless title bar is hovered
@@ -619,7 +624,7 @@ namespace hex::plugin::builtin {
                         }
                     }
                 #endif
-                
+
                 ImGui::EndMainMenuBar();
             } else {
                 ImGui::PopStyleVar(2);
@@ -700,7 +705,7 @@ namespace hex::plugin::builtin {
 
                 const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
                 const auto sidebarPos   = ImGui::GetCursorPos();
-                const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
+                const auto sidebarWidth = shouldDrawSidebar ? 30_scaled : 0;
 
                 auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + 1_scaled;
                 #if defined(OS_MACOS)
@@ -766,11 +771,11 @@ namespace hex::plugin::builtin {
             std::string prefix, postfix;
             std::string title = DefaultImHexTitle;
 
-            if (ProjectFile::hasPath()) {
+            if (ProjectManager::hasPath()) {
                 // If a project is open, show the project name instead of the file name
 
                 prefix  = "Project ";
-                title   = ProjectFile::getPath().stem().string();
+                title   = ProjectManager::getPath().stem().string();
 
                 if (ImHexApi::Provider::isDataDirty() || ImHexApi::Provider::isMetadataDirty())
                     postfix += " (*)";

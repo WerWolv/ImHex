@@ -2,6 +2,8 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/providers/provider_data.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <pl/pattern_language.hpp>
@@ -19,14 +21,15 @@ namespace hex::plugin::builtin {
 
     class PatternSourceCode {
     public:
+        PatternSourceCode();
+
         const std::string& get(prv::Provider *provider) const;
-        std::string& get(prv::Provider *provider);
-        const wolv::io::ChangeTracker& getTracker(prv::Provider *provider) const;
-        wolv::io::ChangeTracker& getTracker(prv::Provider *provider);
-        const bool& getIgnoreNextChangeEvent(prv::Provider *provider) const;
-        bool& getIgnoreNextChangeEvent(prv::Provider *provider);
-        const bool& getChangeEventAcknowledgementPending(prv::Provider *provider) const;
-        bool& getChangeEventAcknowledgementPending(prv::Provider *provider);
+        void set(prv::Provider *provider, std::string source);
+        [[nodiscard]] bool bind(prv::Provider *provider, const std::fs::path &path);
+        [[nodiscard]] std::optional<std::fs::path> getBinding(prv::Provider *provider) const;
+        [[nodiscard]] bool flush(prv::Provider *provider);
+        [[nodiscard]] bool hasPendingData(prv::Provider *provider) const;
+        void setChangedCallback(std::function<void(prv::Provider *)> callback);
         [[nodiscard]] bool hasProviderSpecificSource(prv::Provider *provider) const;
 
         [[nodiscard]] bool isSynced() const;
@@ -34,14 +37,8 @@ namespace hex::plugin::builtin {
 
     private:
         bool m_synced = false;
-        PerProvider<std::string> m_perProviderSource;
+        FileBackedProviderData<std::string> m_perProviderSource;
         std::string m_sharedSource;
-        PerProvider<wolv::io::ChangeTracker> m_PPchangeTracker;
-        PerProvider<bool> m_PPignoreNextChangeEvent;
-        PerProvider<bool> m_PPchangeEventAcknowledgementPending;
-        wolv::io::ChangeTracker m_sharedChangeTracker;
-        bool m_sharedIgnoreNextChangeEvent = false;
-        bool m_sharedChangeEventAcknowledgementPending = false;
     };
 
     using IdentifierHighlighter = hex::plugin::builtin::IdentifierHighlighter;
@@ -170,8 +167,6 @@ namespace hex::plugin::builtin {
         bool m_openFindReplacePopUp = false;
         bool m_openGotoLinePopUp = false;
         std::map<std::fs::path, std::string> m_patternNames;
-        PerProvider<bool> m_patternFileDirty;
-        PerProvider<bool> m_patternFileInitialized;
 
         ImRect m_textEditorHoverBox;
         ImRect m_consoleHoverBox;
@@ -204,8 +199,7 @@ namespace hex::plugin::builtin {
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
         void loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile = false);
-        bool isPatternDirty(prv::Provider *provider) { return m_patternFileDirty.get(provider); }
-        void markPatternFileDirty(prv::Provider *provider) { m_patternFileDirty.get(provider) = true; }
+        bool isPatternDirty(prv::Provider *provider) const { return m_sourceCode.hasPendingData(provider); }
 
         void parsePattern(const std::string &code, prv::Provider *provider);
         void evaluatePattern(const std::string &code, prv::Provider *provider);
@@ -217,8 +211,6 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
         void registerHandlers();
-
-        void handleFileChange(prv::Provider *provider);
 
         void openPatternFile(bool trackFile);
         void savePatternToCurrentFile(bool trackFile);

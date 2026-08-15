@@ -40,6 +40,7 @@ add_imhex_plugin(
         source/content/recent.cpp
         source/content/file_handlers.cpp
         source/content/project.cpp
+        source/content/legacy_project_importer.cpp
         source/content/achievements.cpp
         source/content/file_extraction.cpp
         source/content/report_generators.cpp

@@ -4,7 +4,7 @@
 #include "hex/helpers/utils.hpp"
 
 #include <hex/api/imhex_api/system.hpp>
-#include <hex/api/project_file_manager.hpp>
+#include <hex/api/project_manager.hpp>
 
 #include <ranges>
 #include <set>
@@ -84,8 +84,8 @@ namespace hex::paths {
             emplaceUniquePath(path);
 
         // Add the project file directory to the path, if one is loaded
-        if (ProjectFile::hasPath()) {
-            emplaceUniquePath(ProjectFile::getPath().parent_path());
+        if (ProjectManager::hasPath()) {
+            emplaceUniquePath(ProjectManager::getProjectRoot());
         }
 
         return paths;

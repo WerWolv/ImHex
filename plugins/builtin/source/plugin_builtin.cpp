@@ -97,6 +97,7 @@ IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality")
     registerMCPTools();
     registerFileHandlers();
     registerProjectHandlers();
+    registerLegacyProjectImporter();
     registerCommandForwarders();
     registerAchievements();
     registerReportGenerators();
