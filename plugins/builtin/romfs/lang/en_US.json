@@ -573,6 +573,7 @@
     "hex.builtin.setting.toolbar.icons": "Toolbar Icons",
     "hex.builtin.shortcut.next_provider": "Select Next Data Source",
     "hex.builtin.shortcut.prev_provider": "Select Previous Data Source",
+    "hex.builtin.sidebar.project.name": "Project",
     "hex.builtin.task.query_docs": "Querying Docs...",
     "hex.builtin.task.sending_statistics": "Sending statistics...",
     "hex.builtin.task.check_updates": "Checking for updates...",

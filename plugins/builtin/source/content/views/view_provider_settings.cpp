@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
                 this->getWindowOpenState() = true;
         });
 
-        ContentRegistry::UserInterface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
+        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.view.provider_settings.name", ICON_VS_SERVER_PROCESS, [] {
             auto provider = hex::ImHexApi::Provider::get();
 
             if (auto *sidebarInterfaceProvider = dynamic_cast<prv::IProviderSidebarInterface*>(provider); sidebarInterfaceProvider != nullptr)

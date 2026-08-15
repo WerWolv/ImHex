@@ -47,6 +47,7 @@ EXPORT_MODULE namespace hex {
             };
 
             struct SidebarItem {
+                UnlocalizedString unlocalizedName;
                 std::string icon;
                 DrawCallback callback;
                 EnabledCallback enabledCallback;
@@ -246,11 +247,13 @@ EXPORT_MODULE namespace hex {
 
         /**
          * @brief Adds a new sidebar item
+         * @param name The name of the sidebar
          * @param icon The icon to use for the item
          * @param function The function to call to draw the item
          * @param enabledCallback The function
          */
         void addSidebarItem(
+            const UnlocalizedString &unlocalizedName,
             const std::string &icon,
             const impl::DrawCallback &function,
             const impl::EnabledCallback &enabledCallback = []{ return true; }

@@ -1104,8 +1104,8 @@ namespace hex {
 
 
 
-        void addSidebarItem(const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback) {
-            impl::s_sidebarItems->push_back({ icon, function, enabledCallback });
+        void addSidebarItem(const UnlocalizedString &unlocalizedName, const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback) {
+            impl::s_sidebarItems->push_back({ unlocalizedName, icon, function, enabledCallback });
         }
 
         void addTitleBarButton(const std::string &icon, ImGuiCustomCol color, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function) {

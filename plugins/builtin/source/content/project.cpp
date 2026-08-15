@@ -1354,7 +1354,7 @@ namespace hex::plugin::builtin {
 
     void registerProjectHandlers() {
         hex::ProjectManager::setProjectFunctions(load, store);
-        ContentRegistry::UserInterface::addSidebarItem(ICON_VS_FILES, drawProjectSidebar, [] {
+        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.sidebar.project.name", ICON_VS_FILES, drawProjectSidebar, [] {
             return ProjectManager::isFolderProject();
         });
         EventFileBackedProviderDataChanged::subscribe([](prv::Provider *, FileBackedProviderDataBase *) {

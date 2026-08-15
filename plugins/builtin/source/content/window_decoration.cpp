@@ -143,7 +143,7 @@ namespace hex::plugin::builtin {
             const auto padding = 4_scaled;
 
             ImGui::PushID("SideBarWindows");
-            for (const auto &[icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
+            for (const auto &[unlocalizedName, icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
                 ImGui::SetCursorPosX(padding);
                 ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
 
@@ -163,6 +163,7 @@ namespace hex::plugin::builtin {
                         else
                             openWindow = -1;
                     }
+                    ImGui::SetItemTooltip("%s", Lang(unlocalizedName).get());
                 }
 
                 ImGui::PopStyleVar();
@@ -180,7 +181,10 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
                     ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
                     if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                        if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail())) {
+                        if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail(), ImGuiChildFlags_None, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
+                            fonts::Default().pushBold();
+                            ImGui::TextUnformatted(Lang(unlocalizedName).get());
+                            fonts::Default().pop();
                             callback();
                         }
                         ImGui::EndChild();
