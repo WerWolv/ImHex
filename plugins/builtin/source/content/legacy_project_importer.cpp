@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
                 ImGui::Separator();
 
-                const auto width = ImGui::GetContentRegionAvail().x;
+                const auto width = 500_scaled;
                 const auto blockReason = getMigrationBlockReason();
                 if (!blockReason.empty()) {
                     ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), "%s", blockReason.c_str());
@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
                 if (ImGuiExt::DimmedButton("hex.ui.common.cancel"_lang, ImVec2(width * 0.4F, 0)))
                     close();
                 ImGui::SameLine();
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + width * 0.2F);
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + width * 0.1F);
                 ImGui::BeginDisabled(!blockReason.empty());
                 if (ImGuiExt::DimmedButton("hex.builtin.popup.project.migrate_legacy.choose_location"_lang, ImVec2(width * 0.4F, 0))) {
                     const auto accepted = fs::openFileBrowser(fs::DialogMode::Folder, {}, [path = m_path](const auto &destination) {
@@ -141,11 +141,11 @@ namespace hex::plugin::builtin {
             }
 
             [[nodiscard]] ImVec2 getMinSize() const override {
-                return scaled({ 520, 220 });
+                return scaled({ 750, 0 });
             }
 
             [[nodiscard]] ImVec2 getMaxSize() const override {
-                return scaled({ 520, 420 });
+                return scaled({ 750, 420 });
             }
 
         private:

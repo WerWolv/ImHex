@@ -403,7 +403,7 @@
     "hex.builtin.popup.project.import_legacy.partial": "Imported the legacy project, but {} providers could not be opened.\n{}",
     "hex.builtin.popup.project.import_legacy.confirm": "Only import Projects from trusted sources.\nAre you sure you want to continue?",
     "hex.builtin.popup.project.migrate_legacy.title": "Migrate Legacy Project",
-    "hex.builtin.popup.project.migrate_legacy.description": "This project was created with an older version of ImHex and must be migrated to the new folder project format. Choose a new folder for the migrated project. The original .hexproj file will not be modified. Opening the migrated project will replace the current project and data sources.",
+    "hex.builtin.popup.project.migrate_legacy.description": "This project was created with an older version of ImHex and must be migrated to the new folder project format.\n\nChoose a new folder for the migrated project. The original hexproj file will not be modified.\nOpening the migrated project will replace the current project and data sources.",
     "hex.builtin.popup.project.migrate_legacy.choose_location": "Choose Project Location...",
     "hex.builtin.popup.project.migrate_legacy.blocked_tasks": "Wait for running tasks to finish before migrating.",
     "hex.builtin.popup.project.migrate_legacy.blocked_unsaved": "Cancel this dialog, then save or discard all unsaved changes before migrating.",
