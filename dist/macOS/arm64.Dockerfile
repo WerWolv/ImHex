@@ -95,16 +95,6 @@ RUN mkdir -p /osxcross/target/macports/pkgs/vcpkg/installed/arm-osx-mytriplet/li
 # Build ImHex
 ## Copy ImHex
 COPY --from=imhex / /mnt/ImHex
-## Patch the vendored GLFW for software rendering when requested
-ARG CUSTOM_GLFW
-COPY --from=imhex /dist/macOS/0001-glfw-SW.patch /tmp
-RUN <<EOF
-set -xe
-if [ "$CUSTOM_GLFW" ]; then
-    cd /mnt/ImHex
-    git apply --directory=lib/third_party/glfw /tmp/0001-glfw-SW.patch
-fi
-EOF
 ## Configure ImHex build
 RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/_deps \
     cd /mnt/ImHex && \
