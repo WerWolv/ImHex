@@ -912,7 +912,7 @@
     "hex.builtin.welcome.learn.latest.link": "https://github.com/WerWolv/ImHex/releases/latest",
     "hex.builtin.welcome.learn.latest.title": "Última Versión",
     "hex.builtin.welcome.learn.pattern.desc": "Aprenda a escribir patterns de ImHex con nuestra extensa documentación",
-    "hex.builtin.welcome.learn.pattern.link": "https://docs.werwolv.net/pattern-language/",
+    "hex.builtin.welcome.learn.pattern.link": "https://docs.werwolv.net/pattern-language",
     "hex.builtin.welcome.learn.pattern.title": "Documentación de Pattern Language",
     "hex.builtin.welcome.learn.plugins.desc": "Extienda ImHex con características adicionales mediante plugins",
     "hex.builtin.welcome.learn.plugins.link": "https://docs.werwolv.net/imhex/common/extending-imhex",

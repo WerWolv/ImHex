@@ -315,7 +315,7 @@ The Pattern Language is the completely custom programming language developed for
 It allows you to define structures and data types in a C-like syntax and then use them to parse and highlight a file's content.
 
 - Source Code: [Link](https://github.com/WerWolv/PatternLanguage/)
-- Documentation: [Link](https://docs.werwolv.net/pattern-language/)
+- Documentation: [Link](https://docs.werwolv.net/pattern-language)
 
 ## Database
 
