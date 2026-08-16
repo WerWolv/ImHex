@@ -333,6 +333,7 @@ namespace hex::prv {
 
         [[nodiscard]] u32 getID() const;
         void setID(u32 id);
+        static void reserveID(u32 id);
 
         [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings) const;
         virtual void loadSettings(const nlohmann::json &settings);

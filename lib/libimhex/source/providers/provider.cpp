@@ -24,6 +24,12 @@ namespace hex::prv {
 
         u32 s_idCounter = 0;
 
+        u32 allocateProviderId() {
+            if (s_idCounter >= std::numeric_limits<u32>::max() - 1)
+                throw std::overflow_error("Provider ID space exhausted");
+            return s_idCounter++;
+        }
+
     }
 
     IProviderDataBackupable::IProviderDataBackupable(Provider* provider) : m_provider(provider) {
@@ -49,7 +55,7 @@ namespace hex::prv {
     }
 
 
-    Provider::Provider() : m_undoRedoStack(this), m_id(s_idCounter++) {
+    Provider::Provider() : m_undoRedoStack(this), m_id(allocateProviderId()) {
 
     }
 
@@ -328,6 +334,12 @@ namespace hex::prv {
 
     void Provider::setID(u32 id) {
         m_id = id;
+        reserveID(id);
+    }
+
+    void Provider::reserveID(u32 id) {
+        if (id >= std::numeric_limits<u32>::max() - 1)
+            throw std::overflow_error("Cannot reserve provider ID");
         if (id >= s_idCounter)
             s_idCounter = id + 1;
     }

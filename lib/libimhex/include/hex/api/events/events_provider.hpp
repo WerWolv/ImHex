@@ -56,6 +56,14 @@ namespace hex {
     EVENT_DEF(EventProviderClosing, prv::Provider *, bool *);
 
     /**
+     * @brief Signals that an approved provider removal is about to happen.
+     *
+     * The provider is still active and can safely be inspected. Unlike EventProviderClosing, this event is also
+     * emitted for forced removals and cannot cancel the operation.
+     */
+    EVENT_DEF(EventProviderRemoving, prv::Provider *);
+
+    /**
      * @brief Signals that a provider was closed
      *
      * As this is a closure information broadcast, the provider should generally not be accessed, as it could

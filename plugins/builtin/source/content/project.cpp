@@ -43,9 +43,12 @@ namespace hex::plugin::builtin {
     namespace {
 
         using Associations = std::map<u32, std::map<std::string, std::fs::path>>;
+        using ProviderSettings = std::map<u32, std::string>;
         Associations s_associations;
         std::set<u32> s_projectProviderIds;
-        std::map<u32, std::string> s_projectProviderSettings;
+        std::set<u32> s_closedProjectProviderIds;
+        std::set<u32> s_providerOpenAttempts;
+        ProviderSettings s_projectProviderSettings;
         bool s_loadingProject = false;
 
         enum class InlineEditMode {
@@ -128,6 +131,54 @@ namespace hex::plugin::builtin {
                 { "version", 1 },
                 { "associations", std::move(associations) }
             }).dump(4));
+        }
+
+        std::string rebaseStoredProviderSettings(const std::string &serializedSettings,
+                                                  const std::fs::path &sourceRoot,
+                                                  const std::fs::path &destinationRoot) {
+            if (sourceRoot.empty() || sourceRoot.lexically_normal() == destinationRoot.lexically_normal())
+                return serializedSettings;
+
+            static const std::set<std::string> PathProviderTypes = {
+                "hex.builtin.provider.file",
+                "hex.builtin.provider.base64",
+            };
+
+            try {
+                auto descriptor = nlohmann::json::parse(serializedSettings);
+                if (!PathProviderTypes.contains(descriptor.at("type").get<std::string>()))
+                    return serializedSettings;
+
+                auto &settings = descriptor.at("settings");
+                if (!settings.contains("path") || !settings["path"].is_string())
+                    return serializedSettings;
+
+                auto path = std::fs::path(settings["path"].get<std::string>());
+                if (path.is_absolute())
+                    return serializedSettings;
+
+                std::error_code error;
+                const auto rebasedPath = std::fs::proximate(sourceRoot / path, destinationRoot, error);
+                if (error)
+                    return serializedSettings;
+
+                settings["path"] = wolv::io::fs::toNormalizedPathString(rebasedPath);
+                return descriptor.dump(4);
+            } catch (const std::exception &error) {
+                log::warn("Failed to rebase stored project provider settings: {}", error.what());
+                return serializedSettings;
+            }
+        }
+
+        void snapshotProviderSettings(prv::Provider *provider) {
+            try {
+                s_projectProviderSettings[provider->getID()] = nlohmann::json({
+                    { "type", provider->getTypeName() },
+                    { "settings", provider->storeSettings({}) }
+                }).dump(4);
+            } catch (const std::exception &error) {
+                log::warn("Failed to snapshot project provider {}: {}", provider->getID(), error.what());
+            }
         }
 
         FileBackedProviderDataBase *getDataTypeForFile(const std::fs::path &path) {
@@ -567,6 +618,9 @@ namespace hex::plugin::builtin {
             if (storedSettings == s_projectProviderSettings.end())
                 return false;
 
+            s_providerOpenAttempts.insert(id);
+            auto finishOpenAttempt = SCOPE_GUARD { s_providerOpenAttempts.erase(id); };
+
             try {
                 const auto providerSettings = nlohmann::json::parse(storedSettings->second);
                 const auto providerType = providerSettings.at("type").get<std::string>();
@@ -622,9 +676,20 @@ namespace hex::plugin::builtin {
         bool loadProviders(const std::fs::path &root) {
             const auto basePath = std::fs::path(ProjectDirectory) / "providers";
             std::vector<u32> providerIds;
+            std::vector<u32> closedProviderIds;
             try {
                 const auto manifest = nlohmann::json::parse(readProjectFile(root, basePath / "providers.json"));
                 providerIds = manifest.at("providers").get<std::vector<u32>>();
+                closedProviderIds = manifest.value("closedProviders", std::vector<u32> {});
+
+                const std::set<u32> providerIdSet(providerIds.begin(), providerIds.end());
+                const std::set<u32> closedProviderIdSet(closedProviderIds.begin(), closedProviderIds.end());
+                if (providerIdSet.size() != providerIds.size() || closedProviderIdSet.size() != closedProviderIds.size())
+                    throw std::runtime_error("Project provider manifest contains duplicate IDs");
+                if (std::ranges::any_of(providerIds, [](u32 id) { return id >= std::numeric_limits<u32>::max() - 1; }))
+                    throw std::runtime_error("Project provider manifest contains a reserved ID");
+                if (!std::ranges::all_of(closedProviderIdSet, [&providerIdSet](u32 id) { return providerIdSet.contains(id); }))
+                    throw std::runtime_error("Closed provider is not part of the project");
             } catch (const std::exception &error) {
                 log::error("Failed to load project provider manifest at {}: {}", root.string(), error.what());
                 ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, error.what()));
@@ -632,7 +697,11 @@ namespace hex::plugin::builtin {
             }
 
             s_projectProviderIds = { providerIds.begin(), providerIds.end() };
+            s_closedProjectProviderIds = { closedProviderIds.begin(), closedProviderIds.end() };
             s_projectProviderSettings.clear();
+
+            for (const auto id : providerIds)
+                prv::Provider::reserveID(id);
 
             if (providerIds.empty())
                 return true;
@@ -645,6 +714,9 @@ namespace hex::plugin::builtin {
                         s_projectProviderSettings[id] = serializedSettings;
                     const auto providerSettings = nlohmann::json::parse(std::move(serializedSettings));
                     const auto providerType = providerSettings.at("type").get<std::string>();
+                    if (s_closedProjectProviderIds.contains(id))
+                        continue;
+
                     auto provider = ImHexApi::Provider::createProvider(providerType, true, false);
                     if (provider == nullptr) {
                         log::warn("Failed to create project provider {} of type {}", id, providerType);
@@ -678,28 +750,40 @@ namespace hex::plugin::builtin {
             return true;
         }
 
-        bool storeProviders(const std::fs::path &root) {
+        bool storeProviders(const std::fs::path &root, const std::fs::path &sourceRoot, ProviderSettings &storedSettings) {
             const auto basePath = std::fs::path(ProjectDirectory) / "providers";
+            auto providerSettings = s_projectProviderSettings;
+            std::set<u32> serializedActiveProviderIds;
             for (const auto *provider : ImHexApi::Provider::getProviders()) {
                 if (!s_projectProviderIds.contains(provider->getID()))
                     continue;
 
-                s_projectProviderSettings[provider->getID()] = nlohmann::json({
+                serializedActiveProviderIds.insert(provider->getID());
+                providerSettings[provider->getID()] = nlohmann::json({
                     { "type", provider->getTypeName() },
                     { "settings", provider->storeSettings({}) }
                 }).dump(4);
             }
 
             for (const auto id : s_projectProviderIds) {
-                const auto settings = s_projectProviderSettings.find(id);
-                if (settings != s_projectProviderSettings.end() &&
-                    !writeProjectFile(root, basePath / fmt::format("{}.json", id), settings->second))
+                auto settings = providerSettings.find(id);
+                if (settings == providerSettings.end())
+                    continue;
+
+                if (!serializedActiveProviderIds.contains(id))
+                    settings->second = rebaseStoredProviderSettings(settings->second, sourceRoot, root);
+                if (!writeProjectFile(root, basePath / fmt::format("{}.json", id), settings->second))
                     return false;
             }
 
-            return writeProjectFile(root, basePath / "providers.json", nlohmann::json({
-                { "providers", s_projectProviderIds }
-            }).dump(4));
+            if (!writeProjectFile(root, basePath / "providers.json", nlohmann::json({
+                { "providers", s_projectProviderIds },
+                { "closedProviders", s_closedProjectProviderIds }
+            }).dump(4)))
+                return false;
+
+            storedSettings = std::move(providerSettings);
+            return true;
         }
 
         void scheduleProjectMetadataSave();
@@ -707,6 +791,7 @@ namespace hex::plugin::builtin {
         void removeProviderFromProject(u32 id) {
             auto *provider = getProviderById(id);
             s_projectProviderIds.erase(id);
+            s_closedProjectProviderIds.erase(id);
             s_projectProviderSettings.erase(id);
 
             if (const auto associations = s_associations.find(id); associations != s_associations.end()) {
@@ -738,10 +823,12 @@ namespace hex::plugin::builtin {
                 return false;
 
             const auto root = ProjectManager::getProjectRoot();
-            if (!storeProviders(root) || !storeAssociations(root)) {
+            ProviderSettings storedSettings;
+            if (!storeProviders(root, root, storedSettings) || !storeAssociations(root)) {
                 log::error("Failed to update project metadata at {}", root.string());
                 return false;
             }
+            s_projectProviderSettings = std::move(storedSettings);
             return true;
         }
 
@@ -1014,6 +1101,7 @@ namespace hex::plugin::builtin {
         if (!std::fs::is_regular_file(filePath / projectMetadataPath)) {
             s_associations.clear();
             s_projectProviderIds.clear();
+            s_closedProjectProviderIds.clear();
             s_projectProviderSettings.clear();
             for (const auto *provider : ImHexApi::Provider::getProviders())
                 s_projectProviderIds.insert(provider->getID());
@@ -1077,6 +1165,7 @@ namespace hex::plugin::builtin {
 
         if (!originalFolderProject) {
             s_projectProviderIds.clear();
+            s_closedProjectProviderIds.clear();
             s_projectProviderSettings.clear();
             for (const auto *provider : ImHexApi::Provider::getProviders())
                 s_projectProviderIds.insert(provider->getID());
@@ -1084,7 +1173,8 @@ namespace hex::plugin::builtin {
 
         materializeRegisteredData();
 
-        bool result = storeProviders(*filePath) && storeAssociations(*filePath);
+        ProviderSettings storedSettings;
+        bool result = storeProviders(*filePath, originalPath, storedSettings) && storeAssociations(*filePath);
 
         for (auto *data : FileBackedProviderDataRegistry::getTypes())
             result = data->flush() && result;
@@ -1093,6 +1183,9 @@ namespace hex::plugin::builtin {
             log::error("Failed to write project storage at {}", filePath->string());
         if (!result)
             return false;
+
+        if (updateLocation)
+            s_projectProviderSettings = std::move(storedSettings);
 
         ImHexApi::Provider::resetDataDirty();
         for (const auto &provider : ImHexApi::Provider::getProviders())
@@ -1144,7 +1237,8 @@ namespace hex::plugin::builtin {
                 { "associations", nlohmann::json::object() }
             }).dump(4)) &&
             writeProjectFile(path, std::filesystem::path(ProjectDirectory) / "providers/providers.json", nlohmann::json({
-                { "providers", nlohmann::json::array() }
+                { "providers", nlohmann::json::array() },
+                { "closedProviders", nlohmann::json::array() }
             }).dump(4));
         if (!initialized) {
             std::filesystem::remove_all(metadataDirectory, error);
@@ -1183,14 +1277,14 @@ namespace hex::plugin::builtin {
             }
 
             auto id = provider.id;
-            if (id == std::numeric_limits<u32>::max()) {
+            if (id >= std::numeric_limits<u32>::max() - 1) {
                 result.error = std::string("hex.builtin.popup.error.project.import_legacy.reserved_provider_id"_lang);
                 return result;
             }
             if (usedIds.contains(id)) {
-                while (usedIds.contains(nextId) && nextId != std::numeric_limits<u32>::max())
+                while (usedIds.contains(nextId) && nextId < std::numeric_limits<u32>::max() - 1)
                     nextId += 1;
-                if (nextId == std::numeric_limits<u32>::max()) {
+                if (nextId >= std::numeric_limits<u32>::max() - 1) {
                     result.error = std::string("hex.builtin.popup.error.project.import_legacy.no_provider_ids_available"_lang);
                     return result;
                 }
@@ -1210,6 +1304,7 @@ namespace hex::plugin::builtin {
                 }
             }
             provider.id = remappedIds.at(provider.id);
+            prv::Provider::reserveID(provider.id);
         }
 
         const auto root = ProjectManager::getProjectRoot();
@@ -1369,26 +1464,33 @@ namespace hex::plugin::builtin {
             materializeRegisteredData();
         });
         EventProviderOpened::subscribe([](prv::Provider *provider) {
-            if (ProjectManager::isFolderProject() && !s_loadingProject)
+            if (ProjectManager::isFolderProject() && !s_loadingProject) {
                 s_projectProviderIds.insert(provider->getID());
+                s_closedProjectProviderIds.erase(provider->getID());
+                snapshotProviderSettings(provider);
+            }
             scheduleProjectMetadataSave();
         });
-        EventProviderClosed::subscribe([](prv::Provider *provider) {
-            if (s_loadingProject)
+        EventProviderRemoving::subscribe([](prv::Provider *provider) {
+            if (s_loadingProject || !ProjectManager::isFolderProject() ||
+                !s_projectProviderIds.contains(provider->getID()) || s_providerOpenAttempts.contains(provider->getID()))
                 return;
 
-            if (ProjectManager::isFolderProject() && s_projectProviderIds.contains(provider->getID()) &&
-                !s_projectProviderSettings.contains(provider->getID())) {
-                s_projectProviderSettings[provider->getID()] = nlohmann::json({
-                    { "type", provider->getTypeName() },
-                    { "settings", provider->storeSettings({}) }
-                }).dump(4);
-            }
+            snapshotProviderSettings(provider);
+        });
+        EventProviderClosed::subscribe([](prv::Provider *provider) {
+            if (s_loadingProject || !ProjectManager::isFolderProject() ||
+                !s_projectProviderIds.contains(provider->getID()) || s_providerOpenAttempts.contains(provider->getID()))
+                return;
+
+            s_closedProjectProviderIds.insert(provider->getID());
             scheduleProjectMetadataSave();
         });
         EventProjectClosed::subscribe([] {
             s_associations.clear();
             s_projectProviderIds.clear();
+            s_closedProjectProviderIds.clear();
+            s_providerOpenAttempts.clear();
             s_projectProviderSettings.clear();
             s_inlineEdit.reset();
         });

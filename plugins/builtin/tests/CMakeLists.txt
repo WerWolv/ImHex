@@ -7,6 +7,7 @@ set(AVAILABLE_TESTS
     Project/ParseLegacy
     Project/ImportLegacy
     Project/MigrateLegacy
+    Project/ProviderOpenState
 )
 
 add_library(${PROJECT_NAME} OBJECT

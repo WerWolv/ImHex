@@ -441,6 +441,8 @@ namespace hex {
             if (it == s_providers->end())
                 return;
 
+            EventProviderRemoving::post(provider);
+
             if (!s_providers->empty()) {
                 if (it == s_providers->begin()) {
                     // If the first provider is being closed, select the one that's the first one now
