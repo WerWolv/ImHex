@@ -271,7 +271,7 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
             if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 s_sidebarState.panelWidth = ImGui::GetWindowSize().x;
-                if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail(), ImGuiChildFlags_None, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
+                if (ImGui::BeginChild("##Content", ImGui::GetContentRegionAvail())) {
                     fonts::Default().pushBold();
                     ImGui::TextUnformatted(Lang(openItem->unlocalizedName).get());
                     fonts::Default().pop();
