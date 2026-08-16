@@ -54,6 +54,35 @@ namespace hex::plugin::builtin {
         ProviderSettings s_projectProviderSettings;
         bool s_loadingProject = false;
 
+        std::string getProviderName(const nlohmann::json &descriptor) {
+            if (const auto settings = descriptor.find("settings"); settings != descriptor.end() && settings->is_object()) {
+                for (const auto *key : { "displayName", "name" }) {
+                    if (const auto value = settings->find(key); value != settings->end() && value->is_string() && !value->empty())
+                        return value->get<std::string>();
+                }
+
+                if (const auto path = settings->find("path"); path != settings->end() && path->is_string() && !path->empty())
+                    return wolv::util::toUTF8String(std::fs::path(path->get<std::string>()).filename());
+            }
+
+            if (const auto type = descriptor.find("type"); type != descriptor.end() && type->is_string())
+                return Lang(type->get<std::string>());
+
+            return "hex.builtin.sidebar.project.provider_fallback"_lang;
+        }
+
+        std::string getStoredProviderName(u32 id) {
+            const auto storedSettings = s_projectProviderSettings.find(id);
+            if (storedSettings == s_projectProviderSettings.end())
+                return "hex.builtin.sidebar.project.provider_fallback"_lang;
+
+            try {
+                return getProviderName(nlohmann::json::parse(storedSettings->second));
+            } catch (const std::exception &) {
+                return "hex.builtin.sidebar.project.provider_fallback"_lang;
+            }
+        }
+
         enum class InlineEditMode {
             CreateFile,
             CreateFolder,
@@ -660,7 +689,7 @@ namespace hex::plugin::builtin {
         };
 
         StoredProviderDisplayInfo getStoredProviderDisplayInfo(u32 id) {
-            StoredProviderDisplayInfo result { .name = fmt::format("hex.builtin.sidebar.project.provider_fallback"_lang, id) };
+            StoredProviderDisplayInfo result { .name = getStoredProviderName(id) };
             const auto storedSettings = s_projectProviderSettings.find(id);
             if (storedSettings == s_projectProviderSettings.end())
                 return result;
@@ -668,7 +697,6 @@ namespace hex::plugin::builtin {
             try {
                 const auto providerSettings = nlohmann::json::parse(storedSettings->second);
                 const auto providerType = providerSettings.at("type").get<std::string>();
-                result.name = providerSettings.at("settings").value("displayName", providerType);
                 for (const auto &entry : ContentRegistry::Provider::impl::getEntries()) {
                     if (entry.unlocalizedName.get() == providerType) {
                         result.icon = entry.icon;
@@ -692,9 +720,9 @@ namespace hex::plugin::builtin {
                 const std::set<u32> providerIdSet(providerIds.begin(), providerIds.end());
                 const std::set<u32> closedProviderIdSet(closedProviderIds.begin(), closedProviderIds.end());
                 if (providerIdSet.size() != providerIds.size() || closedProviderIdSet.size() != closedProviderIds.size())
-                    throw std::runtime_error("Project provider manifest contains duplicate IDs");
+                    throw std::runtime_error("Project data source manifest contains duplicate entries");
                 if (std::ranges::any_of(providerIds, [](u32 id) { return id >= std::numeric_limits<u32>::max() - 1; }))
-                    throw std::runtime_error("Project provider manifest contains a reserved ID");
+                    throw std::runtime_error("Project data source manifest contains an invalid entry");
                 if (!std::ranges::all_of(closedProviderIdSet, [&providerIdSet](u32 id) { return providerIdSet.contains(id); }))
                     throw std::runtime_error("Closed provider is not part of the project");
             } catch (const std::exception &error) {
@@ -713,13 +741,15 @@ namespace hex::plugin::builtin {
             if (providerIds.empty())
                 return true;
 
-            std::vector<u32> failedProviderIds;
+            std::vector<std::string> failedProviderNames;
             for (const auto id : providerIds) {
+                auto providerName = getStoredProviderName(id);
                 try {
                     auto serializedSettings = readProjectFile(root, basePath / fmt::format("{}.json", id));
                     if (!serializedSettings.empty())
                         s_projectProviderSettings[id] = serializedSettings;
                     const auto providerSettings = nlohmann::json::parse(std::move(serializedSettings));
+                    providerName = getProviderName(providerSettings);
                     const auto providerType = providerSettings.at("type").get<std::string>();
                     if (s_closedProjectProviderIds.contains(id))
                         continue;
@@ -727,31 +757,34 @@ namespace hex::plugin::builtin {
                     auto provider = ImHexApi::Provider::createProvider(providerType, true, false);
                     if (provider == nullptr) {
                         log::warn("Failed to create project provider {} of type {}", id, providerType);
-                        failedProviderIds.push_back(id);
+                        failedProviderNames.push_back(providerName);
                         continue;
                     }
 
                     provider->setID(id);
                     provider->loadSettings(providerSettings.at("settings"));
+                    providerName = provider->getName();
                     const auto result = provider->open();
                     if (result.isFailure() || result.isRedirecting() || !provider->isAvailable() || !provider->isReadable()) {
                         removeProviderForProjectLoad(provider.get());
-                        failedProviderIds.push_back(id);
+                        failedProviderNames.push_back(providerName);
                         continue;
                     }
                     EventProviderOpened::post(provider.get());
                 } catch (const std::exception &error) {
                     log::warn("Failed to load project provider {}: {}", id, error.what());
-                    if (auto *provider = getProviderById(id); provider != nullptr)
+                    if (auto *provider = getProviderById(id); provider != nullptr) {
+                        providerName = provider->getName();
                         removeProviderForProjectLoad(provider);
-                    failedProviderIds.push_back(id);
+                    }
+                    failedProviderNames.push_back(providerName);
                 }
             }
 
-            if (!failedProviderIds.empty()) {
+            if (!failedProviderNames.empty()) {
                 ui::ToastWarning::open(fmt::format(
                     "hex.builtin.popup.error.project.load.some_providers_failed"_lang,
-                    fmt::join(failedProviderIds, ", ")));
+                    fmt::join(failedProviderNames, ", ")));
             }
 
             return true;
@@ -1067,13 +1100,13 @@ namespace hex::plugin::builtin {
                     if (providerToOpen.has_value()) {
                         TaskManager::doLater([id = *providerToOpen] {
                             if (!openStoredProjectProvider(id))
-                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, id));
+                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, getStoredProviderName(id)));
                         });
                     }
                     if (providerToReplace.has_value()) {
                         TaskManager::doLater([id = *providerToReplace] {
                             if (!reopenProviderWithNewSettings(id))
-                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, id));
+                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, getStoredProviderName(id)));
                         });
                     }
                     if (providerToRemove.has_value())
@@ -1310,26 +1343,27 @@ namespace hex::plugin::builtin {
         std::map<u32, u32> remappedIds;
         u32 nextId = 0;
         for (const auto &provider : providers) {
+            const auto providerName = getProviderName(provider.descriptor);
             if (!legacyIds.insert(provider.id).second) {
-                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.duplicate_provider_id"_lang, provider.id);
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.duplicate_provider_id"_lang, providerName);
                 return result;
             }
             if (!provider.descriptor.contains("type") || !provider.descriptor["type"].is_string() ||
                 !provider.descriptor.contains("settings") || !provider.descriptor["settings"].is_object()) {
-                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.invalid_provider_settings"_lang, provider.id);
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.invalid_provider_settings"_lang, providerName);
                 return result;
             }
 
             auto id = provider.id;
             if (id >= std::numeric_limits<u32>::max() - 1) {
-                result.error = std::string("hex.builtin.popup.error.project.import_legacy.reserved_provider_id"_lang);
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.reserved_provider_id"_lang, providerName);
                 return result;
             }
             if (usedIds.contains(id)) {
                 while (usedIds.contains(nextId) && nextId < std::numeric_limits<u32>::max() - 1)
                     nextId += 1;
                 if (nextId >= std::numeric_limits<u32>::max() - 1) {
-                    result.error = std::string("hex.builtin.popup.error.project.import_legacy.no_provider_ids_available"_lang);
+                    result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.no_provider_ids_available"_lang, providerName);
                     return result;
                 }
                 id = nextId++;
@@ -1456,13 +1490,17 @@ namespace hex::plugin::builtin {
         });
         for (auto &importedProvider : providers) {
             const auto id = importedProvider.id;
+            auto providerName = getProviderName(importedProvider.descriptor);
             s_projectProviderIds.insert(id);
             s_projectProviderSettings[id] = importedProvider.descriptor.dump(4);
 
             std::ignore = openStoredProjectProvider(id);
             auto *provider = getProviderById(id);
-            if (provider == nullptr)
+            if (provider == nullptr) {
                 result.failedProviderIds.push_back(id);
+            } else {
+                providerName = provider->getName();
+            }
 
             for (const auto &file : preparedFiles) {
                 if (file.providerId != id)
@@ -1484,9 +1522,9 @@ namespace hex::plugin::builtin {
                 if (appliedPatches > 0)
                     provider->getUndoStack().groupOperations(appliedPatches, "hex.builtin.undo_operation.patches");
                 if (appliedPatches != importedProvider.patches.size())
-                    result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_applied"_lang, id));
+                    result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_applied"_lang, providerName));
             } else if (!importedProvider.patches.empty()) {
-                result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_imported"_lang, id));
+                result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_imported"_lang, providerName));
             }
         }
 

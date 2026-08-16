@@ -32,6 +32,23 @@ namespace hex::plugin::builtin {
         constexpr auto MetadataPath = "IMHEX_METADATA";
         constexpr auto MetadataMagic = "HEX";
 
+        std::string getLegacyProviderName(const nlohmann::json &descriptor) {
+            if (const auto settings = descriptor.find("settings"); settings != descriptor.end() && settings->is_object()) {
+                for (const auto *key : { "displayName", "name" }) {
+                    if (const auto value = settings->find(key); value != settings->end() && value->is_string() && !value->empty())
+                        return value->get<std::string>();
+                }
+
+                if (const auto path = settings->find("path"); path != settings->end() && path->is_string() && !path->empty())
+                    return wolv::util::toUTF8String(std::fs::path(path->get<std::string>()).filename());
+            }
+
+            if (const auto type = descriptor.find("type"); type != descriptor.end() && type->is_string())
+                return Lang(type->get<std::string>());
+
+            return "hex.builtin.sidebar.project.provider_fallback"_lang;
+        }
+
         struct LegacyFileMapping {
             const char *archiveName;
             const char *typeId;
@@ -190,27 +207,42 @@ namespace hex::plugin::builtin {
             const auto providerIds = manifest.at("providers").get<std::vector<u32>>();
             const std::set<u32> providerIdSet(providerIds.begin(), providerIds.end());
             if (providerIdSet.size() != providerIds.size()) {
-                result.error = "The legacy project contains duplicate provider IDs";
+                auto providerName = std::string("hex.builtin.sidebar.project.provider_fallback"_lang);
+                std::set<u32> seenProviderIds;
+                for (const auto id : providerIds) {
+                    if (seenProviderIds.insert(id).second)
+                        continue;
+
+                    const auto settingsPath = std::fs::path("providers") / fmt::format("{}.json", id);
+                    try {
+                        if (tar.contains(settingsPath))
+                            providerName = getLegacyProviderName(nlohmann::json::parse(readString(settingsPath)));
+                    } catch (const std::exception &) {
+                    }
+                    break;
+                }
+                result.error = fmt::format("Legacy data source '{}' appears more than once", providerName);
                 return result;
             }
 
             for (const auto id : providerIds) {
                 const auto settingsPath = std::fs::path("providers") / fmt::format("{}.json", id);
                 if (!tar.contains(settingsPath)) {
-                    result.error = fmt::format("Legacy project provider {} has no settings", id);
+                    result.error = fmt::format("Legacy data source '{}' has no settings", "hex.builtin.sidebar.project.provider_fallback"_lang);
                     return result;
                 }
 
                 auto descriptor = nlohmann::json::parse(readString(settingsPath));
+                const auto providerName = getLegacyProviderName(descriptor);
                 if (!descriptor.contains("type") || !descriptor["type"].is_string() ||
                     !descriptor.contains("settings") || !descriptor["settings"].is_object()) {
-                    result.error = fmt::format("Legacy project provider {} has invalid settings", id);
+                    result.error = fmt::format("Legacy data source '{}' has invalid settings", providerName);
                     return result;
                 }
                 const auto &settings = descriptor["settings"];
                 if ((settings.contains("displayName") && !settings["displayName"].is_string()) ||
                     (settings.contains("name") && !settings["name"].is_string())) {
-                    result.error = fmt::format("Legacy project provider {} has an invalid name", id);
+                    result.error = fmt::format("Legacy data source '{}' has an invalid name", providerName);
                     return result;
                 }
                 normalizeLegacyProviderPath(path, descriptor);
@@ -260,7 +292,7 @@ namespace hex::plugin::builtin {
                     continue;
                 const auto &settings = provider.descriptor["settings"];
                 if (!settings.contains("id") || !hasSafeLegacyProviderId(settings["id"].get<u32>(), providerIdSet)) {
-                    result.error = fmt::format("Legacy view provider {} references a missing provider", provider.id);
+                    result.error = fmt::format("Legacy view data source '{}' references a missing data source", getLegacyProviderName(provider.descriptor));
                     result.providers.clear();
                     return result;
                 }
