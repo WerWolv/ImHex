@@ -10,6 +10,7 @@ set(AVAILABLE_TESTS
         TestFailing
         TestProvider_read
         TestProvider_write
+        EncodingLineStartAddressCache
 
     # File
         FileAccess
@@ -31,6 +32,7 @@ endif ()
 
 add_executable(${PROJECT_NAME}
         source/common.cpp
+        source/encoding_line_cache.cpp
         source/file.cpp
         source/net.cpp
         source/utils.cpp

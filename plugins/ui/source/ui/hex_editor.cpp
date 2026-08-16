@@ -1006,7 +1006,7 @@ namespace hex::ui {
                                 } else {
                                     if (m_encodingLineStartAddresses[y] >= bytesPerRow) {
                                         encodingData.emplace_back(y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
-                                        m_encodingLineStartAddresses.push_back(0);
+                                        impl::appendEncodingLineStartAddress(m_encodingLineStartAddresses, size_t(y), 0);
                                     } else {
                                         u64 offset = m_encodingLineStartAddresses[y];
                                         do {
@@ -1018,7 +1018,7 @@ namespace hex::ui {
                                             encodingData.emplace_back(address, result);
                                         } while (offset < bytesPerRow);
 
-                                        m_encodingLineStartAddresses.push_back(offset - bytesPerRow);
+                                        impl::appendEncodingLineStartAddress(m_encodingLineStartAddresses, size_t(y), offset - bytesPerRow);
                                     }
                                 }
 
