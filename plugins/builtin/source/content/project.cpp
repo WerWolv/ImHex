@@ -214,11 +214,12 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        void showProjectFileError(const std::string &operation, const std::fs::path &path, const std::error_code &error = {}) {
+        void showProjectFileError(const UnlocalizedString &message, const UnlocalizedString &detailedMessage,
+                                  const std::fs::path &path, const std::error_code &error = {}) {
             if (error)
-                ui::ToastError::open(fmt::format("Failed to {} '{}': {}", operation, path.generic_string(), error.message()));
+                ui::ToastError::open(fmt::format(Lang(detailedMessage), path.generic_string(), error.message()));
             else
-                ui::ToastError::open(fmt::format("Failed to {} '{}'", operation, path.generic_string()));
+                ui::ToastError::open(fmt::format(Lang(message), path.generic_string()));
         }
 
         bool moveProjectEntry(const std::fs::path &source, const std::fs::path &destination) {
@@ -231,15 +232,15 @@ namespace hex::plugin::builtin {
             const auto destinationPath = root / destination;
             std::error_code error;
             if (!std::fs::exists(sourcePath, error) || std::fs::exists(destinationPath, error) || error) {
-                showProjectFileError("move", source, error);
+                showProjectFileError("hex.builtin.popup.error.project.entry.move", "hex.builtin.popup.error.project.entry.move.details", source, error);
                 return false;
             }
             if (std::fs::is_directory(sourcePath, error) && isSameOrDescendant(destination, source)) {
-                showProjectFileError("move a folder into itself", source);
+                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.entry.move_into_self"_lang, source.generic_string()));
                 return false;
             }
             if (containsProviderFile(source)) {
-                ui::ToastError::open("Close the data source before moving its backing file.");
+                ui::ToastError::open("hex.builtin.popup.error.project.entry.backing_file_in_use"_lang);
                 return false;
             }
 
@@ -268,7 +269,7 @@ namespace hex::plugin::builtin {
 
             std::fs::rename(sourcePath, destinationPath, error);
             if (error) {
-                showProjectFileError("move", source, error);
+                showProjectFileError("hex.builtin.popup.error.project.entry.move", "hex.builtin.popup.error.project.entry.move.details", source, error);
                 return false;
             }
 
@@ -283,7 +284,7 @@ namespace hex::plugin::builtin {
 
         bool deleteProjectEntry(const std::fs::path &relativePath) {
             if (!isSafeProjectPath(relativePath) || isReservedProjectPath(relativePath) || containsProviderFile(relativePath)) {
-                showProjectFileError("delete", relativePath);
+                showProjectFileError("hex.builtin.popup.error.project.entry.delete", "hex.builtin.popup.error.project.entry.delete.details", relativePath);
                 return false;
             }
 
@@ -294,7 +295,7 @@ namespace hex::plugin::builtin {
             else
                 std::fs::remove(path, error);
             if (error) {
-                showProjectFileError("delete", relativePath, error);
+                showProjectFileError("hex.builtin.popup.error.project.entry.delete", "hex.builtin.popup.error.project.entry.delete.details", relativePath, error);
                 return false;
             }
 
@@ -357,7 +358,7 @@ namespace hex::plugin::builtin {
         void commitInlineEdit() {
             if (!s_inlineEdit.has_value() || !isValidEntryName(s_inlineEdit->name)) {
                 if (s_inlineEdit.has_value())
-                    showProjectFileError("use name", s_inlineEdit->name);
+                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.entry.invalid_name"_lang, s_inlineEdit->name));
                 return;
             }
 
@@ -371,7 +372,7 @@ namespace hex::plugin::builtin {
 
                     std::error_code error;
                     if (!std::fs::create_directory(ProjectManager::getProjectRoot() / relativePath, error))
-                        showProjectFileError("create folder", relativePath, error);
+                        showProjectFileError("hex.builtin.popup.error.project.entry.create_folder", "hex.builtin.popup.error.project.entry.create_folder.details", relativePath, error);
                 } else if (edit.mode == InlineEditMode::CreateFile) {
                     auto *data = FileBackedProviderDataRegistry::get(edit.typeId);
                     if (data == nullptr || data->getType().extensions.empty())
@@ -383,7 +384,7 @@ namespace hex::plugin::builtin {
                     const auto relativePath = (edit.directory / fileName).lexically_normal();
                     if (!isSafeProjectPath(relativePath) || isReservedProjectPath(relativePath) ||
                         !FileBackedProviderDataRegistry::createFile(edit.typeId, ProjectManager::getProjectRoot() / relativePath))
-                        showProjectFileError("create file", relativePath);
+                        showProjectFileError("hex.builtin.popup.error.project.entry.create_file", "hex.builtin.popup.error.project.entry.create_file.details", relativePath);
                 } else {
                     auto fileName = std::fs::path(edit.name);
                     std::error_code error;
@@ -431,12 +432,12 @@ namespace hex::plugin::builtin {
         }
 
         void promptDeleteProjectEntry(const std::fs::path &relativePath) {
-            ui::PopupQuestion::open(fmt::format("Delete '{}' permanently?", relativePath.generic_string()),
+            ui::PopupQuestion::open(fmt::format("hex.builtin.popup.project.delete_entry.confirm"_lang, relativePath.generic_string()),
                 [relativePath] { deleteProjectEntry(relativePath); }, [] { });
         }
 
         void drawCreateProjectEntryMenu(const std::fs::path &directory) {
-            if (ImGui::BeginMenu(fmt::format("{} New File", ICON_VS_NEW_FILE).c_str())) {
+            if (ImGui::BeginMenu(fmt::format("{} {}", ICON_VS_NEW_FILE, "hex.builtin.sidebar.project.menu.new_file"_lang).c_str())) {
                 for (auto *data : FileBackedProviderDataRegistry::getTypes()) {
                     if (data->getType().extensions.empty())
                         continue;
@@ -446,7 +447,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem(fmt::format("{} New Folder", ICON_VS_NEW_FOLDER).c_str()))
+            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_NEW_FOLDER, "hex.builtin.sidebar.project.menu.new_folder"_lang).c_str()))
                 startCreatingFolder(directory);
         }
 
@@ -598,7 +599,7 @@ namespace hex::plugin::builtin {
         };
 
         StoredProviderDisplayInfo getStoredProviderDisplayInfo(u32 id) {
-            StoredProviderDisplayInfo result { .name = fmt::format("Provider {}", id) };
+            StoredProviderDisplayInfo result { .name = fmt::format("hex.builtin.sidebar.project.provider_fallback"_lang, id) };
             const auto storedSettings = s_projectProviderSettings.find(id);
             if (storedSettings == s_projectProviderSettings.end())
                 return result;
@@ -801,12 +802,12 @@ namespace hex::plugin::builtin {
             if (fileHovered && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
                 ImGui::OpenPopup("ProjectFileContextMenu");
             if (ImGui::BeginPopup("ProjectFileContextMenu")) {
-                if (ImGui::MenuItem(fmt::format("{} Rename", ICON_VS_EDIT).c_str()))
+                if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_EDIT, "hex.builtin.sidebar.project.menu.rename"_lang).c_str()))
                     startRenamingProjectEntry(relativePath);
-                if (ImGui::MenuItem(fmt::format("{} Delete", ICON_VS_TRASH).c_str()))
+                if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.delete"_lang).c_str()))
                     promptDeleteProjectEntry(relativePath);
                 ImGui::Separator();
-                if (ImGui::MenuItem(fmt::format("{} Reveal in file manager", ICON_VS_FOLDER_OPENED).c_str()))
+                if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_FOLDER_OPENED, "hex.builtin.sidebar.project.menu.reveal_in_file_manager"_lang).c_str()))
                     fs::openFolderWithSelectionExternal(path);
                 ImGui::EndPopup();
             }
@@ -856,9 +857,9 @@ namespace hex::plugin::builtin {
                         if (ImGui::BeginPopupContextItem("##ProjectDirectoryContextMenu")) {
                             drawCreateProjectEntryMenu(relativePath);
                             ImGui::Separator();
-                            if (ImGui::MenuItem(fmt::format("{} Rename", ICON_VS_EDIT).c_str()))
+                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_EDIT, "hex.builtin.sidebar.project.menu.rename"_lang).c_str()))
                                 startRenamingProjectEntry(relativePath);
-                            if (ImGui::MenuItem(fmt::format("{} Delete", ICON_VS_TRASH).c_str()))
+                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.delete"_lang).c_str()))
                                 promptDeleteProjectEntry(relativePath);
                             ImGui::EndPopup();
                         }
@@ -907,7 +908,7 @@ namespace hex::plugin::builtin {
                         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
                             ImHexApi::Provider::setCurrentProvider(provider);
                         if (ImGui::BeginPopupContextItem("##ProviderContextMenu")) {
-                            if (ImGui::MenuItem(fmt::format("{} Remove from project", ICON_VS_TRASH).c_str()))
+                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.remove_from_project"_lang).c_str()))
                                 providerToRemove = provider->getID();
                             ImGui::EndPopup();
                         }
@@ -929,7 +930,7 @@ namespace hex::plugin::builtin {
                                 if (ImGui::IsItemHovered())
                                     ImGui::SetTooltip("%s", filePath.generic_string().c_str());
                                 if (ImGui::BeginPopupContextItem()) {
-                                    if (ImGui::MenuItem(fmt::format("{} Remove from provider", ICON_VS_DEBUG_DISCONNECT).c_str()))
+                                    if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_DEBUG_DISCONNECT, "hex.builtin.sidebar.project.menu.remove_from_provider"_lang).c_str()))
                                         associationToRemove = handlerPath;
                                     ImGui::EndPopup();
                                 }
@@ -955,9 +956,9 @@ namespace hex::plugin::builtin {
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                             providerToOpen = id;
                         if (ImGui::BeginPopupContextItem("##ClosedProviderContextMenu")) {
-                            if (ImGui::MenuItem(fmt::format("{} Open", ICON_VS_GO_TO_FILE).c_str()))
+                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_GO_TO_FILE, "hex.ui.common.open"_lang).c_str()))
                                 providerToOpen = id;
-                            if (ImGui::MenuItem(fmt::format("{} Remove from project", ICON_VS_TRASH).c_str()))
+                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.remove_from_project"_lang).c_str()))
                                 providerToRemove = id;
                             ImGui::EndPopup();
                         }
@@ -967,7 +968,7 @@ namespace hex::plugin::builtin {
                     if (providerToOpen.has_value()) {
                         TaskManager::doLater([id = *providerToOpen] {
                             if (!openStoredProjectProvider(id))
-                                ui::ToastError::open(fmt::format("Failed to open project provider {}", id));
+                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, id));
                         });
                     }
                     if (providerToRemove.has_value())
@@ -978,7 +979,7 @@ namespace hex::plugin::builtin {
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
                 if (s_inlineEdit.has_value() && s_inlineEdit->mode != InlineEditMode::Rename && s_inlineEdit->directory.empty())
                     ImGui::SetNextItemOpen(true);
-                const auto filesLabel = fmt::format("{}  Project Files", ICON_VS_ROOT_FOLDER);
+                const auto filesLabel = fmt::format("{}  {}", ICON_VS_ROOT_FOLDER, "hex.builtin.sidebar.project.files"_lang);
                 const bool filesOpen = ImGui::TreeNodeEx("##ProjectFiles", ImGuiTreeNodeFlags_DrawLinesToNodes |
                     ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth, "%s", filesLabel.c_str());
                 drawProjectDirectoryDropTarget({});
@@ -1114,24 +1115,28 @@ namespace hex::plugin::builtin {
 
     std::string project::createEmptyProject(const std::filesystem::path &path) {
         if (path.empty())
-            return "No project folder was selected";
+            return "hex.builtin.popup.error.project.create.no_folder_selected"_lang;
 
         const auto metadataDirectory = path / ProjectDirectory;
         std::error_code error;
         std::filesystem::create_directories(path, error);
-        if (error || !std::filesystem::is_directory(path, error))
-            return fmt::format("Failed to create the project folder: {}", error ? error.message() : "Not a directory");
+        if (error)
+            return fmt::format("hex.builtin.popup.error.project.create.folder_failed"_lang, error.message());
+        if (!std::filesystem::is_directory(path, error))
+            return "hex.builtin.popup.error.project.create.not_directory"_lang;
 
         if (!std::filesystem::create_directory(metadataDirectory, error)) {
             if (error)
-                return fmt::format("Failed to create project metadata: {}", error.message());
-            return "The selected folder already contains ImHex project metadata";
+                return fmt::format("hex.builtin.popup.error.project.create.metadata_failed"_lang, error.message());
+            return "hex.builtin.popup.error.project.create.metadata_exists"_lang;
         }
 
         if (!std::filesystem::create_directory(metadataDirectory / "providers", error)) {
             std::error_code cleanupError;
             std::filesystem::remove(metadataDirectory, cleanupError);
-            return fmt::format("Failed to create project metadata: {}", error ? error.message() : "Directory already exists");
+            if (error)
+                return fmt::format("hex.builtin.popup.error.project.create.metadata_failed"_lang, error.message());
+            return "hex.builtin.popup.error.project.create.metadata_directory_exists"_lang;
         }
 
         const bool initialized = writeProjectFile(path, ProjectSettingsPath, nlohmann::json({
@@ -1143,11 +1148,11 @@ namespace hex::plugin::builtin {
             }).dump(4));
         if (!initialized) {
             std::filesystem::remove_all(metadataDirectory, error);
-            return "Failed to initialize the new project";
+            return "hex.builtin.popup.error.project.create.initialize_failed"_lang;
         }
 
         if (!load(path))
-            return "Failed to open the new project";
+            return "hex.builtin.popup.error.project.create.open_failed"_lang;
 
         return {};
     }
@@ -1155,7 +1160,7 @@ namespace hex::plugin::builtin {
     project::ImportResult project::importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
         ImportResult result;
         if (!ProjectManager::isFolderProject()) {
-            result.error = "No folder project is open";
+            result.error = std::string("hex.builtin.popup.error.project.import_legacy.no_open_project"_lang);
             return result;
         }
 
@@ -1168,25 +1173,25 @@ namespace hex::plugin::builtin {
         u32 nextId = 0;
         for (const auto &provider : providers) {
             if (!legacyIds.insert(provider.id).second) {
-                result.error = fmt::format("Duplicate provider ID {} in legacy project", provider.id);
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.duplicate_provider_id"_lang, provider.id);
                 return result;
             }
             if (!provider.descriptor.contains("type") || !provider.descriptor["type"].is_string() ||
                 !provider.descriptor.contains("settings") || !provider.descriptor["settings"].is_object()) {
-                result.error = fmt::format("Invalid settings for provider {}", provider.id);
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.invalid_provider_settings"_lang, provider.id);
                 return result;
             }
 
             auto id = provider.id;
             if (id == std::numeric_limits<u32>::max()) {
-                result.error = "Legacy project uses a reserved provider ID";
+                result.error = std::string("hex.builtin.popup.error.project.import_legacy.reserved_provider_id"_lang);
                 return result;
             }
             if (usedIds.contains(id)) {
                 while (usedIds.contains(nextId) && nextId != std::numeric_limits<u32>::max())
                     nextId += 1;
                 if (nextId == std::numeric_limits<u32>::max()) {
-                    result.error = "No provider IDs are available for import";
+                    result.error = std::string("hex.builtin.popup.error.project.import_legacy.no_provider_ids_available"_lang);
                     return result;
                 }
                 id = nextId++;
@@ -1240,7 +1245,7 @@ namespace hex::plugin::builtin {
                     std::error_code statusError;
                     const auto status = std::fs::symlink_status(root / relativePath, statusError);
                     if (statusError && statusError != std::errc::no_such_file_or_directory) {
-                        result.error = fmt::format("Failed to inspect import path '{}': {}",
+                        result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.inspect_path_failed"_lang,
                             relativePath.generic_string(), statusError.message());
                         return result;
                     }
@@ -1258,7 +1263,7 @@ namespace hex::plugin::builtin {
                         std::error_code error;
                         std::fs::remove(root / prepared.relativePath, error);
                     }
-                    result.error = fmt::format("Failed to write imported project file '{}'", relativePath.generic_string());
+                    result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.write_file_failed"_lang, relativePath.generic_string());
                     return result;
                 }
 
@@ -1276,7 +1281,7 @@ namespace hex::plugin::builtin {
                 std::error_code statusError;
                 const auto status = std::fs::symlink_status(root / relativePath, statusError);
                 if (statusError && statusError != std::errc::no_such_file_or_directory) {
-                    result.error = fmt::format("Failed to inspect import path '{}': {}",
+                    result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.inspect_path_failed"_lang,
                         relativePath.generic_string(), statusError.message());
                     return result;
                 }
@@ -1298,7 +1303,7 @@ namespace hex::plugin::builtin {
                     std::error_code error;
                     std::fs::remove(root / prepared, error);
                 }
-                result.error = fmt::format("Failed to write imported project file '{}'", relativePath.generic_string());
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.write_file_failed"_lang, relativePath.generic_string());
                 return result;
             }
             preparedProjectFiles.push_back(std::move(relativePath));
@@ -1340,15 +1345,15 @@ namespace hex::plugin::builtin {
                 if (appliedPatches > 0)
                     provider->getUndoStack().groupOperations(appliedPatches, "hex.builtin.undo_operation.patches");
                 if (appliedPatches != importedProvider.patches.size())
-                    result.warnings.push_back(fmt::format("Some patches for provider {} could not be applied", id));
+                    result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_applied"_lang, id));
             } else if (!importedProvider.patches.empty()) {
-                result.warnings.push_back(fmt::format("Patches for provider {} could not be imported", id));
+                result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_imported"_lang, id));
             }
         }
 
         result.success = persistProjectMetadata();
         if (!result.success)
-            result.error = "Failed to save imported project metadata";
+            result.error = std::string("hex.builtin.popup.error.project.import_legacy.save_metadata_failed"_lang);
         return result;
     }
 

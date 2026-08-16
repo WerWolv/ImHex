@@ -196,7 +196,7 @@ TEST_SEQUENCE("Project/MigrateLegacy") {
     TEST_ASSERT(providers.front()->getActualSize() == 2);
     TEST_ASSERT(std::filesystem::is_regular_file(projectPath));
 
-    TEST_ASSERT(project::createEmptyProject(root) == "The selected folder already contains ImHex project metadata");
+    TEST_ASSERT(project::createEmptyProject(root) == std::string("hex.builtin.popup.error.project.create.metadata_exists"_lang));
 
     std::filesystem::remove(projectPath);
     TEST_SUCCESS();
