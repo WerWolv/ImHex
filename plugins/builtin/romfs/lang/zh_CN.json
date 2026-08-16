@@ -456,7 +456,6 @@
     "hex.builtin.setting.general.pattern_data_max_filter_items": "最大显示模式筛选项数",
     "hex.builtin.setting.general.save_recent_providers": "保存最近使用的提供者",
     "hex.builtin.setting.general.show_tips": "在启动时显示每日提示",
-    "hex.builtin.setting.general.sync_pattern_source": "在提供器间同步模式源码",
     "hex.builtin.setting.general.upload_crash_logs": "上传崩溃报告",
     "hex.builtin.setting.hex_editor": "Hex 编辑器",
     "hex.builtin.setting.hex_editor.byte_padding": "额外的字节列对齐",

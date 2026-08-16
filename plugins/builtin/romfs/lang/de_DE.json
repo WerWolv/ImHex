@@ -434,7 +434,6 @@
     "hex.builtin.setting.general.save_recent_providers": "Speichere zuletzt geöffnete Provider",
     "hex.builtin.setting.general.server_contact": "Update checks und Statistiken zulassen",
     "hex.builtin.setting.general.show_tips": "Tipps beim Start anzeigen",
-    "hex.builtin.setting.general.sync_pattern_source": "Pattern Source Code zwischen Providern synchronisieren",
     "hex.builtin.setting.general.upload_crash_logs": "Absturzberichte senden",
     "hex.builtin.setting.hex_editor": "Hex Editor",
     "hex.builtin.setting.hex_editor.byte_padding": "Extra Byte-Zellenabstand",

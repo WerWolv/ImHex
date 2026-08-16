@@ -441,7 +441,6 @@
     "hex.builtin.setting.general.network_interface": "Включить сетевой интерфейс",
     "hex.builtin.setting.general.save_recent_providers": "Сохранять недавние источники",
     "hex.builtin.setting.general.show_tips": "Показывать подсказки на загрузочном экране",
-    "hex.builtin.setting.general.sync_pattern_source": "Синхронизировать код шаблона с несколькими источниками",
     "hex.builtin.setting.general.upload_crash_logs": "Отправлять отчёты об ошибках",
     "hex.builtin.setting.hex_editor": "Hex редактор",
     "hex.builtin.setting.hex_editor.byte_padding": "Доп. смещение ячейки байт",

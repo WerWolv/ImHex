@@ -424,7 +424,6 @@
     "hex.builtin.setting.general.network_interface": "Hálózati interfész engedélyezése",
     "hex.builtin.setting.general.save_recent_providers": "Nemrég használt források mentése",
     "hex.builtin.setting.general.show_tips": "Tippek mutatása indításkor",
-    "hex.builtin.setting.general.sync_pattern_source": "Sablon kód szinkronizálása források között",
     "hex.builtin.setting.general.upload_crash_logs": "Hibajelentések feltöltése",
     "hex.builtin.setting.hex_editor": "Hex szerkesztő",
     "hex.builtin.setting.hex_editor.byte_padding": "Extra bájt cella kitöltés",

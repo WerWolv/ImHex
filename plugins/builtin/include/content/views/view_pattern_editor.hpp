@@ -32,11 +32,7 @@ namespace hex::plugin::builtin {
         void setChangedCallback(std::function<void(prv::Provider *)> callback);
         [[nodiscard]] bool hasProviderSpecificSource(prv::Provider *provider) const;
 
-        [[nodiscard]] bool isSynced() const;
-        void enableSync(bool enabled);
-
     private:
-        bool m_synced = false;
         FileBackedProviderData<std::string> m_perProviderSource;
         std::string m_sharedSource;
     };

@@ -433,7 +433,6 @@
     "hex.builtin.setting.general.save_recent_providers": "儲存近期使用過的提供者",
     "hex.builtin.setting.general.server_contact": "啟用檢查更新和使用統計",
     "hex.builtin.setting.general.show_tips": "啟動時顯示提示",
-    "hex.builtin.setting.general.sync_pattern_source": "同步提供者之間的模式原始碼",
     "hex.builtin.setting.general.upload_crash_logs": "上傳崩潰記錄",
     "hex.builtin.setting.hex_editor": "十六進位編輯器",
     "hex.builtin.setting.hex_editor.byte_padding": "位元組儲存格額外內距",

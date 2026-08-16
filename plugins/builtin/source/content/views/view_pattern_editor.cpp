@@ -184,14 +184,11 @@ namespace hex::plugin::builtin {
           }) { }
 
     const std::string& PatternSourceCode::get(prv::Provider* provider) const {
-        if (m_synced && !m_perProviderSource.isBound(provider))
-            return m_sharedSource;
-
         return m_perProviderSource.get(provider);
     }
 
     void PatternSourceCode::set(prv::Provider *provider, std::string source) {
-        if (!m_synced || m_perProviderSource.isBound(provider)) {
+        if (m_perProviderSource.isBound(provider)) {
             if (m_perProviderSource.get(provider) != source)
                 m_perProviderSource.set(std::move(source), provider);
             return;
@@ -227,26 +224,6 @@ namespace hex::plugin::builtin {
     bool PatternSourceCode::hasProviderSpecificSource(prv::Provider* provider) const {
         return !m_perProviderSource.get(provider).empty();
     }
-
-    void PatternSourceCode::enableSync(bool enabled) {
-        if (m_synced == enabled)
-            return;
-
-        auto *provider = ImHexApi::Provider::get();
-        if (enabled && provider != nullptr && !m_perProviderSource.isBound(provider)) {
-            auto source = m_perProviderSource.get(provider);
-            m_synced = true;
-            this->set(provider, std::move(source));
-            return;
-        }
-
-        m_synced = enabled;
-    }
-
-    bool PatternSourceCode::isSynced() const {
-        return m_synced;
-    }
-
 
     static const ui::TextEditor::LanguageDefinition &PatternLanguage() {
         static bool initialized = false;
@@ -381,7 +358,7 @@ namespace hex::plugin::builtin {
         m_textEditor.setOnCreateCallback([this](auto *provider, ui::TextEditor &editor) {
             if (ImHexApi::Provider::getProviders().size() > 1)
                 return;
-            if (m_sourceCode.isSynced() && !m_sourceCode.get(provider).empty())
+            if (!m_sourceCode.get(provider).empty())
                 return;
 
             std::string text = "hex.builtin.view.pattern_editor.default_help_text"_lang;
@@ -659,14 +636,6 @@ namespace hex::plugin::builtin {
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.auto"_lang.get());
 
                     ImGui::SameLine(0, 5_scaled);
-
-                    bool synced = m_sourceCode.isSynced();
-                    if (ImGuiExt::DimmedIconToggle(ICON_VS_REPO_PINNED, &synced)) {
-                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", synced);
-                    }
-                    ImGui::SetItemTooltip("%s", "hex.builtin.setting.general.sync_pattern_source"_lang.get());
-
-                    ImGui::SameLine(0, 10_scaled);
 
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         ImGui::OpenPopup("Pattern Settings");
@@ -1946,10 +1915,6 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).removeHiddenLinesFromPattern();
             m_sourceCode.set(provider, m_textEditor.get(provider).getText(true));
             m_hasUnparsedChanges.get(provider) = true;
-        });
-
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_sourceCode.enableSync(value.get<bool>(false));
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.tab_size", [this](const ContentRegistry::Settings::SettingsValue &value) {

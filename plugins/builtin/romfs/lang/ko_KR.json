@@ -433,7 +433,6 @@
     "hex.builtin.setting.general.save_recent_providers": "최근에 사용한 공급자 저장",
     "hex.builtin.setting.general.server_contact": "업데이트 확인 및 사용량 통계 사용",
     "hex.builtin.setting.general.show_tips": "시작 시 팁 표시",
-    "hex.builtin.setting.general.sync_pattern_source": "공급자 간 패턴 소스 코드 동기화",
     "hex.builtin.setting.general.upload_crash_logs": "충돌 보고서 업로드",
     "hex.builtin.setting.hex_editor": "헥스 편집기",
     "hex.builtin.setting.hex_editor.byte_padding": "추가 바이트 셀 여백",

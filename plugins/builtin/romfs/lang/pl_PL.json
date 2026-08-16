@@ -454,7 +454,6 @@
     "hex.builtin.setting.general.pattern_data_max_filter_items": "Wyświetlana maksymalna liczba przefiltrowanych elementów pattern",
     "hex.builtin.setting.general.save_recent_providers": "Zapisz ostatnio używanych dostawców",
     "hex.builtin.setting.general.show_tips": "Pokaż wskazówki przy starcie",
-    "hex.builtin.setting.general.sync_pattern_source": "Synchronizuj kod źródłowy pattern między dostawcami",
     "hex.builtin.setting.general.upload_crash_logs": "Przesyłaj raporty awarii",
     "hex.builtin.setting.hex_editor": "Edytor Hex",
     "hex.builtin.setting.hex_editor.byte_padding": "Dodatkowe wypełnienie komórki bajtu",

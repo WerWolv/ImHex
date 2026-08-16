@@ -768,7 +768,6 @@ for (const auto &path : m_paths) {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_apply_patterns", false).setEnabledCallback([=] {
                 return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();
             });
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
 
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
 

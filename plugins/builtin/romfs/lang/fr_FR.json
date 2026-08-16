@@ -453,7 +453,6 @@
     "hex.builtin.setting.general.pattern_data_max_filter_items": "Nombre maximal d'éléments affichés lors du filtrage des données de modèle",
     "hex.builtin.setting.general.save_recent_providers": "Sauvegarder les fournisseurs récemment utilisés",
     "hex.builtin.setting.general.show_tips": "Afficher des conseils au démarrage",
-    "hex.builtin.setting.general.sync_pattern_source": "Synchroniser le code source des modèles entre les fournisseurs",
     "hex.builtin.setting.general.upload_crash_logs": "Télécharger les rapports de plantage",
     "hex.builtin.setting.hex_editor": "Éditeur hexadécimal",
     "hex.builtin.setting.hex_editor.byte_padding": "Espacement supplémentaire des cellules d'octet",

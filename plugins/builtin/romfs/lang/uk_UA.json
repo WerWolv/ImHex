@@ -558,7 +558,6 @@
     "hex.builtin.setting.general.backups.auto_backup_time": "Робити резервні копії проекту",
     "hex.builtin.setting.general.max_mem_file_size": "Максимальний розмір файлу для завантаження в RAM",
     "hex.builtin.setting.general.max_mem_file_size.desc": "Невеликі файли завантажуються в пам'ять, щоб запобігти їх безпосередній модифікації на диску.\n\nЗбільшення цього розміру дозволяє завантажувати в пам'ять більші файли, перш ніж ImHex вдається до потокової передачі даних із диску.",
-    "hex.builtin.setting.general.sync_pattern_source": "Синхронізація вихідного коду шаблону між відкритими джерелами даних",
     "hex.builtin.setting.hex_editor.highlight_color": "Колір підсвічування виділення",
     "hex.builtin.setting.hex_editor.pattern_parent_highlighting": "Підсвічувати батьківські шаблони при наведенні",
     "hex.builtin.setting.hex_editor.sync_scrolling": "Синхронізувати позицію прокрутки редактора",

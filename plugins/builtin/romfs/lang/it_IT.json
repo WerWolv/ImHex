@@ -433,7 +433,6 @@
     "hex.builtin.setting.general.save_recent_providers": "",
     "hex.builtin.setting.general.server_contact": "",
     "hex.builtin.setting.general.show_tips": "Mostra consigli all'avvio",
-    "hex.builtin.setting.general.sync_pattern_source": "",
     "hex.builtin.setting.general.upload_crash_logs": "",
     "hex.builtin.setting.hex_editor": "Hex Editor",
     "hex.builtin.setting.hex_editor.byte_padding": "",
