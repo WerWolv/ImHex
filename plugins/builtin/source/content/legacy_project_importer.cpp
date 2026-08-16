@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
                 ImGui::BeginDisabled(!blockReason.empty());
                 if (ImGuiExt::DimmedButton("hex.builtin.popup.project.migrate_legacy.choose_location"_lang, ImVec2(width * 0.4F, 0))) {
                     const auto accepted = fs::openFileBrowser(fs::DialogMode::Folder, {}, [path = m_path](const auto &destination) {
-                        showImportResult(migrateLegacyProject(path, destination));
+                        showImportResult(migrateLegacyProject(path, destination / path.stem()));
                     }, m_path.parent_path().string());
                     if (accepted)
                         close();
@@ -285,6 +285,7 @@ namespace hex::plugin::builtin {
     }
 
     project::ImportResult migrateLegacyProject(const std::fs::path &path, const std::fs::path &destination) {
+        wolv::io::fs::createDirectories(destination);
         if (const auto blockReason = getMigrationBlockReason(); !blockReason.empty()) {
             project::ImportResult result;
             result.error = blockReason;
