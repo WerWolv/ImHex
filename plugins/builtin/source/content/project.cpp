@@ -1331,7 +1331,7 @@ namespace hex::plugin::builtin {
     project::ImportResult project::importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
         ImportResult result;
         if (!ProjectManager::isFolderProject()) {
-            result.error = std::string("hex.builtin.popup.error.project.import_legacy.no_open_project"_lang);
+            result.error = "hex.builtin.popup.error.project.import_legacy.no_open_project"_lang.get();
             return result;
         }
 
