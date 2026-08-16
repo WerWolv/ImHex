@@ -512,6 +512,7 @@ namespace hex::plugin::builtin {
                                                                                                               : (std::min(source.providerSelection.getSize(), dest.providerSelection.getSize())));
                         ImHexApi::Provider::setCurrentProvider(dest.providerSelection.provider);
                         editor->setSelection(dest.providerSelection.getEndAddress(), dest.providerSelection.getStartAddress());
+                        editor->setCursorPosition(dest.providerSelection.getEndAddress());
                         editor->jumpToSelection();
                         // Clear paste mode
                         m_pasteMode = PasteModeType::ModeNotSelected;
@@ -672,6 +673,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::Provider::setCurrentProvider(providerSelection.provider);
                     if (!isProviderEmpty) {
                         editor->setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
+                        editor->setCursorPosition(providerSelection.getStartAddress());
                         editor->jumpToSelection();
                     }
                 }
@@ -772,6 +774,7 @@ namespace hex::plugin::builtin {
                     // Jump to the selection in hex editor
                     if (!isProviderEmpty) {
                         editor->setSelection(m_setSelectionStart, m_setSelectionEnd);
+                        editor->setCursorPosition(m_setSelectionStart);
                         editor->jumpToSelection();
                     }
                 }
@@ -854,6 +857,7 @@ namespace hex::plugin::builtin {
                 if (providerValidity && (ImHexApi::Provider::getCurrentProviderIndex() == providerIndex) && providerSelectionToggle && (providerActualSize > 0) &&
                         (!(ImGui::IsMouseDragging(ImGuiMouseButton_Left)) && !(ImGui::IsKeyDown(ImGuiKey_LeftShift)) && !(ImGui::IsKeyDown(ImGuiKey_RightShift)))) {
                     editor->setSelection(providerSelection.getStartAddress(), providerSelection.getEndAddress());
+                    editor->setCursorPosition(providerSelection.getStartAddress());
                 }
 
                 ImGui::EndTabBar();
@@ -896,12 +900,26 @@ namespace hex::plugin::builtin {
     }
 
     void PopupPasteFromSource::drawPopupBorderHighlight(void) const {
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImGuiWindow* window = ImGui::GetCurrentWindow();
+        if (window == nullptr) {
+            return;
+        }
 
-        // Draw border highlight
-        drawList->AddRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize(),
-                          ImGui::GetColorU32(ImGuiCol_NavWindowingHighlight), ImGui::GetStyle().WindowRounding,
-                          ImDrawFlags_None, 3_scaled);
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr) {
+            return;
+        }
+
+        ImGuiViewport* viewport = window->Viewport;
+        if (viewport == nullptr) {
+            return;
+        }
+
+        ImRect rect = window->Rect();
+
+        drawList->PushClipRect(viewport->Pos, (viewport->Pos + viewport->Size));
+        drawList->AddRect(rect.Min, rect.Max, ImGui::GetColorU32(ImGuiCol_NavWindowingHighlight), window->WindowRounding, ImDrawFlags_None, 1_scaled);
+        drawList->PopClipRect();
     }
 
     void PopupPasteFromSource::setSelection(u64 start, u64 end) {

@@ -38,6 +38,10 @@ namespace hex::plugin::builtin {
             m_hexEditor.setSelection(start, end);
         }
 
+        void setCursorPosition(u64 cursorPosition) {
+            m_hexEditor.setCursorPosition(cursorPosition);
+        }
+
         void jumpToSelection() {
             m_hexEditor.jumpToSelection();
         }
