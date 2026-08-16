@@ -260,20 +260,21 @@ jobs:
           restore-keys: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache
           max-size: 1G
 
-      - name: 📦 Install vcpkg
-        uses: friendlyanon/setup-vcpkg@v1
-        with:
-          committish: 66c0373dc7fca549e5803087b9487edfe3aca0a1
-          cache-key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-vcpkg-${{ github.run_id }}-${{ github.run_attempt }}
-          cache-restore-keys: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-vcpkg-
-
-
       - name: ⬇️ Install dependencies
         run: |
           cp dist/vcpkg.json vcpkg.json
 
       - name: ⬇️ Install CMake and Ninja
         uses: lukka/get-cmake@latest
+
+      - name: 📦 Install vcpkg
+        uses: friendlyanon/setup-vcpkg@v1
+        with:
+          committish: 66c0373dc7fca549e5803087b9487edfe3aca0a1
+          cache-version: ${{github.run_number}}
+          cache-restore-keys: |
+            vcpkg-${{runner.os}}-${{github.run_number}}
+            vcpkg-${{runner.os}}
 
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v6
