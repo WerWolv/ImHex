@@ -607,6 +607,7 @@
     "hex.builtin.sidebar.project.menu.delete": "Delete",
     "hex.builtin.sidebar.project.menu.new_file": "New File",
     "hex.builtin.sidebar.project.menu.new_folder": "New Folder",
+    "hex.builtin.sidebar.project.menu.update_source": "Reopen from new source",
     "hex.builtin.sidebar.project.menu.remove_from_project": "Remove from project",
     "hex.builtin.sidebar.project.menu.remove_from_provider": "Remove from data source",
     "hex.builtin.sidebar.project.menu.rename": "Rename",

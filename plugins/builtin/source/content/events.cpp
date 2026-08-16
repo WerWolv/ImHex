@@ -346,6 +346,7 @@ namespace hex::plugin::builtin {
                     return;
                 }
 
+                filePickerProvider->setPickedPath(filePath);
                 ImHexApi::Provider::openProvider(provider);
             }
             else if (dynamic_cast<prv::IProviderLoadInterface*>(provider.get()) == nullptr) {

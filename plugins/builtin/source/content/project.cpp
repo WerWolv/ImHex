@@ -40,6 +40,8 @@ namespace hex::plugin::builtin {
     constexpr static auto ProjectDirectory      = ".imhex";
     constexpr static auto ProjectSettingsPath   = ".imhex/project.json";
 
+    static bool reopenProviderWithNewSettings(u32 id);
+
     namespace {
 
         using Associations = std::map<u32, std::map<std::string, std::fs::path>>;
@@ -48,6 +50,7 @@ namespace hex::plugin::builtin {
         std::set<u32> s_projectProviderIds;
         std::set<u32> s_closedProjectProviderIds;
         std::set<u32> s_providerOpenAttempts;
+        std::map<const prv::Provider *, u32> s_providerReplacements;
         ProviderSettings s_projectProviderSettings;
         bool s_loadingProject = false;
 
@@ -647,6 +650,10 @@ namespace hex::plugin::builtin {
             }
         }
 
+        bool isProviderReplacement(const prv::Provider *provider) {
+            return s_providerReplacements.contains(provider);
+        }
+
         struct StoredProviderDisplayInfo {
             std::string name;
             const char *icon = ICON_VS_FILE_BINARY;
@@ -756,6 +763,8 @@ namespace hex::plugin::builtin {
             std::set<u32> serializedActiveProviderIds;
             for (const auto *provider : ImHexApi::Provider::getProviders()) {
                 if (!s_projectProviderIds.contains(provider->getID()))
+                    continue;
+                if (isProviderReplacement(provider))
                     continue;
 
                 serializedActiveProviderIds.insert(provider->getID());
@@ -974,6 +983,7 @@ namespace hex::plugin::builtin {
                     ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth, "%s", projectLabel.c_str());
                 if (projectOpen) {
                     std::optional<u32> providerToOpen;
+                    std::optional<u32> providerToReplace;
                     std::optional<u32> providerToRemove;
                     std::set<u32> openProviderIds;
                     for (auto *provider : providers) {
@@ -1045,6 +1055,8 @@ namespace hex::plugin::builtin {
                         if (ImGui::BeginPopupContextItem("##ClosedProviderContextMenu")) {
                             if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_GO_TO_FILE, "hex.ui.common.open"_lang).c_str()))
                                 providerToOpen = id;
+                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_REPLACE, "hex.builtin.sidebar.project.menu.update_source"_lang).c_str()))
+                                providerToReplace = id;
                             if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.remove_from_project"_lang).c_str()))
                                 providerToRemove = id;
                             ImGui::EndPopup();
@@ -1055,6 +1067,12 @@ namespace hex::plugin::builtin {
                     if (providerToOpen.has_value()) {
                         TaskManager::doLater([id = *providerToOpen] {
                             if (!openStoredProjectProvider(id))
+                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, id));
+                        });
+                    }
+                    if (providerToReplace.has_value()) {
+                        TaskManager::doLater([id = *providerToReplace] {
+                            if (!reopenProviderWithNewSettings(id))
                                 ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, id));
                         });
                     }
@@ -1249,6 +1267,32 @@ namespace hex::plugin::builtin {
             return "hex.builtin.popup.error.project.create.open_failed"_lang;
 
         return {};
+    }
+
+    static bool reopenProviderWithNewSettings(u32 id) {
+        if (!ProjectManager::isFolderProject() || !s_projectProviderIds.contains(id) ||
+            getProviderById(id) != nullptr ||
+            std::ranges::any_of(s_providerReplacements, [id](const auto &entry) { return entry.second == id; }) ||
+            TaskManager::getRunningTaskCount() != 0)
+            return false;
+
+        const auto storedSettings = s_projectProviderSettings.find(id);
+        if (storedSettings == s_projectProviderSettings.end())
+            return false;
+
+        try {
+            const auto descriptor = nlohmann::json::parse(storedSettings->second);
+            const auto providerType = descriptor.at("type").get<std::string>();
+            auto provider = ImHexApi::Provider::createProvider(providerType);
+            if (provider == nullptr || !std::ranges::contains(ImHexApi::Provider::getProviders(), provider.get()))
+                return false;
+
+            s_providerReplacements[provider.get()] = id;
+            return true;
+        } catch (const std::exception &error) {
+            log::warn("Failed to reconfigure project provider {}: {}", id, error.what());
+            return false;
+        }
     }
 
     project::ImportResult project::importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
@@ -1464,21 +1508,34 @@ namespace hex::plugin::builtin {
             materializeRegisteredData();
         });
         EventProviderOpened::subscribe([](prv::Provider *provider) {
+            const auto replacement = s_providerReplacements.find(provider);
+            const bool isReplacement = replacement != s_providerReplacements.end();
+            if (isReplacement) {
+                provider->setID(replacement->second);
+                s_providerReplacements.erase(replacement);
+            }
             if (ProjectManager::isFolderProject() && !s_loadingProject) {
                 s_projectProviderIds.insert(provider->getID());
                 s_closedProjectProviderIds.erase(provider->getID());
                 snapshotProviderSettings(provider);
+                if (isReplacement)
+                    bindRegisteredData();
             }
             scheduleProjectMetadataSave();
         });
         EventProviderRemoving::subscribe([](prv::Provider *provider) {
             if (s_loadingProject || !ProjectManager::isFolderProject() ||
-                !s_projectProviderIds.contains(provider->getID()) || s_providerOpenAttempts.contains(provider->getID()))
+                !s_projectProviderIds.contains(provider->getID()) || s_providerOpenAttempts.contains(provider->getID()) ||
+                isProviderReplacement(provider))
                 return;
 
             snapshotProviderSettings(provider);
         });
         EventProviderClosed::subscribe([](prv::Provider *provider) {
+            if (isProviderReplacement(provider)) {
+                s_providerReplacements.erase(provider);
+                return;
+            }
             if (s_loadingProject || !ProjectManager::isFolderProject() ||
                 !s_projectProviderIds.contains(provider->getID()) || s_providerOpenAttempts.contains(provider->getID()))
                 return;
@@ -1491,6 +1548,7 @@ namespace hex::plugin::builtin {
             s_projectProviderIds.clear();
             s_closedProjectProviderIds.clear();
             s_providerOpenAttempts.clear();
+            s_providerReplacements.clear();
             s_projectProviderSettings.clear();
             s_inlineEdit.reset();
         });
