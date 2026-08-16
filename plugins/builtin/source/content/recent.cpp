@@ -1,9 +1,11 @@
 #include <content/recent.hpp>
+
 #include <content/legacy_project_importer.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <hex/api/content_registry/views.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/content_registry/settings.hpp>
@@ -13,8 +15,9 @@
 #include <hex/api/project_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/default_paths.hpp>
 
+#include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 
@@ -23,11 +26,10 @@
 
 #include <toasts/toast_notification.hpp>
 #include <fonts/vscode_icons.hpp>
+#include <fonts/tabler_icons.hpp>
 
 #include <ranges>
 #include <unordered_set>
-#include <hex/api/content_registry/views.hpp>
-#include <hex/helpers/menu_items.hpp>
 
 namespace hex::plugin::builtin::recent {
 
@@ -307,7 +309,11 @@ namespace hex::plugin::builtin::recent {
             }
         }
 
-        return ICON_VS_WORKSPACE_UNKNOWN;
+        if (unlocalizedName == std::string("project")) {
+            return ICON_VS_NOTEBOOK;
+        }
+
+        return ICON_TA_FILE_UNKNOWN;
     }
 
     void draw() {
@@ -326,14 +332,7 @@ namespace hex::plugin::builtin::recent {
                     ImGui::PushID(&recentEntry);
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
-                    const char* icon;
-                    if (isProject) {
-                        icon = ICON_VS_NOTEBOOK;
-                    } else {
-                        icon = getProviderIcon(recentEntry.type);
-                    }
-                  
-                    if (ImGuiExt::IconHyperlink(icon, hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
+                    if (ImGuiExt::IconHyperlink(getProviderIcon(recentEntry.type), hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
