@@ -8,6 +8,15 @@
 
 namespace hex {
 
+    namespace impl {
+
+        void appendEncodingLineStartAddress(std::vector<u64> &lineStartAddresses, size_t line, u64 nextLineStartAddress) {
+            if (line + 1 == lineStartAddresses.size())
+                lineStartAddresses.push_back(nextLineStartAddress);
+        }
+
+    }
+
     EncodingFile::EncodingFile() : m_mapping(std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>()) {
 
     }

@@ -1,6 +1,6 @@
 #include <hex/test/tests.hpp>
 
-#include <hex/helpers/encoding_line_cache.hpp>
+#include <hex/helpers/encoding_file.hpp>
 
 #include <vector>
 

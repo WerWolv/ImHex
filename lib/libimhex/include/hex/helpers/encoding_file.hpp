@@ -11,6 +11,10 @@
 
 namespace hex {
 
+    namespace impl {
+        void appendEncodingLineStartAddress(std::vector<u64> &lineStartAddresses, size_t line, u64 nextLineStartAddress);
+    }
+
     class EncodingFile {
     public:
         enum class Type

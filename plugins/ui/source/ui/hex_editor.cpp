@@ -4,7 +4,6 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/encoding_file.hpp>
-#include <hex/helpers/encoding_line_cache.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/guards.hpp>
