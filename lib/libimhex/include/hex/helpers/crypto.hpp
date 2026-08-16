@@ -65,5 +65,5 @@ namespace hex::crypt {
         Key256Bits = 2
     };
 
-    wolv::util::Expected<std::vector<u8>, int> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input);
+    wolv::util::Expected<std::vector<u8>, int> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, const std::vector<u8> &nonce, const std::vector<u8> &iv, const std::vector<u8> &input, const std::vector<u8> &tag, const std::vector<u8> &aad);
 }

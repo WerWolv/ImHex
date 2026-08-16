@@ -856,65 +856,70 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0F, 1.0F));
 
             // Draw all attributes of the node
-            for (auto &attribute : node.getAttributes()) {
-                ImNodesPinShape pinShape;
+            for (const auto ioType : { dp::Attribute::IOType::In, dp::Attribute::IOType::Out }) {
+                for (auto &attribute : node.getAttributes()) {
+                    if (attribute.getIOType() != ioType)
+                        continue;
 
-                // Set the pin shape depending on the attribute type
-                auto attributeType = attribute.getType();
-                switch (attributeType) {
-                    default:
-                    case dp::Attribute::Type::Integer:
-                        pinShape = ImNodesPinShape_Circle;
-                        break;
-                    case dp::Attribute::Type::Float:
-                        pinShape = ImNodesPinShape_Triangle;
-                        break;
-                    case dp::Attribute::Type::Buffer:
-                        pinShape = ImNodesPinShape_Quad;
-                        break;
-                }
+                    ImNodesPinShape pinShape;
 
-                // Draw the attribute
-                if (attribute.getIOType() == dp::Attribute::IOType::In) {
-                    ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
-
-                    // Draw input fields for attributes that have no connected links
-                    if (attribute.getConnectedAttributes().empty() && attributeType != dp::Attribute::Type::Buffer) {
-                        auto &defaultValue = attribute.getDefaultData();
-
-                        ImGui::PushItemWidth(100_scaled);
-                        if (attributeType == dp::Attribute::Type::Integer) {
-                            defaultValue.resize(sizeof(i128));
-
-                            auto value = i64(*reinterpret_cast<i128*>(defaultValue.data()));
-                            if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_S64, &value)) {
-                                std::ranges::fill(defaultValue, 0x00);
-
-                                i128 writeValue = value;
-                                std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
-                            }
-                        } else if (attributeType == dp::Attribute::Type::Float) {
-                            defaultValue.resize(sizeof(long double));
-
-                            auto value = double(*reinterpret_cast<long double*>(defaultValue.data()));
-                            if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_Double, &value)) {
-                                std::ranges::fill(defaultValue, 0x00);
-
-                                long double writeValue = value;
-                                std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
-                            }
-                        }
-                        ImGui::PopItemWidth();
-
-                    } else {
-                        ImGui::TextUnformatted(Lang(attribute.getUnlocalizedName()));
+                    // Set the pin shape depending on the attribute type
+                    auto attributeType = attribute.getType();
+                    switch (attributeType) {
+                        default:
+                        case dp::Attribute::Type::Integer:
+                            pinShape = ImNodesPinShape_Circle;
+                            break;
+                        case dp::Attribute::Type::Float:
+                            pinShape = ImNodesPinShape_Triangle;
+                            break;
+                        case dp::Attribute::Type::Buffer:
+                            pinShape = ImNodesPinShape_Quad;
+                            break;
                     }
 
-                    ImNodes::EndInputAttribute();
-                } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
-                    ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
-                    ImGui::TextUnformatted(Lang(attribute.getUnlocalizedName()));
-                    ImNodes::EndOutputAttribute();
+                    // Draw the attribute
+                    if (attribute.getIOType() == dp::Attribute::IOType::In) {
+                        ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
+
+                        // Draw input fields for attributes that have no connected links
+                        if (attribute.getConnectedAttributes().empty() && attributeType != dp::Attribute::Type::Buffer) {
+                            auto &defaultValue = attribute.getDefaultData();
+
+                            ImGui::PushItemWidth(100_scaled);
+                            if (attributeType == dp::Attribute::Type::Integer) {
+                                defaultValue.resize(sizeof(i128));
+
+                                auto value = i64(*reinterpret_cast<i128*>(defaultValue.data()));
+                                if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_S64, &value)) {
+                                    std::ranges::fill(defaultValue, 0x00);
+
+                                    i128 writeValue = value;
+                                    std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
+                                }
+                            } else if (attributeType == dp::Attribute::Type::Float) {
+                                defaultValue.resize(sizeof(long double));
+
+                                auto value = double(*reinterpret_cast<long double*>(defaultValue.data()));
+                                if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_Double, &value)) {
+                                    std::ranges::fill(defaultValue, 0x00);
+
+                                    long double writeValue = value;
+                                    std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
+                                }
+                            }
+                            ImGui::PopItemWidth();
+
+                        } else {
+                            ImGui::TextUnformatted(Lang(attribute.getUnlocalizedName()));
+                        }
+
+                        ImNodes::EndInputAttribute();
+                    } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
+                        ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
+                        ImGui::TextUnformatted(Lang(attribute.getUnlocalizedName()));
+                        ImNodes::EndOutputAttribute();
+                    }
                 }
             }
         }
@@ -1204,16 +1209,6 @@ namespace hex::plugin::builtin {
             if (data.contains("name"))
                 newNode->setUnlocalizedTitle(data["name"]);
 
-            u32 attrIndex  = 0;
-            for (auto &attr : newNode->getAttributes()) {
-                if (attrIndex < data["attrs"].size())
-                    attr.setId(data["attrs"][attrIndex]);
-                else
-                    attr.setId(-1);
-
-                attrIndex++;
-            }
-
             if (!data["data"].is_null())
                 newNode->load(data["data"]);
 
@@ -1314,6 +1309,13 @@ namespace hex::plugin::builtin {
                 if (node->getId() == -1) {
                     maxNodeId += 1;
                     node->setId(maxNodeId);
+                }
+
+                for (auto &attr : node->getAttributes()) {
+                    if (attr.getId() == -1) {
+                        maxAttrId += 1;
+                        attr.setId(maxAttrId);
+                    }
                 }
             }
 

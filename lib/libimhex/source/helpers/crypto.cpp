@@ -491,18 +491,15 @@ namespace hex::crypt {
     }
 
     static wolv::util::Expected<std::vector<u8>, int> aes(mbedtls_cipher_type_t type, mbedtls_operation_t operation, const std::vector<u8> &key,
-                   std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::span<const u8> &input) {
-
-        if (input.empty())
-            return {};
-        if (key.size() > 256)
-            return {};
-
+                   const std::vector<u8> &nonce, const std::vector<u8> &iv, const std::vector<u8> &input, const std::vector<u8> &tag, const std::vector<u8> &aad) {
         mbedtls_cipher_context_t ctx;
+        mbedtls_cipher_init(&ctx);
+        ON_SCOPE_EXIT { mbedtls_cipher_free(&ctx); };
+
         auto cipherInfo = mbedtls_cipher_info_from_type(type);
 
         if (cipherInfo == nullptr)
-            return {};
+            return wolv::util::Unexpected(MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE);
 
         int setupResult = mbedtls_cipher_setup(&ctx, cipherInfo);
         if (setupResult != 0)
@@ -512,39 +509,74 @@ namespace hex::crypt {
         if (setKeyResult != 0)
             return wolv::util::Unexpected(setKeyResult);
 
-        std::array<u8, 16> nonceCounter = { 0 };
-
         auto mode = mbedtls_cipher_get_cipher_mode(&ctx);
 
-        // if we are in ECB mode, we don't need to set the nonce
-        if (mode != MBEDTLS_MODE_ECB) {
-            std::ranges::copy(nonce, nonceCounter.begin());
-            std::ranges::copy(iv, nonceCounter.begin() + 8);
+        if (mode == MBEDTLS_MODE_CBC) {
+            int paddingResult = mbedtls_cipher_set_padding_mode(&ctx, MBEDTLS_PADDING_NONE);
+            if (paddingResult != 0) {
+                return wolv::util::Unexpected(paddingResult);
+            }
         }
+
+        if (mode == MBEDTLS_MODE_GCM || mode == MBEDTLS_MODE_CCM) {
+            const auto &aeadIv = mode == MBEDTLS_MODE_GCM ? iv : nonce;
+            std::vector<u8> authenticatedInput;
+            authenticatedInput.reserve(input.size() + tag.size());
+            authenticatedInput.insert(authenticatedInput.end(), input.begin(), input.end());
+            authenticatedInput.insert(authenticatedInput.end(), tag.begin(), tag.end());
+
+            size_t outputSize = input.size();
+            std::vector<u8> output(outputSize, 0x00);
+            const auto cryptResult = mbedtls_cipher_auth_decrypt_ext(
+                &ctx,
+                aeadIv.data(), aeadIv.size(),
+                aad.data(), aad.size(),
+                authenticatedInput.data(), authenticatedInput.size(),
+                output.data(), output.size(),
+                &outputSize, tag.size());
+
+            if (cryptResult != 0)
+                return wolv::util::Unexpected(cryptResult);
+
+            output.resize(outputSize);
+            return output;
+        }
+
+        if (input.empty())
+            return {};
 
         size_t outputSize = input.size() + mbedtls_cipher_get_block_size(&ctx);
         std::vector<u8> output(outputSize, 0x00);
 
         int cryptResult = 0;
         if (mode == MBEDTLS_MODE_ECB) {
-            cryptResult = mbedtls_cipher_crypt(&ctx, nullptr, 0, input.data(), input.size(), output.data(), &outputSize);
-        } else {
-            cryptResult = mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
-        }
+            const auto blockSize = static_cast<size_t>(mbedtls_cipher_get_block_size(&ctx));
+            outputSize = 0;
 
-        // free regardless of the result
-        mbedtls_cipher_free(&ctx);
+            for (size_t inputOffset = 0; inputOffset < input.size(); inputOffset += blockSize) {
+                const auto inputSize = std::min(blockSize, input.size() - inputOffset);
+                size_t blockOutputSize = 0;
+
+                cryptResult = mbedtls_cipher_crypt(&ctx, nullptr, 0, input.data() + inputOffset, inputSize, output.data() + outputSize, &blockOutputSize);
+                if (cryptResult != 0)
+                    break;
+
+                outputSize += blockOutputSize;
+            }
+        } else {
+            cryptResult = mbedtls_cipher_crypt(&ctx, iv.data(), iv.size(), input.data(), input.size(), output.data(), &outputSize);
+        }
 
         if (cryptResult != 0) {
             return wolv::util::Unexpected(cryptResult);
         }
 
-        output.resize(input.size());
+        output.resize(outputSize);
 
         return output;
     }
 
-    wolv::util::Expected<std::vector<u8>, int> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
+    wolv::util::Expected<std::vector<u8>, int> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, const std::vector<u8> &nonce, const std::vector<u8> &iv, const std::vector<u8> &input, const std::vector<u8> &tag, const std::vector<u8> &aad) {
         switch (keyLength) {
             case KeyLength::Key128Bits:
                 if (key.size() != 128 / 8)
@@ -594,7 +626,7 @@ namespace hex::crypt {
 
         type = mbedtls_cipher_type_t(type + u8(keyLength));
 
-        return aes(type, MBEDTLS_DECRYPT, key, nonce, iv, input);
+        return aes(type, MBEDTLS_DECRYPT, key, nonce, iv, input, tag, aad);
     }
 
 }
