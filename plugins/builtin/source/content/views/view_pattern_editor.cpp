@@ -1154,9 +1154,12 @@ namespace hex::plugin::builtin {
             m_consoleNeedsUpdate = false;
         }
 
-        fonts::CodeEditor().push();
-        m_consoleEditor.get(provider).render("##console", size, true);
-        fonts::CodeEditor().pop();
+        if (ImGui::BeginChild("##console_border", size, ImGuiChildFlags_Borders)) {
+            fonts::CodeEditor().push();
+            m_consoleEditor.get(provider).render("##console", ImGui::GetContentRegionAvail(), false);
+            fonts::CodeEditor().pop();
+        }
+        ImGui::EndChild();
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
