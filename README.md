@@ -34,7 +34,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Ko-Fi or 
 <p align="center">
 <a href="https://github.com/sponsors/WerWolv"><img src="https://werwolv.net/assets/github_banner.png" alt="GitHub donate button" /></a>
 <a href="https://ko-fi.com/WerWolv"><img src="https://werwolv.net/assets/kofi_banner.png" alt="Ko-Fi donate button" /></a>
-<a href="https://werwolv.net/donate"><img src="https://werwolv.net/assets/paypal_banner.png" alt="PayPal donate button" /></a>
+<a href="https://werwolv.net"><img src="https://werwolv.net/assets/paypal_banner.png" alt="PayPal donate button" /></a>
 </p>
 
 ### Notable Sponsors
