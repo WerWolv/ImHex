@@ -10,6 +10,7 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/api_urls.hpp>
 
 #include <hex/api/events/events_provider.hpp>
@@ -755,11 +756,18 @@ namespace hex::plugin::builtin {
         };
 
         RequestChangeTheme::subscribe([]() { updateTextures(ImHexApi::System::getGlobalScale()); });
+        EventWindowOpening::subscribe([](GLFWwindow *) {
+            TaskManager::doLater([] {
+                updateTextures(ImHexApi::System::getGlobalScale());
+            });
+        });
         EventDPIChanged::subscribe([](float oldScale, float newScale) {
             if (oldScale == newScale)
                 return;
 
-            updateTextures(newScale);
+            TaskManager::doLater([] {
+                updateTextures(ImHexApi::System::getGlobalScale());
+            });
         });
 
         // Clear project context if we go back to the welcome screen
