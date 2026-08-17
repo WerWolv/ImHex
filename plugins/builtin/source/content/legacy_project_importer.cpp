@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
             const auto providerIds = manifest.at("providers").get<std::vector<u32>>();
             const std::set<u32> providerIdSet(providerIds.begin(), providerIds.end());
             if (providerIdSet.size() != providerIds.size()) {
-                auto providerName = std::string("hex.builtin.sidebar.project.provider_fallback"_lang);
+                std::string providerName = "hex.builtin.sidebar.project.provider_fallback"_lang.get();
                 std::set<u32> seenProviderIds;
                 for (const auto id : providerIds) {
                     if (seenProviderIds.insert(id).second)

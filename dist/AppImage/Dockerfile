@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/var/cache/dnf <<EOF
 set -xe
 
 dnf install -y \
-    autoconf automake ccache curl dbus-devel desktop-file-utils file fontconfig-devel fuse gettext git glm-devel gtk3-devel kernel-headers libtool \
+    autoconf automake autoconf-archive ccache curl dbus-devel desktop-file-utils file fontconfig-devel fuse gettext git glm-devel gtk3-devel kernel-headers libtool \
     libX11-devel libXcursor-devel libXext-devel libXi-devel libXinerama-devel libXrandr-devel libxkbcommon-devel lz4-devel \
     mesa-libGL-devel mesa-libGLU-devel ninja-build perl-IPC-Cmd perl-Time-Piece pkgconf-pkg-config squashfs-tools unzip wayland-devel wget zip
 EOF

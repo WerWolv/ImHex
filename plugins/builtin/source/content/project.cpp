@@ -1541,7 +1541,7 @@ namespace hex::plugin::builtin {
 
         result.success = persistProjectMetadata();
         if (!result.success)
-            result.error = std::string("hex.builtin.popup.error.project.import_legacy.save_metadata_failed"_lang);
+            result.error = "hex.builtin.popup.error.project.import_legacy.save_metadata_failed"_lang.get();
         return result;
     }
 
