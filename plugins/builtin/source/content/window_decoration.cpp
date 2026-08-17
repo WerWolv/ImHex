@@ -53,9 +53,6 @@ namespace hex::plugin::builtin {
 
         struct SidebarState {
             i32 openWindow = -1;
-            i32 pendingClose = -1;
-            i32 suppressedActivation = -1;
-            double closeDeadline = 0.0;
             bool pinned = false;
             float panelWidth = 0.0F;
         };
@@ -64,8 +61,6 @@ namespace hex::plugin::builtin {
 
         void closeSidebar() {
             s_sidebarState.openWindow = -1;
-            s_sidebarState.pendingClose = -1;
-            s_sidebarState.suppressedActivation = -1;
             s_sidebarState.pinned = false;
         }
 
@@ -85,18 +80,7 @@ namespace hex::plugin::builtin {
             return &item;
         }
 
-        void processPendingSidebarClose() {
-            if (s_sidebarState.pendingClose < 0 || ImGui::GetTime() < s_sidebarState.closeDeadline)
-                return;
-
-            if (s_sidebarState.openWindow == s_sidebarState.pendingClose)
-                closeSidebar();
-            else
-                s_sidebarState.pendingClose = -1;
-        }
-
         float getPinnedSidebarWidth(float windowWidth, float sidebarWidth) {
-            processPendingSidebarClose();
             if (!s_sidebarState.pinned || getOpenSidebarItem() == nullptr)
                 return 0.0F;
 
@@ -197,7 +181,6 @@ namespace hex::plugin::builtin {
 
             u32 index = 0;
             u32 drawIndex = 0;
-            processPendingSidebarClose();
 
             drawTitleBarBackDrop();
 
@@ -220,26 +203,15 @@ namespace hex::plugin::builtin {
                     drawIndex += 1;
 
                     const bool activated = ImGuiExt::IconButton(icon.c_str(), ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(sidebarWidth - 2 * padding, sidebarWidth - 2 * padding));
-                    const bool doubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-                    if (doubleClicked) {
+                    if (activated && ImGui::GetIO().KeyShift) {
                         s_sidebarState.openWindow = index;
-                        s_sidebarState.pendingClose = -1;
-                        s_sidebarState.suppressedActivation = index;
-                        s_sidebarState.pinned = true;
+                        s_sidebarState.pinned = selected ? !s_sidebarState.pinned : true;
                     } else if (activated) {
-                        if (s_sidebarState.suppressedActivation == static_cast<i32>(index)) {
-                            s_sidebarState.suppressedActivation = -1;
-                        } else if (!selected) {
+                        if (!selected) {
                             s_sidebarState.openWindow = index;
-                            s_sidebarState.pendingClose = -1;
                         } else {
-                            s_sidebarState.pendingClose = index;
-                            s_sidebarState.closeDeadline = ImGui::GetTime() + ImGui::GetIO().MouseDoubleClickTime;
+                            closeSidebar();
                         }
-                    }
-                    if (s_sidebarState.suppressedActivation == static_cast<i32>(index) &&
-                        !activated && !ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                        s_sidebarState.suppressedActivation = -1;
                     }
                     ImGui::SetItemTooltip("%s", Lang(unlocalizedName).get());
                 }
