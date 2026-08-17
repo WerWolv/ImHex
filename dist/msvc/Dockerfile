@@ -118,7 +118,7 @@ git -C /opt/msvc-wine checkout --detach FETCH_HEAD
 rm -rf /opt/msvc-wine
 EOF
 
-ARG VCPKG_VERSION=66c0373dc7fca549e5803087b9487edfe3aca0a1
+ARG VCPKG_VERSION=9e593bb18ea69cc5095e012465dcd675a822ed0d
 RUN git init /vcpkg && \
     git -C /vcpkg remote add origin https://github.com/microsoft/vcpkg.git && \
     git -C /vcpkg fetch --depth 1 origin ${VCPKG_VERSION} && \

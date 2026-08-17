@@ -270,7 +270,7 @@ jobs:
       - name: 📦 Install vcpkg
         uses: friendlyanon/setup-vcpkg@v1
         with:
-          committish: 66c0373dc7fca549e5803087b9487edfe3aca0a1
+          committish: 9e593bb18ea69cc5095e012465dcd675a822ed0d
           cache-version: ${{github.run_number}}
           cache-restore-keys: |
             vcpkg-${{runner.os}}-${{github.run_number}}

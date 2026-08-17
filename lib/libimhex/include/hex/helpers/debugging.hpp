@@ -24,7 +24,7 @@ namespace hex::dbg {
         bool &getDebugWindowState();
 
         template<typename T>
-        static void drawDebugVariable(T &variable, std::string_view name) {
+        [[maybe_unused]] static void drawDebugVariable(T &variable, std::string_view name) {
             if (!getDebugWindowState())
                 return;
 

@@ -17,7 +17,7 @@ dnf install -y \
     mesa-libGL-devel mesa-libGLU-devel ninja-build perl-IPC-Cmd perl-Time-Piece pkgconf-pkg-config squashfs-tools unzip wayland-devel wget zip
 EOF
 
-ARG VCPKG_BASELINE=66c0373dc7fca549e5803087b9487edfe3aca0a1
+ARG VCPKG_BASELINE=9e593bb18ea69cc5095e012465dcd675a822ed0d
 RUN <<EOF
 # Install vcpkg
 set -xe

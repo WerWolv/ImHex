@@ -777,6 +777,7 @@ macro(setupCompilerFlags target)
         addCCXXFlag("-Wno-deprecated-declarations" ${target})
         addCCXXFlag("-Wno-unknown-pragmas" ${target})
         addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
+        addCXXFlag("-Wno-unused-template" ${target})
 
         # Enable hardening flags
         if (IMHEX_BUILD_HARDENING)
