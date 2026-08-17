@@ -21,6 +21,7 @@ EXPORT_MODULE namespace hex {
 
     class ProjectManager {
     public:
+        constexpr static auto ProjectDirectory = ".imhex";
 
         /**
          * @brief Set implementations for loading and restoring a project

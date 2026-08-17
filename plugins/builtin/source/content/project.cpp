@@ -43,8 +43,7 @@
 
 namespace hex::plugin::builtin {
 
-    constexpr static auto ProjectDirectory      = ".imhex";
-    constexpr static auto ProjectSettingsPath   = ".imhex/project.json";
+    const static auto ProjectSettingsPath = fmt::format("{}/project.json", ProjectManager::ProjectDirectory);
 
     static bool reopenProviderWithNewSettings(u32 id);
 
@@ -258,12 +257,12 @@ namespace hex::plugin::builtin {
         }
 
         bool isReservedProjectPath(const std::fs::path &path) {
-            return std::ranges::any_of(path, [](const auto &part) { return part == ProjectDirectory; });
+            return std::ranges::any_of(path, [](const auto &part) { return part == ProjectManager::ProjectDirectory; });
         }
 
         bool isValidEntryName(const std::string &name) {
             const auto path = std::fs::path(name);
-            return !name.empty() && path != "." && path != ".." && path == path.filename() && path != ProjectDirectory;
+            return !name.empty() && path != "." && path != ".." && path == path.filename() && path != ProjectManager::ProjectDirectory;
         }
 
         bool isSameOrDescendant(const std::fs::path &path, const std::fs::path &base) {
@@ -693,7 +692,7 @@ namespace hex::plugin::builtin {
         }
 
         bool loadProviders(const std::fs::path &root) {
-            const auto basePath = std::fs::path(ProjectDirectory) / "providers";
+            const auto basePath = std::fs::path(ProjectManager::ProjectDirectory) / "providers";
             std::vector<u32> providerIds;
             std::vector<u32> closedProviderIds;
             try {
@@ -775,7 +774,7 @@ namespace hex::plugin::builtin {
         }
 
         bool storeProviders(const std::fs::path &root, const std::fs::path &sourceRoot, ProviderSettings &storedSettings) {
-            const auto basePath = std::fs::path(ProjectDirectory) / "providers";
+            const auto basePath = std::fs::path(ProjectManager::ProjectDirectory) / "providers";
             auto providerSettings = s_projectProviderSettings;
             std::set<u32> serializedActiveProviderIds;
             for (const auto *provider : ImHexApi::Provider::getProviders()) {
@@ -835,7 +834,7 @@ namespace hex::plugin::builtin {
             }
 
             std::error_code error;
-            std::fs::remove(ProjectManager::getProjectRoot() / ProjectDirectory / "providers" /
+            std::fs::remove(ProjectManager::getProjectRoot() / ProjectManager::ProjectDirectory / "providers" /
                 fmt::format("{}.json", id), error);
             if (error)
                 log::warn("Failed to remove project provider metadata: {}", error.message());
@@ -937,7 +936,7 @@ namespace hex::plugin::builtin {
             std::vector<std::fs::directory_entry> entries;
             std::error_code error;
             for (std::fs::directory_iterator iterator(directory, std::fs::directory_options::skip_permission_denied, error), end; iterator != end && !error; iterator.increment(error)) {
-                if (iterator->path().filename() != ProjectDirectory && !iterator->is_symlink(error))
+                if (iterator->path().filename() != ProjectManager::ProjectDirectory && !iterator->is_symlink(error))
                     entries.push_back(*iterator);
             }
             std::ranges::sort(entries, [](const auto &left, const auto &right) {
@@ -1169,9 +1168,9 @@ namespace hex::plugin::builtin {
                 s_projectProviderIds.insert(provider->getID());
 
             std::error_code error;
-            std::fs::create_directories(filePath / ProjectDirectory, error);
+            std::fs::create_directories(filePath / ProjectManager::ProjectDirectory, error);
             if (error) {
-                log::error("Failed to create project metadata directory at {}: {}", (filePath / ProjectDirectory).string(), error.message());
+                log::error("Failed to create project metadata directory at {}: {}", (filePath / ProjectManager::ProjectDirectory).string(), error.message());
                 return false;
             }
 
@@ -1272,7 +1271,7 @@ namespace hex::plugin::builtin {
         if (path.empty())
             return "hex.builtin.popup.error.project.create.no_folder_selected"_lang;
 
-        const auto metadataDirectory = path / ProjectDirectory;
+        const auto metadataDirectory = path / ProjectManager::ProjectDirectory;
         std::error_code error;
         std::filesystem::create_directories(path, error);
         if (error)
@@ -1298,7 +1297,7 @@ namespace hex::plugin::builtin {
                 { "version", 1 },
                 { "associations", nlohmann::json::object() }
             }).dump(4)) &&
-            writeProjectFile(path, std::filesystem::path(ProjectDirectory) / "providers/providers.json", nlohmann::json({
+            writeProjectFile(path, std::filesystem::path(ProjectManager::ProjectDirectory) / "providers/providers.json", nlohmann::json({
                 { "providers", nlohmann::json::array() },
                 { "closedProviders", nlohmann::json::array() }
             }).dump(4));

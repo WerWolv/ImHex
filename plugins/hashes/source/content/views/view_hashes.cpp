@@ -3,7 +3,6 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/api/content_registry/hashes.hpp>
-#include <hex/providers/memory_provider.hpp>
 
 #include <hex/helpers/crypto.hpp>
 

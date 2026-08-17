@@ -62,6 +62,7 @@ namespace hex::paths {
     std::vector<std::fs::path> getConfigPaths(bool includeSystemFolders);
 
     const static inline impl::ConfigPath Config("config");
+    const static inline impl::ConfigPath Variables("config/variables");
     const static inline impl::ConfigPath Recent("recent");
     const static inline impl::ConfigPath Updates("updates");
 
@@ -86,8 +87,9 @@ namespace hex::paths {
     const static inline impl::DataPath Workspaces("workspaces");
     const static inline impl::DataPath Disassemblers("disassemblers");
 
-    constexpr static inline std::array<const impl::DefaultPath*, 22> All = {
+    constexpr static inline std::array<const impl::DefaultPath*, 23> All = {
         &Config,
+        &Variables,
         &Recent,
         &Updates,
 

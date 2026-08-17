@@ -482,6 +482,7 @@ namespace hex::plugin::builtin {
                 { "Yara Patterns",                  &paths::Yara                 },
                 { "Yara Advanced Analysis",         &paths::YaraAdvancedAnalysis },
                 { "Config",                         &paths::Config               },
+                { "Variables",                      &paths::Variables            },
                 { "Updates",                        &paths::Updates              },
                 { "Backups",                        &paths::Backups              },
                 { "Resources",                      &paths::Resources            },
