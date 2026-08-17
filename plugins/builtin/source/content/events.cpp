@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
         });
     }
 
-    static void openFileWithProvider(UnlocalizedString providerName, const std::fs::path &path) {
+    static bool openFileWithProvider(UnlocalizedString providerName, const std::fs::path &path) {
         auto provider = ImHexApi::Provider::createProvider(providerName, true);
         if (auto *fileProvider = dynamic_cast<prv::IProviderFilePicker*>(provider.get()); fileProvider != nullptr) {
             fileProvider->setPickedPath(path);
@@ -75,7 +75,12 @@ namespace hex::plugin::builtin {
 
             glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
             glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
+            return true;
         }
+
+        ImHexApi::Provider::remove(provider.get());
+
+        return false;
     }
 
     static void openFile(const std::fs::path &path) {
@@ -88,8 +93,8 @@ namespace hex::plugin::builtin {
             for (const auto &entry : ContentRegistry::Provider::impl::getEntries()) {
                 for (const auto &extension : entry.validFileExtensions) {
                     if (path.extension() == fmt::format(".{}", extension.spec)) {
-                        openFileWithProvider(entry.unlocalizedName, path);
-                        return;
+                        if (openFileWithProvider(entry.unlocalizedName, path))
+                            return;
                     }
                 }
             }

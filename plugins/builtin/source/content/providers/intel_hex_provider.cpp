@@ -261,6 +261,8 @@ namespace hex::plugin::builtin {
         }
         processMemoryRegions(data);
 
+        this->lockFile(getPickedPath());
+
         return {};
     }
 

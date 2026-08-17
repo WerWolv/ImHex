@@ -2,10 +2,8 @@
 #include "content/providers/memory_file_provider.hpp"
 
 #include <hex/api/content_registry/settings.hpp>
-#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/project_manager.hpp>
-#include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/events/events_interaction.hpp>
 
@@ -32,11 +30,7 @@
 
 namespace hex::plugin::builtin {
 
-    static std::mutex s_openCloseMutex;
-
     using namespace wolv::literals;
-
-    std::set<FileProvider*> FileProvider::s_openedFiles;
 
     bool FileProvider::isAvailable() const {
         return true;
@@ -273,13 +267,17 @@ namespace hex::plugin::builtin {
         const bool directAccess = fileSize >= maxMemoryFileSize;
         const auto result = open(directAccess);
 
-        if (result.isSuccess() && directAccess) {
-            m_writable = false;
+        if (result.isSuccess()) {
+            this->lockFile(getPickedPath());
 
-            ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
-                m_writable = true;
-                RequestUpdateWindowTitle::post();
-            });
+            if (directAccess) {
+                m_writable = false;
+
+                ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
+                    m_writable = true;
+                    RequestUpdateWindowTitle::post();
+                });
+            }
         }
 
         return result;
@@ -306,23 +304,13 @@ namespace hex::plugin::builtin {
             ui::ToastInfo::open("hex.builtin.popup.error.read_only"_lang);
         }
 
-        std::scoped_lock lock(s_openCloseMutex);
-
         m_file      = std::move(file);
         m_fileStats = m_file.getFileInfo();
         m_fileSize  = m_file.getSize();
 
         // Make sure the current file is not already opened
-        {
-            auto alreadyOpenedFileProvider = std::ranges::find_if(s_openedFiles, [&path](const FileProvider *provider) {
-                return provider->getPickedPath() == path;
-            });
-
-            if (alreadyOpenedFileProvider != s_openedFiles.end()) {
-                return OpenResult::redirect(*alreadyOpenedFileProvider);
-            } else {
-                s_openedFiles.insert(this);
-            }
+        if (auto provider = isFileLocked(path); provider != nullptr) {
+            return OpenResult::redirect(provider);
         }
 
         if (m_writable) {
@@ -367,11 +355,8 @@ namespace hex::plugin::builtin {
 
 
     void FileProvider::close() {
-        std::scoped_lock lock(s_openCloseMutex);
-
         m_file.close();
         m_data.clear();
-        s_openedFiles.erase(this);
         m_changeTracker.stopTracking();
         m_readable = false;
         m_writable = false;

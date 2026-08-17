@@ -68,7 +68,6 @@ namespace hex {
 
         bool m_emergencyPopupOpen = false;
         bool m_shouldUnlockFrameRate = false;
-        double m_fpsUnlockedEndTime = 0.0;
         bool m_waitEventsBlocked = false;
 
         gl::Shader m_postProcessingShader;

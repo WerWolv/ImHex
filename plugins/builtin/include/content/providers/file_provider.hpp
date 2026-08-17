@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
                          public prv::IProviderDataDescription,
                          public prv::IProviderFilePicker,
                          public prv::IProviderMenuItems,
-                         public prv::IProviderDataBackupable {
+                         public prv::IProviderDataBackupable{
     public:
         FileProvider() : IProviderDataBackupable(this) {}
         ~FileProvider() override = default;
@@ -80,8 +80,6 @@ namespace hex::plugin::builtin {
         std::optional<struct stat> m_fileStats;
 
         bool m_readable = false, m_writable = false;
-
-        static std::set<FileProvider*> s_openedFiles;
     };
 
 }

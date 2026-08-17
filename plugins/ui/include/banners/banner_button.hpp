@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/ui/banner.hpp>
 #include <hex/helpers/utils.hpp>
 

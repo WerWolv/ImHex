@@ -4,6 +4,7 @@
 
 #include <list>
 #include <optional>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
@@ -34,15 +35,33 @@ namespace hex::prv {
         virtual void drawSidebarInterface() = 0;
     };
 
+    class IProviderFileBacked {
+    public:
+        virtual ~IProviderFileBacked();
+
+        std::set<std::fs::path> getBackedFiles() const;
+        static std::set<std::fs::path> getAllLockedFiles();
+
+        Provider* isFileLocked(const std::fs::path &path);
+
+        void lockFile(const std::fs::path &path);
+        void unlockFile(const std::fs::path &path);
+
+    private:
+        std::set<std::fs::path> m_backedFiles;
+    };
+
     /**
      * @brief Interface for providers that need to show a file picker dialog when being created
      */
-    class IProviderFilePicker {
+    class IProviderFilePicker : public IProviderFileBacked {
     public:
-        virtual ~IProviderFilePicker() = default;
+        ~IProviderFilePicker() override = default;
         [[nodiscard]] virtual std::vector<fs::ItemFilter> getValidExtensions() const = 0;
         [[nodiscard]] virtual bool canOpenFile(const std::fs::path &path) const { std::ignore = path; return true; }
         void setPickedPath(const std::fs::path &path) {
+            this->unlockFile(m_path);
+
             m_path = path;
             m_path.make_preferred();
         }

@@ -309,10 +309,13 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted(begin, end);
             };
 
+            ImGui::SetCursorPos(scaled(10, 10));
+            ImGuiExt::TextFormatted("{} {}",  ICON_VS_ARROW_LEFT, "hex.builtin.welcome.project.empty.open_existing_source"_lang);
+
             const auto contentHeight = ImGui::GetTextLineHeightWithSpacing() * 6 + ImGui::GetFrameHeight();
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + std::max(0.0F, (ImGui::GetContentRegionAvail().y - contentHeight) / 2));
             fonts::Default().push(1.5F);
-            centerText(fmt::format("{}  {}", ICON_VS_PROJECT, ProjectManager::getProjectRoot().filename().string()));
+            centerText(fmt::format("{}  {}", ICON_VS_NOTEBOOK, ProjectManager::getProjectRoot().filename().string()));
             fonts::Default().pop();
 
             ImGui::NewLine();
@@ -325,8 +328,9 @@ namespace hex::plugin::builtin {
 
             const auto subWindowSize = scaled(300, 150);
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.0F, (ImGui::GetContentRegionAvail().x - subWindowSize.x) / 2));
-            if (ImGuiExt::BeginSubWindow("Choose Data Source", nullptr, subWindowSize)) {
-                if (ImGui::MenuItemEx("File", ICON_VS_GO_TO_FILE))
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+            if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.project.empty.create_new_source"_lang, nullptr, subWindowSize)) {
+                if (ImGui::MenuItemEx("hex.builtin.provider.file"_lang, ICON_VS_FILE_BINARY))
                     RequestOpenWindow::post("Open File");
                 ImGui::Separator();
                 for (const auto &[unlocalizedProviderName, icon, _, hidden] : ContentRegistry::Provider::impl::getEntries()) {
@@ -338,6 +342,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGuiExt::EndSubWindow();
             }
+            ImGui::PopStyleColor();
         }
 
         void drawWelcomeScreenContentFull() {

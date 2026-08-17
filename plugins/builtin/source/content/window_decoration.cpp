@@ -193,8 +193,10 @@ namespace hex::plugin::builtin {
         }
 
         void drawSidebar(ImVec2 dockSpaceSize, ImVec2 sidebarPos, float sidebarWidth) {
+            const auto startPos = ImGui::GetWindowPos();
+
             u32 index = 0;
-            u32 drawIndex = 1;
+            u32 drawIndex = 0;
             processPendingSidebarClose();
 
             drawTitleBarBackDrop();
@@ -205,8 +207,7 @@ namespace hex::plugin::builtin {
             for (const auto &[unlocalizedName, icon, callback, enabledCallback] : ContentRegistry::UserInterface::impl::getSidebarItems()) {
                 std::ignore = callback;
                 ImGui::PushID(index);
-                ImGui::SetCursorPosX(padding);
-                ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * drawIndex);
+                ImGui::SetCursorPos({ padding, padding + sidebarPos.y + sidebarWidth * drawIndex });
 
                 const bool selected = s_sidebarState.openWindow == static_cast<i32>(index);
 
@@ -257,11 +258,11 @@ namespace hex::plugin::builtin {
                 return;
 
             const auto &g = *ImGui::GetCurrentContext();
-            const auto titleBarHeight = g.FontSize + g.Style.FramePadding.y * 2.0F;
+            const auto titleBarHeight = ImHexApi::Provider::isValid() ? g.FontSize + g.Style.FramePadding.y * 2.0F : 0.0F;
             const auto panelHeight = dockSpaceSize.y + 5_scaled - titleBarHeight;
             const auto maxWidth = std::max(180_scaled, ImHexApi::System::getMainWindowSize().x - sidebarWidth - 100_scaled);
             const auto initialWidth = std::min(300_scaled, maxWidth);
-            ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, titleBarHeight));
+            ImGui::SetNextWindowPos(startPos + sidebarPos + ImVec2(sidebarWidth, titleBarHeight));
             ImGui::SetNextWindowSizeConstraints(ImVec2(180_scaled, panelHeight), ImVec2(maxWidth, panelHeight));
             if (s_sidebarState.panelWidth <= 0.0F)
                 ImGui::SetNextWindowSize(ImVec2(initialWidth, panelHeight), ImGuiCond_FirstUseEver);
@@ -794,8 +795,8 @@ namespace hex::plugin::builtin {
                 const auto shouldDrawSidebar = anySidebarItemsAvailable();
 
                 const auto menuBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight;
-                const auto sidebarPos   = ImGui::GetCursorPos();
-                const auto sidebarWidth = shouldDrawSidebar ? 30_scaled : 0;
+                const auto sidebarPos  = ImGui::GetCursorPos();
+                const auto sidebarWidth  = shouldDrawSidebar ? 30_scaled : 0;
                 if (!shouldDrawSidebar)
                     closeSidebar();
                 const auto pinnedSidebarWidth = shouldDrawSidebar
@@ -827,7 +828,7 @@ namespace hex::plugin::builtin {
                     ImGui::PopClipRect();
 
                     ImGui::SetCursorPos(sidebarPos);
-                    drawSidebar(dockSpaceSize, sidebarPos, sidebarWidth);
+                    drawSidebar(dockSpaceSize + ImVec2(0, 2_scaled), sidebarPos - ImVec2(0, 2_scaled), sidebarWidth);
 
                     if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
                         const auto separatorX = ImGui::GetWindowPos().x + sidebarWidth - 1_scaled;

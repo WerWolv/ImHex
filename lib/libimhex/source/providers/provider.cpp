@@ -3,18 +3,20 @@
 #include <hex.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/imhex_api/provider.hpp>
+
+#include <hex/helpers/magic.hpp>
+#include <hex/helpers/auto_reset.hpp>
+#include <wolv/io/file.hpp>
+#include <wolv/literals.hpp>
+#include <wolv/utils/string.hpp>
 
 #include <cmath>
 #include <cstring>
 #include <optional>
-#include <hex/api/content_registry/settings.hpp>
-
-#include <hex/helpers/magic.hpp>
-#include <wolv/io/file.hpp>
-#include <wolv/literals.hpp>
 
 #include <nlohmann/json.hpp>
-#include <wolv/utils/string.hpp>
 
 namespace hex::prv {
 
@@ -52,6 +54,76 @@ namespace hex::prv {
                 log::info("Created backup of provider data at '{}'", backupFilePath.string());
             }
         }
+    }
+
+    static AutoReset<std::set<std::fs::path>> s_lockedFiles;
+    static std::mutex s_lockedFilesMutex;
+    std::set<std::fs::path> IProviderFileBacked::getAllLockedFiles() {
+        std::lock_guard lock(s_lockedFilesMutex);
+        auto result = *s_lockedFiles;
+
+        return result;
+    }
+
+    static bool containsEqualPath(const std::set<std::fs::path> &paths, const std::fs::path &path) {
+        return std::ranges::find_if(paths, [&path](const std::fs::path &lockedPath) {
+            return std::fs::equivalent(path, lockedPath);
+        }) != paths.end();
+    }
+
+    Provider* IProviderFileBacked::isFileLocked(const std::fs::path& path) {
+        if (containsEqualPath(getAllLockedFiles(), path)) {
+            const auto &providers = ImHexApi::Provider::getProviders();
+            auto alreadyOpenedFileProvider = std::ranges::find_if(providers, [&path](const Provider *provider) {
+                auto fileBackedProvider = dynamic_cast<const IProviderFileBacked*>(provider);
+                if (fileBackedProvider == nullptr)
+                    return false;
+
+                return containsEqualPath(fileBackedProvider->getBackedFiles(), path);
+            });
+
+            if (alreadyOpenedFileProvider != providers.end()) {
+                return *alreadyOpenedFileProvider;
+            }
+        }
+
+        return nullptr;
+    }
+
+    std::set<std::fs::path> IProviderFileBacked::getBackedFiles() const {
+        std::lock_guard lock(s_lockedFilesMutex);
+        auto result = m_backedFiles;
+
+        return result;
+    }
+
+    void IProviderFileBacked::lockFile(const std::fs::path &path) {
+        std::lock_guard lock(s_lockedFilesMutex);
+
+        const auto canonical_path = std::fs::weakly_canonical(path);
+
+        s_lockedFiles->insert(canonical_path);
+        m_backedFiles.insert(canonical_path);
+    }
+
+    void IProviderFileBacked::unlockFile(const std::fs::path &path) {
+        std::lock_guard lock(s_lockedFilesMutex);
+
+        const auto canonical_path = std::fs::weakly_canonical(path);
+
+        s_lockedFiles->erase(canonical_path);
+        m_backedFiles.erase(canonical_path);
+    }
+
+    IProviderFileBacked::~IProviderFileBacked() {
+        std::set<std::fs::path> backedFiles;
+        {
+            std::lock_guard lock(s_lockedFilesMutex);
+            backedFiles = m_backedFiles;
+        }
+
+        for (const auto &path : backedFiles)
+            this->unlockFile(path);
     }
 
 

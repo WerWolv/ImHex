@@ -17,7 +17,6 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
-#include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
@@ -26,14 +25,21 @@
 #include <hex/providers/provider.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <imgui_internal.h>
+
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+
+#include <fonts/fonts.hpp>
 #include <fonts/vscode_icons.hpp>
-#include <nlohmann/json.hpp>
+#include <fonts/tabler_icons.hpp>
+
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_question.hpp>
 #include <wolv/io/file.hpp>
+#include <nlohmann/json.hpp>
+
 
 namespace hex::plugin::builtin {
 
@@ -284,16 +290,13 @@ namespace hex::plugin::builtin {
             if (error)
                 return false;
 
-            for (auto *provider : ImHexApi::Provider::getProviders()) {
-                const auto *filePicker = dynamic_cast<const prv::IProviderFilePicker *>(provider);
-                if (filePicker == nullptr || filePicker->getPickedPath().empty())
-                    continue;
-
+            for (const auto &lockedFilePath : prv::IProviderFileBacked::getAllLockedFiles()) {
                 error.clear();
-                const auto providerRelativePath = std::fs::weakly_canonical(filePicker->getPickedPath(), error).lexically_relative(canonicalRoot);
+                const auto providerRelativePath = std::fs::weakly_canonical(lockedFilePath, error).lexically_relative(canonicalRoot);
                 if (!error && isSameOrDescendant(providerRelativePath, relativePath))
                     return true;
             }
+
             return false;
         }
 
@@ -520,17 +523,16 @@ namespace hex::plugin::builtin {
         }
 
         void drawCreateProjectEntryMenu(const std::fs::path &directory) {
-            if (ImGui::BeginMenu(fmt::format("{} {}", ICON_VS_NEW_FILE, "hex.builtin.sidebar.project.menu.new_file"_lang).c_str())) {
+            if (ImGui::BeginMenuEx("hex.builtin.sidebar.project.menu.new_file"_lang, ICON_VS_NEW_FILE)) {
                 for (auto *data : FileBackedProviderDataRegistry::getTypes()) {
                     if (data->getType().extensions.empty())
                         continue;
-                    const auto label = fmt::format("{}  {}", data->getType().displayIcon, Lang(data->getType().displayName));
-                    if (ImGui::MenuItem(label.c_str()))
+                    if (ImGui::MenuItemEx(Lang(data->getType().displayName), data->getType().displayIcon.c_str()))
                         startCreatingFile(directory, data->getType().typeId);
                 }
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_NEW_FOLDER, "hex.builtin.sidebar.project.menu.new_folder"_lang).c_str()))
+            if (ImGui::MenuItemEx( "hex.builtin.sidebar.project.menu.new_folder"_lang, ICON_VS_NEW_FOLDER))
                 startCreatingFolder(directory);
         }
 
@@ -564,24 +566,6 @@ namespace hex::plugin::builtin {
                     return icon.c_str();
             }
             return ICON_VS_FILE;
-        }
-
-        bool isProviderFile(const std::fs::path &path) {
-            std::error_code error;
-            const auto canonicalPath = std::fs::weakly_canonical(path, error);
-            if (error)
-                return false;
-
-            for (auto *provider : ImHexApi::Provider::getProviders()) {
-                const auto *filePicker = dynamic_cast<const prv::IProviderFilePicker *>(provider);
-                if (filePicker == nullptr || filePicker->getPickedPath().empty())
-                    continue;
-
-                const auto providerPath = std::fs::weakly_canonical(filePicker->getPickedPath(), error);
-                if (!error && providerPath == canonicalPath)
-                    return true;
-            }
-            return false;
         }
 
         bool associateFile(prv::Provider *provider, const std::fs::path &relativePath) {
@@ -931,12 +915,12 @@ namespace hex::plugin::builtin {
             if (fileHovered && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
                 ImGui::OpenPopup("ProjectFileContextMenu");
             if (ImGui::BeginPopup("ProjectFileContextMenu")) {
-                if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_EDIT, "hex.builtin.sidebar.project.menu.rename"_lang).c_str()))
+                if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.rename"_lang, ICON_VS_EDIT))
                     startRenamingProjectEntry(relativePath);
-                if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.delete"_lang).c_str()))
+                if (ImGui::MenuItemEx( "hex.builtin.sidebar.project.menu.delete"_lang, ICON_VS_TRASH))
                     promptDeleteProjectEntry(relativePath);
                 ImGui::Separator();
-                if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_FOLDER_OPENED, "hex.builtin.sidebar.project.menu.reveal_in_file_manager"_lang).c_str()))
+                if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.reveal_in_file_manager"_lang, ICON_VS_FOLDER_OPENED))
                     fs::openFolderWithSelectionExternal(path);
                 ImGui::EndPopup();
             }
@@ -986,9 +970,9 @@ namespace hex::plugin::builtin {
                         if (ImGui::BeginPopupContextItem("##ProjectDirectoryContextMenu")) {
                             drawCreateProjectEntryMenu(relativePath);
                             ImGui::Separator();
-                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_EDIT, "hex.builtin.sidebar.project.menu.rename"_lang).c_str()))
+                            if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.rename"_lang, ICON_VS_EDIT))
                                 startRenamingProjectEntry(relativePath);
-                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.delete"_lang).c_str()))
+                            if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.delete"_lang, ICON_VS_TRASH))
                                 promptDeleteProjectEntry(relativePath);
                             ImGui::EndPopup();
                         }
@@ -998,7 +982,7 @@ namespace hex::plugin::builtin {
                         ImGui::TreePop();
                     }
                     ImGui::PopID();
-                } else if (entry.is_regular_file(error) && !isProviderFile(entry.path())) {
+                } else if (entry.is_regular_file(error)) {
                     drawProjectFile(root, entry.path());
                 }
             }
@@ -1010,19 +994,30 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginChild("##ProjectTree", ImVec2(0, 0), ImGuiChildFlags_Borders)) {
                 const auto providers = ImHexApi::Provider::getProviders();
-                const auto projectLabel = fmt::format("{}  {}", ICON_VS_PROJECT, ProjectManager::getProjectRoot().filename().string());
+                const auto projectRoot = ProjectManager::getProjectRoot();
+                const auto projectLabel = fmt::format("{}  {}", ICON_VS_PROJECT, wolv::util::toUTF8String(projectRoot.filename()));
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-                const bool projectOpen = ImGui::TreeNodeEx("##Project", ImGuiTreeNodeFlags_DrawLinesToNodes |
-                    ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth, "%s", projectLabel.c_str());
+                const bool projectOpen = ImGui::TreeNodeEx("##Project",
+                    ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth,
+                    "%s", projectLabel.c_str()
+                );
+
+                ImGui::SameLine();
+                fonts::Default().pushItalic();
+                ImGui::TextDisabled("%s", wolv::util::toUTF8String(projectRoot).c_str());
+                fonts::Default().pop();
+
                 if (projectOpen) {
                     std::optional<u32> providerToOpen;
                     std::optional<u32> providerToReplace;
                     std::optional<u32> providerToRemove;
+                    std::optional<u32> providerToClose;
+
                     std::set<u32> openProviderIds;
                     for (auto *provider : providers) {
+                        const bool partOfProject = s_projectProviderIds.contains(provider->getID());
+
                         openProviderIds.insert(provider->getID());
-                        if (!s_projectProviderIds.contains(provider->getID()))
-                            continue;
 
                         ImGui::PushID(provider);
                         const auto associations = s_associations.find(provider->getID());
@@ -1033,13 +1028,26 @@ namespace hex::plugin::builtin {
                         if (!hasAssociations)
                             flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-                        const auto providerLabel = fmt::format("{}  {}", provider->getIcon(), provider->getName());
+                        const auto providerLabel = fmt::format("{}  {}", partOfProject ? provider->getIcon() : ICON_TA_FILE_BROKEN, provider->getName());
                         const bool open = ImGui::TreeNodeEx("##Provider", flags, "%s", providerLabel.c_str());
                         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
                             ImHexApi::Provider::setCurrentProvider(provider);
                         if (ImGui::BeginPopupContextItem("##ProviderContextMenu")) {
-                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.remove_from_project"_lang).c_str()))
-                                providerToRemove = provider->getID();
+                            if (partOfProject) {
+                                // Provider is part of project already
+
+                                if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.remove_from_project"_lang, ICON_VS_TRASH))
+                                    providerToRemove = provider->getID();
+                            } else {
+                                // Provider is open but not part of the project
+
+                                if (ImGui::MenuItemEx( "hex.builtin.sidebar.project.menu.add_to_project"_lang, ICON_VS_ADD))
+                                    s_projectProviderIds.insert(provider->getID());
+                            }
+
+                            if (ImGui::MenuItemEx( "hex.ui.common.close"_lang, ICON_VS_CLOSE))
+                                providerToClose = provider->getID();
+
                             ImGui::EndPopup();
                         }
                         if (ImGui::BeginDragDropTarget()) {
@@ -1060,7 +1068,7 @@ namespace hex::plugin::builtin {
                                 if (ImGui::IsItemHovered())
                                     ImGui::SetTooltip("%s", filePath.generic_string().c_str());
                                 if (ImGui::BeginPopupContextItem()) {
-                                    if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_DEBUG_DISCONNECT, "hex.builtin.sidebar.project.menu.remove_from_provider"_lang).c_str()))
+                                    if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.remove_from_provider"_lang, ICON_VS_DEBUG_DISCONNECT))
                                         associationToRemove = handlerPath;
                                     ImGui::EndPopup();
                                 }
@@ -1086,11 +1094,11 @@ namespace hex::plugin::builtin {
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                             providerToOpen = id;
                         if (ImGui::BeginPopupContextItem("##ClosedProviderContextMenu")) {
-                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_GO_TO_FILE, "hex.ui.common.open"_lang).c_str()))
+                            if (ImGui::MenuItemEx("hex.ui.common.open"_lang, ICON_VS_GO_TO_FILE))
                                 providerToOpen = id;
-                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_REPLACE, "hex.builtin.sidebar.project.menu.update_source"_lang).c_str()))
+                            if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.update_source"_lang, ICON_VS_REPLACE))
                                 providerToReplace = id;
-                            if (ImGui::MenuItem(fmt::format("{} {}", ICON_VS_TRASH, "hex.builtin.sidebar.project.menu.remove_from_project"_lang).c_str()))
+                            if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.remove_from_project"_lang, ICON_VS_TRASH))
                                 providerToRemove = id;
                             ImGui::EndPopup();
                         }
@@ -1111,6 +1119,9 @@ namespace hex::plugin::builtin {
                     }
                     if (providerToRemove.has_value())
                         TaskManager::doLater([id = *providerToRemove] { removeProviderFromProject(id); });
+                    if (providerToClose.has_value())
+                        TaskManager::doLater([id = *providerToClose] { ImHexApi::Provider::remove(getProviderById(id)); });
+
                     ImGui::TreePop();
                 }
 
@@ -1536,7 +1547,7 @@ namespace hex::plugin::builtin {
 
     void registerProjectHandlers() {
         hex::ProjectManager::setProjectFunctions(load, store);
-        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.sidebar.project.name", ICON_VS_FILES, drawProjectSidebar, [] {
+        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.sidebar.project.name", ICON_VS_NOTEBOOK, drawProjectSidebar, [] {
             return ProjectManager::isFolderProject();
         });
         EventFileBackedProviderDataChanged::subscribe([](prv::Provider *, FileBackedProviderDataBase *) {
@@ -1553,7 +1564,6 @@ namespace hex::plugin::builtin {
                 s_providerReplacements.erase(replacement);
             }
             if (ProjectManager::isFolderProject() && !s_loadingProject) {
-                s_projectProviderIds.insert(provider->getID());
                 s_closedProjectProviderIds.erase(provider->getID());
                 snapshotProviderSettings(provider);
                 if (isReplacement)
