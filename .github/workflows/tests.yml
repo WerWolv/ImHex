@@ -56,7 +56,7 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=gcc-14 CXX=g++-14 cmake                                                                                 \
+        CC=gcc-16 CXX=g++-16 cmake                                                                                 \
           -DCMAKE_BUILD_TYPE=Debug                                                                                 \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                             \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                                                                           \
