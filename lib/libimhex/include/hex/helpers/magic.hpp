@@ -5,9 +5,11 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/providers/matchers/base_matcher.hpp>
 
 #include <string>
 #include <vector>
+
 
 namespace hex::prv {
     class Provider;
@@ -33,8 +35,7 @@ namespace hex::magic {
         std::fs::path patternFilePath;
         std::string author;
         std::string description;
-        std::optional<std::string> mimeType;
-        std::optional<u64> magicOffset;
+        std::shared_ptr<prv::PatternMatcherBase> matcher;
     };
 
     std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, Task* task = nullptr);

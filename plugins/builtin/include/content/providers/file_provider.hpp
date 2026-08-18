@@ -1,6 +1,10 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/filename.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -14,7 +18,13 @@ namespace hex::plugin::builtin {
                          public prv::IProviderDataDescription,
                          public prv::IProviderFilePicker,
                          public prv::IProviderMenuItems,
-                         public prv::IProviderDataBackupable{
+                         public prv::IProviderDataBackupable,
+                         public prv::ProviderMatchStrategies<
+                             prv::PatternMatcherMIME,
+                             prv::PatternMatcherMagic,
+                             prv::PatternMatcherFileName,
+                             prv::PatternMatcherProviderType
+                         > {
     public:
         FileProvider() : IProviderDataBackupable(this) {}
         ~FileProvider() override = default;

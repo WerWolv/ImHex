@@ -86,10 +86,11 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosX(ImGui::GetWindowSize().x - 300_scaled);
 
             if (ImGuiExt::BeginSubWindow("hex.builtin.view.fullscreen.file_info.match_info"_lang)) {
-                if (firstMatch.mimeType.has_value())
+                // TODO: Implement this again
+                /*if (firstMatch.mimeType.has_value())
                     ImGuiExt::TextFormattedWrapped("hex.builtin.view.fullscreen.file_info.match_info.mime"_lang);
                 else if (firstMatch.magicOffset.has_value())
-                    ImGuiExt::TextFormattedWrapped("hex.builtin.view.fullscreen.file_info.match_info.magic"_lang, *firstMatch.magicOffset);
+                    ImGuiExt::TextFormattedWrapped("hex.builtin.view.fullscreen.file_info.match_info.magic"_lang, *firstMatch.magicOffset);*/
             }
             ImGuiExt::EndSubWindow();
         } else {

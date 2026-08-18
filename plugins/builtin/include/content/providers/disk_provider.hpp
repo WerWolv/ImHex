@@ -2,6 +2,9 @@
 #if !defined(OS_WEB)
 
 #include <hex/providers/cached_provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 #include <set>
 #include <string>
@@ -13,7 +16,12 @@ namespace hex::plugin::builtin {
 
     class DiskProvider : public prv::CachedProvider,
                          public prv::IProviderDataDescription,
-                         public prv::IProviderLoadInterface {
+                         public prv::IProviderLoadInterface,
+                         public prv::ProviderMatchStrategies<
+                             prv::PatternMatcherMIME,
+                             prv::PatternMatcherMagic,
+                             prv::PatternMatcherProviderType
+                         > {
     public:
         DiskProvider() = default;
         ~DiskProvider() override = default;

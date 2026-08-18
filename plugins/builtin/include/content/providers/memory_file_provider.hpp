@@ -1,12 +1,23 @@
 #pragma once
 
 #include <fonts/vscode_icons.hpp>
+
 #include <hex/providers/provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/filename.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 namespace hex::plugin::builtin {
 
     class MemoryFileProvider : public hex::prv::Provider,
-                               public prv::IProviderMenuItems {
+                               public prv::IProviderMenuItems,
+                               public prv::ProviderMatchStrategies<
+                                   prv::PatternMatcherMIME,
+                                   prv::PatternMatcherMagic,
+                                   prv::PatternMatcherFileName,
+                                   prv::PatternMatcherProviderType
+                               > {
     public:
         explicit MemoryFileProvider() = default;
         ~MemoryFileProvider() override = default;

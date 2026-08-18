@@ -3,6 +3,8 @@
 #if defined(OS_WINDOWS) || defined(OS_MACOS) || (defined(OS_LINUX) && !defined(OS_FREEBSD))
 
 #include <hex/providers/provider.hpp>
+#include <hex/providers/matchers/base_matcher.hpp>
+
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -24,10 +26,25 @@
 
 namespace hex::plugin::builtin {
 
+    class PatternMatcherProcessName : public prv::PatternMatcher<"process"> {
+    public:
+        PatternMatcherProcessName(prv::Provider *provider);
+
+        bool match(const std::string& parameter) override {
+            return !m_processName.empty() && m_processName == parameter;
+        }
+
+    private:
+        std::string m_processName;
+    };
+
     class ProcessMemoryProvider : public prv::Provider,
                                   public prv::IProviderDataDescription,
                                   public prv::IProviderLoadInterface,
-                                  public prv::IProviderSidebarInterface {
+                                  public prv::IProviderSidebarInterface,
+                                  public prv::ProviderMatchStrategies<
+                                      PatternMatcherProcessName
+                                  > {
     public:
         ProcessMemoryProvider() = default;
         ~ProcessMemoryProvider() override = default;
@@ -78,7 +95,12 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
+        [[nodiscard]] std::string getProcessName() const {
+            if (m_selectedProcess == nullptr)
+                return "";
 
+            return m_selectedProcess->name;
+        }
     private:
         void reloadProcessModules();
 

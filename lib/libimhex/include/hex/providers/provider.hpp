@@ -15,6 +15,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include <hex/providers/undo_redo/stack.hpp>
+#include <hex/providers/matchers/base_matcher.hpp>
 
 namespace hex::prv {
     /**

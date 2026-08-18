@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
                 u32 index = 0;
-                for (const auto &[path, author, description, mimeType, magicOffset] : m_view->m_possiblePatternFiles.get(provider)) {
+                for (const auto &[path, author, description, matcher] : m_view->m_possiblePatternFiles.get(provider)) {
                     ImGui::PushID(index + 1);
                     auto fileName = wolv::util::toUTF8String(path.filename());
 

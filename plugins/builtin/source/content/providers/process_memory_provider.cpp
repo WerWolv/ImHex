@@ -38,6 +38,12 @@ namespace hex::plugin::builtin {
 
     using namespace wolv::literals;
 
+    PatternMatcherProcessName::PatternMatcherProcessName(prv::Provider* provider) : PatternMatcher(provider) {
+        if (auto processMemoryProvider = dynamic_cast<ProcessMemoryProvider*>(provider); processMemoryProvider != nullptr) {
+            m_processName = processMemoryProvider->getProcessName();
+        }
+    }
+
 #if defined(OS_WINDOWS)
 
     using NtQueryInformationProcessFunc = NTSTATUS (NTAPI*)(
