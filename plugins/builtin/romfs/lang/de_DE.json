@@ -90,7 +90,6 @@
     "hex.builtin.inspector.sleb128": "sLEB128",
     "hex.builtin.inspector.string": "String",
     "hex.builtin.inspector.wstring": "Wide String",
-    "hex.builtin.inspector.time": "time_t",
     "hex.builtin.inspector.time32": "time32_t",
     "hex.builtin.inspector.time64": "time64_t",
     "hex.builtin.inspector.u16": "uint16_t",

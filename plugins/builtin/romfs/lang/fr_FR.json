@@ -95,7 +95,6 @@
     "hex.builtin.inspector.wstring": "Chaîne large",
     "hex.builtin.inspector.string16": "Chaîne16",
     "hex.builtin.inspector.string32": "Chaîne32",
-    "hex.builtin.inspector.time": "time_t",
     "hex.builtin.inspector.time32": "time32_t",
     "hex.builtin.inspector.time64": "time64_t",
     "hex.builtin.inspector.u16": "uint16_t",

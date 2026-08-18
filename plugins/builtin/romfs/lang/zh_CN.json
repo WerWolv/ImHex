@@ -98,7 +98,6 @@
     "hex.builtin.inspector.wstring": "宽字符串",
     "hex.builtin.inspector.string16": "String16",
     "hex.builtin.inspector.string32": "String32",
-    "hex.builtin.inspector.time": "time_t",
     "hex.builtin.inspector.time32": "time32_t",
     "hex.builtin.inspector.time64": "time64_t",
     "hex.builtin.inspector.u16": "uint16_t",
