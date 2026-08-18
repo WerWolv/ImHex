@@ -33,6 +33,8 @@ parts:
   imhex:
     plugin: cmake
     source: .
+    build-attributes:
+      - enable-patchelf
     build-environment:
       - CC: /usr/bin/gcc-16
       - CXX: /usr/bin/g++-16
