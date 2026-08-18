@@ -163,26 +163,40 @@ namespace hex {
 
             #else
 
+                static std::atomic<bool> s_settingsLoaded;
                 void load() {
                     bool loaded = false;
                     for (const auto &dir : paths::Config.read()) {
                         wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
 
                         if (file.isValid()) {
-                            s_settings = nlohmann::json::parse(file.readString());
-                            loaded = true;
-                            break;
+                            try {
+                                s_settings = nlohmann::json::parse(file.readString());
+                                loaded = true;
+                                break;
+                            } catch (const std::exception &e) {
+                                log::error("Failed to parse settings file! {}", e.what());
+                            }
                         }
                     }
 
-                    if (!loaded)
+                    s_settingsLoaded = true;
+
+                    if (!loaded) {
+                        log::warn("Failed to load settings file! Creating new one!");
                         store();
+                    }
 
                     runAllOnChangeCallbacks();
                 }
 
                 void store() {
                     thread_local bool isRunningCallbacks = false;
+
+                    // Refuse to store settings before they have been tried to be loaded
+                    // This is to ensure settings aren't lost accidentally
+                    if (!s_settingsLoaded)
+                        return;
 
                     if (isRunningCallbacks)
                         return;

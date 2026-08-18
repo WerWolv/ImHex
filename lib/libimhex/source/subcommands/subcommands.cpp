@@ -10,6 +10,8 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 
+#include "hex/api/content_registry/settings.hpp"
+
 namespace hex::subcommands {
 
     std::optional<SubCommand> findSubCommand(const std::string &arg) {
@@ -105,6 +107,7 @@ namespace hex::subcommands {
         for (const auto &[subcommand, _] : subCommands) {
             if (bool(subcommand.flags & SubCommand::Flags::InitPlugins)) {
                 pluginsInitialized = true;
+                ContentRegistry::Settings::impl::load();
                 PluginManager::initializeNewPlugins();
                 break;
             }
