@@ -972,7 +972,11 @@ macro(addBundledLibraries)
     enableUnityBuild(libpl)
     setupCompilerFlags(libpl)
 
-    find_package(mbedTLS 3.4.0 REQUIRED)
+    if (CRYPTO_BACKEND STREQUAL "mbedtls")
+        find_package(mbedTLS 3.4.0 REQUIRED)
+    else ()
+        find_package(Nettle 3.4 REQUIRED)
+    endif ()
     find_package(Magic 5.39 REQUIRED)
 endmacro()
 

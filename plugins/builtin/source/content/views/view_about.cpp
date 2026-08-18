@@ -342,6 +342,7 @@ namespace hex::plugin::builtin {
             ExternalResource { .name="miniaudio", .author="mackron", .link="https://github.com/mackron/miniaudio" },
             ExternalResource { .name="freetype", .author="freetype", .link="https://gitlab.freedesktop.org/freetype/freetype" },
             ExternalResource { .name="mbedTLS", .author="ARMmbed", .link="https://github.com/ARMmbed/mbedtls" },
+            ExternalResource { .name="Nettle", .author="Nettle developers", .link="https://www.lysator.liu.se/~nisse/nettle/" },
             ExternalResource { .name="curl", .author="curl", .link="https://github.com/curl/curl" },
             ExternalResource { .name="file", .author="file", .link="https://github.com/file/file" },
             ExternalResource { .name="glfw", .author="glfw", .link="https://github.com/glfw/glfw" },

@@ -65,6 +65,12 @@ set(LIBIMHEX_SOURCES
         source/subcommands/subcommands.cpp
 )
 
+if (CRYPTO_BACKEND STREQUAL "mbedtls")
+    list(APPEND LIBIMHEX_SOURCES source/helpers/crypto_mbedtls.cpp)
+else ()
+    list(APPEND LIBIMHEX_SOURCES source/helpers/crypto_nettle.cpp)
+endif ()
+
 if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
             source/helpers/utils_macos.m
@@ -176,9 +182,16 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_options(libimhex PUBLIC -sFETCH)
     endif()
 
-    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
-    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES})
-    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
+    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${LIBBACKTRACE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS})
+    target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MAGIC_LIBRARY_DIRS})
+
+    if (CRYPTO_BACKEND STREQUAL "mbedtls")
+        target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_INCLUDE_DIR})
+        target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARIES})
+        target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR})
+    else ()
+        target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} Nettle::Nettle)
+    endif ()
 
     precompileHeaders(libimhex "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()

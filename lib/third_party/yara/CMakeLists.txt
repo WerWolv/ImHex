@@ -33,7 +33,7 @@ set(LIBYARA_INCLUDES
         ${LIBYARA_SOURCE_PATH}/include/yara/threading.h
         ${LIBYARA_SOURCE_PATH}/include/yara/types.h
         ${LIBYARA_SOURCE_PATH}/include/yara/utils.h
-        ${LIBYARA_SOURCE_PATH}/crypto.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/crypto.h
         ${LIBYARA_SOURCE_PATH}/tlshc/tlsh_impl.h
         ${LIBYARA_SOURCE_PATH}/tlshc/tlsh_util.h
         )
@@ -102,16 +102,22 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
 
-find_package(mbedTLS 2.26.0 REQUIRED)
-
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 
-# Add mbedtls crypto wrappers
 target_compile_definitions(libyara PRIVATE
-        HAVE_MBEDTLS
         USE_NO_PROC BUCKETS_256 CHECKSUM_3B
         HASH_MODULE DOTNET_MODULE MAGIC_MODULE MACHO_MODULE DEX_MODULE
 )
+
+if (CRYPTO_BACKEND STREQUAL "mbedtls")
+    target_compile_definitions(libyara PRIVATE HAVE_MBEDTLS)
+    target_include_directories(libyara PRIVATE ${MBEDTLS_INCLUDE_DIR})
+    target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
+    set(LIBYARA_CRYPTO_LIBRARY ${MBEDTLS_LIBRARIES})
+else ()
+    target_compile_definitions(libyara PRIVATE HAVE_NETTLE)
+    set(LIBYARA_CRYPTO_LIBRARY Nettle::Nettle)
+endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
@@ -124,15 +130,13 @@ endif ()
 target_include_directories(
         libyara
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include>
-        PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
+        PRIVATE ${LIBYARA_SOURCE_PATH}
 )
 
-target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
-
 if (UNIX)
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES} pthread)
+    target_link_libraries(libyara PRIVATE magic ${LIBYARA_CRYPTO_LIBRARY} pthread)
 else ()
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES})
+    target_link_libraries(libyara PRIVATE magic ${LIBYARA_CRYPTO_LIBRARY})
 endif ()
 
 include(GNUInstallDirs)
