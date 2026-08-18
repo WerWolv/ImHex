@@ -60,10 +60,10 @@ namespace hex::plugin::builtin {
         class PopupAcceptPattern;
 
         struct PatternVariable {
-            bool inVariable{};
-            bool outVariable{};
+            bool inVariable;
+            bool outVariable;
 
-            pl::core::Token::ValueType type{};
+            pl::core::Token::ValueType type;
             pl::core::Token::Literal value;
         };
 

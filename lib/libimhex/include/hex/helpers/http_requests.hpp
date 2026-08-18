@@ -57,7 +57,7 @@ namespace hex {
                 else if (m_backendResult.has_value())
                     return m_backendResult.value();
                 else
-                    return {};
+                    return std::monostate();
             }
 
             [[nodiscard]] bool isSuccess() const {
