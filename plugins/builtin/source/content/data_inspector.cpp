@@ -754,8 +754,6 @@ namespace hex::plugin::builtin {
             };
         });
 
-#if defined(OS_WINDOWS)
-
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
@@ -763,19 +761,23 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::gmtime(&endianAdjustedTime);
+                if (endianAdjustedTime & (1LLU << 31))
+                    throw std::runtime_error("MSB is set");
+
+                const auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
                     value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
                 }
-            } catch (fmt::format_error &) {
+            } catch (std::exception &) {
                 value = "Invalid";
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
+    #if defined(TIME_T_SIZE) && TIME_T_SIZE >= 8
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(u64), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
 
@@ -783,42 +785,22 @@ namespace hex::plugin::builtin {
 
             std::string value;
             try {
-                auto time = std::gmtime(&endianAdjustedTime);
+                if (endianAdjustedTime & (1LLU << 63))
+                    throw std::runtime_error("MSB is set");
+
+                const auto time = std::gmtime(&endianAdjustedTime);
                 if (time == nullptr) {
                     value = "Invalid";
                 } else {
                     value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
                 }
-            } catch (fmt::format_error &) {
+            } catch (std::exception &) {
                 value = "Invalid";
             }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
-
-#else
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
-            std::ignore = style;
-
-            time_t endianAdjustedTime = hex::changeEndianness(*reinterpret_cast<time_t *>(buffer.data()), endian);
-
-            std::string value;
-            try {
-                auto time = std::gmtime(&endianAdjustedTime);
-                if (time == nullptr) {
-                    value = "Invalid";
-                } else {
-                    value = fmt::format("{0:%a, %d.%m.%Y %H:%M:%S}", *time);
-                }
-            } catch (const fmt::format_error &e) {
-                value = "Invalid";
-            }
-
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
-
-#endif
+    #endif
 
         struct DOSDate {
             u16 day   : 5;

@@ -154,3 +154,7 @@ add_imhex_plugin(
 if (WIN32)
     target_link_libraries(builtin PRIVATE setupapi)
 endif ()
+
+include(CheckTypeSize)
+check_type_size(time_t TIME_T_SIZE)
+target_compile_definitions(builtin PRIVATE TIME_T_SIZE=${TIME_T_SIZE})
