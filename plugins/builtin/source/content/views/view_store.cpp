@@ -35,8 +35,6 @@ namespace hex::plugin::builtin {
             this->getWindowOpenState() = true;
         });
 
-        m_httpRequest.setTimeout(30'000);
-
         addCategory("hex.builtin.view.store.tab.patterns",     "patterns",      &paths::Patterns);
         addCategory("hex.builtin.view.store.tab.includes",     "includes",      &paths::PatternsInclude);
         addCategory("hex.builtin.view.store.tab.magic",        "magic",         &paths::Magic, []{
@@ -94,11 +92,11 @@ namespace hex::plugin::builtin {
 
     void ViewStore::drawTab(hex::plugin::builtin::StoreCategory &category) {
         if (ImGui::BeginTabItem(Lang(category.unlocalizedName))) {
-            if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
+            if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_RowBg)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
-                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_WidthStretch, 0.3F);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_WidthStretch, 0.7F);
                 ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                 ImGui::TableHeadersRow();
@@ -108,6 +106,11 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.name.c_str());
+
+                    // The space makes a padding in the UI
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
+
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.description.c_str());
                     if (ImGui::IsItemHovered()) {
@@ -117,11 +120,8 @@ namespace hex::plugin::builtin {
                         ImGui::PopTextWrapPos();
                         ImGui::EndTooltip();
                     }
-                    ImGui::TableNextColumn();
-                    // The space makes a padding in the UI
-                    ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
-                    ImGui::TableNextColumn();
 
+                    ImGui::TableNextColumn();
                     ImGui::PushID(id);
                     ImGui::BeginDisabled(m_updateAllTask.isRunning() || (m_download.valid() && m_download.wait_for(0s) != std::future_status::ready));
                     {
@@ -280,33 +280,8 @@ namespace hex::plugin::builtin {
     }
 
     bool ViewStore::download(const paths::impl::DefaultPath *pathType, const std::string &fileName, const std::string &url) {
-        bool downloading = false;
-        for (const auto &folderPath : pathType->write()) {
-            if (!fs::isPathWritable(folderPath))
-                continue;
-
-            // Verify that we write the file to the right folder
-            // this is to prevent the filename from having elements like ../
-            const auto fullPath = std::fs::absolute(folderPath / std::fs::path(fileName));
-            const auto [folderIter, pathIter] = std::mismatch(folderPath.begin(), folderPath.end(), fullPath.begin());
-            if (folderIter != folderPath.end()) {
-                continue;
-            }
-
-            downloading = true;
-            m_downloadPath = fullPath;
-
-            m_httpRequest.setUrl(url);
-            m_download = m_httpRequest.downloadFile(fullPath);
-            break;
-        }
-
-        if (!downloading) {
-            ui::ToastError::open("hex.builtin.view.store.download_error"_lang);
-            return false;
-        }
-
-        return downloading;
+        m_download = StoreApi::download(pathType, fileName, url);
+        return m_download.valid();
     }
 
     bool ViewStore::remove(const paths::impl::DefaultPath *pathType, const std::string &fileName) {
@@ -334,17 +309,11 @@ namespace hex::plugin::builtin {
                         if (!m_download.valid())
                             continue;
 
-                        m_download.wait();
-
                         while (m_download.valid() && m_download.wait_for(100ms) != std::future_status::ready) {
                             task.update();
                         }
 
-                        entry.hasUpdate = false;
-                        entry.downloading = false;
-
-                        if (m_updateCount > 0)
-                            m_updateCount -= 1;
+                        this->handleDownloadFinished(category, entry);
 
                         task.increment();
                     }
@@ -365,8 +334,10 @@ namespace hex::plugin::builtin {
     void ViewStore::handleDownloadFinished(const StoreCategory &category, StoreEntry &entry) {
         entry.downloading = false;
 
-        auto response = m_download.get();
+        const auto response = m_download.get();
         if (response.isSuccess()) {
+            m_downloadPath = response.getPath();
+
             if (entry.hasUpdate)
                 m_updateCount -= 1;
 
@@ -384,7 +355,10 @@ namespace hex::plugin::builtin {
 
             category.downloadCallback();
         } else {
-            log::error("Download failed! {}", response.getStatusCode().toString());
+            if (response.getStatus() == StoreApi::DownloadResult::Status::NoWritablePath)
+                ui::ToastError::open("hex.builtin.view.store.download_error"_lang);
+            else
+                log::error("Download failed! {}", response.getErrorMessage());
         }
 
         m_download = {};

@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <hex/api/http/store_api.hpp>
 
 #include <hex/api/http/api_urls.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/http_requests.hpp>
 
 #include <nlohmann/json.hpp>
@@ -33,9 +35,6 @@ namespace hex {
             try {
                 StoreApi::Store store;
                 const auto json = nlohmann::json::parse(response.getData());
-                store.pragmas = json.contains("pragmas")
-                    ? json["pragmas"].get<StoreApi::Pragmas>()
-                    : StoreApi::Pragmas { };
 
                 for (const auto &[categoryName, category] : json.items()) {
                     if (!category.is_array())
@@ -43,19 +42,26 @@ namespace hex {
 
                     auto &entries = store.categories[categoryName];
                     for (const auto &entry : category) {
-                        if (!entry.contains("name") || !entry.contains("desc") || !entry.contains("authors") ||
-                            !entry.contains("file") || !entry.contains("url") || !entry.contains("hash") || !entry.contains("folder"))
-                            continue;
+                        try {
+                            StoreApi::Pragmas pragmas;
+                            for (const auto &[name, values] : entry["pragmas"].items()) {
+                                for (const auto &value : values)
+                                    pragmas.emplace(name, value.get<std::string>());
+                            }
 
-                        entries.push_back({
-                            entry["name"],
-                            entry["desc"],
-                            entry["authors"],
-                            entry["file"],
-                            HttpRequest::curlify(entry["url"]),
-                            entry["hash"],
-                            entry["folder"]
-                        });
+                            entries.emplace_back(
+                                entry["name"],
+                                entry["desc"],
+                                entry["authors"],
+                                entry["file"],
+                                HttpRequest::curlify(entry["url"]),
+                                entry["hash"],
+                                entry["folder"],
+                                std::move(pragmas)
+                            );
+                        } catch (const nlohmann::json::exception &error) {
+                            log::error("Failed to parse store entry: {}", error.what());
+                        }
                     }
 
                     std::ranges::sort(entries, [](const auto &lhs, const auto &rhs) {
@@ -75,7 +81,8 @@ namespace hex {
             auto request = httpRequest->execute();
 
             return std::async(std::launch::async, [httpRequest = std::move(httpRequest), request = std::move(request)]() mutable {
-                static_cast<void>(httpRequest);
+                std::ignore = httpRequest;
+
                 return parseStore(request.get());
             }).share();
         }
@@ -99,6 +106,47 @@ namespace hex {
 
         state.cachedRequest = startRequest();
         return state.cachedRequest;
+    }
+
+    StoreApi::DownloadRequest StoreApi::download(const paths::impl::DefaultPath *pathType, const std::string &fileName, const std::string &url) {
+        std::fs::path downloadPath;
+        for (const auto &folderPath : pathType == nullptr ? std::vector<std::fs::path> { } : pathType->write()) {
+            if (!fs::isPathWritable(folderPath))
+                continue;
+
+            const auto normalizedFolder = std::fs::absolute(folderPath).lexically_normal();
+            const auto fullPath = std::fs::absolute(folderPath / std::fs::path(fileName)).lexically_normal();
+            const auto [folderIter, _] = std::ranges::mismatch(normalizedFolder, fullPath);
+
+            if (folderIter != normalizedFolder.end())
+                continue;
+
+            downloadPath = fullPath;
+            break;
+        }
+
+        if (downloadPath.empty()) {
+            std::promise<DownloadResult> result;
+            result.set_value(DownloadResult(DownloadResult::Status::NoWritablePath));
+            return result.get_future();
+        }
+
+        auto httpRequest = std::make_shared<HttpRequest>("GET", url);
+        httpRequest->setTimeout(30'000);
+        auto request = httpRequest->downloadFile(downloadPath);
+
+        return std::async(std::launch::async, [httpRequest = std::move(httpRequest), request = std::move(request), downloadPath]() mutable {
+            std::ignore = httpRequest;
+
+            const auto response = request.get();
+            if (!response.isSuccess()) {
+                std::error_code error;
+                std::filesystem::remove(downloadPath, error);
+                return DownloadResult(DownloadResult::Status::NetworkError, downloadPath, response.getStatusCode().toString());
+            }
+
+            return DownloadResult(DownloadResult::Status::Success, downloadPath);
+        });
     }
 
 }

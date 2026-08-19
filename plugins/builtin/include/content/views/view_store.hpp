@@ -8,7 +8,6 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/http_requests.hpp>
 
 #include <future>
 #include <string>
@@ -68,9 +67,8 @@ namespace hex::plugin::builtin {
         void updateAll();
 
     private:
-        HttpRequest m_httpRequest = HttpRequest("GET", "");
         StoreApi::Request m_apiRequest;
-        std::future<HttpRequest::Result<std::string>> m_download;
+        StoreApi::DownloadRequest m_download;
         std::fs::path m_downloadPath;
         RequestStatus m_requestStatus = RequestStatus::NotAttempted;
 
