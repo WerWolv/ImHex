@@ -142,6 +142,8 @@ namespace hex {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
                     openEmergencyPopup("No Plugins");
+                } else if (argument == "bad-plugin") {
+                    openEmergencyPopup("Bad Plugin");
                 } else if (argument == "duplicate-plugins") {
                     openEmergencyPopup("Duplicate Plugins loaded");
                 }
@@ -502,6 +504,25 @@ namespace hex {
                 ImGui::TextUnformatted("Make sure you installed ImHex correctly and, if needed,");
                 ImGui::TextUnformatted("cleaned up older installations correctly.");
                 ImGui::TextUnformatted("Each plugin should only ever be loaded once.");
+
+                ImGui::NewLine();
+
+                drawPluginFolderTable();
+
+                ImGui::NewLine();
+                if (ImGuiExt::DimmedButton("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                    ImHexApi::System::closeImHex(true);
+
+                ImGui::EndPopup();
+            }
+
+            // Bad Plugin Popup
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("Bad Plugin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)) {
+                ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
+                ImGui::TextUnformatted("ImHex tried to load a Plugin but failed to do so!");
+                ImGui::TextUnformatted("This is usually caused by a badly built plugin or missing dependencies.");
+                ImGui::TextUnformatted("Check logs for more information.");
 
                 ImGui::NewLine();
 

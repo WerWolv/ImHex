@@ -126,8 +126,10 @@ namespace hex::init {
                 PluginManager::addLoadPath(dir);
             }
 
-            PluginManager::loadLibraries();
-            PluginManager::load();
+            if (!PluginManager::loadLibraries())
+                ImHexApi::System::impl::addInitArgument("bad-plugin");
+            if (!PluginManager::load())
+                ImHexApi::System::impl::addInitArgument("bad-plugin");
         #endif
 
         // Get loaded plugins
