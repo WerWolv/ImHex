@@ -1,8 +1,8 @@
-#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/http/api_urls.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/events/events_gui.hpp>
-#include <hex/api_urls.hpp>
+#include <hex/api/imhex_api/system.hpp>
 
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/http_requests.hpp>

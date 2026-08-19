@@ -1,20 +1,20 @@
 #include <algorithm>
 #include <hex.hpp>
 
-#include <hex/api/workspace_manager.hpp>
-#include <hex/api/content_registry/settings.hpp>
-#include <hex/api/content_registry/views.hpp>
-#include <hex/api/content_registry/provider.hpp>
-#include <hex/api/content_registry/user_interface.hpp>
-#include <hex/api/localization_manager.hpp>
-#include <hex/api/theme_manager.hpp>
-#include <hex/api/layout_manager.hpp>
+#include <hex/api/http/api_urls.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/content_registry/provider.hpp>
+#include <hex/api/content_registry/settings.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/views.hpp>
+#include <hex/api/layout_manager.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/api_urls.hpp>
+#include <hex/api/theme_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
 
-#include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_gui.hpp>
+#include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/requests_gui.hpp>
 
 #include <hex/ui/view.hpp>

@@ -2,6 +2,7 @@
 
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/http/github_api.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/views.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
@@ -18,7 +19,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/debugging.hpp>
-#include <hex/helpers/http_requests.hpp>
 
 #include <hex/subcommands/subcommands.hpp>
 #include <hex/trace/stacktrace.hpp>
@@ -492,15 +492,14 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(file.readString());
         } else if (type == "gist") {
-            HttpRequest request("GET", "https://api.github.com/gists/" + argument);
-            auto response = request.execute().get();
+            const auto &response = GitHubApi::getGist(argument).get();
 
             if (!response.isSuccess()) {
-                const auto code = response.getStatusCode();
-                if (std::holds_alternative<HttpRequest::BackendStatus>(code)) {
-                    log::println("{}", code.toString());
-                } else if (auto httpCode = std::get_if<HttpRequest::HttpStatus>(&code); httpCode != nullptr) {
-                    switch (u32(*httpCode)) {
+                const auto statusCode = response.getStatusCode();
+                if (statusCode == 0) {
+                    log::println("{}", response.getErrorMessage());
+                } else {
+                    switch (statusCode) {
                     case 404:
                         log::println("Gist with ID '{}' not found!", argument);
                         break;
@@ -508,7 +507,7 @@ namespace hex::plugin::builtin {
                         log::println("Gist with ID '{}' is private or you have exceeded the rate limit!", argument);
                         break;
                     default:
-                        log::println("Failed to fetch Gist with ID '{}': {}", argument, u32(*httpCode));
+                        log::println("Failed to fetch Gist with ID '{}': {}", argument, statusCode);
                         break;
                     }
                 }
@@ -516,21 +515,15 @@ namespace hex::plugin::builtin {
                 std::exit(EXIT_FAILURE);
             }
 
-            try {
-                const auto json = nlohmann::json::parse(response.getData());
-                if (!json.contains("files") || json["files"].size() != 1) {
-                    log::println("Gist with ID '{}' does not have exactly one file!", argument);
-                    return EXIT_FAILURE;
-                }
-
-                auto sourceCode = json["files"].front()["content"];
-                TaskManager::doLater([sourceCode] {
-                    ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(sourceCode);
-                });
-            } catch (const nlohmann::json::parse_error &e) {
-                log::println("Failed to parse Gist response: {}", e.what());
+            const auto &gist = response.getData();
+            if (gist.files.size() != 1) {
+                log::println("Gist with ID '{}' does not have exactly one file!", argument);
                 return EXIT_FAILURE;
             }
+
+            TaskManager::doLater([sourceCode = gist.files.front().content] {
+                ContentRegistry::Views::setFullScreenView<ViewFullScreenSaveEditor>(sourceCode);
+            });
         } else {
             log::println("Unknown source type '{}'. Use 'file' or 'gist'.", type);
             return EXIT_FAILURE;

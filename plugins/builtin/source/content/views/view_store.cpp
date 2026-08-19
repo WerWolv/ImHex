@@ -1,7 +1,6 @@
 #include "content/views/view_store.hpp"
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api_urls.hpp>
 
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/settings.hpp>
@@ -21,19 +20,17 @@
 
 #include <filesystem>
 #include <functional>
-#include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
-    using namespace std::literals::string_literals;
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name", ICON_VS_EXTENSIONS) {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
-                this->refresh();
+                this->requestStore(false);
 
             this->getWindowOpenState() = true;
         });
@@ -188,8 +185,10 @@ namespace hex::plugin::builtin {
             else {
                 try {
                     this->parseResponse();
-                } catch (nlohmann::json::exception &e) {
+                } catch (const std::exception &e) {
                     log::error("Failed to parse store response: {}", e.what());
+                    m_requestStatus = RequestStatus::Failed;
+                    m_apiRequest = { };
                 }
             }
         }
@@ -226,6 +225,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::refresh() {
+        this->requestStore(true);
+    }
+
+    void ViewStore::requestStore(bool forceRefresh) {
         // Do not refresh if a refresh is already in progress
         if (m_requestStatus == RequestStatus::InProgress)
             return;
@@ -235,41 +238,27 @@ namespace hex::plugin::builtin {
             category.entries.clear();
         }
 
-        m_httpRequest.setUrl(ImHexApiURL + "/store"s);
-        m_apiRequest = m_httpRequest.execute();
+        m_apiRequest = forceRefresh ? StoreApi::refresh() : StoreApi::get();
     }
 
     void ViewStore::parseResponse() {
-        const auto response = m_apiRequest.get();
+        const auto &response = m_apiRequest.get();
         m_requestStatus = response.isSuccess() ? RequestStatus::Succeeded : RequestStatus::Failed;
+        if (!response.isSuccess() && !response.getErrorMessage().empty())
+            log::error("Failed to load store response: {}", response.getErrorMessage());
+
         if (m_requestStatus == RequestStatus::Succeeded) {
-            const auto json = nlohmann::json::parse(response.getData());
-
-            auto parseStoreEntries = [](auto storeJson, StoreCategory &category) {
-                // Check if the response handles the type of files
-                if (storeJson.contains(category.requestName)) {
-
-                    for (auto &entry : storeJson[category.requestName]) {
-
-                        // Check if entry is valid
-                        if (entry.contains("name") && entry.contains("desc") && entry.contains("authors") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
-
-                            // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], HttpRequest::curlify(entry["url"]), entry["hash"], entry["folder"], false, false, false, false };
-
-                            updateEntryMetadata(storeEntry, category);
-                            category.entries.push_back(storeEntry);
-                        }
-                    }
-                }
-
-                std::sort(category.entries.begin(), category.entries.end(), [](const auto &lhs, const auto &rhs) {
-                    return lhs.name < rhs.name;
-                });
-            };
-
             for (auto &category : m_categories) {
-                parseStoreEntries(json, category);
+                const auto &store = response.getData().categories;
+                const auto entries = store.find(category.requestName);
+                if (entries == store.end())
+                    continue;
+
+                for (const auto &entry : entries->second) {
+                    StoreEntry storeEntry = { entry, false, false, false, false };
+                    updateEntryMetadata(storeEntry, category);
+                    category.entries.push_back(std::move(storeEntry));
+                }
             }
 
             m_updateCount = 0;

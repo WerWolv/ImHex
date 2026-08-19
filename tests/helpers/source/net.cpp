@@ -1,34 +1,50 @@
 #include <hex/test/tests.hpp>
 
-#include <hex/api_urls.hpp>
+#include <hex/api/http/store_api.hpp>
+#include <hex/api/http/tips_api.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <wolv/io/file.hpp>
 
-using namespace std::literals::string_literals;
+#include <array>
+#include <iterator>
 
 TEST_SEQUENCE("StoreAPI") {
-    hex::HttpRequest request("GET", ImHexApiURL + "/store"s);
+    std::array<std::future<hex::StoreApi::Request>, 8> requests;
+    for (auto &request : requests) {
+        request = std::async(std::launch::async, [] {
+            return hex::StoreApi::get();
+        });
+    }
 
-    auto result = request.execute().get();
+    const auto cachedRequest = requests.front().get();
+    const auto &result = cachedRequest.get();
 
-    if (result.getStatusCode() != hex::HttpRequest::HttpStatus(200))
+    if (!result.isSuccess())
         TEST_FAIL();
 
-    if (result.getData().empty())
+    if (result.getData().categories.empty())
         TEST_FAIL();
+
+    for (auto request = std::next(requests.begin()); request != requests.end(); ++request) {
+        if (&request->get().get() != &result)
+            TEST_FAIL();
+    }
 
     TEST_SUCCESS();
 };
 
 TEST_SEQUENCE("TipsAPI") {
-    hex::HttpRequest request("GET", ImHexApiURL + "/tip"s);
+    const auto request = hex::TipsApi::get();
+    const auto cachedRequest = hex::TipsApi::get();
+    const auto &result = request.get();
 
-    auto result = request.execute().get();
-
-    if (result.getStatusCode() != hex::HttpRequest::HttpStatus(200))
+    if (!result.isSuccess())
         TEST_FAIL();
 
     if (result.getData().empty())
+        TEST_FAIL();
+
+    if (&result != &cachedRequest.get())
         TEST_FAIL();
 
     TEST_SUCCESS();

@@ -18,6 +18,7 @@ module;
 #include <fstream>
 #include <thread>
 #include <future>
+#include <utility>
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
@@ -54,6 +55,9 @@ export module hex;
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
+#include <hex/api/http/github_api.hpp>
+#include <hex/api/http/store_api.hpp>
+#include <hex/api/http/tips_api.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>

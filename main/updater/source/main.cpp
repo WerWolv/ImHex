@@ -1,4 +1,4 @@
-#include <hex/api_urls.hpp>
+#include <hex/api/http/github_api.hpp>
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/task_manager.hpp>
 
@@ -8,52 +8,38 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
 #include <optional>
 
-using namespace std::literals::string_literals;
-
 std::string getArtifactUrl(std::string_view artifactEnding, hex::ImHexApi::System::UpdateType updateType) {
     // Get the latest version info from the ImHex API
-    const auto response = hex::HttpRequest("GET",
-        GitHubApiURL + "/releases"s
-    ).execute().get();
-
-    const auto &data = response.getData();
+    const auto &response = hex::GitHubApi::getReleases().get();
 
     // Make sure we got a valid response
     if (!response.isSuccess()) {
-        hex::log::error("Failed to get latest version info: ({}) {}", response.getStatusCode().toString(), data);
+        hex::log::error("Failed to get latest version info: {}", response.getErrorMessage());
 
         return { };
     }
 
-    try {
-        const auto json = nlohmann::json::parse(data);
+    for (const auto &release : response.getData()) {
+        if (updateType == hex::ImHexApi::System::UpdateType::Stable && !release.targetCommitish.starts_with("releases/v"))
+            continue;
+        if (updateType == hex::ImHexApi::System::UpdateType::Nightly && release.tagName != "nightly")
+            continue;
 
-        for (const auto &release : json) {
-            if (updateType == hex::ImHexApi::System::UpdateType::Stable && !release["target_commitish"].get<std::string>().starts_with("releases/v"))
-                continue;
-            if (updateType == hex::ImHexApi::System::UpdateType::Nightly && release["tag_name"].get<std::string>() != "nightly")
-                continue;
-
-            // Loop over all assets in the release
-            for (const auto &asset : release["assets"]) {
-                // Check if the asset name ends with the specified artifact ending
-                if (asset["name"].get<std::string>().ends_with(artifactEnding)) {
-                    return asset["browser_download_url"].get<std::string>();
-                }
+        // Loop over all assets in the release
+        for (const auto &asset : release.assets) {
+            // Check if the asset name ends with the specified artifact ending
+            if (asset.name.ends_with(artifactEnding)) {
+                return asset.browserDownloadUrl;
             }
         }
-
-        hex::log::error("No suitable artifact found for ending: {}", artifactEnding);
-        return { };
-    } catch (const std::exception &e) {
-        hex::log::error("Failed to parse latest version info: {}", e.what());
-        return { };
     }
+
+    hex::log::error("No suitable artifact found for ending: {}", artifactEnding);
+    return { };
 }
 
 std::optional<std::fs::path> downloadUpdate(const std::string &url) {

@@ -1,15 +1,13 @@
 #include "content/views/view_about.hpp"
 #include "hex/ui/popup.hpp"
 
-#include <hex/api_urls.hpp>
-#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/plugin_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/menu_items.hpp>
 
@@ -17,7 +15,6 @@
 
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
-#include <nlohmann/json.hpp>
 
 #include <string>
 #include <ui/markdown.hpp>
@@ -544,38 +541,20 @@ namespace hex::plugin::builtin {
         AutoReset<std::shared_ptr<ui::Markdown>> markdown;
     };
 
-    static ReleaseNotes parseReleaseNotes(const HttpRequest::Result<std::string>& response) {
+    static ReleaseNotes parseReleaseNotes(const GitHubApi::Result<GitHubApi::Release>& response) {
         ReleaseNotes notes;
-        nlohmann::json json;
 
         if (!response.isSuccess()) {
             // An error occurred, display it
-            notes.markdown = std::make_shared<ui::Markdown>(response.getStatusCode().toString());
+            notes.markdown = std::make_shared<ui::Markdown>(response.getErrorMessage());
 
             return notes;
         }
 
-        // A valid response was received, parse it
-        try {
-            json = nlohmann::json::parse(response.getData());
-
-            // Get the release title
-            notes.title = json["name"].get<std::string>();
-
-            // Get the release version string
-            notes.versionString = json["tag_name"].get<std::string>();
-
-            // Get the release notes and split it into lines
-            auto body = json["body"].get<std::string>();
-
-            std::string content;
-            content += fmt::format("# {} | {}\n", notes.versionString, notes.title);
-            content += fmt::format("---\n");
-            content += body;
-            notes.markdown = std::make_shared<ui::Markdown>(content);
-        } catch (std::exception &e) {
-            notes.markdown = std::make_shared<ui::Markdown>("## Error: " + std::string(e.what()));
-        }
+        const auto &release = response.getData();
+        notes.title = release.name;
+        notes.versionString = release.tagName;
+        notes.markdown = std::make_shared<ui::Markdown>(fmt::format("# {} | {}\n---\n{}", release.tagName, release.name, release.body));
 
         return notes;
     }
@@ -586,15 +565,16 @@ namespace hex::plugin::builtin {
         // Set up the request to get the release notes the first time the page is opened
         const static auto ImHexVersion = ImHexApi::System::getImHexVersion();
         AT_FIRST_TIME {
-            static HttpRequest request("GET", GitHubApiURL + std::string("/releases/") + (ImHexVersion.nightly() ? "latest" : ( "tags/v" + ImHexVersion.get(false))));
-
-            m_releaseNoteRequest = request.execute();
+            m_releaseNoteRequest = ImHexVersion.nightly()
+                ? GitHubApi::getLatestRelease()
+                : GitHubApi::getRelease("v" + ImHexVersion.get(false));
         };
 
         // Wait for the request to finish and parse the response
         if (m_releaseNoteRequest.valid()) {
             if (m_releaseNoteRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
                 notes = parseReleaseNotes(m_releaseNoteRequest.get());
+                m_releaseNoteRequest = { };
             } else {
                 // Draw a spinner while the release notes are loading
                 ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
@@ -605,91 +585,24 @@ namespace hex::plugin::builtin {
             (*notes.markdown)->draw();
     }
 
-    struct Commit {
-        std::string hash;
-        std::string message;
-        std::string description;
-        std::string author;
-        std::string date;
-        std::string url;
-    };
-
-    static std::vector<Commit> parseCommits(const HttpRequest::Result<std::string>& response) {
-        nlohmann::json json;
-        std::vector<Commit> commits;
-
-        if (!response.isSuccess()) {
-            // An error occurred, display it
-            commits.emplace_back(
-                    "hex.ui.common.error"_lang,
-                    response.getStatusCode().toString(),
-                    "",
-                    "",
-                    ""
-            );
-
-            return { };
-        }
-
-        // A valid response was received, parse it
-        try {
-            json = nlohmann::json::parse(response.getData());
-
-            for (auto &commit: json) {
-                const auto message = commit["commit"]["message"].get<std::string>();
-
-                // Split commit title and description. They're separated by two newlines.
-                const auto messageEnd = message.find("\n\n");
-
-                auto commitTitle = messageEnd == std::string::npos ? message : message.substr(0, messageEnd);
-                auto commitDescription =
-                        messageEnd == std::string::npos ? "" : message.substr(commitTitle.size() + 2);
-
-                auto url = commit["html_url"].get<std::string>();
-                auto sha = commit["sha"].get<std::string>();
-                auto date = commit["commit"]["author"]["date"].get<std::string>();
-                auto author = fmt::format("{} <{}>",
-                                          commit["commit"]["author"]["name"].get<std::string>(),
-                                          commit["commit"]["author"]["email"].get<std::string>()
-                );
-
-                // Move the commit data into the list of commits
-                commits.emplace_back(
-                        std::move(sha),
-                        std::move(commitTitle),
-                        std::move(commitDescription),
-                        std::move(author),
-                        std::move(date),
-                        std::move(url)
-                );
-            }
-
-        } catch (std::exception &e) {
-            commits.emplace_back(
-                    "hex.ui.common.error"_lang,
-                    e.what(),
-                    "",
-                    "",
-                    ""
-            );
-        }
-
-        return commits;
-    }
-
     void ViewAbout::drawCommitHistoryPage() {
-        static std::vector<Commit> commits;
+        static std::vector<GitHubApi::Commit> commits;
 
         // Set up the request to get the commit history the first time the page is opened
         AT_FIRST_TIME {
-            static HttpRequest request("GET", GitHubApiURL + std::string("/commits?per_page=100"));
-            m_commitHistoryRequest = request.execute();
+            m_commitHistoryRequest = GitHubApi::getCommits();
         };
 
         // Wait for the request to finish and parse the response
         if (m_commitHistoryRequest.valid()) {
             if (m_commitHistoryRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                commits = parseCommits(m_commitHistoryRequest.get());
+                const auto &response = m_commitHistoryRequest.get();
+                if (response.isSuccess()) {
+                    commits = response.getData();
+                } else {
+                    commits = { { "hex.ui.common.error"_lang, response.getErrorMessage(), "", "", "", "" } };
+                }
+                m_commitHistoryRequest = { };
             } else {
                 // Draw a spinner while the commits are loading
                 ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
