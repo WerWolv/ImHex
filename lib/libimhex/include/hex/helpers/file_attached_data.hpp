@@ -15,7 +15,13 @@ namespace hex {
             Data(std::fs::path path, nlohmann::json *json) : m_path(std::move(path)), m_json(json) {}
 
             [[nodiscard]] operator Type() {
-                return (*m_json)[getPathKey()].template get<Type>();
+                try {
+                    return (*m_json)[getPathKey()].template get<Type>();
+                } catch (const nlohmann::json::exception &e) {
+                    // If value can't be loaded, default construct it
+                    (*m_json)[getPathKey()] = Type();
+                    return Type();
+                }
             }
 
             Data& operator=(Type value) {
@@ -71,7 +77,14 @@ namespace hex {
             if (!wolv::io::fs::exists(directory))
                 return false;
 
-            const auto jsonString = wolv::io::File(directory / fmt::format("{}.json", Key.get()), wolv::io::File::Mode::Read).readString();
+            auto file = wolv::io::File(directory / fmt::format("{}.json", Key.get()), wolv::io::File::Mode::Read);
+            if (!file.isValid())
+                return false;
+
+            const auto jsonString = file.readString();
+            if (jsonString.empty())
+                return false;
+
             try {
                 m_data = nlohmann::json::parse(jsonString);
             } catch (const std::exception &error) {
