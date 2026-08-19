@@ -10,7 +10,7 @@ on:
 
 jobs:
   nightly-release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: 🌃 Update Nightly Release
     steps:
       - name: 🧰 Checkout
@@ -133,7 +133,7 @@ jobs:
   website_update:
     name: 🌍 Update ImHex Landing Website
     needs: nightly-release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       WEBSITE_DISPATCH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
     steps:

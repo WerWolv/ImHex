@@ -16,7 +16,7 @@ on:
 
 jobs:
   release-update-repos:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Release Update Repos
 
     steps:
@@ -72,7 +72,7 @@ jobs:
           skipIfReleaseExists: true
 
   release-upload-artifacts:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     name: Release Upload Artifacts
     outputs:
       IMHEX_VERSION: ${{ steps.verify_version.outputs.IMHEX_VERSION }}
@@ -188,7 +188,7 @@ jobs:
   release-update-aur:
     name: Release update AUR package
     needs: release-upload-artifacts
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v7
@@ -254,7 +254,7 @@ jobs:
   release-update-snapstore:
     name: Release update snapstore package
     needs: release-upload-artifacts
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: ⬇️ Download artifacts
         run: |
