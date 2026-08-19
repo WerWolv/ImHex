@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                 m_fileDescription = magic::getDescription(&m_provider, 0, 100_KiB, true);
             }
 
-            m_foundPatterns = magic::findViablePatterns(&m_provider, &task);
+            m_foundPatterns = magic::findViablePatterns(&m_provider, false, &task);
             if (!m_foundPatterns.empty()) {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, &m_provider);

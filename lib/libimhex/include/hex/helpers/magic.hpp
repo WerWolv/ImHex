@@ -36,8 +36,14 @@ namespace hex::magic {
         std::string author;
         std::string description;
         std::shared_ptr<prv::PatternMatcherBase> matcher;
+        std::string downloadUrl;
+        bool remote;
+
+        bool operator<(const FoundPattern &other) const {
+            return patternFilePath.filename() < other.patternFilePath.filename();
+        }
     };
 
-    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, Task* task = nullptr);
+    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, bool searchOnline, Task* task = nullptr);
 
 }

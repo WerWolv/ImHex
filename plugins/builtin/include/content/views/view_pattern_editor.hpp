@@ -121,6 +121,7 @@ namespace hex::plugin::builtin {
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
 
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns"> m_suggestSupportedPatterns = true;
+        ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.search_patterns_online"> m_searchPatternsOnline = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns"> m_autoApplyPatterns = false;
         ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.tab_size"> m_tabSize = 4;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.show_white_spaces"> m_showWhiteSpaces = false;

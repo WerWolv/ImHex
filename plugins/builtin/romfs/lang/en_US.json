@@ -537,6 +537,7 @@
     "hex.builtin.setting.general.network": "Network",
     "hex.builtin.setting.general.auto_apply_patterns": "Auto-load supported pattern",
     "hex.builtin.setting.general.suggest_patterns": "Suggest patterns based on loaded data",
+    "hex.builtin.setting.general.search_patterns_online": "Search for matching patterns online",
     "hex.builtin.setting.general.server_contact": "Enable update checks and usage statistics",
     "hex.builtin.setting.general.max_mem_file_size": "Max file size to load into RAM",
     "hex.builtin.setting.general.max_mem_file_size.desc": "Small files are loaded into memory to prevent them from being modified directly on disk.\n\nIncreasing this size allows larger files to be loaded into memory before ImHex resorts to streaming in data from disk.",

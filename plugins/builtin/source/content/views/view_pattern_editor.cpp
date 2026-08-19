@@ -1,7 +1,10 @@
 #include "content/views/view_pattern_editor.hpp"
+
 #include <fonts/blender_icons.hpp>
+#include <fonts/tabler_icons.hpp>
 
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/http/store_api.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/content_registry/settings.hpp>
@@ -29,6 +32,7 @@
 
 #include <popups/popup_question.hpp>
 #include <popups/popup_file_chooser.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <chrono>
 
@@ -86,24 +90,47 @@ namespace hex::plugin::builtin {
                 return;
             }
 
+            if (m_download.valid()) {
+                if (m_download.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+                    ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
+                    return;
+                }
+
+                const auto result = m_download.get();
+                if (result.isSuccess()) {
+                    m_view->loadPatternFile(result.getPath(), provider, false);
+                } else {
+                    log::error("Failed to download suggested pattern: {}", result.getErrorMessage());
+                    ui::ToastError::open("hex.builtin.view.store.download_error"_lang);
+                }
+
+                this->close();
+                return;
+            }
+
+            const auto &possiblePatterns = m_view->m_possiblePatternFiles.get(provider);
+            if (possiblePatterns.empty()) {
+                this->close();
+                return;
+            }
+            m_selectedPatternFile = std::min<u32>(m_selectedPatternFile, possiblePatterns.size() - 1);
+
             ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
-            if (ImGui::BeginListBox("##patterns_accept", ImVec2(400_scaled, 0))) {
+            if (ImGui::BeginTable("##patterns_accept", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter, scaled(400, 200))) {
                 u32 index = 0;
-                for (const auto &[path, author, description, matcher] : m_view->m_possiblePatternFiles.get(provider)) {
+                for (const auto &[path, author, description, matcher, downloadUrl, remote] : possiblePatterns) {
                     ImGui::PushID(index + 1);
+                    ImGui::TableNextRow();
+
                     auto fileName = wolv::util::toUTF8String(path.filename());
 
-                    std::string displayValue;
-                    if (!description.empty()) {
-                        displayValue = fmt::format("{} ({})", description, fileName);
-                    } else {
-                        displayValue = fileName;
-                    }
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(remote ? ICON_TA_WORLD : "  ");
 
-                    if (ImGui::Selectable(displayValue.c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_NoAutoClosePopups))
+                    ImGui::TableNextColumn();
+                    if (ImGui::Selectable(!description.empty() ? description.c_str() : fileName.c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_NoAutoClosePopups | ImGuiSelectableFlags_SpanAllColumns))
                         m_selectedPatternFile = index;
-
                     if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary | ImGuiHoveredFlags_DelayNormal)) {
                         if (ImGui::BeginTooltip()) {
                             ImGui::TextUnformatted(fileName.c_str());
@@ -125,30 +152,30 @@ namespace hex::plugin::builtin {
                     }
 
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                        m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].patternFilePath, provider, false);
+                        this->applyPattern(possiblePatterns[m_selectedPatternFile], provider);
 
                     ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
+
+                    ImGui::TableNextColumn();
+                    if (!description.empty())
+                        ImGuiExt::TextFormatted("({})", fileName);
 
                     index++;
 
                     ImGui::PopID();
                 }
 
-                // Close the popup if there aren't any patterns available
-                if (index == 0)
-                    this->close();
-
-                ImGui::EndListBox();
+                ImGui::EndTable();
             }
 
             ImGui::NewLine();
-            ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
+            ImGuiExt::TextFormattedCenteredHorizontal("{}", "hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
             ImGui::NewLine();
 
+            const auto &selectedPattern = possiblePatterns[m_selectedPatternFile];
             ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
-                [this, provider] {
-                    m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile].patternFilePath, provider, false);
-                    this->close();
+                [this, provider, selectedPattern] {
+                    this->applyPattern(selectedPattern, provider);
                 },
                 [this] {
                     this->close();
@@ -164,7 +191,21 @@ namespace hex::plugin::builtin {
         }
 
     private:
+        void applyPattern(const magic::FoundPattern &pattern, prv::Provider *provider) {
+            if (pattern.remote) {
+                m_download = StoreApi::download(
+                    &paths::Patterns,
+                    pattern.patternFilePath.filename(),
+                    pattern.downloadUrl
+                );
+            } else {
+                m_view->loadPatternFile(pattern.patternFilePath, provider, false);
+                this->close();
+            }
+        }
+
         ViewPatternEditor *m_view;
+        StoreApi::DownloadRequest m_download;
         u32 m_selectedPatternFile = 0;
     };
 
@@ -1435,11 +1476,12 @@ namespace hex::plugin::builtin {
                 m_analysisTask.interrupt();
             else {
                 m_shouldAnalyze.get(provider) = false;
+
                 m_analysisTask = TaskManager::createBackgroundTask("hex.builtin.task.analyzing_data", [this, provider](Task &task) {
                     if (!m_suggestSupportedPatterns)
                         return;
 
-                    auto foundPatterns = magic::findViablePatterns(provider, &task);
+                    auto foundPatterns = magic::findViablePatterns(provider, m_searchPatternsOnline, &task);
 
                     if (!foundPatterns.empty()) {
                         std::scoped_lock lock(m_possiblePatternFilesMutex);
