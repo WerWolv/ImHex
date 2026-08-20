@@ -16,6 +16,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/debugging.hpp>
+#include <hex/providers/memory_provider.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <fonts/vscode_icons.hpp>
@@ -27,6 +28,7 @@
 
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_question.hpp>
+#include <popups/popup_text_input.hpp>
 
 #include <csignal>
 #include <fonts/tabler_icons.hpp>
@@ -423,6 +425,15 @@ namespace hex::plugin::builtin {
     }
 
     static void drawProviderContextMenu(prv::Provider *provider) {
+        if (auto *memoryProvider = dynamic_cast<prv::MemoryProvider*>(provider); memoryProvider != nullptr) {
+            if (ImGui::MenuItemEx(Lang("hex.builtin.provider.rename").get(), ICON_VS_TAG)) {
+                ui::PopupTextInput::open("hex.builtin.provider.rename", "hex.builtin.provider.rename.desc", [memoryProvider](const std::string &name) {
+                    memoryProvider->setName(name);
+                    RequestUpdateWindowTitle::post();
+                });
+            }
+        }
+
         if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(provider); menuItemProvider != nullptr) {
             for (const auto &menuEntry : menuItemProvider->getMenuEntries()) {
                 if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
@@ -500,12 +511,12 @@ namespace hex::plugin::builtin {
 
         EventFrameBegin::subscribe([] {
             if (rightClickedProvider != nullptr) {
-                if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(rightClickedProvider); menuItemProvider != nullptr) {
-                    if (!menuItemProvider->getMenuEntries().empty()) {
-                        if (ImGui::BeginPopup("ProviderMenu")) {
-                            drawProviderContextMenu(rightClickedProvider);
-                            ImGui::EndPopup();
-                        }
+                auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(rightClickedProvider);
+                auto *memoryProvider = dynamic_cast<prv::MemoryProvider*>(rightClickedProvider);
+                if ((menuItemProvider != nullptr && !menuItemProvider->getMenuEntries().empty()) || memoryProvider != nullptr) {
+                    if (ImGui::BeginPopup("ProviderMenu")) {
+                        drawProviderContextMenu(rightClickedProvider);
+                        ImGui::EndPopup();
                     }
                 }
             }
