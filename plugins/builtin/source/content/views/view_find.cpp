@@ -8,6 +8,9 @@
 #include <hex/trace/stacktrace.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
+#include <hex/helpers/crypto.hpp>
+#include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/search.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <imgui_internal.h>
@@ -20,8 +23,6 @@
 #include <boost/regex.hpp>
 
 #include <content/helpers/constants.hpp>
-#include <hex/helpers/crypto.hpp>
-#include <hex/helpers/default_paths.hpp>
 #include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
@@ -406,7 +407,7 @@ namespace hex::plugin::builtin {
         while (true) {
             task.update(progress);
 
-            occurrence = std::search(reader.begin(), reader.end(), std::default_searcher(bytes.begin(), bytes.end(), searchPredicate));
+            occurrence = hex::searchInterruptable(reader.begin(), reader.end(), bytes.begin(), bytes.end(), searchPredicate, task);
             if (occurrence == reader.end())
                 break;
 
