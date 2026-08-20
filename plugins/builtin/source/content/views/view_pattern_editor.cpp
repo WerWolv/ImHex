@@ -195,7 +195,7 @@ namespace hex::plugin::builtin {
             if (pattern.remote) {
                 m_download = StoreApi::download(
                     &paths::Patterns,
-                    pattern.patternFilePath.filename(),
+                    wolv::util::toUTF8String(pattern.patternFilePath.filename()),
                     pattern.downloadUrl
                 );
             } else {
