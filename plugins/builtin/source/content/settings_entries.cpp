@@ -1077,22 +1077,9 @@ for (const auto &path : m_paths) {
         ImHexApi::System::impl::setBorderlessWindowMode(borderlessWindowMode);
     }
 
-    static void loadFolderSettings() {
-        auto folderPathStrings = ContentRegistry::Settings::read<std::vector<std::string>>("hex.builtin.setting.folders", "hex.builtin.setting.folders", { });
-
-        std::vector<std::fs::path> paths;
-        paths.reserve(folderPathStrings.size());
-for (const auto &pathString : folderPathStrings) {
-            paths.emplace_back(pathString);
-        }
-
-        ImHexApi::System::setAdditionalFolderPaths(paths);
-    }
-
     void loadSettings() {
         loadLayoutSettings();
         loadThemeSettings();
-        loadFolderSettings();
     }
 
 }
