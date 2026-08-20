@@ -321,6 +321,7 @@ namespace hex::plugin::builtin::recent {
             return;
 
         static bool collapsed = false;
+        const RecentEntry *entryToLoad = nullptr;
         if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, &collapsed, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
             if (!s_recentEntriesUpdating) {
                 for (auto it = s_recentEntries.begin(); it != s_recentEntries.end();) {
@@ -333,8 +334,7 @@ namespace hex::plugin::builtin::recent {
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
                     if (ImGuiExt::IconHyperlink(getProviderIcon(recentEntry.type), hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
-                        loadRecentEntry(recentEntry);
-                        break;
+                        entryToLoad = &recentEntry;
                     }
                     ImGui::SetItemTooltip("%s", recentEntry.displayName.c_str());
 
@@ -400,6 +400,10 @@ namespace hex::plugin::builtin::recent {
                     ImGui::Separator();
                     if (ImGuiExt::IconHyperlink(ICON_VS_ARCHIVE, "hex.builtin.welcome.start.recent.auto_backups"_lang))
                         PopupAutoBackups::open();
+                }
+
+                if (entryToLoad != nullptr) {
+                    loadRecentEntry(*entryToLoad);
                 }
             }
 
