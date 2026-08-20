@@ -4,12 +4,13 @@
 #include <hex/api/http/api_urls.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/http_requests.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
 #include <memory>
 #include <mutex>
+#include <ranges>
 
 namespace hex {
 
