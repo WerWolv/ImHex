@@ -91,7 +91,7 @@ namespace hex::plugin::builtin::recent {
         return { result.begin(), result.end() };
     }
 
-    PopupAutoBackups::PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", true, true) {
+    PopupAutoBackups::PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", ICON_VS_ARCHIVE, true, true) {
         m_backups = getAutoBackups();
     }
 

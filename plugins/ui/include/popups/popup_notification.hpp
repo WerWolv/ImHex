@@ -5,6 +5,7 @@
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/api/localization_manager.hpp>
 #include <hex/helpers/scaling.hpp>
+#include <fonts/vscode_icons.hpp>
 
 #include <functional>
 #include <string>
@@ -16,8 +17,8 @@ namespace hex::ui {
         template<typename T>
         class PopupNotification : public Popup<T> {
         public:
-            PopupNotification(UnlocalizedString unlocalizedName, std::string message, std::function<void()> function)
-                : hex::Popup<T>(std::move(unlocalizedName), false),
+            PopupNotification(UnlocalizedString unlocalizedName, const char *icon, std::string message, std::function<void()> function)
+                : hex::Popup<T>(std::move(unlocalizedName), icon, false),
                   m_message(std::move(message)), m_function(std::move(function)) { }
 
             void drawContent() override {
@@ -55,7 +56,7 @@ namespace hex::ui {
     class PopupInfo : public impl::PopupNotification<PopupInfo> {
     public:
         explicit PopupInfo(std::string message)
-        : PopupNotification("hex.ui.common.info", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.info", ICON_VS_INFO, std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -63,7 +64,7 @@ namespace hex::ui {
     class PopupWarning : public impl::PopupNotification<PopupWarning> {
     public:
         explicit PopupWarning(std::string message)
-        : PopupNotification("hex.ui.common.warning", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.warning", ICON_VS_WARNING, std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -71,7 +72,7 @@ namespace hex::ui {
     class PopupError : public impl::PopupNotification<PopupError> {
     public:
         explicit PopupError(std::string message)
-        : PopupNotification("hex.ui.common.error", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.error", ICON_VS_ERROR, std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -79,7 +80,7 @@ namespace hex::ui {
     class PopupFatal : public impl::PopupNotification<PopupFatal> {
     public:
         explicit PopupFatal(std::string message)
-        : PopupNotification("hex.ui.common.fatal", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.fatal", ICON_VS_BUG, std::move(message), [this] {
             ImHexApi::System::closeImHex();
             Popup::close();
         }) { }

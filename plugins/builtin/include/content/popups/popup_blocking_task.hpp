@@ -2,6 +2,7 @@
 
 #include <hex/ui/popup.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <fonts/tabler_icons.hpp>
 
 #include <imgui_internal.h>
 
@@ -11,7 +12,7 @@ namespace hex::plugin::builtin {
 
     class PopupBlockingTask : public Popup<PopupBlockingTask> {
     public:
-        PopupBlockingTask(TaskHolder &&task) : hex::Popup<PopupBlockingTask>("hex.builtin.popup.blocking_task.title", false), m_task(std::move(task)) { }
+        PopupBlockingTask(TaskHolder &&task) : hex::Popup<PopupBlockingTask>("hex.builtin.popup.blocking_task.title", ICON_TA_SETTINGS_COG, false), m_task(std::move(task)) { }
 
         void drawContent() override {
             ImGui::TextUnformatted("hex.builtin.popup.blocking_task.desc"_lang);

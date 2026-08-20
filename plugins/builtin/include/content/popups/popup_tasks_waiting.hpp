@@ -3,6 +3,7 @@
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization_manager.hpp>
+#include <fonts/tabler_icons.hpp>
 
 #include <imgui_internal.h>
 
@@ -11,7 +12,7 @@ namespace hex::plugin::builtin {
     class PopupTasksWaiting : public Popup<PopupTasksWaiting> {
     public:
         PopupTasksWaiting(std::function<void()> onFinish)
-            : hex::Popup<PopupTasksWaiting>("hex.builtin.popup.waiting_for_tasks.title", false),
+            : hex::Popup<PopupTasksWaiting>("hex.builtin.popup.waiting_for_tasks.title", ICON_TA_SETTINGS_COG, false),
               m_onFinish(std::move(onFinish)){ }
 
         void drawContent() override {

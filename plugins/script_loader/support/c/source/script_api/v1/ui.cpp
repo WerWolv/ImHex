@@ -23,7 +23,7 @@ static std::optional<bool> s_yesNoQuestionBoxResult;
 class PopupYesNo : public Popup<PopupYesNo> {
 public:
     PopupYesNo(std::string title, std::string message)
-            : hex::Popup<PopupYesNo>(std::move(title), false),
+            : hex::Popup<PopupYesNo>(std::move(title), ICON_VS_QUESTION, false),
               m_message(std::move(message)) { }
 
     void drawContent() override {
@@ -66,7 +66,7 @@ private:
 class PopupInputText : public Popup<PopupInputText> {
 public:
     PopupInputText(std::string title, std::string message, size_t maxSize)
-            : hex::Popup<PopupInputText>(std::move(title), false),
+            : hex::Popup<PopupInputText>(std::move(title), ICON_VS_QUOTE, false),
               m_message(std::move(message)), m_maxSize(maxSize) { }
 
     void drawContent() override {

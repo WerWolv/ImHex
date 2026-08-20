@@ -545,7 +545,7 @@ namespace hex {
             static bool popupClosed = true;
 
             static AutoReset<std::unique_ptr<impl::PopupBase>> currPopupStorage;
-            static Lang name("");
+            static std::string popupName;
 
             auto &currPopup = *currPopupStorage;
 
@@ -558,10 +558,10 @@ namespace hex {
                         if (popupDelay < 0 || popups.size() == 1) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
-                            name = Lang(currPopup->getUnlocalizedName());
+                            popupName = fmt::format("{} {}", currPopup->getIcon(), Lang(currPopup->getUnlocalizedName()));
                             displayFrameCount = 0;
 
-                            ImGui::OpenPopup(name);
+                            ImGui::OpenPopup(popupName.c_str());
                             popupClosed = false;
 
                             popups.pop_back();
@@ -619,18 +619,17 @@ namespace hex {
                     }
                 };
 
-                std::string localizedName = name.get();
                 if (currPopup->isModal())
-                    createPopup(ImGui::BeginPopupModal(localizedName.c_str(), closeButton, flags));
+                    createPopup(ImGui::BeginPopupModal(popupName.c_str(), closeButton, flags));
                 else
-                    createPopup(ImGui::BeginPopup(localizedName.c_str(), flags));
+                    createPopup(ImGui::BeginPopup(popupName.c_str(), flags));
 
-                if (!ImGui::IsPopupOpen(localizedName.c_str()) && displayFrameCount < 5) {
-                    ImGui::OpenPopup(localizedName.c_str());
+                if (!ImGui::IsPopupOpen(popupName.c_str()) && displayFrameCount < 5) {
+                    ImGui::OpenPopup(popupName.c_str());
                 }
 
                 if (currPopup->shouldClose() || !open) {
-                    log::debug("Closing popup '{}'", localizedName);
+                    log::debug("Closing popup '{}'", popupName);
                     positionSet = sizeSet = false;
 
                     currPopup = nullptr;

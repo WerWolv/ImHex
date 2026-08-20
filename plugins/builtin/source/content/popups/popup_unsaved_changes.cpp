@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
     PopupUnsavedChanges::PopupUnsavedChanges(std::vector<ProviderDirtyState> providers,
                         std::function<void()> saveDataFunction, std::function<void()> saveProjectFunction,
                         std::function<void()> discardFunction, std::function<void()> cancelFunction)
-            : hex::Popup<PopupUnsavedChanges>("hex.ui.common.question", false),
+            : hex::Popup<PopupUnsavedChanges>("hex.ui.common.question", ICON_VS_SAVE_AS, false),
               m_providers(std::move(providers)),
               m_saveDataFunction(std::move(saveDataFunction)), m_saveProjectFunction(std::move(saveProjectFunction)),
               m_discardFunction(std::move(discardFunction)), m_cancelFunction(std::move(cancelFunction)) { }

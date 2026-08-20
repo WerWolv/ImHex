@@ -5,6 +5,8 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/imhex_api/system.hpp>
 
+#include <fonts/vscode_icons.hpp>
+
 #include <functional>
 #include <string>
 
@@ -13,7 +15,7 @@ namespace hex::ui {
     class PopupQuestion : public Popup<PopupQuestion> {
     public:
         PopupQuestion(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction)
-                : hex::Popup<PopupQuestion>("hex.ui.common.question", false),
+                : hex::Popup<PopupQuestion>("hex.ui.common.question", ICON_VS_QUESTION, false),
                   m_message(std::move(message)),
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 
@@ -58,7 +60,7 @@ namespace hex::ui {
     class PopupCancelableQuestion : public Popup<PopupCancelableQuestion> {
     public:
         PopupCancelableQuestion(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction)
-                : hex::Popup<PopupCancelableQuestion>("hex.ui.common.question", false),
+                : hex::Popup<PopupCancelableQuestion>("hex.ui.common.question", ICON_VS_QUESTION, false),
                   m_message(std::move(message)),
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 

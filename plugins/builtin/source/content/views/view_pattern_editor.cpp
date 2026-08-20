@@ -74,7 +74,7 @@ namespace hex::plugin::builtin {
 
     class ViewPatternEditor::PopupAcceptPattern : public Popup<PopupAcceptPattern> {
     public:
-        explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"), m_view(view) {}
+        explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern", ICON_VS_SYMBOL_NAMESPACE), m_view(view) {}
 
         void drawContent() override {
             std::scoped_lock lock(m_view->m_possiblePatternFilesMutex);

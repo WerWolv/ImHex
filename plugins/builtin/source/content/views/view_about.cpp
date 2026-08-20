@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
     class PopupEE : public Popup<PopupEE> {
     public:
-        PopupEE() : Popup("Se" /* Not going to */ "cr" /* make it that easy */ "et") {
+        PopupEE() : Popup("Se" /* Not going to */ "cr" /* make it that easy */ "et", ICON_VS_RUBY) {
 
         }
 

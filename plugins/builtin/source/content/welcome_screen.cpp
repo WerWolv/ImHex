@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
             bool m_reportError = true;
         public:
             PopupRestoreBackup(std::fs::path logFilePath, bool hasAutoBackups, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
-                    : Popup("hex.builtin.popup.safety_backup.title"),
+                    : Popup("hex.builtin.popup.safety_backup.title", ICON_VS_ARCHIVE),
                     m_logFilePath(std::move(logFilePath)),
                     m_hasAutoBackups(hasAutoBackups),
                     m_restoreCallback(restoreCallback),
@@ -138,7 +138,7 @@ namespace hex::plugin::builtin {
 
         class PopupTipOfTheDay : public Popup<PopupTipOfTheDay> {
         public:
-            PopupTipOfTheDay() : Popup("hex.builtin.popup.tip_of_the_day.title", true, false) { }
+            PopupTipOfTheDay() : Popup("hex.builtin.popup.tip_of_the_day.title", ICON_VS_LIGHTBULB, true, false) { }
 
             void drawContent() override {
                 ImGuiExt::Header("hex.builtin.welcome.tip_of_the_day"_lang, true);

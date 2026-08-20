@@ -19,7 +19,7 @@ namespace hex::plugin::hashes {
     class PopupTextHash : public Popup<PopupTextHash> {
     public:
         explicit PopupTextHash(const ViewHashes::Function &hash)
-                : hex::Popup<PopupTextHash>(hash.getFunction().getName(), true, false),
+                : hex::Popup<PopupTextHash>(hash.getFunction().getName(), ICON_VS_SYMBOL_NUMERIC, true, false),
                   m_hash(hash) { }
 
         void drawContent() override {

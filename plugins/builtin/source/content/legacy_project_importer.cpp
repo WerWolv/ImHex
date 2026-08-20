@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
         class PopupLegacyProjectMigration : public Popup<PopupLegacyProjectMigration> {
         public:
             explicit PopupLegacyProjectMigration(std::fs::path path)
-                : Popup("hex.builtin.popup.project.migrate_legacy.title", false), m_path(std::move(path)) { }
+                : Popup("hex.builtin.popup.project.migrate_legacy.title", ICON_VS_NOTEBOOK_TEMPLATE, false), m_path(std::move(path)) { }
 
             void drawContent() override {
                 ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.popup.project.migrate_legacy.description"_lang);
