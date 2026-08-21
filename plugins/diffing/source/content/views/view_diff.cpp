@@ -246,7 +246,7 @@ namespace hex::plugin::diffing {
 
 
         // Draw the two hex editor columns side by side
-        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, diffingColumnSize)) {
+        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_BordersOuter, diffingColumnSize)) {
             ImGui::TableSetupColumn(fmt::format(" {}", "hex.diffing.view.diff.provider_a"_lang).c_str());
             ImGui::TableSetupColumn(fmt::format(" {}", "hex.diffing.view.diff.provider_b"_lang).c_str());
             ImGui::TableHeadersRow();
