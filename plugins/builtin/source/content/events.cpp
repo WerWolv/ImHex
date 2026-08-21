@@ -463,10 +463,12 @@ namespace hex::plugin::builtin {
             if (ctx == nullptr)
                 return;
 
-            if (ImGui::IsAnyItemHovered())
-                return;
-
             static ImGuiWindow *lastFocusedWindow = nullptr;
+
+            if (ImGui::IsAnyItemHovered()) {
+                lastFocusedWindow = nullptr;
+                return;
+            }
 
             if (focused) {
                 if (lastFocusedWindow == nullptr)
