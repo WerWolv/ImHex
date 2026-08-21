@@ -204,89 +204,93 @@ static std::mutex s_traceMutex;
 
     }
 
-#elif defined(HEX_HAS_ELFUTILS) && __has_include(BACKTRACE_HEADER) && __has_include(<elfutils/libdwfl.h>)
+#elif defined(HEX_HAS_ELFUTILS)
 
-    #include BACKTRACE_HEADER
-    #include <filesystem>
-    #include <array>
-    #include <elfutils/libdwfl.h>
-    #include <unistd.h>
+    #if __has_include(BACKTRACE_HEADER) && __has_include(<elfutils/libdwfl.h>)
 
-    namespace hex::trace {
+        #include BACKTRACE_HEADER
+        #include <filesystem>
+        #include <array>
+        #include <elfutils/libdwfl.h>
+        #include <unistd.h>
 
-        void initialize() {
+        namespace hex::trace {
 
-        }
+            void initialize() {
 
-        StackTraceResult getStackTrace()
-        {
-            std::array<void*, 128> addresses{};
-            const auto count = ::backtrace(addresses.data(), addresses.size());
-
-            char* debuginfoPath = nullptr;
-
-            Dwfl_Callbacks callbacks{};
-            callbacks.find_elf = dwfl_linux_proc_find_elf;
-            callbacks.find_debuginfo = dwfl_standard_find_debuginfo;
-            callbacks.debuginfo_path = &debuginfoPath;
-
-            Dwfl* dwfl = dwfl_begin(&callbacks);
-            if (!dwfl)
-                return {};
-
-            dwfl_report_begin(dwfl);
-
-            if (dwfl_linux_proc_report(dwfl, getpid()) != 0) {
-                dwfl_end(dwfl);
-                return {};
             }
 
-            dwfl_report_end(dwfl, nullptr, nullptr);
+            StackTraceResult getStackTrace()
+            {
+                std::array<void*, 128> addresses{};
+                const auto count = ::backtrace(addresses.data(), addresses.size());
 
-            std::vector<StackFrame> frames;
-            frames.reserve(count);
+                char* debuginfoPath = nullptr;
 
-            for (int i = 1; i < count; ++i) {
-                const auto address = reinterpret_cast<std::uintptr_t>(addresses[i]);
+                Dwfl_Callbacks callbacks{};
+                callbacks.find_elf = dwfl_linux_proc_find_elf;
+                callbacks.find_debuginfo = dwfl_standard_find_debuginfo;
+                callbacks.debuginfo_path = &debuginfoPath;
 
-                std::string function = "??";
-                std::string file = "??";
-                uint32_t lineNumber = 0;
+                Dwfl* dwfl = dwfl_begin(&callbacks);
+                if (!dwfl)
+                    return {};
 
-                if (Dwfl_Module* module = dwfl_addrmodule(dwfl, address)) {
-                    if (const char* name = dwfl_module_addrname(module, address)) {
-                        function = demangle(name);
-                    }
+                dwfl_report_begin(dwfl);
 
-                    if (Dwfl_Line* line =
-                            dwfl_module_getsrc(module, address)) {
-
-                        int lineNo = 0;
-                        int column = 0;
-
-                        if (const char* source = dwfl_lineinfo(line, nullptr, &lineNo, &column, nullptr, nullptr)) {
-                            file = source;
-                            lineNumber = lineNo;
-                        }
-                    }
+                if (dwfl_linux_proc_report(dwfl, getpid()) != 0) {
+                    dwfl_end(dwfl);
+                    return {};
                 }
 
-                frames.push_back(StackFrame{
-                    .file = std::move(file),
-                    .function = std::move(function),
-                    .line = lineNumber,
-                });
+                dwfl_report_end(dwfl, nullptr, nullptr);
+
+                std::vector<StackFrame> frames;
+                frames.reserve(count);
+
+                for (int i = 1; i < count; ++i) {
+                    const auto address = reinterpret_cast<std::uintptr_t>(addresses[i]);
+
+                    std::string function = "??";
+                    std::string file = "??";
+                    uint32_t lineNumber = 0;
+
+                    if (Dwfl_Module* module = dwfl_addrmodule(dwfl, address)) {
+                        if (const char* name = dwfl_module_addrname(module, address)) {
+                            function = demangle(name);
+                        }
+
+                        if (Dwfl_Line* line =
+                                dwfl_module_getsrc(module, address)) {
+
+                            int lineNo = 0;
+                            int column = 0;
+
+                            if (const char* source = dwfl_lineinfo(line, nullptr, &lineNo, &column, nullptr, nullptr)) {
+                                file = source;
+                                lineNumber = lineNo;
+                            }
+                        }
+                    }
+
+                    frames.push_back(StackFrame{
+                        .file = std::move(file),
+                        .function = std::move(function),
+                        .line = lineNumber,
+                    });
+                }
+
+                dwfl_end(dwfl);
+
+                return StackTraceResult {
+                    .stackFrames = std::move(frames),
+                    .implementationName = "libdwfl",
+                };
             }
 
-            dwfl_end(dwfl);
-
-            return StackTraceResult {
-                .stackFrames = std::move(frames),
-                .implementationName = "libdwfl",
-            };
         }
 
-    }
+    #endif
 
 #elif defined(HEX_HAS_EXECINFO)
 
