@@ -303,7 +303,7 @@ namespace hex::plugin::visualizers {
                 ImGui::IsKeyDown(ImGuiKey_RightShift))
                 accel = 10.0F;
 
-            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
+            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle, 0);
             if (dragDelta.x != 0) {
                 rotation[1] += dragDelta.x * 0.0075F * accel;
             }
@@ -314,7 +314,7 @@ namespace hex::plugin::visualizers {
 
             ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
 
-            dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
+            dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right, 0);
             translation[0] += dragDelta.x * 0.0075F * accel;
             translation[1] -= dragDelta.y * 0.0075F * accel;
             ImGui::ResetMouseDragDelta(ImGuiMouseButton_Right);
