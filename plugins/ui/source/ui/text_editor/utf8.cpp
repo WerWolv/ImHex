@@ -211,7 +211,7 @@ namespace hex::ui {
             increase = TextEditor::utf8CharLength(line[count]);
             count += increase;
             std::string partialLine = line.substr(0, count);
-            length = ImGui::CalcTextSize(partialLine.c_str(), nullptr, false, m_lines.m_charAdvance.x * count).x;
+            length = ImGui::CalcTextSize(partialLine.c_str(), nullptr, false, 0).x;
         } while (length < local.x && count < (i32) line.size() + increase);
 
         result = m_lines.lineIndexCoords(lineIndex + 1, count - increase);
