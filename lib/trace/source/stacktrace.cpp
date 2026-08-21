@@ -48,8 +48,6 @@ static std::mutex s_traceMutex;
         }
 
         StackTraceResult getStackTrace() {
-            std::lock_guard lock(s_traceMutex);
-
             StackTrace result;
 
             auto stackTrace = std::stacktrace::current();
@@ -86,7 +84,10 @@ static std::mutex s_traceMutex;
                 }
             }
 
-            return { result, "std::stacktrace" };
+            return StackTraceResult{
+                .stackFrames = std::move(result),
+                .implementationName = "std::stacktrace"
+            };
         }
 
     }
@@ -104,8 +105,6 @@ static std::mutex s_traceMutex;
         }
 
         StackTraceResult getStackTrace() {
-            std::lock_guard lock(s_traceMutex);
-
             std::vector<StackFrame> stackTrace;
 
             HANDLE process = GetCurrentProcess();
@@ -197,7 +196,94 @@ static std::mutex s_traceMutex;
 
             SymCleanup(process);
 
-            return StackTraceResult{ stackTrace, "StackWalk" };
+            return StackTraceResult{
+                .stackFrames = std::move(stackTrace),
+                .implementationName = "StackWalk"
+            };
+        }
+
+    }
+
+#elif defined(HEX_HAS_ELFUTILS) && __has_include(BACKTRACE_HEADER) && __has_include(<elfutils/libdwfl.h>)
+
+    #include BACKTRACE_HEADER
+    #include <filesystem>
+    #include <array>
+    #include <elfutils/libdwfl.h>
+    #include <unistd.h>
+
+    namespace hex::trace {
+
+        void initialize() {
+
+        }
+
+        StackTraceResult getStackTrace()
+        {
+            std::array<void*, 128> addresses{};
+            const auto count = ::backtrace(addresses.data(), addresses.size());
+
+            char* debuginfoPath = nullptr;
+
+            Dwfl_Callbacks callbacks{};
+            callbacks.find_elf = dwfl_linux_proc_find_elf;
+            callbacks.find_debuginfo = dwfl_standard_find_debuginfo;
+            callbacks.debuginfo_path = &debuginfoPath;
+
+            Dwfl* dwfl = dwfl_begin(&callbacks);
+            if (!dwfl)
+                return {};
+
+            dwfl_report_begin(dwfl);
+
+            if (dwfl_linux_proc_report(dwfl, getpid()) != 0) {
+                dwfl_end(dwfl);
+                return {};
+            }
+
+            dwfl_report_end(dwfl, nullptr, nullptr);
+
+            std::vector<StackFrame> frames;
+            frames.reserve(count);
+
+            for (int i = 1; i < count; ++i) {
+                const auto address = reinterpret_cast<std::uintptr_t>(addresses[i]);
+
+                std::string function = "??";
+                std::string file = "??";
+                uint32_t lineNumber = 0;
+
+                if (Dwfl_Module* module = dwfl_addrmodule(dwfl, address)) {
+                    if (const char* name = dwfl_module_addrname(module, address)) {
+                        function = demangle(name);
+                    }
+
+                    if (Dwfl_Line* line =
+                            dwfl_module_getsrc(module, address)) {
+
+                        int lineNo = 0;
+                        int column = 0;
+
+                        if (const char* source = dwfl_lineinfo(line, nullptr, &lineNo, &column, nullptr, nullptr)) {
+                            file = source;
+                            lineNumber = lineNo;
+                        }
+                    }
+                }
+
+                frames.push_back(StackFrame{
+                    .file = std::move(file),
+                    .function = std::move(function),
+                    .line = lineNumber,
+                });
+            }
+
+            dwfl_end(dwfl);
+
+            return StackTraceResult {
+                .stackFrames = std::move(frames),
+                .implementationName = "libdwfl",
+            };
         }
 
     }
@@ -218,9 +304,7 @@ static std::mutex s_traceMutex;
             }
 
             StackTraceResult getStackTrace() {
-                std::scoped_lock lock(s_traceMutex);
-
-                static std::vector<StackFrame> result;
+                std::vector<StackFrame> result;
 
                 std::array<void*, 128> addresses = {};
                 const size_t count = backtrace(addresses.data(), addresses.size());
@@ -235,7 +319,10 @@ static std::mutex s_traceMutex;
                     result.push_back(StackFrame { .file=std::move(fileName), .function=std::move(demangledName), .line=0 });
                 }
 
-                return StackTraceResult{ .stackFrames=result, .implementationName="execinfo" };
+                return StackTraceResult{
+                    .stackFrames = std::move(result),
+                    .implementationName = "execinfo"
+                };
             }
 
         }
@@ -258,15 +345,11 @@ static std::mutex s_traceMutex;
 
 
             void initialize() {
-                std::scoped_lock lock(s_traceMutex);
-
                 s_backtraceState = backtrace_create_state(nullptr, 1, [](void *, const char *, int) { }, nullptr);
             }
 
             StackTraceResult getStackTrace() {
-                std::scoped_lock lock(s_traceMutex);
-
-                static std::vector<StackFrame> result;
+                std::vector<StackFrame> result;
 
                 if (s_backtraceState != nullptr) {
                     backtrace_full(s_backtraceState, 0, [](void *, uintptr_t, const char *fileName, int lineNumber, const char *function) -> int {
@@ -282,7 +365,10 @@ static std::mutex s_traceMutex;
 
                 }
 
-                return StackTraceResult{ result, "backtrace" };
+                return StackTraceResult{
+                    .stackFrames = std::move(result),
+                    .implementationName = "backtrace"
+                };
             }
 
         }
@@ -298,8 +384,8 @@ static std::mutex s_traceMutex;
             std::lock_guard lock(s_traceMutex);
 
             return StackTraceResult {
-                {StackFrame { "??", "Stacktrace collecting not available!", 0 }},
-                "none"
+                .stackFrames = { StackFrame { "??", "Stacktrace collecting not available!", 0 } },
+                .implementationName = "none"
             };
         }
     }

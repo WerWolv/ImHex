@@ -779,6 +779,10 @@ macro(setupCompilerFlags target)
         addCXXFlag("-Wno-include-angled-in-module-purview" ${target})
         addCXXFlag("-Wno-unused-template" ${target})
 
+        if (UNIX)
+            set_target_properties(${target} PROPERTIES ENABLE_EXPORTS ON)
+        endif()
+
         # Enable hardening flags
         if (IMHEX_BUILD_HARDENING)
             if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

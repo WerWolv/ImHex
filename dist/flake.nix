@@ -49,6 +49,7 @@
                 pkgs.lz4
                 pkgs.libssh2
                 pkgs.md4c
+                pkgs.libelf
               ];
 
               shellHook = ''

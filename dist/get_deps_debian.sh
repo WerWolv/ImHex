@@ -41,4 +41,5 @@ apt install -y \
   liblz4-dev            \
   libssh2-1-dev         \
   libmd4c-dev           \
-  libmd4c-html0-dev
+  libmd4c-html0-dev     \
+  libelf-dev
