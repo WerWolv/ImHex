@@ -375,7 +375,7 @@ for (const auto &[categoryName, achievements] : startNodes) {
 
                     // Handle dragging the achievement tree around
                     if (ImGui::IsMouseHoveringRect(innerWindowPos, innerWindowPos + innerWindowSize)) {
-                        auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+                        auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0);
                         m_offset += dragDelta;
                         ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
                     }
