@@ -308,16 +308,14 @@ namespace hex::plugin::disasm {
                         return;
                     }
 
-                    // As disassembly code can be quite long, we prefer writing each disassembled instruction to file
                     for (const ContentRegistry::Disassemblers::Instruction& instruction : m_disassembly.get(provider)) {
-                        // We test for a "bugged" case that should never happen - the instruction should always have a mnemonic
-                        if (instruction.mnemonic.empty())
+                        auto line = fmt::format("{} {}", instruction.mnemonic, instruction.operators);
+                        line = wolv::util::trim(line) + "\n";
+
+                        if (line.empty())
                             continue;
 
-                        if (instruction.operators.empty())
-                            file.writeString(fmt::format("{}\n", instruction.mnemonic));
-                        else
-                            file.writeString(fmt::format("{} {}\n", instruction.mnemonic, instruction.operators));
+                        file.writeString(line);
                     }
                 });
             });
