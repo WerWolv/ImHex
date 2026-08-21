@@ -8,8 +8,9 @@
 
 #include <nlohmann/json.hpp>
 
-#include <memory>
+#include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <ranges>
 
 namespace hex {
@@ -21,7 +22,9 @@ namespace hex {
 
         struct StoreState {
             std::mutex mutex;
-            StoreApi::Request cachedRequest;
+            std::condition_variable requestFinished;
+            std::optional<StoreApi::Result> cachedResult;
+            bool requestInProgress = false;
         };
 
         StoreState& getStoreState() {
@@ -76,15 +79,40 @@ namespace hex {
             }
         }
 
-        StoreApi::Request startRequest() {
-            auto httpRequest = std::make_shared<HttpRequest>("GET", ImHexApiURL + "/store"s);
-            httpRequest->setTimeout(30'000);
-            auto request = httpRequest->execute();
+        StoreApi::Request makeReadyRequest(const StoreApi::Result &result) {
+            std::promise<StoreApi::Result> promise;
+            promise.set_value(result);
+            return promise.get_future().share();
+        }
 
-            return std::async(std::launch::async, [httpRequest = std::move(httpRequest), request = std::move(request)]() mutable {
-                std::ignore = httpRequest;
+        StoreApi::Request waitForRequest(StoreState &state) {
+            return std::async(std::launch::async, [&state] {
+                std::unique_lock lock(state.mutex);
+                state.requestFinished.wait(lock, [&state] { return !state.requestInProgress; });
+                return *state.cachedResult;
+            }).share();
+        }
 
-                return parseStore(request.get());
+        StoreApi::Request startRequest(StoreState &state) {
+            state.requestInProgress = true;
+            return std::async(std::launch::async, [&state] {
+                auto result = [] {
+                    try {
+                        HttpRequest request("GET", ImHexApiURL + "/store"s);
+                        request.setTimeout(30'000);
+                        return parseStore(request.execute().get());
+                    } catch (const std::exception &error) {
+                        return StoreApi::Result(StoreApi::Result::Status::NetworkError, { }, error.what());
+                    }
+                }();
+
+                {
+                    std::scoped_lock lock(state.mutex);
+                    state.cachedResult = result;
+                    state.requestInProgress = false;
+                }
+                state.requestFinished.notify_all();
+                return result;
             }).share();
         }
 
@@ -93,20 +121,21 @@ namespace hex {
     StoreApi::Request StoreApi::get() {
         auto &state = getStoreState();
         std::scoped_lock lock(state.mutex);
-        if (!state.cachedRequest.valid())
-            state.cachedRequest = startRequest();
+        if (state.requestInProgress)
+            return waitForRequest(state);
+        if (state.cachedResult.has_value())
+            return makeReadyRequest(*state.cachedResult);
 
-        return state.cachedRequest;
+        return startRequest(state);
     }
 
     StoreApi::Request StoreApi::refresh() {
         auto &state = getStoreState();
         std::scoped_lock lock(state.mutex);
-        if (state.cachedRequest.valid() && state.cachedRequest.wait_for(0s) != std::future_status::ready)
-            return state.cachedRequest;
+        if (state.requestInProgress)
+            return waitForRequest(state);
 
-        state.cachedRequest = startRequest();
-        return state.cachedRequest;
+        return startRequest(state);
     }
 
     StoreApi::DownloadRequest StoreApi::download(const paths::impl::DefaultPath *pathType, const std::string &fileName, const std::string &url) {

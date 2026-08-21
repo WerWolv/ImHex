@@ -82,7 +82,7 @@ EXPORT_MODULE namespace hex {
         using DownloadRequest = std::future<DownloadResult>;
 
         /**
-         * Gets the store contents. Repeated calls return the cached request and result.
+         * Gets the store contents. Repeated calls return the cached result.
          */
         static Request get();
 

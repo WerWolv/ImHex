@@ -39,19 +39,25 @@ namespace hex {
         return request.isCanceled() ? CURLE_ABORTED_BY_CALLBACK : CURLE_OK;
     }
 
+    static std::atomic_bool s_curlInitialized = false;
     HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
         AT_FIRST_TIME {
             curl_global_init(CURL_GLOBAL_ALL);
+            s_curlInitialized = true;
         };
 
         AT_FINAL_CLEANUP {
             curl_global_cleanup();
+            s_curlInitialized = false;
         };
 
         m_curl = curl_easy_init();
     }
 
     HttpRequest::~HttpRequest() {
+        if (!s_curlInitialized)
+            return;
+
         curl_easy_cleanup(m_curl);
     }
 

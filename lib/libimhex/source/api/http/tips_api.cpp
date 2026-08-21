@@ -3,8 +3,9 @@
 #include <hex/api/http/api_urls.hpp>
 #include <hex/helpers/http_requests.hpp>
 
-#include <memory>
+#include <condition_variable>
 #include <mutex>
+#include <optional>
 
 namespace hex {
 
@@ -15,7 +16,9 @@ namespace hex {
 
         struct TipsState {
             std::mutex mutex;
-            TipsApi::Request cachedRequest;
+            std::condition_variable requestFinished;
+            std::optional<TipsApi::Result> cachedResult;
+            bool requestInProgress = false;
         };
 
         TipsState& getTipsState() {
@@ -23,18 +26,44 @@ namespace hex {
             return state;
         }
 
-        TipsApi::Request startRequest() {
-            auto httpRequest = std::make_shared<HttpRequest>("GET", ImHexApiURL + "/tip"s);
-            httpRequest->setTimeout(30'000);
-            auto request = httpRequest->execute();
+        TipsApi::Request makeReadyRequest(const TipsApi::Result &result) {
+            std::promise<TipsApi::Result> promise;
+            promise.set_value(result);
+            return promise.get_future().share();
+        }
 
-            return std::async(std::launch::async, [httpRequest = std::move(httpRequest), request = std::move(request)]() mutable {
-                static_cast<void>(httpRequest);
-                auto response = request.get();
-                if (!response.isSuccess())
-                    return TipsApi::Result(TipsApi::Result::Status::NetworkError, { }, response.getStatusCode().toString());
+        TipsApi::Request waitForRequest(TipsState &state) {
+            return std::async(std::launch::async, [&state] {
+                std::unique_lock lock(state.mutex);
+                state.requestFinished.wait(lock, [&state] { return !state.requestInProgress; });
+                return *state.cachedResult;
+            }).share();
+        }
 
-                return TipsApi::Result(TipsApi::Result::Status::Success, response.getData());
+        TipsApi::Request startRequest(TipsState &state) {
+            state.requestInProgress = true;
+            return std::async(std::launch::async, [&state] {
+                auto result = [] {
+                    try {
+                        HttpRequest request("GET", ImHexApiURL + "/tip"s);
+                        request.setTimeout(30'000);
+                        const auto response = request.execute().get();
+                        if (!response.isSuccess())
+                            return TipsApi::Result(TipsApi::Result::Status::NetworkError, { }, response.getStatusCode().toString());
+
+                        return TipsApi::Result(TipsApi::Result::Status::Success, response.getData());
+                    } catch (const std::exception &error) {
+                        return TipsApi::Result(TipsApi::Result::Status::NetworkError, { }, error.what());
+                    }
+                }();
+
+                {
+                    std::scoped_lock lock(state.mutex);
+                    state.cachedResult = result;
+                    state.requestInProgress = false;
+                }
+                state.requestFinished.notify_all();
+                return result;
             }).share();
         }
 
@@ -43,20 +72,21 @@ namespace hex {
     TipsApi::Request TipsApi::get() {
         auto &state = getTipsState();
         std::scoped_lock lock(state.mutex);
-        if (!state.cachedRequest.valid())
-            state.cachedRequest = startRequest();
+        if (state.requestInProgress)
+            return waitForRequest(state);
+        if (state.cachedResult.has_value())
+            return makeReadyRequest(*state.cachedResult);
 
-        return state.cachedRequest;
+        return startRequest(state);
     }
 
     TipsApi::Request TipsApi::refresh() {
         auto &state = getTipsState();
         std::scoped_lock lock(state.mutex);
-        if (state.cachedRequest.valid() && state.cachedRequest.wait_for(0s) != std::future_status::ready)
-            return state.cachedRequest;
+        if (state.requestInProgress)
+            return waitForRequest(state);
 
-        state.cachedRequest = startRequest();
-        return state.cachedRequest;
+        return startRequest(state);
     }
 
 }

@@ -26,7 +26,8 @@ TEST_SEQUENCE("StoreAPI") {
         TEST_FAIL();
 
     for (auto request = std::next(requests.begin()); request != requests.end(); ++request) {
-        if (&request->get().get() != &result)
+        const auto &cachedResult = request->get().get();
+        if (!cachedResult.isSuccess() || cachedResult.getData().categories.size() != result.getData().categories.size())
             TEST_FAIL();
     }
 
@@ -44,7 +45,7 @@ TEST_SEQUENCE("TipsAPI") {
     if (result.getData().empty())
         TEST_FAIL();
 
-    if (&result != &cachedRequest.get())
+    if (result.getData() != cachedRequest.get().getData())
         TEST_FAIL();
 
     TEST_SUCCESS();

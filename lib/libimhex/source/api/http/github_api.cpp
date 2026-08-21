@@ -5,9 +5,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <condition_variable>
 #include <map>
-#include <memory>
 #include <mutex>
+#include <optional>
 
 namespace hex {
 
@@ -16,12 +17,19 @@ namespace hex {
         using namespace std::literals::string_literals;
         using namespace std::literals::chrono_literals;
 
+        template<typename T>
+        struct RequestCache {
+            std::condition_variable requestFinished;
+            std::optional<GitHubApi::Result<T>> cachedResult;
+            bool requestInProgress = false;
+        };
+
         struct GitHubState {
             std::mutex mutex;
-            std::map<std::string, GitHubApi::ReleaseRequest> releaseRequests;
-            std::map<std::string, GitHubApi::GistRequest> gistRequests;
-            GitHubApi::ReleasesRequest releasesRequest;
-            GitHubApi::CommitsRequest commitsRequest;
+            std::map<std::string, RequestCache<GitHubApi::Release>> releaseRequests;
+            std::map<std::string, RequestCache<GitHubApi::Gist>> gistRequests;
+            RequestCache<std::vector<GitHubApi::Release>> releasesRequest;
+            RequestCache<std::vector<GitHubApi::Commit>> commitsRequest;
         };
 
         GitHubState& getGitHubState() {
@@ -50,35 +58,32 @@ namespace hex {
         }
 
         template<typename T, typename Parser>
-        std::shared_future<GitHubApi::Result<T>> startRequest(std::string url, Parser parser) {
-            auto httpRequest = std::make_shared<HttpRequest>("GET", std::move(url));
-            httpRequest->setTimeout(30'000);
-            auto request = httpRequest->execute();
-
-            return std::async(std::launch::async, [httpRequest = std::move(httpRequest), request = std::move(request), parser = std::move(parser)]() mutable {
-                static_cast<void>(httpRequest);
-                auto response = request.get();
+        GitHubApi::Result<T> executeRequest(const std::string &url, Parser parser) {
+            try {
+                HttpRequest request("GET", url);
+                request.setTimeout(30'000);
+                const auto response = request.execute().get();
                 if (!response.isSuccess()) {
                     const auto status = response.getStatusCode();
                     const auto httpStatus = std::get_if<HttpRequest::HttpStatus>(&status);
                     return GitHubApi::Result<T>(GitHubApi::Status::NetworkError, { }, status.toString(), httpStatus == nullptr ? 0 : u32(*httpStatus));
                 }
 
-                try {
-                    return GitHubApi::Result<T>(GitHubApi::Status::Success, parser(nlohmann::json::parse(response.getData())));
-                } catch (const nlohmann::json::exception &error) {
-                    return GitHubApi::Result<T>(GitHubApi::Status::InvalidResponse, { }, error.what());
-                }
-            }).share();
+                return GitHubApi::Result<T>(GitHubApi::Status::Success, parser(nlohmann::json::parse(response.getData())));
+            } catch (const nlohmann::json::exception &error) {
+                return GitHubApi::Result<T>(GitHubApi::Status::InvalidResponse, { }, error.what());
+            } catch (const std::exception &error) {
+                return GitHubApi::Result<T>(GitHubApi::Status::NetworkError, { }, error.what());
+            }
         }
 
-        GitHubApi::ReleaseRequest startReleaseRequest(const std::string &tag) {
+        GitHubApi::Result<GitHubApi::Release> loadRelease(const std::string &tag) {
             const auto path = tag.empty() ? "/releases/latest" : "/releases/tags/" + tag;
-            return startRequest<GitHubApi::Release>(GitHubApiURL + path, parseRelease);
+            return executeRequest<GitHubApi::Release>(GitHubApiURL + path, parseRelease);
         }
 
-        GitHubApi::ReleasesRequest startReleasesRequest() {
-            return startRequest<std::vector<GitHubApi::Release>>(GitHubApiURL + "/releases"s, [](const auto &json) {
+        GitHubApi::Result<std::vector<GitHubApi::Release>> loadReleases() {
+            return executeRequest<std::vector<GitHubApi::Release>>(GitHubApiURL + "/releases"s, [](const auto &json) {
                 std::vector<GitHubApi::Release> releases;
                 for (const auto &release : json)
                     releases.push_back(parseRelease(release));
@@ -86,8 +91,8 @@ namespace hex {
             });
         }
 
-        GitHubApi::CommitsRequest startCommitsRequest() {
-            return startRequest<std::vector<GitHubApi::Commit>>(GitHubApiURL + "/commits?per_page=100"s, [](const auto &json) {
+        GitHubApi::Result<std::vector<GitHubApi::Commit>> loadCommits() {
+            return executeRequest<std::vector<GitHubApi::Commit>>(GitHubApiURL + "/commits?per_page=100"s, [](const auto &json) {
                 std::vector<GitHubApi::Commit> commits;
                 for (const auto &entry : json) {
                     const auto fullMessage = entry["commit"]["message"].template get<std::string>();
@@ -107,8 +112,8 @@ namespace hex {
             });
         }
 
-        GitHubApi::GistRequest startGistRequest(const std::string &id) {
-            return startRequest<GitHubApi::Gist>("https://api.github.com/gists/" + id, [](const auto &json) {
+        GitHubApi::Result<GitHubApi::Gist> loadGist(const std::string &id) {
+            return executeRequest<GitHubApi::Gist>("https://api.github.com/gists/" + id, [](const auto &json) {
                 GitHubApi::Gist gist;
                 for (const auto &[name, file] : json["files"].items()) {
                     gist.files.push_back({ name, file["content"].template get<std::string>() });
@@ -117,22 +122,62 @@ namespace hex {
             });
         }
 
-        GitHubApi::ReleaseRequest getReleaseRequest(const std::string &tag, bool refresh) {
+        template<typename T>
+        std::shared_future<GitHubApi::Result<T>> makeReadyRequest(const GitHubApi::Result<T> &result) {
+            std::promise<GitHubApi::Result<T>> promise;
+            promise.set_value(result);
+            return promise.get_future().share();
+        }
+
+        template<typename T>
+        std::shared_future<GitHubApi::Result<T>> waitForRequest(GitHubState &state, RequestCache<T> &cache) {
+            return std::async(std::launch::async, [&state, &cache] {
+                std::unique_lock lock(state.mutex);
+                cache.requestFinished.wait(lock, [&cache] { return !cache.requestInProgress; });
+                return *cache.cachedResult;
+            }).share();
+        }
+
+        template<typename T, typename Loader>
+        std::shared_future<GitHubApi::Result<T>> getCachedRequest(RequestCache<T> &cache, bool refresh, Loader loader) {
             auto &state = getGitHubState();
             std::scoped_lock lock(state.mutex);
-            auto &request = state.releaseRequests[tag];
-            if (!request.valid() || (refresh && request.wait_for(0s) == std::future_status::ready))
-                request = startReleaseRequest(tag);
-            return request;
+            if (cache.requestInProgress)
+                return waitForRequest(state, cache);
+            if (!refresh && cache.cachedResult.has_value())
+                return makeReadyRequest(*cache.cachedResult);
+
+            cache.requestInProgress = true;
+            return std::async(std::launch::async, [&state, &cache, loader = std::move(loader)]() mutable {
+                auto result = loader();
+                {
+                    std::scoped_lock lock(state.mutex);
+                    cache.cachedResult = result;
+                    cache.requestInProgress = false;
+                }
+                cache.requestFinished.notify_all();
+                return result;
+            }).share();
+        }
+
+        GitHubApi::ReleaseRequest getReleaseRequest(const std::string &tag, bool refresh) {
+            auto &state = getGitHubState();
+            RequestCache<GitHubApi::Release> *cache;
+            {
+                std::scoped_lock lock(state.mutex);
+                cache = &state.releaseRequests[tag];
+            }
+            return getCachedRequest(*cache, refresh, [tag] { return loadRelease(tag); });
         }
 
         GitHubApi::GistRequest getGistRequest(const std::string &id, bool refresh) {
             auto &state = getGitHubState();
-            std::scoped_lock lock(state.mutex);
-            auto &request = state.gistRequests[id];
-            if (!request.valid() || (refresh && request.wait_for(0s) == std::future_status::ready))
-                request = startGistRequest(id);
-            return request;
+            RequestCache<GitHubApi::Gist> *cache;
+            {
+                std::scoped_lock lock(state.mutex);
+                cache = &state.gistRequests[id];
+            }
+            return getCachedRequest(*cache, refresh, [id] { return loadGist(id); });
         }
 
     }
@@ -146,19 +191,11 @@ namespace hex {
     }
 
     GitHubApi::ReleasesRequest GitHubApi::getReleases() {
-        auto &state = getGitHubState();
-        std::scoped_lock lock(state.mutex);
-        if (!state.releasesRequest.valid())
-            state.releasesRequest = startReleasesRequest();
-        return state.releasesRequest;
+        return getCachedRequest(getGitHubState().releasesRequest, false, loadReleases);
     }
 
     GitHubApi::CommitsRequest GitHubApi::getCommits() {
-        auto &state = getGitHubState();
-        std::scoped_lock lock(state.mutex);
-        if (!state.commitsRequest.valid())
-            state.commitsRequest = startCommitsRequest();
-        return state.commitsRequest;
+        return getCachedRequest(getGitHubState().commitsRequest, false, loadCommits);
     }
 
     GitHubApi::GistRequest GitHubApi::getGist(const std::string &id) {
@@ -174,19 +211,11 @@ namespace hex {
     }
 
     GitHubApi::ReleasesRequest GitHubApi::refreshReleases() {
-        auto &state = getGitHubState();
-        std::scoped_lock lock(state.mutex);
-        if (!state.releasesRequest.valid() || state.releasesRequest.wait_for(0s) == std::future_status::ready)
-            state.releasesRequest = startReleasesRequest();
-        return state.releasesRequest;
+        return getCachedRequest(getGitHubState().releasesRequest, true, loadReleases);
     }
 
     GitHubApi::CommitsRequest GitHubApi::refreshCommits() {
-        auto &state = getGitHubState();
-        std::scoped_lock lock(state.mutex);
-        if (!state.commitsRequest.valid() || state.commitsRequest.wait_for(0s) == std::future_status::ready)
-            state.commitsRequest = startCommitsRequest();
-        return state.commitsRequest;
+        return getCachedRequest(getGitHubState().commitsRequest, true, loadCommits);
     }
 
     GitHubApi::GistRequest GitHubApi::refreshGist(const std::string &id) {
