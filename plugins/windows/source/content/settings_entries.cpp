@@ -51,7 +51,7 @@ namespace hex::plugin::windows {
 
         namespace Widgets = ContentRegistry::Settings::Widgets;
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.context_menu_entry", false)
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, {}, "hex.builtin.setting.general.context_menu_entry"_unlocalized, false)
                 .setChangedCallback([](auto &widget) {
                     auto checked = static_cast<Widgets::Checkbox &>(widget).isChecked();
 
@@ -63,7 +63,7 @@ namespace hex::plugin::windows {
                     widget.load(hasImHexContextMenuEntry());
                 });
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.show_resource_usage", false);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.show_resource_usage"_unlocalized, false);
     }
 
 }

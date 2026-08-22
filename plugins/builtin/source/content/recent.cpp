@@ -118,7 +118,7 @@ namespace hex::plugin::builtin::recent {
     }
 
     static void saveCurrentProjectAsRecent() {
-        if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
+        if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.save_recent_providers"_unlocalized, true)) {
             return;
         }
         auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));

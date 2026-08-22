@@ -12,7 +12,7 @@
 
 namespace hex::plugin::windows {
 
-    ViewTTYConsole::ViewTTYConsole() : View::Window("hex.windows.view.tty_console.name", ICON_VS_TERMINAL) {
+    ViewTTYConsole::ViewTTYConsole() : View::Window("hex.windows.view.tty_console.name"_unlocalized, ICON_VS_TERMINAL) {
         m_comPorts = getAvailablePorts();
         m_selectedPortIndex = 0;
         m_transmitDataBuffer.resize(0xFFF, 0x00);
