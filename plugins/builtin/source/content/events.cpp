@@ -308,20 +308,13 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     openFile(path);
                 }, {}, true);
-            } else if (name == "Open Project") {
-                fs::openFileBrowser(fs::DialogMode::Folder, { },
-                    [](const auto &path) {
-                        if (!ProjectManager::load(path)) {
-                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-                        }
-                    });
             } else if (name == "Open Folder") {
                 fs::openFileBrowser(fs::DialogMode::Folder, {  },
-                    [](const auto &path) {
-                        if (!ProjectManager::load(path)) {
-                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
-                        }
-                    });
+                [](const auto &path) {
+                    if (!ProjectManager::load(path)) {
+                        ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                    }
+                });
             }
         });
 
@@ -525,6 +518,9 @@ namespace hex::plugin::builtin {
         });
 
         RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider, TaskHolder *task) {
+            if (!ProjectManager::hasPath())
+                ProjectManager::loadDefaultProject();
+
             *task = TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                 auto result = provider->open();
                 if (result.isFailure()) {

@@ -118,6 +118,9 @@ namespace hex::plugin::builtin::recent {
     }
 
     static void saveCurrentProjectAsRecent() {
+        if (ProjectManager::isDefaultProject())
+            return;
+
         if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
             return;
         }
