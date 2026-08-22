@@ -325,7 +325,7 @@ namespace hex::plugin::builtin {
             return;
 
         fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
-            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data", TaskManager::NoProgress, [=](Task &){
+            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data", ProgressValue::None(), [=](Task &){
                 provider->saveAs(path);
             }));
         });
@@ -807,7 +807,7 @@ namespace hex::plugin::builtin {
                 ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                 [this](const auto &path) {
                     auto *provider = ImHexApi::Provider::get();
-                    TaskManager::createTask("hex.builtin.task.loading_encoding_file", 0, [this, path, provider](auto&) {
+                    TaskManager::createTask("hex.builtin.task.loading_encoding_file", ProgressValue::None(), [this, path, provider](auto&) {
                         auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
 
                         TaskManager::doLater([this, provider, encoding = std::move(encoding)]() mutable {
@@ -1265,7 +1265,7 @@ namespace hex::plugin::builtin {
             [this] {
                 const auto selection = ImHexApi::HexEditor::getSelection();
 
-                TaskManager::createTask("", TaskManager::NoProgress, [this, selection] {
+                TaskManager::createTask("", ProgressValue::None(), [this, selection] {
                     const auto &customEncoding = this->m_hexEditor.getCustomEncoding();
                     if (!customEncoding.has_value())
                         return;

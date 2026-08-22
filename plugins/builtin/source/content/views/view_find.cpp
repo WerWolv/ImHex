@@ -695,7 +695,7 @@ namespace hex::plugin::builtin {
         m_occurrenceTree->clear();
         EventHighlightingChanged::post();
 
-        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = m_searchSettings, searchRegion](auto &task) {
+        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", ProgressValue::Size(searchRegion.getSize()), [this, settings = m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
             switch (settings.mode) {
@@ -1163,7 +1163,7 @@ namespace hex::plugin::builtin {
             std::scoped_lock lock(mutex);
 
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", currOccurrences.size(), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
                     std::scoped_lock lock(mutex);
 
                     u64 progress = 0;

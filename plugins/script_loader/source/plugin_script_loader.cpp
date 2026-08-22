@@ -111,7 +111,7 @@ std::vector<const Script*> loadAllScripts() {
                         continue;
 
                     if (menu::menuItem(name.c_str())) {
-                        runnerTask = TaskManager::createTask("hex.script_loader.task.running", TaskManager::NoProgress, [entryPoint](auto&) {
+                        runnerTask = TaskManager::createTask("hex.script_loader.task.running", ProgressValue::None(), [entryPoint](auto&) {
                             entryPoint();
                         });
                     }

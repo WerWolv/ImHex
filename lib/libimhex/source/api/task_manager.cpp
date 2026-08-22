@@ -69,9 +69,10 @@ namespace hex {
     }
 
 
-    Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function)
+    Task::Task(UnlocalizedString unlocalizedName, ProgressValue maxValue, bool background, bool blocking, std::function<void(Task &)> function)
     : m_unlocalizedName(std::move(unlocalizedName)),
-      m_maxValue(maxValue),
+      m_progressType(maxValue.type),
+      m_maxValue(maxValue.value),
       m_function(std::move(function)),
       m_background(background), m_blocking(blocking) { }
 
@@ -84,8 +85,8 @@ namespace hex {
             m_unlocalizedName = std::move(other.m_unlocalizedName);
         }
 
-        m_maxValue    = u64(other.m_maxValue);
-        m_currValue   = u64(other.m_currValue);
+        m_maxValue.store(other.m_maxValue.load());
+        m_currValue.store(other.m_currValue.load());
 
         if (other.m_finished.test())
             m_finished.test_and_set();
@@ -191,6 +192,10 @@ namespace hex {
 
     u64 Task::getMaxValue() const {
         return m_maxValue;
+    }
+
+    ProgressValue::Type Task::getProgressType() const {
+        return m_progressType;
     }
 
     void Task::wait() const {
@@ -388,7 +393,7 @@ namespace hex {
         s_taskCompletionCallbacks.clear();
     }
 
-    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task&)> function) {
+    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, bool background, bool blocking, std::function<void(Task&)> function) {
         std::scoped_lock lock(s_queueMutex);
 
         // Construct new task
@@ -405,12 +410,12 @@ namespace hex {
     }
 
 
-    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function) {
+    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void(Task &)> function) {
         log::debug("Creating task {}", unlocalizedName.get());
         return createTask(unlocalizedName, maxValue, false, false, std::move(function));
     }
 
-    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function) {
+    TaskHolder TaskManager::createTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void()> function) {
         log::debug("Creating task {}", unlocalizedName.get());
         return createTask(unlocalizedName, maxValue, false, false,
             [function = std::move(function)](Task&) {
@@ -421,24 +426,24 @@ namespace hex {
 
     TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function) {
         log::debug("Creating background task {}", unlocalizedName.get());
-        return createTask(unlocalizedName, 0, true, false, std::move(function));
+        return createTask(unlocalizedName, ProgressValue::None(), true, false, std::move(function));
     }
 
     TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function) {
         log::debug("Creating background task {}", unlocalizedName.get());
-        return createTask(unlocalizedName, 0, true, false,
+        return createTask(unlocalizedName, ProgressValue::None(), true, false,
             [function = std::move(function)](Task&) {
                 function();
             }
         );
     }
 
-    TaskHolder TaskManager::createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function) {
+    TaskHolder TaskManager::createBlockingTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void(Task &)> function) {
         log::debug("Creating blocking task {}", unlocalizedName.get());
         return createTask(unlocalizedName, maxValue, true, true, std::move(function));
     }
 
-    TaskHolder TaskManager::createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function) {
+    TaskHolder TaskManager::createBlockingTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void()> function) {
         log::debug("Creating blocking task {}", unlocalizedName.get());
         return createTask(unlocalizedName, maxValue, true, true,
             [function = std::move(function)](Task&) {

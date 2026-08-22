@@ -17,13 +17,36 @@ EXPORT_MODULE namespace hex {
     class TaskHolder;
     class TaskManager;
 
+    struct ProgressValue {
+        enum class Type : u8 {
+            None,
+            Count,
+            Size
+        };
+
+        u64 value;
+        Type type;
+
+        constexpr static ProgressValue None() {
+            return { 0, Type::None };
+        }
+
+        constexpr static ProgressValue Count(u64 value) {
+            return { value, Type::Count };
+        }
+
+        constexpr static ProgressValue Size(u64 value) {
+            return { value, Type::Size };
+        }
+    };
+
     /**
      * @brief A type representing a running asynchronous task
      */
     class Task {
     public:
         Task() = default;
-        Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
+        Task(UnlocalizedString unlocalizedName, ProgressValue maxValue, bool background, bool blocking, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -70,6 +93,7 @@ EXPORT_MODULE namespace hex {
         [[nodiscard]] const UnlocalizedString &getUnlocalizedName();
         [[nodiscard]] u64 getValue() const;
         [[nodiscard]] u64 getMaxValue() const;
+        [[nodiscard]] ProgressValue::Type getProgressType() const;
 
         void wait() const;
 
@@ -82,6 +106,7 @@ EXPORT_MODULE namespace hex {
         mutable std::mutex m_mutex;
 
         UnlocalizedString m_unlocalizedName;
+        ProgressValue::Type m_progressType = ProgressValue::Type::None;
         std::atomic<u64> m_currValue = 0, m_maxValue = 0;
         std::function<void()> m_interruptCallback;
         std::function<void(Task &)> m_function;
@@ -141,8 +166,6 @@ EXPORT_MODULE namespace hex {
         static void init();
         static void exit();
 
-        constexpr static auto NoProgress = 0;
-
         /**
          * @brief Creates a new asynchronous task that gets displayed in the Task Manager in the footer
          * @param unlocalizedName Name of the task
@@ -150,7 +173,7 @@ EXPORT_MODULE namespace hex {
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function);
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void(Task &)> function);
 
         /**
         * @brief Creates a new asynchronous task that gets displayed in the Task Manager in the footer
@@ -159,7 +182,7 @@ EXPORT_MODULE namespace hex {
         * @param function Function to be executed
         * @return A TaskHolder holding a weak reference to the task
         */
-        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function);
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void()> function);
 
         /**
          * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
@@ -184,7 +207,7 @@ EXPORT_MODULE namespace hex {
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void(Task &)> function);
+        static TaskHolder createBlockingTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void(Task &)> function);
 
         /**
         * @brief Creates a new asynchronous task that shows a blocking modal window
@@ -193,7 +216,7 @@ EXPORT_MODULE namespace hex {
         * @param function Function to be executed
         * @return A TaskHolder holding a weak reference to the task
         */
-        static TaskHolder createBlockingTask(const UnlocalizedString &unlocalizedName, u64 maxValue, std::function<void()> function);
+        static TaskHolder createBlockingTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, std::function<void()> function);
 
         /**
          * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
@@ -255,7 +278,7 @@ EXPORT_MODULE namespace hex {
         static void addTaskCompletionCallback(const std::function<void(Task&)>& function);
 
     private:
-        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, u64 maxValue, bool background, bool blocking, std::function<void(Task &)> function);
+        static TaskHolder createTask(const UnlocalizedString &unlocalizedName, ProgressValue maxValue, bool background, bool blocking, std::function<void(Task &)> function);
     };
 
 }

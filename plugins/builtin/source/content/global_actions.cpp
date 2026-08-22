@@ -54,6 +54,7 @@ namespace hex::plugin::builtin {
                 return;
 
             const auto providers = ImHexApi::Provider::getProviders();
+            ProjectManager::store();
             ProjectManager::clearPath();
             EventProjectClosed::post();
             for (auto *provider : providers)

@@ -118,7 +118,7 @@ namespace hex::plugin::diffing {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &task) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", ProgressValue::Size(commonSize), [this, providerA, providerB](Task &task) {
             task.setInterruptCallback([this]{ m_analysisInterrupted = true; });
 
             for (auto &column : m_columns) {

@@ -518,7 +518,7 @@ namespace hex::plugin::builtin {
         });
 
         RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider, TaskHolder *task) {
-            *task = TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
+            *task = TaskManager::createBlockingTask("hex.builtin.provider.opening", ProgressValue::None(), [provider]() {
                 auto result = provider->open();
                 if (result.isFailure()) {
                     ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, result.getErrorMessage()));

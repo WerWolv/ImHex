@@ -1833,7 +1833,7 @@ namespace hex::plugin::builtin {
             return true;
         });
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", ProgressValue::None(), [this, code, provider](auto &task) {
             // Disable exception tracing to speed up evaluation
             trace::disableExceptionCaptureForCurrentThread();
 

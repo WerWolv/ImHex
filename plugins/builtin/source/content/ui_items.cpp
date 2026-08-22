@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextSpinner("");
 
                     ImGui::NewLine();
-                    const auto progress = task->getMaxValue() == 0 ? -1 : float(task->getValue()) / float(task->getMaxValue());
+                    const auto progress = task->getProgressType() == ProgressValue::Type::None ? -1 : float(task->getValue()) / float(task->getMaxValue());
                     ImGuiExt::ProgressBar(progress, ImVec2(0, 10_scaled));
                     break;
                 }
@@ -371,10 +371,21 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPos(widgetEnd);
 
                 std::string progressString;
-                if (progress < 0)
+                if (progress < 0) {
                     progressString = "";
-                else
-                    progressString = fmt::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
+                } else {
+                    switch (frontTask->getProgressType()) {
+                        case ProgressValue::Type::None:
+                            progressString = "";
+                            break;
+                        case ProgressValue::Type::Size:
+                            progressString = fmt::format("[ {}/{} ({:.1f}%) ] ", toByteString(frontTask->getValue()), toByteString(frontTask->getMaxValue()), std::min(progress, 1.0F) * 100.0F);
+                            break;
+                        case ProgressValue::Type::Count:
+                            progressString = fmt::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), std::min(progress, 1.0F) * 100.0F);
+                            break;
+                    }
+                }
 
                 ImGuiExt::InfoTooltip(fmt::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
 
@@ -389,7 +400,7 @@ namespace hex::plugin::builtin {
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
                         ImGuiExt::ProgressBar(
-                            task->getMaxValue() == 0 ? -1 : (float(task->getValue()) / float(task->getMaxValue())),
+                            task->getProgressType() == ProgressValue::Type::None ? -1 : (float(task->getValue()) / float(task->getMaxValue())),
                             scaled({ 100, 5 }),
                             (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2
                         );

@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
         }
 
         // Run analyzers for each section
-        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing", analysis.informationSections.size(), [this, provider, &analysis](Task &task) {
+        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing", ProgressValue::Count(analysis.informationSections.size()), [this, provider, &analysis](Task &task) {
             u32 progress = 0;
             for (const auto &section : analysis.informationSections) {
                 // Only process the section if it is enabled
