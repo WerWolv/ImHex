@@ -1116,8 +1116,8 @@ namespace hex::plugin::builtin {
         /* Set Base Address */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.set_base" }, ICON_VS_LOCATION, 1650, Shortcut::None,
             [this] {
-                auto provider = ImHexApi::Provider::get();
-                this->openPopup<PopupBaseAddress>(provider->getBaseAddress());
+                auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get()));
+                this->openPopup<PopupBaseAddress>(selection);
             },
             [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isReadable(); },
             this
