@@ -27,7 +27,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewFind::ViewFind() : View::Window("hex.builtin.view.find.name", ICON_VS_SEARCH) {
+    ViewFind::ViewFind() : View::Window("hex.builtin.view.find.name"_unlocalized, ICON_VS_SEARCH) {
         const static auto HighlightColor = [] { return (ImGuiExt::GetCustomColorU32(ImGuiCustomCol_FindHighlight) & 0x00FFFFFF) | 0x70000000; };
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTooltip();
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A, "hex.builtin.view.find.shortcut.select_all", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A, "hex.builtin.view.find.shortcut.select_all"_unlocalized, [this] {
             if (m_filterTask.isRunning())
                 return;
             if (m_searchTask.isRunning())
@@ -119,7 +119,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Find Selection */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.find.find_selection" }, ICON_VS_SEARCH_SPARKLE, 1950, CTRLCMD + SHIFT + Keys::F, [&] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.menu.edit.find.find_selection"_unlocalized }, ICON_VS_SEARCH_SPARKLE, 1950, CTRLCMD + SHIFT + Keys::F, [&] {
             auto selection = ImHexApi::HexEditor::getSelection();
             if (!selection.has_value())
                 return;
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
             this->runSearch();
             this->bringToFront();
         }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); },
-        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized));
     }
 
     template<typename Type, typename StorageType>
@@ -684,18 +684,18 @@ namespace hex::plugin::builtin {
         Region searchRegion = m_searchSettings.region;
 
         if (m_searchSettings.mode == SearchSettings::Mode::Strings) {
-            AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_strings.name");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.find"_unlocalized, "hex.builtin.achievement.find.find_strings.name"_unlocalized);
         } else if (m_searchSettings.mode == SearchSettings::Mode::Sequence) {
-            AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.find"_unlocalized, "hex.builtin.achievement.find.find_specific_string.name"_unlocalized);
         } else if (m_searchSettings.mode == SearchSettings::Mode::Value) {
             if (m_searchSettings.value.inputMin == "250" && m_searchSettings.value.inputMax == "1000")
-                AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_numeric.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.find"_unlocalized, "hex.builtin.achievement.find.find_numeric.name"_unlocalized);
         }
 
         m_occurrenceTree->clear();
         EventHighlightingChanged::post();
 
-        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", ProgressValue::Size(searchRegion.getSize()), [this, settings = m_searchSettings, searchRegion](auto &task) {
+        m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching"_unlocalized, ProgressValue::Size(searchRegion.getSize()), [this, settings = m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
             switch (settings.mode) {
@@ -1163,7 +1163,7 @@ namespace hex::plugin::builtin {
             std::scoped_lock lock(mutex);
 
             if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data", ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
                     std::scoped_lock lock(mutex);
 
                     u64 progress = 0;
@@ -1190,7 +1190,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportResults")) {
             for (const auto &formatter : ContentRegistry::DataFormatter::impl::getFindExporterEntries()) {
-                const auto formatterName = formatter.unlocalizedName;
+                const auto formatterName = Lang(formatter.unlocalizedName);
                 const auto name = toUpper(formatterName);
 
                 const auto &extension = formatter.fileExtension;

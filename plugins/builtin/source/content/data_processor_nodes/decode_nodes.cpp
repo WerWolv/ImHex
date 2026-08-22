@@ -12,14 +12,14 @@ namespace hex::plugin::builtin {
 
     class NodeCryptoAESDecrypt : public dp::Node {
     public:
-        NodeCryptoAESDecrypt() : Node("hex.builtin.nodes.crypto.aes.header",
-                                     { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.key"),
-                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.iv"),
-                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.nonce"),
-                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"),
-                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"),
-                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.tag"),
-                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.aad") }) { }
+        NodeCryptoAESDecrypt() : Node("hex.builtin.nodes.crypto.aes.header"_unlocalized,
+                                     { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.key"_unlocalized),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.iv"_unlocalized),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.nonce"_unlocalized),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.tag"_unlocalized),
+                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.aad"_unlocalized) }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
 
     class NodeDecodingBase64 : public dp::Node {
     public:
-        NodeDecodingBase64() : Node("hex.builtin.nodes.decoding.base64.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeDecodingBase64() : Node("hex.builtin.nodes.decoding.base64.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
 
     class NodeDecodingHex : public dp::Node {
     public:
-        NodeDecodingHex() : Node("hex.builtin.nodes.decoding.hex.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeDecodingHex() : Node("hex.builtin.nodes.decoding.hex.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -154,9 +154,9 @@ namespace hex::plugin::builtin {
     };
 
     void registerDecodeDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeDecodingBase64>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.base64");
-        ContentRegistry::DataProcessor::add<NodeDecodingHex>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.hex");
-        ContentRegistry::DataProcessor::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto", "hex.builtin.nodes.crypto.aes");
+        ContentRegistry::DataProcessor::add<NodeDecodingBase64>("hex.builtin.nodes.decoding"_unlocalized, "hex.builtin.nodes.decoding.base64"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeDecodingHex>("hex.builtin.nodes.decoding"_unlocalized, "hex.builtin.nodes.decoding.hex"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto"_unlocalized, "hex.builtin.nodes.crypto.aes"_unlocalized);
     }
 
 }

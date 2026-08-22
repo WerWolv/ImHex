@@ -186,19 +186,19 @@ EXPORT_MODULE namespace hex {
 
         /**
          * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
-         * @param unlocalizedName Name of the task
+         * @param name Name of the task
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function);
+        static TaskHolder createBackgroundTask(const std::string &name, std::function<void(Task &)> function);
 
         /**
          * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
-         * @param unlocalizedName Name of the task
+         * @param name Name of the task
          * @param function Function to be executed
          * @return A TaskHolder holding a weak reference to the task
          */
-        static TaskHolder createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function);
+        static TaskHolder createBackgroundTask(const std::string &name, std::function<void()> function);
 
         /**
          * @brief Creates a new asynchronous task that shows a blocking modal window

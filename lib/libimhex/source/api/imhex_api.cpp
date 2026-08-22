@@ -1265,7 +1265,7 @@ namespace hex {
 
         const Font& getDefaultFont() {
             if (*impl::s_defaultFont == nullptr) {
-                static Font emptyFont("");
+                static Font emptyFont({});
                 return emptyFont;
             }
             return **impl::s_defaultFont;

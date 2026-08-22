@@ -107,6 +107,6 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupBaseAddress::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.set_base";
+        return "hex.builtin.view.hex_editor.menu.edit.set_base"_unlocalized;
     }
 }

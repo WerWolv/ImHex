@@ -568,7 +568,7 @@ namespace hex::ui {
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
                 m_editingPattern = &pattern;
                 m_editingPatternOffset = pattern.getOffset();
-                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.modify_data.name"_unlocalized);
             }
         }
 
@@ -587,7 +587,7 @@ namespace hex::ui {
             if (ImGui::MenuItemEx("hex.ui.pattern_drawer.context.edit_value"_lang, ICON_VS_EDIT)) {
                 m_editingPattern = &pattern;
                 m_editingPatternOffset = pattern.getOffset();
-                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.modify_data.name"_unlocalized);
             }
 
             ImGui::EndPopup();
@@ -1473,7 +1473,7 @@ namespace hex::ui {
             m_filtersUpdated = true;
 
             if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating", ProgressValue::None(), [this, patterns, runtime](auto &task) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_unlocalized, ProgressValue::None(), [this, patterns, runtime](auto &task) {
                     size_t updatedFavorites = 0;
 
                     {

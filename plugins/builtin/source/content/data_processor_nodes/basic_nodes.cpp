@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
 
     class NodeNullptr : public dp::Node {
     public:
-        NodeNullptr() : Node("hex.builtin.nodes.constants.nullptr.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) { }
+        NodeNullptr() : Node("hex.builtin.nodes.constants.nullptr.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, {}) }) { }
 
         void process() override {
             this->setBufferOnOutput(0, {});
@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
 
     class NodeBuffer : public dp::Node {
     public:
-        NodeBuffer() : Node("hex.builtin.nodes.constants.buffer.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) { }
+        NodeBuffer() : Node("hex.builtin.nodes.constants.buffer.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, {}) }) { }
 
         void drawNode() override {
             constexpr static int StepSize = 1, FastStepSize = 10;
@@ -98,7 +98,7 @@ namespace hex::plugin::builtin {
 
     class NodeString : public dp::Node {
     public:
-        NodeString() : Node("hex.builtin.nodes.constants.string.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {
+        NodeString() : Node("hex.builtin.nodes.constants.string.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, {}) }) {
 
         }
 
@@ -127,7 +127,7 @@ namespace hex::plugin::builtin {
 
     class NodeInteger : public dp::Node {
     public:
-        NodeInteger() : Node("hex.builtin.nodes.constants.int.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "") }) { }
+        NodeInteger() : Node("hex.builtin.nodes.constants.int.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, {}) }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
@@ -164,7 +164,7 @@ namespace hex::plugin::builtin {
 
     class NodeFloat : public dp::Node {
     public:
-        NodeFloat() : Node("hex.builtin.nodes.constants.float.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "") }) { }
+        NodeFloat() : Node("hex.builtin.nodes.constants.float.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, {}) }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
@@ -193,13 +193,13 @@ namespace hex::plugin::builtin {
 
     class NodeRGBA8 : public dp::Node {
     public:
-        NodeRGBA8() : Node("hex.builtin.nodes.constants.rgba8.header",
+        NodeRGBA8() : Node("hex.builtin.nodes.constants.rgba8.header"_unlocalized,
                           {
-                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.r"),
-                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.g"),
-                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.b"),
-                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.a"),
-                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer,  "hex.builtin.nodes.constants.rgba8.output.color"),
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.r"_unlocalized),
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.g"_unlocalized),
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.b"_unlocalized),
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.a"_unlocalized),
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer,  "hex.builtin.nodes.constants.rgba8.output.color"_unlocalized),
                           }) { }
 
         void drawNode() override {
@@ -245,7 +245,7 @@ namespace hex::plugin::builtin {
 
     class NodeComment : public dp::Node {
     public:
-        NodeComment() : Node("hex.builtin.nodes.constants.comment.header", {}) {
+        NodeComment() : Node("hex.builtin.nodes.constants.comment.header"_unlocalized, {}) {
 
         }
 
@@ -272,13 +272,13 @@ namespace hex::plugin::builtin {
     };
 
     void registerBasicDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeInteger>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.int");
-        ContentRegistry::DataProcessor::add<NodeFloat>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.float");
-        ContentRegistry::DataProcessor::add<NodeNullptr>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.nullptr");
-        ContentRegistry::DataProcessor::add<NodeBuffer>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.buffer");
-        ContentRegistry::DataProcessor::add<NodeString>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.string");
-        ContentRegistry::DataProcessor::add<NodeRGBA8>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.rgba8");
-        ContentRegistry::DataProcessor::add<NodeComment>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.comment");
+        ContentRegistry::DataProcessor::add<NodeInteger>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.int"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeFloat>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.float"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeNullptr>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.nullptr"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBuffer>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.buffer"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeString>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.string"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeRGBA8>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.rgba8"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeComment>("hex.builtin.nodes.constants"_unlocalized, "hex.builtin.nodes.constants.comment"_unlocalized);
     }
 
 }

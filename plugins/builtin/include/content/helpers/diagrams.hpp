@@ -673,9 +673,9 @@ namespace hex {
                     const u64 size = u64(m_xBlockEntropy[index + 1] - m_xBlockEntropy[index + 0]);
                     Region region = { start, size };
                     if (first > second) {
-                        this->addRegion("hex.ui.diagram.entropy_analysis.entropy_drop", region, 0x60FF2020);
+                        this->addRegion("hex.ui.diagram.entropy_analysis.entropy_drop"_unlocalized, region, 0x60FF2020);
                     } else {
-                        this->addRegion("hex.ui.diagram.entropy_analysis.entropy_spike", region, 0x602020FF);
+                        this->addRegion("hex.ui.diagram.entropy_analysis.entropy_spike"_unlocalized, region, 0x602020FF);
                     }
                 }
             }
@@ -999,9 +999,9 @@ namespace hex {
                         m_yBlockTypeDistributions[i].push_back(typeDist[i] * 100);
 
                     if (m_yBlockTypeDistributions[2].back() + m_yBlockTypeDistributions[4].back() >= 95) {
-                        this->addRegion("hex.ui.diagram.byte_type_distribution.plain_text", Region { m_byteCount, m_blockSize }, 0x80FF00FF);
+                        this->addRegion("hex.ui.diagram.byte_type_distribution.plain_text"_unlocalized, Region { m_byteCount, m_blockSize }, 0x80FF00FF);
                     } else if (std::ranges::any_of(m_blockValueCounts, [&](auto count) { return count >= m_blockSize * 0.95F; })) {
-                        this->addRegion("hex.ui.diagram.byte_type_distribution.similar_bytes", Region { m_byteCount, m_blockSize }, 0x8000FF00);
+                        this->addRegion("hex.ui.diagram.byte_type_distribution.similar_bytes"_unlocalized, Region { m_byteCount, m_blockSize }, 0x8000FF00);
                     }
 
                     m_blockCount += 1;

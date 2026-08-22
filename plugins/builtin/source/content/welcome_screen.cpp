@@ -64,13 +64,13 @@ namespace hex::plugin::builtin {
             bool m_reportError = true;
         public:
             PopupRestoreBackup(std::fs::path logFilePath, bool hasAutoBackups, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
-                    : Popup("hex.builtin.popup.safety_backup.title", ICON_VS_ARCHIVE),
+                    : Popup("hex.builtin.popup.safety_backup.title"_unlocalized, ICON_VS_ARCHIVE),
                     m_logFilePath(std::move(logFilePath)),
                     m_hasAutoBackups(hasAutoBackups),
                     m_restoreCallback(restoreCallback),
                     m_deleteCallback(deleteCallback) {
 
-                m_reportError = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
+                m_reportError = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, true);
             }
 
             void drawContent() override {
@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", m_reportError);
+                    ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, m_reportError);
 
                     this->close();
                 }
@@ -138,7 +138,7 @@ namespace hex::plugin::builtin {
 
         class PopupTipOfTheDay : public Popup<PopupTipOfTheDay> {
         public:
-            PopupTipOfTheDay() : Popup("hex.builtin.popup.tip_of_the_day.title", ICON_VS_LIGHTBULB, true, false) { }
+            PopupTipOfTheDay() : Popup("hex.builtin.popup.tip_of_the_day.title"_unlocalized, ICON_VS_LIGHTBULB, true, false) { }
 
             void drawContent() override {
                 ImGuiExt::Header("hex.builtin.welcome.tip_of_the_day"_lang, true);
@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
 
                 static bool dontShowAgain = false;
                 if (ImGui::Checkbox("hex.ui.common.dont_show_again"_lang, &dontShowAgain)) {
-                    ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
+                    ContentRegistry::Settings::write<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.show_tips"_unlocalized, !dontShowAgain);
                 }
 
                 ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.ui.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
@@ -394,7 +394,7 @@ namespace hex::plugin::builtin {
                         auto startPos = ImGui::GetCursorPos();
                         if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.start"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                             if (ImGuiExt::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
-                                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
                                 if (newProvider != nullptr && newProvider->open().isFailure())
                                     hex::ImHexApi::Provider::remove(newProvider.get());
                                 else
@@ -479,7 +479,7 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, ICON_VS_GITHUB, size))
                             hex::openWebpage("hex.builtin.welcome.learn.latest.link"_lang);
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.imhex.title"_lang, "hex.builtin.welcome.learn.imhex.desc"_lang, ICON_VS_BOOK, size)) {
-                            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
+                            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out"_unlocalized, "hex.builtin.achievement.starting_out.docs.name"_unlocalized);
                             hex::openWebpage("hex.builtin.welcome.learn.imhex.link"_lang);
                         }
                         if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.pattern.title"_lang, "hex.builtin.welcome.learn.pattern.desc"_lang, ICON_VS_SYMBOL_NAMESPACE, size))
@@ -543,7 +543,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetStyle().FramePadding.x * 2, ImGui::GetStyle().FramePadding.y * 2 - 1));
             if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null");
+                auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null"_unlocalized);
                 if (provider != nullptr)
                     std::ignore = provider->open();
             }
@@ -598,7 +598,7 @@ namespace hex::plugin::builtin {
                                                 for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : quickSettings) {
                                                     ImGui::PushID(id + 1);
                                                     if (ImGuiExt::DimmedIconToggle(onIcon.c_str(), offIcon.c_str(), &state)) {
-                                                        ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings", unlocalizedTooltip, state);
+                                                        ContentRegistry::Settings::write<bool>("hex.builtin.settings.quick_settings"_untranslated, unlocalizedTooltip, state);
                                                     }
                                                     if (id % 5 > 0)
                                                         ImGui::SameLine();
@@ -695,7 +695,7 @@ namespace hex::plugin::builtin {
                 drawNoViewsBackground();
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", [](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.color"_unlocalized, [](const ContentRegistry::Settings::SettingsValue &value) {
             auto theme = value.get<std::string>("Dark");
             if (theme != ThemeManager::NativeTheme) {
                 static std::string lastTheme;
@@ -707,17 +707,17 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", [](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.language"_unlocalized, [](const ContentRegistry::Settings::SettingsValue &value) {
             auto language = value.get<std::string>("en-US");
             if (language != LocalizationManager::getSelectedLanguageId())
                 LocalizationManager::setLanguage(language);
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", [](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.fps"_unlocalized, [](const ContentRegistry::Settings::SettingsValue &value) {
             ImHexApi::System::setTargetFPS(static_cast<float>(value.get<int>(14)));
         });
 
 
-        ContentRegistry::UserInterface::addWelcomeScreenQuickSettingsToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, "hex.builtin.welcome.quick_settings.simplified", false, [](bool state) {
+        ContentRegistry::UserInterface::addWelcomeScreenQuickSettingsToggle(ICON_VS_COMPASS_ACTIVE, ICON_VS_COMPASS, "hex.builtin.welcome.quick_settings.simplified"_unlocalized, false, [](bool state) {
             s_simplifiedWelcomeScreen = state;
             WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
         });
@@ -725,7 +725,7 @@ namespace hex::plugin::builtin {
         EventImHexStartupFinished::subscribe([]() {
             for (const auto &quickSetting : ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles()) {
                 auto &setting = quickSetting.unlocalizedTooltip;
-                ContentRegistry::Settings::onChange("hex.builtin.settings.quick_settings", setting, [setting](const ContentRegistry::Settings::SettingsValue &value) {
+                ContentRegistry::Settings::onChange("hex.builtin.settings.quick_settings"_untranslated, setting, [setting](const ContentRegistry::Settings::SettingsValue &value) {
                     for (auto &[onIcon, offIcon, unlocalizedTooltip, toggleCallback, state] : ContentRegistry::UserInterface::impl::getWelcomeScreenQuickSettingsToggles()) {
                         if (unlocalizedTooltip == setting) {
                             state = value.get<bool>(state);
@@ -735,7 +735,7 @@ namespace hex::plugin::builtin {
                     }
                 });
 
-                bool state = ContentRegistry::Settings::read<bool>("hex.builtin.settings.quick_settings", quickSetting.unlocalizedTooltip, quickSetting.state);
+                bool state = ContentRegistry::Settings::read<bool>("hex.builtin.settings.quick_settings"_untranslated, quickSetting.unlocalizedTooltip, quickSetting.state);
                 quickSetting.state = state;
                 quickSetting.callback(state);
             }
@@ -807,7 +807,7 @@ namespace hex::plugin::builtin {
                 auto backupFilePath = path / BackupFileName;
                 auto backupFilePathOld = path / "crash_backup.old";
 
-                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time", 0) > 0;
+                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups.auto_backup_time"_unlocalized, 0) > 0;
                 auto autoBackups = recent::PopupAutoBackups::getAutoBackups();
                 bool hasAutoBackups = autoBackupsEnabled && !autoBackups.empty();
 
@@ -881,26 +881,26 @@ namespace hex::plugin::builtin {
             const auto& chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 
-            bool showTipOfTheDay = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", false);
+            bool showTipOfTheDay = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.show_tips"_unlocalized, false);
             if (showTipOfTheDay)
                 PopupTipOfTheDay::open();
         }
 
         if (hasCrashed) {
             TaskManager::doLater([]{
-                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.crash.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out"_unlocalized, "hex.builtin.achievement.starting_out.crash.name"_unlocalized);
             });
         } else {
             std::random_device rd;
             if (ImHexApi::System::isCorporateEnvironment()) {
                 if (rd() % 25 == 0) {
-                    ui::BannerButton::open(ICON_VS_HEART, "Using ImHex for professional work? Ask your boss to sponsor us and get private E-Mail support and more!", ImColor(0x68, 0xA7, 0x70), "Donate Now!", [] {
+                    ui::BannerButton::open(ICON_VS_HEART, "Using ImHex for professional work? Ask your boss to sponsor us and get private E-Mail support and more!"_untranslated, ImColor(0x68, 0xA7, 0x70), "Donate Now!"_untranslated, [] {
                         hex::openWebpage("https://imhex.werwolv.net/donate_work");
                     });
                 }
             } else {
                 if (rd() % 75 == 0) {
-                    ui::BannerButton::open(ICON_VS_HEART, "ImHex needs your help to stay alive! Donate now to fund infrastructure and further development", ImColor(0x68, 0xA7, 0x70), "Donate Now!", [] {
+                    ui::BannerButton::open(ICON_VS_HEART, "ImHex needs your help to stay alive! Donate now to fund infrastructure and further development"_untranslated, ImColor(0x68, 0xA7, 0x70), "Donate Now!"_untranslated, [] {
                         hex::openWebpage("https://github.com/sponsors/WerWolv");
                     });
                 }
@@ -919,8 +919,8 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            auto allowNetworking = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false)
-                && ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0) != 0;
+            auto allowNetworking = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.network_interface"_unlocalized, false)
+                && ContentRegistry::Settings::read<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.server_contact"_unlocalized, 0) != 0;
             if (!s_infoBannerTexture->isValid() && allowNetworking) {
                 TaskManager::createBackgroundTask("hex.builtin.task.loading_banner", [](auto&) {
                     HttpRequest request("GET",

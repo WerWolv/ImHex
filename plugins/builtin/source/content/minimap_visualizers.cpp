@@ -145,15 +145,15 @@ namespace hex::plugin::builtin {
     }
 
     void registerMiniMapVisualizers() {
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.highlights",       highlightsMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.entropy",          entropyMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zero_count",       zerosCountMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zeros",            zerosMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.ascii_count",      asciiCountMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.byte_type",        byteTypeMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.byte_magnitude",   byteMagnitudeMiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.rgba8",            rgba8MiniMapVisualizer);
-        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.rgb565",           rgb565MiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.highlights"_unlocalized,       highlightsMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.entropy"_unlocalized,          entropyMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zero_count"_unlocalized,       zerosCountMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zeros"_unlocalized,            zerosMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.ascii_count"_unlocalized,      asciiCountMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.byte_type"_unlocalized,        byteTypeMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.byte_magnitude"_unlocalized,   byteMagnitudeMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.rgba8"_unlocalized,            rgba8MiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.rgb565"_unlocalized,           rgb565MiniMapVisualizer);
     }
 
 }

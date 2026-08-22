@@ -9,13 +9,13 @@ namespace hex::plugin::builtin {
 
     void registerIntroductionTutorial() {
         using enum TutorialManager::Position;
-        auto &tutorial = TutorialManager::createTutorial("hex.builtin.tutorial.introduction", "hex.builtin.tutorial.introduction.description");
+        auto &tutorial = TutorialManager::createTutorial("hex.builtin.tutorial.introduction"_unlocalized, "hex.builtin.tutorial.introduction.description"_unlocalized);
 
         {
             tutorial.addStep()
                 .setMessage(
-                    "hex.builtin.tutorial.introduction.step1.title",
-                    "hex.builtin.tutorial.introduction.step1.description",
+                    "hex.builtin.tutorial.introduction.step1.title"_unlocalized,
+                    "hex.builtin.tutorial.introduction.step1.description"_unlocalized,
                     Bottom | Right
                 )
                 .allowSkip();
@@ -26,11 +26,11 @@ namespace hex::plugin::builtin {
             static EventManager::EventList::iterator eventHandle;
 
             step.setMessage(
-                "hex.builtin.tutorial.introduction.step2.title",
-                "hex.builtin.tutorial.introduction.step2.description",
+                "hex.builtin.tutorial.introduction.step2.title"_unlocalized,
+                "hex.builtin.tutorial.introduction.step2.description"_unlocalized,
                 Bottom | Right
             )
-            .addHighlight("hex.builtin.tutorial.introduction.step2.highlight",
+            .addHighlight("hex.builtin.tutorial.introduction.step2.highlight"_unlocalized,
             {
                 "Welcome Screen/Start_087A287D",
                 Lang("hex.builtin.welcome.start.create_file")
@@ -48,16 +48,16 @@ namespace hex::plugin::builtin {
 
         {
             tutorial.addStep()
-            .addHighlight("hex.builtin.tutorial.introduction.step3.highlight", {
-                View::toWindowName("hex.builtin.view.hex_editor.name")
+            .addHighlight("hex.builtin.tutorial.introduction.step3.highlight"_unlocalized, {
+                View::toWindowName("hex.builtin.view.hex_editor.name"_unlocalized)
             })
             .allowSkip();
         }
 
         {
             tutorial.addStep()
-            .addHighlight("hex.builtin.tutorial.introduction.step4.highlight", {
-                View::toWindowName("hex.builtin.view.data_inspector.name")
+            .addHighlight("hex.builtin.tutorial.introduction.step4.highlight"_unlocalized, {
+                View::toWindowName("hex.builtin.view.data_inspector.name"_unlocalized)
             })
             .onAppear([]{
                 ImHexApi::HexEditor::setSelection(Region { .address=0, .size=1 });
@@ -67,11 +67,11 @@ namespace hex::plugin::builtin {
 
         {
             tutorial.addStep()
-            .addHighlight("hex.builtin.tutorial.introduction.step5.highlight.pattern_editor", {
-                View::toWindowName("hex.builtin.view.pattern_editor.name")
+            .addHighlight("hex.builtin.tutorial.introduction.step5.highlight.pattern_editor"_unlocalized, {
+                View::toWindowName("hex.builtin.view.pattern_editor.name"_unlocalized)
             })
-            .addHighlight("hex.builtin.tutorial.introduction.step5.highlight.pattern_data", {
-                View::toWindowName("hex.builtin.view.pattern_data.name")
+            .addHighlight("hex.builtin.tutorial.introduction.step5.highlight.pattern_data"_unlocalized, {
+                View::toWindowName("hex.builtin.view.pattern_data.name"_unlocalized)
             })
             .onAppear([] {
                 RequestSetPatternLanguageCode::post("\n\n\n\n\n\nstruct Test {\n    u8 value;\n};\n\nTest test @ 0x00;");
@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
         {
             auto &step = tutorial.addStep();
 
-            step.addHighlight("hex.builtin.tutorial.introduction.step6.highlight", {
+            step.addHighlight("hex.builtin.tutorial.introduction.step6.highlight"_unlocalized, {
                 "##MainMenuBar",
                 "##MenuBar",
                 Lang("hex.builtin.menu.help")

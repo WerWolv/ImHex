@@ -15,9 +15,9 @@
 
 namespace hex::plugin::builtin {
 
-    ViewAchievements::ViewAchievements() : View::Floating("hex.builtin.view.achievements.name", ICON_VS_SPARKLE) {
+    ViewAchievements::ViewAchievements() : View::Floating("hex.builtin.view.achievements.name"_unlocalized, ICON_VS_SPARKLE) {
         // Add achievements menu item to Extas menu
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.achievements.name" }, ICON_VS_SPARKLE, 2600, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras"_unlocalized, "hex.builtin.view.achievements.name"_unlocalized }, ICON_VS_SPARKLE, 2600, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
 
@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void drawOverlay(ImDrawList *drawList, ImVec2 windowMin, ImVec2 windowMax, const std::string &currCategory) {
+    void drawOverlay(ImDrawList *drawList, ImVec2 windowMin, ImVec2 windowMax, const UnlocalizedString &currCategory) {
         auto &achievements = AchievementManager::getAchievements().at(currCategory);
 
         // Calculate number of achievements that have been unlocked
@@ -306,9 +306,9 @@ namespace hex::plugin::builtin {
             auto &startNodes = AchievementManager::getAchievementStartNodes();
 
             // Get all achievement category names
-            std::vector<std::string> categories;
+            std::vector<UnlocalizedString> categories;
             categories.reserve(startNodes.size());
-for (const auto &[categoryName, achievements] : startNodes) {
+            for (const auto &[categoryName, achievements] : startNodes) {
                 categories.push_back(categoryName);
             }
 

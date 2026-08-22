@@ -31,7 +31,7 @@ namespace hex::plugin::remote {
         void writeToSource(uint64_t offset, const void* buffer, size_t size) override;
 
         u64 getSourceSize() const override;
-        UnlocalizedString getTypeName() const override { return "hex.plugin.remote.ssh_provider"; }
+        UnlocalizedString getTypeName() const override { return "hex.plugin.remote.ssh_provider"_unlocalized; }
         std::string getName() const override;
 
         [[nodiscard]] const char* getIcon() const override {

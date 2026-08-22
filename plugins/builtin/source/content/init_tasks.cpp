@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
         #if defined(IMHEX_ENABLE_UPDATER)
             bool checkForUpdatesSync() {
-                int checkForUpdates = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
+                int checkForUpdates = ContentRegistry::Settings::read<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.server_contact"_unlocalized, 2);
                 if (checkForUpdates != 1)
                     return true;
 
@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
                         return;
 
                     TaskManager::doLater([updateString] {
-                        ContentRegistry::UserInterface::addTitleBarButton(ICON_TA_DOWNLOAD, ImGuiCustomCol_ToolbarGreen, "hex.builtin.welcome.update.title", [] {
+                        ContentRegistry::UserInterface::addTitleBarButton(ICON_TA_DOWNLOAD, ImGuiCustomCol_ToolbarGreen, "hex.builtin.welcome.update.title"_unlocalized, [] {
                             ImHexApi::System::updateImHex(ImHexApi::System::isNightlyBuild() ? ImHexApi::System::UpdateType::Nightly : ImHexApi::System::UpdateType::Stable);
                         });
 
@@ -51,12 +51,12 @@ namespace hex::plugin::builtin {
                 });
 
                 // Check if there is a telemetry uuid
-                auto uuid = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
+                auto uuid = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.uuid"_untranslated, "");
                 if (uuid.empty()) {
                     // Generate a new uuid
                     uuid = wolv::hash::generateUUID();
                     // Save
-                    ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
+                    ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.uuid"_untranslated, uuid);
                 }
 
                 TaskManager::createBackgroundTask("hex.builtin.task.sending_statistics", [uuid](auto&) {
@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
 
         bool configureUIScale() {
             EventDPIChanged::subscribe([](float, float newScaling) {
-                int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F) * 10.0F);
+                int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.scaling_factor"_unlocalized, 0.0F) * 10.0F);
 
                 float interfaceScaling;
                 if (interfaceScaleSetting == 0)
@@ -113,19 +113,19 @@ namespace hex::plugin::builtin {
         }
 
         bool loadWindowSettings() {
-            bool multiWindowEnabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", false);
+            bool multiWindowEnabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.multi_windows"_unlocalized, false);
             ImHexApi::System::impl::setMultiWindowMode(multiWindowEnabled);
 
-            bool restoreWindowPos = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.restore_window_pos", false);
+            bool restoreWindowPos = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.restore_window_pos"_unlocalized, false);
 
             if (restoreWindowPos) {
                 ImHexApi::System::InitialWindowProperties properties = {};
 
-                properties.maximized = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", false);
-                properties.x       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", 0);
-                properties.y       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", 0);
-                properties.width   = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", 0);
-                properties.height  = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", 0);
+                properties.maximized = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.maximized"_untranslated, false);
+                properties.x       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.x"_untranslated, 0);
+                properties.y       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.y"_untranslated, 0);
+                properties.width   = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.width"_untranslated, 0);
+                properties.height  = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.height"_untranslated, 0);
 
                 ImHexApi::System::impl::setInitialWindowProperties(properties);
             }

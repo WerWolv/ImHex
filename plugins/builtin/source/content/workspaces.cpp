@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
     void loadWorkspaces() {
         WorkspaceManager::reload();
 
-        auto currentWorkspace = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", "Default");
+        auto currentWorkspace = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.curr_workspace"_untranslated, "Default");
         TaskManager::doLater([currentWorkspace] {
             WorkspaceManager::switchWorkspace(currentWorkspace);
         });

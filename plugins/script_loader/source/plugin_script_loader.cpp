@@ -86,7 +86,7 @@ std::vector<const Script*> loadAllScripts() {
     void addScriptsMenu() {
         static std::vector<const Script*> scripts;
         static TaskHolder runnerTask, updaterTask;
-        hex::ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
+        hex::ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.extras"_unlocalized }, 5000, [] {
             static bool menuJustOpened = true;
 
             if (menu::beginMenuEx("hex.script_loader.menu.run_script"_lang, ICON_VS_LIBRARY)) {
@@ -111,7 +111,7 @@ std::vector<const Script*> loadAllScripts() {
                         continue;
 
                     if (menu::menuItem(name.c_str())) {
-                        runnerTask = TaskManager::createTask("hex.script_loader.task.running", ProgressValue::None(), [entryPoint](auto&) {
+                        runnerTask = TaskManager::createTask("hex.script_loader.task.running"_unlocalized, ProgressValue::None(), [entryPoint](auto&) {
                             entryPoint();
                         });
                     }

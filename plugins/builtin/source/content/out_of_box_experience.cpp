@@ -250,7 +250,7 @@ namespace hex::plugin::builtin {
                         if (ImGui::BeginChild("##language_text", ImVec2(availableSize.x, 30_scaled))) {
                             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, textFadeIn - textFadeOut));
                             fonts::Default().push(1.2);
-                            ImGuiExt::TextFormattedCentered("{}", LocalizationManager::get(currLanguage->first, "hex.builtin.setting.interface.language"));
+                            ImGuiExt::TextFormattedCentered("{}", LocalizationManager::get(currLanguage->first, "hex.builtin.setting.interface.language"_unlocalized));
                             fonts::Default().pop();
                             ImGui::PopStyleColor();
                         }
@@ -363,8 +363,8 @@ namespace hex::plugin::builtin {
                             // Draw allow button
                             ImGui::SetCursorPosX(buttonPos(0));
                             if (ImGui::Button("hex.ui.common.allow"_lang, buttonSize)) {
-                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
-                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.server_contact"_unlocalized, 1);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, 1);
                                 page += 1;
                             }
 
@@ -373,8 +373,8 @@ namespace hex::plugin::builtin {
                             // Draw crash logs only button
                             ImGui::SetCursorPosX(buttonPos(1));
                             if (ImGui::Button("hex.builtin.oobe.server_contact.crash_logs_only"_lang, buttonSize)) {
-                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
-                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.server_contact"_unlocalized, 0);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, 1);
                                 page += 1;
                             }
 
@@ -383,8 +383,8 @@ namespace hex::plugin::builtin {
                             // Draw deny button
                             ImGui::SetCursorPosX(buttonPos(2));
                             if (ImGui::Button("hex.ui.common.deny"_lang, buttonSize)) {
-                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
-                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 0);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.server_contact"_unlocalized, 0);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, 0);
                                 page += 1;
                             }
 
@@ -442,9 +442,9 @@ namespace hex::plugin::builtin {
 
                 if (backgroundFadeOut >= 1.0F) {
                     if (tutorialEnabled) {
-                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
+                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction"_unlocalized);
                     } else {
-                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", false);
+                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.achievement_popup"_untranslated, false);
                     }
 
                     TaskManager::doLater([] {
@@ -464,14 +464,14 @@ namespace hex::plugin::builtin {
         #endif
 
         // Check if there is a telemetry uuid
-        s_uuid = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
+        s_uuid = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.uuid"_untranslated, "");
 
         if (s_uuid.empty()) {
             // Generate a new UUID
             s_uuid = wolv::hash::generateUUID();
 
             // Save UUID to settings
-            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", s_uuid);
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.uuid"_untranslated, s_uuid);
         }
 
         EventFirstLaunch::subscribe([] {

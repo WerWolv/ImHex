@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
 
             ImHexApi::Provider::openProvider(provider);
 
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out"_unlocalized, "hex.builtin.achievement.starting_out.open_file.name"_unlocalized);
 
             glfwRequestWindowAttention(ImHexApi::System::getMainWindowHandle());
             glfwFocusWindow(ImHexApi::System::getMainWindowHandle());
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            openFileWithProvider("hex.builtin.provider.file", path);
+            openFileWithProvider("hex.builtin.provider.file"_unlocalized, path);
         });
     }
 
@@ -302,7 +302,7 @@ namespace hex::plugin::builtin {
 
         RequestOpenWindow::subscribe([](const std::string &name) {
             if (name == "Create File") {
-                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
                 ImHexApi::Provider::openProvider(newProvider);
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
@@ -381,7 +381,7 @@ namespace hex::plugin::builtin {
 
         EventImHexStartupFinished::subscribe([] {
             const auto& currVersion = ImHexApi::System::getImHexVersion();
-            const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
+            const auto prevLaunchVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.prev_launch_version"_untranslated, "");
 
             const auto forceOobe = getEnvironmentVariable("IMHEX_FORCE_OOBE");
             if (prevLaunchVersion.empty() || (forceOobe.has_value() && *forceOobe != "0")) {
@@ -394,14 +394,14 @@ namespace hex::plugin::builtin {
             if (currVersion != prevLaunchVersionParsed) {
                 EventImHexUpdated::post(prevLaunchVersionParsed, currVersion);
 
-                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", currVersion.get(false));
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.prev_launch_version"_untranslated, currVersion.get(false));
             }
         });
 
         EventWindowDeinitializing::subscribe([](GLFWwindow *window) {
             WorkspaceManager::exportToFile();
             if (auto workspace = WorkspaceManager::getCurrentWorkspace(); workspace != WorkspaceManager::getWorkspaces().end())
-                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.curr_workspace"_untranslated, workspace->first);
 
             {
                 int x = 0, y = 0, width = 0, height = 0, maximized = 0;
@@ -409,11 +409,11 @@ namespace hex::plugin::builtin {
                 glfwGetWindowSize(window, &width, &height);
                 maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
-                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.x"_untranslated, x);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.y"_untranslated, y);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.width"_untranslated, width);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.height"_untranslated, height);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window.maximized"_untranslated, maximized);
             }
         });
 
@@ -518,7 +518,7 @@ namespace hex::plugin::builtin {
         });
 
         RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider, TaskHolder *task) {
-            *task = TaskManager::createBlockingTask("hex.builtin.provider.opening", ProgressValue::None(), [provider]() {
+            *task = TaskManager::createBlockingTask("hex.builtin.provider.opening"_unlocalized, ProgressValue::None(), [provider]() {
                 auto result = provider->open();
                 if (result.isFailure()) {
                     ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, result.getErrorMessage()));

@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupSelect::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.select";
+        return "hex.builtin.view.hex_editor.menu.edit.select"_unlocalized;
     }
 
     bool PopupSelect::canBePinned() const {

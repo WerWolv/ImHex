@@ -17,24 +17,24 @@
 
 namespace hex::plugin::builtin {
 
-    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
+    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name"_unlocalized, ICON_VS_DATABASE) {
         // Handle tree style setting changes
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.pattern_tree_style"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_treeStyle = ui::PatternDrawer::TreeStyle(value.get<int>(0));
             for (auto &drawers : m_patternDrawer.all())
                 for (auto &[id, drawer] : drawers)
                     drawer->setTreeStyle(m_treeStyle);
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.pattern_data_row_bg"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_rowColoring = bool(value.get<int>(false));
             for (auto &drawers : m_patternDrawer.all())
                 for (auto &[id, drawer] : drawers)
                     drawer->enableRowColoring(m_rowColoring);
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.pattern_data_max_filter_items", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.pattern_data_max_filter_items"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_maxFilterItems = value.get<u32>(128);
             for (auto &drawers : m_patternDrawer.all())
                 for (auto &[id, drawer] : drawers)

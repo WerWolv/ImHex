@@ -6,6 +6,7 @@
 #include <hex/helpers/fs.hpp>
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <functional>
@@ -181,8 +182,7 @@ EXPORT_MODULE namespace hex {
 
             class DropDown : public Widget {
             public:
-                explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items.begin(), items.end()), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
-                explicit DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
+                explicit DropDown(const std::vector<UnlocalizedString> &items, const std::vector<nlohmann::json> &settingsValues, nlohmann::json defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(std::move(defaultItem)) { }
 
                 bool draw(const std::string &name) override;
 
@@ -370,8 +370,8 @@ EXPORT_MODULE namespace hex {
                 registerChangeHandler();
                 if (!m_value.has_value()) {
                     m_value = read<T>(
-                        UnlocalizedCategory.value.data(),
-                        UnlocalizedName.value.data(),
+                        UnlocalizedString(UnlocalizedCategory.value.data()),
+                        UnlocalizedString(UnlocalizedName.value.data()),
                         m_defaultValue
                     );
                 }
@@ -382,8 +382,8 @@ EXPORT_MODULE namespace hex {
             void set(T value) {
                 registerChangeHandler();
                 write<T>(
-                    UnlocalizedCategory.value.data(),
-                    UnlocalizedName.value.data(),
+                    UnlocalizedString(UnlocalizedCategory.value.data()),
+                    UnlocalizedString(UnlocalizedName.value.data()),
                     std::move(value)
                 );
             }
@@ -406,7 +406,7 @@ EXPORT_MODULE namespace hex {
                 if (m_onChangeId > 0)
                     return;
 
-                m_onChangeId = onChange(UnlocalizedCategory.value.data(), UnlocalizedName.value.data(), [this](const SettingsValue &value) {
+                m_onChangeId = onChange(UnlocalizedString(UnlocalizedCategory.value.data()), UnlocalizedString(UnlocalizedName.value.data()), [this](const SettingsValue &value) {
                     m_value = value.get<T>(m_defaultValue);
                 });
             }

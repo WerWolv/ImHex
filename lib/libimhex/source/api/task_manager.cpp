@@ -424,14 +424,14 @@ namespace hex {
         );
     }
 
-    TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void(Task &)> function) {
-        log::debug("Creating background task {}", unlocalizedName.get());
-        return createTask(unlocalizedName, ProgressValue::None(), true, false, std::move(function));
+    TaskHolder TaskManager::createBackgroundTask(const std::string &name, std::function<void(Task &)> function) {
+        log::debug("Creating background task {}", name);
+        return createTask(UnlocalizedString(name), ProgressValue::None(), true, false, std::move(function));
     }
 
-    TaskHolder TaskManager::createBackgroundTask(const UnlocalizedString &unlocalizedName, std::function<void()> function) {
-        log::debug("Creating background task {}", unlocalizedName.get());
-        return createTask(unlocalizedName, ProgressValue::None(), true, false,
+    TaskHolder TaskManager::createBackgroundTask(const std::string &name, std::function<void()> function) {
+        log::debug("Creating background task {}", name);
+        return createTask(UnlocalizedString(name), ProgressValue::None(), true, false,
             [function = std::move(function)](Task&) {
                 function();
             }

@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
         std::vector<IntelHexProvider::Description> getDataDescription() const override;
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.motorola_srec";
+            return "hex.builtin.provider.motorola_srec"_unlocalized;
         }
 
         std::vector<fs::ItemFilter> getValidExtensions() const override;

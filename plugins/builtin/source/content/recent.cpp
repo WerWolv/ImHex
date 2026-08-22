@@ -91,7 +91,7 @@ namespace hex::plugin::builtin::recent {
         return { result.begin(), result.end() };
     }
 
-    PopupAutoBackups::PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", ICON_VS_ARCHIVE, true, true) {
+    PopupAutoBackups::PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups"_unlocalized, ICON_VS_ARCHIVE, true, true) {
         m_backups = getAutoBackups();
     }
 
@@ -121,7 +121,7 @@ namespace hex::plugin::builtin::recent {
         if (ProjectManager::isDefaultProject())
             return;
 
-        if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
+        if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.save_recent_providers"_unlocalized, true)) {
             return;
         }
         auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin::recent {
     void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
         (void)EventProviderOpened::subscribe([](const prv::Provider *provider) {
-            if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
+            if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.save_recent_providers"_unlocalized, true)) {
                 auto fileName = fmt::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 // Do not save to recents if the provider is part of a project
@@ -295,7 +295,7 @@ namespace hex::plugin::builtin::recent {
             }
         }
 
-        auto provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
+        auto provider = ImHexApi::Provider::createProvider(UntranslatedString(recentEntry.type), true);
         if (provider != nullptr) {
             provider->loadSettings(recentEntry.data);
 
@@ -312,7 +312,7 @@ namespace hex::plugin::builtin::recent {
             }
         }
 
-        if (unlocalizedName == std::string("project")) {
+        if (unlocalizedName == UntranslatedString("project")) {
             return ICON_VS_NOTEBOOK;
         }
 
@@ -336,7 +336,7 @@ namespace hex::plugin::builtin::recent {
                     ImGui::PushID(&recentEntry);
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
-                    if (ImGuiExt::IconHyperlink(getProviderIcon(recentEntry.type), hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
+                    if (ImGuiExt::IconHyperlink(getProviderIcon(UntranslatedString(recentEntry.type)), hex::limitStringLength(recentEntry.displayName, 32).c_str())) {
                         entryToLoad = &recentEntry;
                     }
                     ImGui::SetItemTooltip("%s", recentEntry.displayName.c_str());
@@ -421,12 +421,12 @@ namespace hex::plugin::builtin::recent {
             return;
         #endif
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file"_unlocalized }, 1200, [] {
             if (menu::beginMenuEx("hex.builtin.menu.file.open_recent"_lang, ICON_VS_ARCHIVE, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentEntries = s_recentEntries;
                 for (auto &recentEntry : recentEntries) {
-                    if (menu::menuItemEx(recentEntry.displayName.c_str(), getProviderIcon(recentEntry.type))) {
+                    if (menu::menuItemEx(recentEntry.displayName.c_str(), getProviderIcon(UntranslatedString(recentEntry.type)))) {
                         loadRecentEntry(recentEntry);
                     }
                 }

@@ -20,7 +20,7 @@ EXPORT_MODULE namespace hex {
             void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions, bool hidden);
 
             using ProviderCreationFunction = std::function<std::shared_ptr<prv::Provider>()>;
-            void add(const std::string &typeName, ProviderCreationFunction creationFunction);
+            void add(const UnlocalizedString &typeName, ProviderCreationFunction creationFunction);
 
             struct Entry {
                 UnlocalizedString unlocalizedName;

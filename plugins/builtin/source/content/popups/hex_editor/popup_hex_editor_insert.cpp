@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupInsert::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.insert";
+        return "hex.builtin.view.hex_editor.menu.edit.insert"_unlocalized;
     }
 
     void PopupInsert::insert(u64 address, size_t size) {

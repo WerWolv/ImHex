@@ -16,7 +16,7 @@ namespace hex::plugin::diffing {
 
     using ContentRegistry::Diffing::DifferenceType;
 
-    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF) {
+    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name"_unlocalized, ICON_VS_DIFF) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             this->reset();
@@ -118,7 +118,7 @@ namespace hex::plugin::diffing {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", ProgressValue::Size(commonSize), [this, providerA, providerB](Task &task) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing"_unlocalized, ProgressValue::Size(commonSize), [this, providerA, providerB](Task &task) {
             task.setInterruptCallback([this]{ m_analysisInterrupted = true; });
 
             for (auto &column : m_columns) {
@@ -465,17 +465,17 @@ namespace hex::plugin::diffing {
     }
 
     void ViewDiff::registerMenuItems() {
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1700, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized }, 1700, this);
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.diffing.view.diff.menu.file.jumping" }, ICON_TA_ARROWS_MOVE_HORIZONTAL, 1710,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file"_unlocalized, "hex.diffing.view.diff.menu.file.jumping"_unlocalized }, ICON_TA_ARROWS_MOVE_HORIZONTAL, 1710,
                                                            []{},
                                                            [this]{ return (bool) m_analyzed; },
                                                            this);
 
         ContentRegistry::UserInterface::addMenuItem({
-                "hex.builtin.menu.file",
-                "hex.diffing.view.diff.menu.file.jumping",
-                "hex.diffing.view.diff.menu.file.jumping.prev_diff"
+                "hex.builtin.menu.file"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping.prev_diff"_unlocalized
             },
             ICON_TA_ARROW_BAR_TO_LEFT_DASHED,
             1720,
@@ -511,9 +511,9 @@ namespace hex::plugin::diffing {
         );
 
         ContentRegistry::UserInterface::addMenuItem({
-                "hex.builtin.menu.file",
-                "hex.diffing.view.diff.menu.file.jumping",
-                "hex.diffing.view.diff.menu.file.jumping.next_diff"
+                "hex.builtin.menu.file"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping.next_diff"_unlocalized
             },
             ICON_TA_ARROW_BAR_TO_RIGHT_DASHED,
             1730,

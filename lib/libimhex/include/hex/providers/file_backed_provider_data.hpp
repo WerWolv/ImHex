@@ -34,7 +34,7 @@ namespace hex {
 
     struct FileBackedProviderDataType {
         std::string typeId;
-        std::string displayName;
+        UnlocalizedString displayName;
         std::string displayIcon;
         std::vector<fs::ItemFilter> extensions;
     };
@@ -99,7 +99,7 @@ namespace hex {
 
         struct Descriptor {
             std::string typeId;
-            std::string displayName;
+            UnlocalizedString displayName;
             std::string displayIcon;
             std::vector<fs::ItemFilter> extensions;
             std::function<SerializedData(const T &)> encode;

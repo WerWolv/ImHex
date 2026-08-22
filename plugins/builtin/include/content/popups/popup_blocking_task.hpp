@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
 
     class PopupBlockingTask : public Popup<PopupBlockingTask> {
     public:
-        PopupBlockingTask(TaskHolder &&task) : hex::Popup<PopupBlockingTask>("hex.builtin.popup.blocking_task.title", ICON_TA_SETTINGS_COG, false), m_task(std::move(task)) { }
+        PopupBlockingTask(TaskHolder &&task) : hex::Popup<PopupBlockingTask>("hex.builtin.popup.blocking_task.title"_unlocalized, ICON_TA_SETTINGS_COG, false), m_task(std::move(task)) { }
 
         void drawContent() override {
             ImGui::TextUnformatted("hex.builtin.popup.blocking_task.desc"_lang);

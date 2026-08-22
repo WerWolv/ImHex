@@ -256,7 +256,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::CommandPalette::add(
             ContentRegistry::CommandPalette::Type::SymbolCommand,
             "=",
-            "hex.builtin.command.calc.desc",
+            "hex.builtin.command.calc.desc"_unlocalized,
             [](auto input) {
                 wolv::math_eval::MathEvaluator<long double> evaluator;
                 evaluator.registerStandardVariables();
@@ -285,7 +285,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::CommandPalette::add(
             ContentRegistry::CommandPalette::Type::SymbolCommand,
             "@",
-            "hex.builtin.command.goto.desc",
+            "hex.builtin.command.goto.desc"_unlocalized,
             [](auto input) {
                 wolv::math_eval::MathEvaluator<i64> evaluator;
                 evaluator.registerStandardVariables();
@@ -313,7 +313,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::CommandPalette::add(
             ContentRegistry::CommandPalette::Type::KeywordCommand,
             "/web",
-            "hex.builtin.command.web.desc",
+            "hex.builtin.command.web.desc"_unlocalized,
             [](auto input) {
                 return fmt::format("hex.builtin.command.web.result"_lang, input.data());
             },
@@ -325,7 +325,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::CommandPalette::add(
             ContentRegistry::CommandPalette::Type::SymbolCommand,
             "$",
-            "hex.builtin.command.cmd.desc",
+            "hex.builtin.command.cmd.desc"_unlocalized,
             [](auto input) {
                 return fmt::format("hex.builtin.command.cmd.result"_lang, input.data());
             },
@@ -337,10 +337,10 @@ namespace hex::plugin::builtin {
                     if (!parts.empty()) {
                         if (parts.size() == 2 && parts[0] == "debug") {
                             if (parts[1] == "on") {
-                                ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.debug_mode_enabled", true);
+                                ContentRegistry::Settings::write<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.debug_mode_enabled"_untranslated, true);
                                 ui::ToastInfo::open("Debug mode enabled!");
                             } else if (parts[1] == "off") {
-                                ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.debug_mode_enabled", false);
+                                ContentRegistry::Settings::write<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.debug_mode_enabled"_untranslated, false);
                                 ui::ToastInfo::open("Debug mode disabled!");
                             }
                         }
@@ -419,7 +419,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::CommandPalette::add(
                     ContentRegistry::CommandPalette::Type::SymbolCommand,
                     "%",
-                    "hex.builtin.command.convert.desc",
+                    "hex.builtin.command.convert.desc"_unlocalized,
                     handleConversionCommand);
 
         ContentRegistry::CommandPalette::addHandler(

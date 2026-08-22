@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::MCP::registerTool(romfs::get("mcp/tools/open_file.json").string(), [](const nlohmann::json &data) -> nlohmann::json {
             auto filePath = data.at("file_path").get<std::string>();
 
-            auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+            auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file"_unlocalized, true);
             if (auto *fileProvider = dynamic_cast<FileProvider*>(provider.get()); fileProvider != nullptr) {
                 fileProvider->setPickedPath(filePath);
 

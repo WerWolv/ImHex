@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
     class PopupTasksWaiting : public Popup<PopupTasksWaiting> {
     public:
         PopupTasksWaiting(std::function<void()> onFinish)
-            : hex::Popup<PopupTasksWaiting>("hex.builtin.popup.waiting_for_tasks.title", ICON_TA_SETTINGS_COG, false),
+            : hex::Popup<PopupTasksWaiting>("hex.builtin.popup.waiting_for_tasks.title"_unlocalized, ICON_TA_SETTINGS_COG, false),
               m_onFinish(std::move(onFinish)){ }
 
         void drawContent() override {

@@ -30,7 +30,13 @@ namespace hex::plugin::builtin {
      */
     class NodeCustomInput : public dp::Node {
     public:
-        NodeCustomInput() : Node("hex.builtin.nodes.custom.input.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input") }) { }
+        NodeCustomInput() : Node(
+            "hex.builtin.nodes.custom.input.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"_unlocalized)
+            }
+        ) { }
+
         ~NodeCustomInput() override = default;
 
         void drawNode() override {
@@ -38,7 +44,7 @@ namespace hex::plugin::builtin {
             // Draw combo box to select the type of the input
             if (ImGui::Combo("##type", &m_type, "Integer\0Float\0Buffer\0")) {
                 this->setAttributes({
-                    { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
+                    { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input"_unlocalized) }
                 });
                 this->markPersistentDataChanged();
             }
@@ -86,7 +92,7 @@ namespace hex::plugin::builtin {
 
             this->setUnlocalizedTitle(m_name);
             this->setAttributes({
-                { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
+                { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input"_unlocalized) }
             });
         }
 
@@ -102,7 +108,13 @@ namespace hex::plugin::builtin {
      */
     class NodeCustomOutput : public dp::Node {
     public:
-        NodeCustomOutput() : Node("hex.builtin.nodes.custom.output.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeCustomOutput() : Node(
+            "hex.builtin.nodes.custom.output.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
+
         ~NodeCustomOutput() override = default;
 
         void drawNode() override {
@@ -111,7 +123,7 @@ namespace hex::plugin::builtin {
             // Draw combo box to select the type of the output
             if (ImGui::Combo("##type", &m_type, "Integer\0Float\0Buffer\0")) {
                 this->setAttributes({
-                    { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
+                    { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output"_unlocalized) }
                 });
                 this->markPersistentDataChanged();
             }
@@ -158,7 +170,7 @@ namespace hex::plugin::builtin {
 
             this->setUnlocalizedTitle(m_name);
             this->setAttributes({
-                { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
+                { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output"_unlocalized) }
             });
         }
 
@@ -174,7 +186,7 @@ namespace hex::plugin::builtin {
      */
     class NodeCustom : public dp::Node {
     public:
-        explicit NodeCustom(ViewDataProcessor *dataProcessor) : Node("hex.builtin.nodes.custom.custom.header", {}), m_dataProcessor(dataProcessor) {
+        explicit NodeCustom(ViewDataProcessor *dataProcessor) : Node("hex.builtin.nodes.custom.custom.header"_unlocalized, {}), m_dataProcessor(dataProcessor) {
             this->setUnlocalizedTitle(m_name);
         }
         ~NodeCustom() override = default;
@@ -205,7 +217,7 @@ namespace hex::plugin::builtin {
 
                 // Draw edit button
                 if (ImGui::Button("hex.builtin.nodes.custom.custom.edit"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing()))) {
-                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.custom_node.name");
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor"_unlocalized, "hex.builtin.achievement.data_processor.custom_node.name"_unlocalized);
 
                     // Open the custom node's workspace
                     m_dataProcessor->getWorkspaceStack().push_back(&m_workspace);
@@ -328,26 +340,26 @@ namespace hex::plugin::builtin {
             // Search through all nodes in the workspace and add all input and output nodes to the result
             for (auto &node : m_workspace.nodes) {
                 if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr)
-                    result.emplace_back(dp::Attribute::IOType::In, inputNode->getType(), inputNode->getName());
+                    result.emplace_back(dp::Attribute::IOType::In, inputNode->getType(), UntranslatedString(inputNode->getName()));
                 else if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr)
-                    result.emplace_back(dp::Attribute::IOType::Out, outputNode->getType(), outputNode->getName());
+                    result.emplace_back(dp::Attribute::IOType::Out, outputNode->getType(), UntranslatedString(outputNode->getName()));
             }
 
             return result;
         }
 
-        [[nodiscard]] NodeCustomInput* findInput(const std::string &name) const {
+        [[nodiscard]] NodeCustomInput* findInput(const UnlocalizedString &name) const {
             for (auto &node : m_workspace.nodes) {
-                if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && inputNode->getName() == name)
+                if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && UnlocalizedString(inputNode->getName()) == name)
                     return inputNode;
             }
 
             return nullptr;
         }
 
-        [[nodiscard]] NodeCustomOutput* findOutput(const std::string &name) const {
+        [[nodiscard]] NodeCustomOutput* findOutput(const UnlocalizedString &name) const {
             for (auto &node : m_workspace.nodes) {
-                if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && outputNode->getName() == name)
+                if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && UnlocalizedString(outputNode->getName()) == name)
                     return outputNode;
             }
 
@@ -365,12 +377,12 @@ namespace hex::plugin::builtin {
     };
 
     ViewDataProcessor::ViewDataProcessor()
-        : View::Window("hex.builtin.view.data_processor.name", ICON_VS_CHIP),
+        : View::Window("hex.builtin.view.data_processor.name"_unlocalized, ICON_VS_CHIP),
           m_mainWorkspace({
               .typeId = "hex.builtin.data-processor",
-              .displayName = "hex.builtin.view.data_processor.name",
+              .displayName = "hex.builtin.view.data_processor.name"_unlocalized,
               .displayIcon = ICON_VS_CHIP,
-              .extensions = { { "hex.builtin.view.data_processor.name", "hexnode" } },
+              .extensions = { { "hex.builtin.view.data_processor.name"_lang, "hexnode" } },
               .encode = [](const Workspace &workspace) {
                   const auto data = ViewDataProcessor::saveNodes(workspace).dump(4);
                   return FileBackedProviderData<Workspace>::SerializedData(data.begin(), data.end());
@@ -385,9 +397,9 @@ namespace hex::plugin::builtin {
                   }
               }
           }) {
-        ContentRegistry::DataProcessor::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
-        ContentRegistry::DataProcessor::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
-        ContentRegistry::DataProcessor::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
+        ContentRegistry::DataProcessor::add<NodeCustom>("hex.builtin.nodes.custom"_unlocalized, "hex.builtin.nodes.custom.custom"_unlocalized, this);
+        ContentRegistry::DataProcessor::add<NodeCustomInput>("hex.builtin.nodes.custom"_unlocalized, "hex.builtin.nodes.custom.input"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeCustomOutput>("hex.builtin.nodes.custom"_unlocalized, "hex.builtin.nodes.custom.output"_unlocalized);
 
         m_mainWorkspace.setChangedCallback([this](prv::Provider *provider) {
             auto &mainWorkspace = m_mainWorkspace.get(provider);
@@ -423,7 +435,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Import Nodes */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 5600, Shortcut::None, [this]{
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized, "hex.builtin.menu.file.import.data_processor"_unlocalized }, ICON_VS_CHIP, 5600, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
@@ -436,7 +448,7 @@ namespace hex::plugin::builtin {
         }, ImHexApi::Provider::isValid);
 
         /* Export Nodes */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, ICON_VS_CHIP, 8050, Shortcut::None, [this]{
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.export"_unlocalized, "hex.builtin.menu.file.export.data_processor"_unlocalized }, ICON_VS_CHIP, 8050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&, this](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);
@@ -568,7 +580,7 @@ namespace hex::plugin::builtin {
         // Reset any potential node errors
         workspace.currNodeError.reset();
 
-        m_evaluationTask = TaskManager::createTask("hex.builtin.task.evaluating_nodes", ProgressValue::None(), [this, workspace = &workspace](Task& task) {
+        m_evaluationTask = TaskManager::createTask("hex.builtin.task.evaluating_nodes"_unlocalized, ProgressValue::None(), [this, workspace = &workspace](Task& task) {
             task.setInterruptCallback([]{
                 dp::Node::interrupt();
             });
@@ -777,7 +789,7 @@ namespace hex::plugin::builtin {
                 workspace.nodes.push_back(std::move(node));
 
                 m_mainWorkspace.markChanged();
-                AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.place_node.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor"_unlocalized, "hex.builtin.achievement.data_processor.place_node.name"_unlocalized);
             }
 
             ImGui::EndPopup();
@@ -1100,7 +1112,7 @@ namespace hex::plugin::builtin {
 
                     m_mainWorkspace.markChanged();
 
-                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.create_connection.name");
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor"_unlocalized, "hex.builtin.achievement.data_processor.create_connection.name"_unlocalized);
                 } while (false);
             }
         }
@@ -1196,7 +1208,7 @@ namespace hex::plugin::builtin {
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
-                if (data.contains("name") && entry.unlocalizedName == data["type"].get<std::string>())
+                if (data.contains("name") && entry.unlocalizedName == UntranslatedString(data["type"].get<std::string>()))
                     newNode = entry.creatorFunction();
             }
 

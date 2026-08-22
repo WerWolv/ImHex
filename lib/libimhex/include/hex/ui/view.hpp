@@ -220,7 +220,7 @@ namespace hex {
 
     class View::FullScreen : public View {
     public:
-        explicit FullScreen() : View("FullScreen", "") {}
+        explicit FullScreen() : View("FullScreen"_untranslated, "") {}
 
         void draw(ImGuiWindowFlags extraFlags = ImGuiWindowFlags_None) final;
     };

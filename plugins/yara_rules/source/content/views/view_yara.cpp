@@ -18,10 +18,10 @@ namespace hex::plugin::yara {
     using namespace wolv::literals;
 
     ViewYara::ViewYara()
-        : View::Window("hex.yara_rules.view.yara.name", ICON_VS_BUG),
+        : View::Window("hex.yara_rules.view.yara.name"_unlocalized, ICON_VS_BUG),
           m_rulePaths({
               .typeId = "hex.yara.rules",
-              .displayName = "hex.yara_rules.view.yara.name",
+              .displayName = "hex.yara_rules.view.yara.name"_unlocalized,
               .displayIcon = ICON_VS_BUG,
               .extensions = { { "YARA Rules", "hexyara" } },
               .encode = [](const RulePaths &rulePaths) {
@@ -281,7 +281,7 @@ namespace hex::plugin::yara {
         if (provider == nullptr)
             return;
 
-        m_matcherTask = TaskManager::createTask("hex.yara_rules.view.yara.matching", ProgressValue::Count(m_rulePaths->size()), [this, provider](auto &task) {
+        m_matcherTask = TaskManager::createTask("hex.yara_rules.view.yara.matching"_unlocalized, ProgressValue::Count(m_rulePaths->size()), [this, provider](auto &task) {
             std::vector<YaraRule::Result> results;
             for (const auto &[fileName, filePath] : *m_rulePaths) {
                 YaraRule rule(filePath);

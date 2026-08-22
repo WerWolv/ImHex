@@ -756,45 +756,45 @@ for (const auto &path : m_paths) {
         /* General */
         {
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
-            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "", "hex.builtin.setting.general.max_mem_file_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
-                .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc");
-            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.pattern_data_max_filter_items", 128, 32, 1024);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, {}, "hex.builtin.setting.general.show_tips"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, {}, "hex.builtin.setting.general.save_recent_providers"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general"_unlocalized, {}, "hex.builtin.setting.general.max_mem_file_size"_unlocalized, 512_MiB, 0_bytes, 32_GiB, 1_MiB)
+                .setTooltip("hex.builtin.setting.general.max_mem_file_size.desc"_unlocalized);
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.patterns"_unlocalized, "hex.builtin.setting.general.pattern_data_max_filter_items"_unlocalized, 128, 32, 1024);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.data_inspector_exact_size_only", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, {}, "hex.builtin.setting.general.data_inspector_exact_size_only"_unlocalized, false);
 
-            auto suggestPatterns = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.suggest_patterns", true);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.search_patterns_online", true).setEnabledCallback([=] {
+            auto suggestPatterns = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.patterns"_unlocalized, "hex.builtin.setting.general.suggest_patterns"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.patterns"_unlocalized, "hex.builtin.setting.general.search_patterns_online"_unlocalized, true).setEnabledCallback([=] {
                 return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();
             });
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_apply_patterns", false).setEnabledCallback([=] {
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.patterns"_unlocalized, "hex.builtin.setting.general.auto_apply_patterns"_unlocalized, false).setEnabledCallback([=] {
                 return static_cast<Widgets::Checkbox&>(suggestPatterns.getWidget()).isChecked();
             });
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.network"_unlocalized, "hex.builtin.setting.general.network_interface"_unlocalized, false);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.mcp_server", false)
-                .setTooltip("hex.builtin.setting.general.mcp_server.desc");
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.network"_unlocalized, "hex.builtin.setting.general.mcp_server"_unlocalized, false)
+                .setTooltip("hex.builtin.setting.general.mcp_server.desc"_unlocalized);
 
             #if !defined(OS_WEB)
                 const auto trackingAllowed = ImHexApi::System::anonymousTrackingAllowed();
-                ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact")
+                ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.network"_unlocalized, "hex.builtin.setting.general.server_contact"_unlocalized)
                     .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true)
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.network"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, true)
                     .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
             #endif
 
 
-            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.auto_backup_time");
-            ContentRegistry::Settings::add<Widgets::Spacer>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.spacer");
+            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.auto_backup_time"_unlocalized);
+            ContentRegistry::Settings::add<Widgets::Spacer>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, {});
 
-            auto fileBackupEnabledWidget = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.enable", true);
-            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.max_size", 512_MiB, 0_bytes, 32_GiB, 1_MiB)
+            auto fileBackupEnabledWidget = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.file_backup.enable"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.file_backup.max_size"_unlocalized, 512_MiB, 0_bytes, 32_GiB, 1_MiB)
                 .setEnabledCallback([=] {
                     return static_cast<Widgets::Checkbox&>(fileBackupEnabledWidget.getWidget()).isChecked();
                 });
-            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.general", "hex.builtin.setting.general.backups", "hex.builtin.setting.general.backups.file_backup.extension", ".bak")
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.file_backup.extension"_unlocalized, ".bak")
                 .setEnabledCallback([=] {
                     return static_cast<Widgets::Checkbox&>(fileBackupEnabledWidget.getWidget()).isChecked();
                 });
@@ -802,7 +802,8 @@ for (const auto &path : m_paths) {
 
         /* Interface */
         {
-            auto themeNames = ThemeManager::getThemeNames();
+            auto themeNamesStrings = ThemeManager::getThemeNames();
+            std::vector<UnlocalizedString> themeNames = { themeNamesStrings.begin(), themeNamesStrings.end() };
             std::vector<nlohmann::json> themeJsons = { };
             themeJsons.reserve(themeNames.size());
             for (const auto &themeName : themeNames)
@@ -811,22 +812,23 @@ for (const auto &path : m_paths) {
             themeNames.emplace(themeNames.begin(), ThemeManager::NativeTheme);
             themeJsons.emplace(themeJsons.begin(), ThemeManager::NativeTheme);
 
-            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.color",
-                                                              themeNames,
-                                                              themeJsons,
-                                                              "Dark").setChangedCallback([](auto &widget) {
-                                                                  auto dropDown = static_cast<Widgets::DropDown *>(&widget);
+            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.color"_unlocalized,
+                themeNames,
+                themeJsons,
+                "Dark"
+            ).setChangedCallback([](auto &widget) {
+                auto dropDown = static_cast<Widgets::DropDown *>(&widget);
 
-                                                                  if (dropDown->getValue() == ThemeManager::NativeTheme)
-                                                                      ImHexApi::System::enableSystemThemeDetection(true);
-                                                                  else {
-                                                                      ImHexApi::System::enableSystemThemeDetection(false);
-                                                                      ThemeManager::changeTheme(dropDown->getValue());
-                                                                  }
-                                                              });
+                if (dropDown->getValue() == ThemeManager::NativeTheme)
+                    ImHexApi::System::enableSystemThemeDetection(true);
+                else {
+                    ImHexApi::System::enableSystemThemeDetection(false);
+                    ThemeManager::changeTheme(dropDown->getValue());
+                }
+            });
 
             ContentRegistry::Settings::add<Widgets::ColorPicker>(
-                "hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.accent",
+                "hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.accent"_unlocalized,
                 ImVec4(0.26f, 0.59f, 0.98f, 0.40f),
                 ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoDragDrop
             )
@@ -835,15 +837,15 @@ for (const auto &path : m_paths) {
                 ThemeManager::setAccentColor(colorPicker->getColor());
             });
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_titlebar_backdrop", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.show_titlebar_backdrop"_unlocalized, true);
 
-            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor")
+            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.scaling_factor"_unlocalized)
             .setChangedCallback([](auto &widget) {
                 EventDPIChanged::post(ImHexApi::System::getGlobalScale(), static_cast<ScalingWidget&>(widget).getValue());
             });
 
             #if defined (OS_WEB)
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.crisp_scaling", false)
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.crisp_scaling"_unlocalized, false)
                 .setChangedCallback([](Widgets::Widget &widget) {
                     auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 
@@ -857,13 +859,13 @@ for (const auto &path : m_paths) {
                 });
             #endif
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.always_show_provider_tabs", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.show_header_command_palette", true);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.display_shortcut_highlights", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.pattern_data_row_bg"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.always_show_provider_tabs"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.show_header_command_palette"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.style"_unlocalized, "hex.builtin.setting.interface.display_shortcut_highlights"_unlocalized, true);
 
             {
-                std::vector<std::string> languageNames;
+                std::vector<UnlocalizedString> languageNames;
                 std::vector<nlohmann::json> languageCodes;
 
                 {
@@ -883,11 +885,11 @@ for (const auto &path : m_paths) {
                     languageCodes.emplace_back(languageCode);
                 }
 
-                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+                ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.language"_unlocalized, "hex.builtin.setting.interface.language"_unlocalized, languageNames, languageCodes, "en-US");
             }
 
-            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
-            ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.language"_unlocalized, "hex.builtin.setting.interface.wiki_explain_language"_unlocalized, "en");
+            ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.fps"_unlocalized);
 
             #if defined (OS_LINUX)
                 constexpr static auto MultiWindowSupportEnabledDefault = 0;
@@ -895,66 +897,74 @@ for (const auto &path : m_paths) {
                 constexpr static auto MultiWindowSupportEnabledDefault = 1;
             #endif
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.multi_windows"_unlocalized, MultiWindowSupportEnabledDefault).requiresRestart();
 
             #if !defined(OS_WEB)
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.native_window_decorations", !getDefaultBorderlessWindowMode()).requiresRestart();
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.native_window_decorations"_unlocalized, !getDefaultBorderlessWindowMode()).requiresRestart();
             #endif
 
             #if defined (OS_MACOS)
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.use_native_menu_bar", true);
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.use_native_menu_bar"_unlocalized, true);
             #endif
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.randomize_window_title", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.randomize_window_title"_unlocalized, false);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.show_task_finish_notification", true)
-                .setTooltip("hex.builtin.setting.interface.show_task_finish_notification.desc");
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.restore_window_pos"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.window"_unlocalized, "hex.builtin.setting.interface.show_task_finish_notification"_unlocalized, true)
+                .setTooltip("hex.builtin.setting.interface.show_task_finish_notification.desc"_unlocalized);
 
-            ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.show_selection", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.show_highlights", true);
-            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.byte_padding", 0, 0, 50);
-            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.char_padding", 0, 0, 50);
+            ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.highlight_color"_unlocalized, ImColor(0x80, 0x80, 0xC0, 0x60));
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.sync_scrolling"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.show_selection"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.show_highlights"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.byte_padding"_unlocalized, 0, 0, 50);
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.char_padding"_unlocalized, 0, 0, 50);
 
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.pattern_parent_highlighting", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.pattern_parent_highlighting"_unlocalized, true);
 
-            std::vector<std::string> pasteBehaviourNames = { "hex.builtin.setting.hex_editor.paste_behaviour.none", "hex.builtin.setting.hex_editor.paste_behaviour.everything", "hex.builtin.setting.hex_editor.paste_behaviour.selection" };
-            std::vector<nlohmann::json> pasteBehaviourValues = { "none", "everything", "selection" };
-            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.paste_behaviour",
+            std::vector pasteBehaviourNames = {
+                "hex.builtin.setting.hex_editor.paste_behaviour.none"_unlocalized,
+                "hex.builtin.setting.hex_editor.paste_behaviour.everything"_unlocalized,
+                "hex.builtin.setting.hex_editor.paste_behaviour.selection"_unlocalized
+            };
+            std::vector<nlohmann::json> pasteBehaviourValues = {
+                "none",
+                "everything",
+                "selection"
+            };
+            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.hex_editor"_unlocalized, {}, "hex.builtin.setting.hex_editor.paste_behaviour"_unlocalized,
                                                               pasteBehaviourNames,
                                                               pasteBehaviourValues,
                                                               "none");
 
-            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.tab_size", 4, 0, 16);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.syntactic_highlighting", true);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.semantic_highlighting", true);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.auto_indent", true);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.disable_folds", false);
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor","","hex.builtin.setting.pattern_editor.show_white_spaces", false);
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.tab_size"_unlocalized, 4, 0, 16);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.syntactic_highlighting"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.semantic_highlighting"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.auto_indent"_unlocalized, true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.disable_folds"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.show_white_spaces"_unlocalized, false);
         }
 
         /* Folders */
         {
-            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.folders", "hex.builtin.setting.folders.description");
-            ContentRegistry::Settings::add<UserFolderWidget>("hex.builtin.setting.folders", "", "hex.builtin.setting.folders.description");
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.folders"_unlocalized, "hex.builtin.setting.folders.description"_unlocalized);
+            ContentRegistry::Settings::add<UserFolderWidget>("hex.builtin.setting.folders"_unlocalized, {}, "hex.builtin.setting.folders.description"_unlocalized);
         }
 
         /* Proxy */
         {
-            HttpRequest::setProxyUrl(ContentRegistry::Settings::read<std::string>("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", ""));
+            HttpRequest::setProxyUrl(ContentRegistry::Settings::read<std::string>("hex.builtin.setting.proxy"_unlocalized, "hex.builtin.setting.proxy.url"_unlocalized, ""));
 
-            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy"_unlocalized, "hex.builtin.setting.proxy.description"_unlocalized);
 
-            auto proxyEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.enable", false)
+            auto proxyEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.proxy"_unlocalized, {}, "hex.builtin.setting.proxy.enable"_unlocalized, false)
             .setChangedCallback([](Widgets::Widget &widget) {
                 auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 
                 HttpRequest::setProxyState(checkBox->isChecked());
             });
 
-            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.url", "")
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.proxy"_unlocalized, {}, "hex.builtin.setting.proxy.url"_unlocalized, "")
             .setEnabledCallback([proxyEnabledSetting] {
                 auto &checkBox = static_cast<Widgets::Checkbox &>(proxyEnabledSetting.getWidget());
 
@@ -969,10 +979,10 @@ for (const auto &path : m_paths) {
 
         /* Experiments */
         {
-            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.experiments", "hex.builtin.setting.experiments.description");
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.experiments"_unlocalized, "hex.builtin.setting.experiments.description"_unlocalized);
             EventImHexStartupFinished::subscribe([]{
                 for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
-                    ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
+                    ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments"_unlocalized, {}, experiment.unlocalizedName, false)
                         .setTooltip(experiment.unlocalizedDescription)
                         .setChangedCallback([name](Widgets::Widget &widget) {
                             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
@@ -988,8 +998,8 @@ for (const auto &path : m_paths) {
             EventImHexStartupFinished::subscribe([] {
                 for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
                     ContentRegistry::Settings::add<KeybindingWidget>(
-                        "hex.builtin.setting.shortcuts",
-                        "hex.builtin.setting.shortcuts.global",
+                        "hex.builtin.setting.shortcuts"_unlocalized,
+                        "hex.builtin.setting.shortcuts.global"_unlocalized,
                         shortcutEntry.unlocalizedName.back(),
                         nullptr,
                         shortcutEntry.shortcut,
@@ -1000,7 +1010,7 @@ for (const auto &path : m_paths) {
                 for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
                     for (const auto &shortcutEntry : ShortcutManager::getViewShortcuts(view.get())) {
                         ContentRegistry::Settings::add<KeybindingWidget>(
-                            "hex.builtin.setting.shortcuts",
+                            "hex.builtin.setting.shortcuts"_unlocalized,
                             viewName,
                             shortcutEntry.unlocalizedName.back(),
                             view.get(),
@@ -1014,9 +1024,9 @@ for (const auto &path : m_paths) {
 
         /* Toolbar icons */
         {
-            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.toolbar", "hex.builtin.setting.toolbar.description");
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.toolbar"_unlocalized, "hex.builtin.setting.toolbar.description"_unlocalized);
 
-            ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
+            ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar"_unlocalized, {}, "hex.builtin.setting.toolbar.icons"_unlocalized);
         }
 
         ImHexApi::System::addMigrationRoutine("v1.37.0", [] {
@@ -1045,8 +1055,8 @@ for (const auto &path : m_paths) {
                 if (plugin.isBuiltinPlugin())
                     continue;
 
-                auto interface = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.plugins", "hex.builtin.setting.loaded_plugins", plugin.getPluginName(), true)
-                    .setTooltip(plugin.getPluginDescription())
+                auto interface = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.plugins"_unlocalized, "hex.builtin.setting.loaded_plugins"_unlocalized, UnlocalizedString(plugin.getPluginName()), true)
+                    .setTooltip(UntranslatedString(plugin.getPluginDescription()))
                     .setChangedCallback([&plugin](Widgets::Widget &widget) {
                         auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
                         PluginManager::setPluginEnabled(plugin, checkBox->isChecked());
@@ -1059,12 +1069,12 @@ for (const auto &path : m_paths) {
     }
 
     static void loadLayoutSettings() {
-        const bool locked = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", false);
+        const bool locked = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.layout_locked"_untranslated, false);
         LayoutManager::lockLayout(locked);
     }
 
     static void loadThemeSettings() {
-        auto theme = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
+        auto theme = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.color"_unlocalized, ThemeManager::NativeTheme);
 
         if (theme == ThemeManager::NativeTheme) {
             ImHexApi::System::enableSystemThemeDetection(true);
@@ -1073,7 +1083,7 @@ for (const auto &path : m_paths) {
             ThemeManager::changeTheme(theme);
         }
 
-        auto borderlessWindowMode = !ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.native_window_decorations", !getDefaultBorderlessWindowMode());
+        auto borderlessWindowMode = !ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.native_window_decorations"_unlocalized, !getDefaultBorderlessWindowMode());
         ImHexApi::System::impl::setBorderlessWindowMode(borderlessWindowMode);
     }
 

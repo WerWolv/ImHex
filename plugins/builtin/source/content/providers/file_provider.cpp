@@ -214,7 +214,7 @@ namespace hex::plugin::builtin {
 
         if (m_loadedIntoMemory) {
             loadMenuItem = {
-                .name = "hex.builtin.provider.file.menu.direct_access"_lang,
+                .name = "hex.builtin.provider.file.menu.direct_access"_unlocalized,
                 .icon = ICON_VS_ARROW_SWAP,
                 .callback = [this] {
                     this->convertToDirectAccess();
@@ -222,7 +222,7 @@ namespace hex::plugin::builtin {
             };
         } else {
             loadMenuItem = {
-                .name = "hex.builtin.provider.file.menu.into_memory"_lang,
+                .name = "hex.builtin.provider.file.menu.into_memory"_unlocalized,
                 .icon = ICON_VS_ARROW_SWAP,
                 .callback = [this] {
                     this->convertToMemoryFile();
@@ -232,14 +232,14 @@ namespace hex::plugin::builtin {
 
         return {
             {
-                .name = "hex.builtin.provider.file.menu.open_folder"_lang,
+                .name = "hex.builtin.provider.file.menu.open_folder"_unlocalized,
                 .icon = ICON_VS_FOLDER_OPENED,
                 .callback = [this] {
                     fs::openFolderWithSelectionExternal(getPickedPath());
                 },
             },
             {
-                .name = "hex.builtin.provider.file.menu.open_file"_lang,
+                .name = "hex.builtin.provider.file.menu.open_file"_unlocalized,
                 .icon = ICON_VS_FILE,
                 .callback = [this] {
                     fs::openFileExternal(getPickedPath());
@@ -250,7 +250,7 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult FileProvider::open() {
-        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
+        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.max_mem_file_size"_unlocalized, 128_MiB);
 
         const auto &path = getPickedPath();
 
@@ -273,7 +273,7 @@ namespace hex::plugin::builtin {
             if (directAccess) {
                 m_writable = false;
 
-                ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
+                ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large"_unlocalized, ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write"_unlocalized, [this]{
                     m_writable = true;
                     RequestUpdateWindowTitle::post();
                 });
@@ -433,7 +433,7 @@ namespace hex::plugin::builtin {
         }
 
         m_changeEventAcknowledgementPending = true;
-        ui::BannerButtonProviderSpecific::open(this, ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this] {
+        ui::BannerButtonProviderSpecific::open(this, ICON_VS_INFO, "hex.builtin.provider.file.reload_changes"_unlocalized, ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload"_unlocalized, [this] {
             this->close();
             (void)this->open(!m_loadedIntoMemory);
 

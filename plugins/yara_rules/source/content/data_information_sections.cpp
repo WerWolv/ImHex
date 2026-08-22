@@ -16,7 +16,7 @@ namespace hex::plugin::yara {
 
     class InformationAdvancedFileInformation : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationAdvancedFileInformation() : InformationSection("hex.yara.information_section.advanced_data_info") { }
+        InformationAdvancedFileInformation() : InformationSection("hex.yara.information_section.advanced_data_info"_unlocalized) { }
         ~InformationAdvancedFileInformation() override = default;
 
         struct Category {

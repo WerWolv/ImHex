@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
     class PopupCrashRecovered : public Popup<PopupCrashRecovered> {
     public:
         PopupCrashRecovered(const std::exception &e)
-            : hex::Popup<PopupCrashRecovered>("hex.builtin.popup.crash_recover.title", ICON_VS_BUG, false),
+            : hex::Popup<PopupCrashRecovered>("hex.builtin.popup.crash_recover.title"_unlocalized, ICON_VS_BUG, false),
               m_errorType(typeid(e).name()),
               m_errorMessage(e.what()) { }
 

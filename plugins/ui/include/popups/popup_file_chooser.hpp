@@ -18,7 +18,7 @@ namespace hex::ui {
     class PopupNamedFileChooserBase : public Popup<T> {
     public:
         PopupNamedFileChooserBase(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
-                : hex::Popup<T>("hex.ui.common.choose_file", ICON_VS_FILE_SYMLINK_FILE),
+                : hex::Popup<T>("hex.ui.common.choose_file"_unlocalized, ICON_VS_FILE_SYMLINK_FILE),
                   m_files(files),
                   m_selectedFiles({ }),
                   m_openCallback(callback),

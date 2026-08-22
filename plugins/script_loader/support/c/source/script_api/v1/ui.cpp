@@ -22,12 +22,12 @@ static std::optional<bool> s_yesNoQuestionBoxResult;
 
 class PopupYesNo : public Popup<PopupYesNo> {
 public:
-    PopupYesNo(std::string title, std::string message)
+    PopupYesNo(UnlocalizedString title, UnlocalizedString message)
             : hex::Popup<PopupYesNo>(std::move(title), ICON_VS_QUESTION, false),
               m_message(std::move(message)) { }
 
     void drawContent() override {
-        ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
+        ImGuiExt::TextFormattedWrapped("{}", Lang(m_message));
         ImGui::NewLine();
         ImGui::Separator();
 
@@ -60,12 +60,12 @@ public:
     }
 
 private:
-    std::string m_message;
+    UnlocalizedString m_message;
 };
 
 class PopupInputText : public Popup<PopupInputText> {
 public:
-    PopupInputText(std::string title, std::string message, size_t maxSize)
+    PopupInputText(UnlocalizedString title, UnlocalizedString message, size_t maxSize)
             : hex::Popup<PopupInputText>(std::move(title), ICON_VS_QUOTE, false),
               m_message(std::move(message)), m_maxSize(maxSize) { }
 
@@ -123,7 +123,7 @@ SCRIPT_API(void showMessageBox, const char *message) {
 }
 
 SCRIPT_API(void showInputTextBox, const char *title, const char *message, char *buffer, u32 bufferSize) {
-    PopupInputText::open(std::string(title), std::string(message), bufferSize - 1);
+    PopupInputText::open(UntranslatedString(title), UntranslatedString(message), bufferSize - 1);
 
     while (!s_inputTextBoxResult.has_value()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -135,7 +135,7 @@ SCRIPT_API(void showInputTextBox, const char *title, const char *message, char *
 }
 
 SCRIPT_API(void showYesNoQuestionBox, const char *title, const char *message, bool *result) {
-    PopupYesNo::open(std::string(title), std::string(message));
+    PopupYesNo::open(UntranslatedString(title), UntranslatedString(message));
 
     while (!s_yesNoQuestionBoxResult.has_value()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -184,5 +184,5 @@ SCRIPT_API(void registerView, const char *icon, const char *name, void *drawFunc
 
 SCRIPT_API(void addMenuItem, const char *icon, const char *menuName, const char *itemName, void *function) {
     using MenuFunction = void(*)();
-    ContentRegistry::UserInterface::addMenuItem({ menuName, itemName }, icon, 9999, Shortcut::None, reinterpret_cast<MenuFunction>(function));
+    ContentRegistry::UserInterface::addMenuItem({ UntranslatedString(menuName), UntranslatedString(itemName) }, icon, 9999, Shortcut::None, reinterpret_cast<MenuFunction>(function));
 }

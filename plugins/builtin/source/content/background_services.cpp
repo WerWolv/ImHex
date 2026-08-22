@@ -123,13 +123,13 @@ namespace hex::plugin::builtin {
     }
 
     void registerBackgroundServices() {
-        ContentRegistry::Settings::onChange("hex.builtin.setting.general", "hex.builtin.setting.general.mcp_server", [](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.mcp_server"_unlocalized, [](const ContentRegistry::Settings::SettingsValue &value) {
             ContentRegistry::MCP::impl::setEnabled(value.get<bool>(false));
         });
 
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.mcp", handleMCPServer);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface"_unlocalized, handleNetworkInterfaceService);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup"_unlocalized, handleAutoBackup);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.mcp"_unlocalized, handleMCPServer);
 
         EventImHexClosing::subscribe([] {
             ContentRegistry::MCP::impl::getMcpServerInstance().reset();

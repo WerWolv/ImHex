@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.gdb";
+            return "hex.builtin.provider.gdb"_unlocalized;
         }
 
         [[nodiscard]] const char* getIcon() const override {

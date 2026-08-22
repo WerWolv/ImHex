@@ -860,7 +860,7 @@ namespace hex::ui {
         if (clipText != nullptr) {
             auto stringVector = wolv::util::splitString(clipText, "\n", false);
             if (std::ranges::any_of(stringVector, [](const std::string &s) { return s.size() > 1024; })) {
-                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_lang, [this, clipText]() {
+                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_unlocalized, [this, clipText]() {
                     this->doPaste(clipText);
                 }, [] {});
             } else {

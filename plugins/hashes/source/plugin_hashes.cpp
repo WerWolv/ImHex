@@ -28,8 +28,8 @@ IMHEX_PLUGIN_SETUP("Hashes", "WerWolv", "Hashing algorithms") {
     registerHashes();
     ContentRegistry::Views::add<ViewHashes>();
 
-    AchievementManager::addAchievement<Achievement>("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name")
-        .setDescription("hex.hashes.achievement.misc.create_hash.desc")
+    AchievementManager::addAchievement<Achievement>("hex.builtin.achievement.misc"_unlocalized, "hex.hashes.achievement.misc.create_hash.name"_unlocalized)
+        .setDescription("hex.hashes.achievement.misc.create_hash.desc"_unlocalized)
         .setIcon(ICON_TA_CRYSTAL_BALL)
-        .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
+        .addRequirement("hex.builtin.achievement.starting_out.open_file.name"_unlocalized);
 }

@@ -522,7 +522,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (menu::beginTaskBarMenu()) {
-                    populateMenu(ContentRegistry::UserInterface::impl::TaskBarMenuValue);
+                    populateMenu(UntranslatedString(ContentRegistry::UserInterface::impl::TaskBarMenuValue));
                     menu::endTaskBarMenu();
                 }
             } else {
@@ -882,7 +882,7 @@ namespace hex::plugin::builtin {
             RequestUpdateWindowTitle::post();
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.randomize_window_title", [](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.randomize_window_title"_unlocalized, [](const ContentRegistry::Settings::SettingsValue &value) {
             const bool randomTitle = value.get<bool>(false);
             if (randomTitle) {
                 s_applicationName.clear();

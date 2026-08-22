@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupPasteFromSource::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.title";
+        return "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.title"_unlocalized;
     }
 
     bool PopupPasteFromSource::canBePinned() const {

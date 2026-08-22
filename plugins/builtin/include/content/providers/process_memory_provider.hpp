@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.process_memory";
+            return "hex.builtin.provider.process_memory"_unlocalized;
         }
 
         [[nodiscard]] const char* getIcon() const override {

@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         std::vector<fs::ItemFilter> getValidExtensions() const override;
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.base64";
+            return "hex.builtin.provider.base64"_unlocalized;
         }
     };
 

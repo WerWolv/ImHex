@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
         }
 
         View* getMenuItemInheritView() const override {
-            return ContentRegistry::Views::getViewByName("hex.builtin.view.data_inspector.name");
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.data_inspector.name"_unlocalized);
         }
 
     public:

@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
         class PopupLegacyProjectMigration : public Popup<PopupLegacyProjectMigration> {
         public:
             explicit PopupLegacyProjectMigration(std::fs::path path)
-                : Popup("hex.builtin.popup.project.migrate_legacy.title", ICON_VS_NOTEBOOK_TEMPLATE, false), m_path(std::move(path)) { }
+                : Popup("hex.builtin.popup.project.migrate_legacy.title"_unlocalized, ICON_VS_NOTEBOOK_TEMPLATE, false), m_path(std::move(path)) { }
 
             void drawContent() override {
                 ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.popup.project.migrate_legacy.description"_lang);
@@ -372,11 +372,11 @@ namespace hex::plugin::builtin {
 
     void registerLegacyProjectImporter() {
         ContentRegistry::UserInterface::addMenuItem(
-            { "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.legacy_project" },
+            { "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized, "hex.builtin.menu.file.import.legacy_project"_unlocalized },
             ICON_VS_PROJECT, 5145, Shortcut::None,
             [] {
                 fs::openFileBrowser(fs::DialogMode::Open, { { "Legacy ImHex Project", "hexproj" } }, [](const auto &path) {
-                    ui::PopupQuestion::open("hex.builtin.popup.project.import_legacy.confirm"_lang,
+                    ui::PopupQuestion::open("hex.builtin.popup.project.import_legacy.confirm"_unlocalized,
                         [path] {
                             showImportResult(importLegacyProject(path));
                         }, [] { });

@@ -5,11 +5,11 @@ namespace hex::plugin::builtin {
 
     class NodeIf : public dp::Node {
     public:
-        NodeIf() : Node("hex.builtin.nodes.control_flow.if.header",
-                       { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.if.condition"),
-                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.true"),
-                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.false"),
-                           dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeIf() : Node("hex.builtin.nodes.control_flow.if.header"_unlocalized,
+                       { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.if.condition"_unlocalized),
+                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.true"_unlocalized),
+                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.false"_unlocalized),
+                           dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &cond      = this->getIntegerOnInput(0);
@@ -25,10 +25,10 @@ namespace hex::plugin::builtin {
 
     class NodeEquals : public dp::Node {
     public:
-        NodeEquals() : Node("hex.builtin.nodes.control_flow.equals.header",
-                           { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"),
-                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"),
-                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeEquals() : Node("hex.builtin.nodes.control_flow.equals.header"_unlocalized,
+                           { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -40,9 +40,9 @@ namespace hex::plugin::builtin {
 
     class NodeNot : public dp::Node {
     public:
-        NodeNot() : Node("hex.builtin.nodes.control_flow.not.header",
-                        { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"),
-                            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeNot() : Node("hex.builtin.nodes.control_flow.not.header"_unlocalized,
+                        { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"_unlocalized),
+                            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &input = this->getIntegerOnInput(0);
@@ -53,10 +53,10 @@ namespace hex::plugin::builtin {
 
     class NodeGreaterThan : public dp::Node {
     public:
-        NodeGreaterThan() : Node("hex.builtin.nodes.control_flow.gt.header",
-                                { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"),
-                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"),
-                                    dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeGreaterThan() : Node("hex.builtin.nodes.control_flow.gt.header"_unlocalized,
+                                { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                                    dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -68,10 +68,10 @@ namespace hex::plugin::builtin {
 
     class NodeLessThan : public dp::Node {
     public:
-        NodeLessThan() : Node("hex.builtin.nodes.control_flow.lt.header",
-                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"),
-                                 dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"),
-                                 dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeLessThan() : Node("hex.builtin.nodes.control_flow.lt.header"_unlocalized,
+                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                                 dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                                 dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -83,10 +83,10 @@ namespace hex::plugin::builtin {
 
     class NodeBoolAND : public dp::Node {
     public:
-        NodeBoolAND() : Node("hex.builtin.nodes.control_flow.and.header",
-                            { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"),
-                                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"),
-                                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeBoolAND() : Node("hex.builtin.nodes.control_flow.and.header"_unlocalized,
+                            { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -98,10 +98,10 @@ namespace hex::plugin::builtin {
 
     class NodeBoolOR : public dp::Node {
     public:
-        NodeBoolOR() : Node("hex.builtin.nodes.control_flow.or.header",
-                           { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"),
-                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"),
-                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeBoolOR() : Node("hex.builtin.nodes.control_flow.or.header"_unlocalized,
+                           { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -113,12 +113,12 @@ namespace hex::plugin::builtin {
 
     class NodeLoop : public dp::Node {
     public:
-        NodeLoop() : Node("hex.builtin.nodes.control_flow.loop.header",
-                                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.start"),
-                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.end"),
-                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.init"),
-                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.in"),
-                                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.out") }) {}
+        NodeLoop() : Node("hex.builtin.nodes.control_flow.loop.header"_unlocalized,
+                                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.start"_unlocalized),
+                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.end"_unlocalized),
+                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.init"_unlocalized),
+                                               dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.in"_unlocalized),
+                                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.loop.out"_unlocalized) }) {}
 
         void process() override {
             if (!m_started) {
@@ -148,14 +148,14 @@ namespace hex::plugin::builtin {
     };
 
     void registerControlDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
-        ContentRegistry::DataProcessor::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");
-        ContentRegistry::DataProcessor::add<NodeNot>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.not");
-        ContentRegistry::DataProcessor::add<NodeGreaterThan>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.gt");
-        ContentRegistry::DataProcessor::add<NodeLessThan>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.lt");
-        ContentRegistry::DataProcessor::add<NodeBoolAND>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.and");
-        ContentRegistry::DataProcessor::add<NodeBoolOR>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.or");
-        ContentRegistry::DataProcessor::add<NodeLoop>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.loop");
+        ContentRegistry::DataProcessor::add<NodeIf>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.if"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeEquals>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.equals"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeNot>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.not"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeGreaterThan>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.gt"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeLessThan>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.lt"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBoolAND>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.and"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBoolOR>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.or"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeLoop>("hex.builtin.nodes.control_flow"_unlocalized, "hex.builtin.nodes.control_flow.loop"_unlocalized);
     }
 
 }

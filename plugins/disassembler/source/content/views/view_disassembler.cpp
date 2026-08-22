@@ -26,7 +26,7 @@ using namespace wolv::literals;
 
 namespace hex::plugin::disasm {
 
-    ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name", ICON_VS_FILE_CODE) {
+    ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name"_unlocalized, ICON_VS_FILE_CODE) {
         EventProviderDeleted::subscribe(this, [this](const auto *provider) {
             m_disassembly.get(provider).clear();
             m_flowEdges.get(provider).clear();
@@ -40,7 +40,7 @@ namespace hex::plugin::disasm {
             this->updateSelection(selection.getProvider(), selection.getRegion());
         });
 
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.disassemble_range" }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.menu.edit.disassemble_range"_unlocalized }, ICON_VS_DEBUG_LINE_BY_LINE, 3100, CTRLCMD + SHIFT + Keys::D, [this] {
             ImGui::SetWindowFocus(this->getName().c_str());
             this->getWindowOpenState() = true;
 
@@ -50,7 +50,7 @@ namespace hex::plugin::disasm {
             this->disassemble();
         }, [this]{
             return ImHexApi::HexEditor::isSelectionValid() && !m_disassemblerTask.isRunning() && *m_currArchitecture != nullptr;
-        }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+        }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized));
 
         m_settingsCollapsed.setOnCreateCallback([](auto *, bool &value) { value = false; });
     }
@@ -216,7 +216,7 @@ namespace hex::plugin::disasm {
         if (m_regionToDisassemble.get(provider).getStartAddress() < m_imageBaseAddress)
             return;
 
-        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling", ProgressValue::Size(m_regionToDisassemble.get(provider).getSize()), [this, provider](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.disassembler.view.disassembler.disassembling"_unlocalized, ProgressValue::Size(m_regionToDisassemble.get(provider).getSize()), [this, provider](auto &task) {
             const auto &currArchitecture = m_currArchitecture.get(provider);
             const auto region = m_regionToDisassemble.get(provider);
             auto &disassembly = m_disassembly.get(provider);
@@ -295,7 +295,7 @@ namespace hex::plugin::disasm {
 
     void ViewDisassembler::exportToFile() {
         const auto provider = ImHexApi::Provider::get();
-        TaskManager::createTask("hex.ui.common.processing", ProgressValue::None(), [this, provider](auto &) {
+        TaskManager::createTask("hex.ui.common.processing"_unlocalized, ProgressValue::None(), [this, provider](auto &) {
             TaskManager::doLater([this, provider] {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this, provider](const std::fs::path &path) {
                     auto p = path;

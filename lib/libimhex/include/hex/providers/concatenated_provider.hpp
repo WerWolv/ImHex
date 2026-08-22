@@ -40,7 +40,7 @@ namespace hex::prv {
         [[nodiscard]] u64 getActualSize() const override { return m_size; }
 
         [[nodiscard]] std::string getName() const override { return "ConcatenatedProvider"; }
-        [[nodiscard]] UnlocalizedString getTypeName() const override { return "ConcatenatedProvider"; }
+        [[nodiscard]] UnlocalizedString getTypeName() const override { return "ConcatenatedProvider"_untranslated; }
         [[nodiscard]] const char *getIcon() const override { return ""; }
 
     private:

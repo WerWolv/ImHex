@@ -15,12 +15,12 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewInformation::ViewInformation()
-        : View::Scrolling("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE),
+        : View::Scrolling("hex.builtin.view.information.name"_unlocalized, ICON_VS_GRAPH_LINE),
           m_informationConfig({
               .typeId = "hex.builtin.data-information",
-              .displayName = "hex.builtin.view.information.name",
+              .displayName = "hex.builtin.view.information.name"_unlocalized,
               .displayIcon = ICON_VS_GRAPH_LINE,
-              .extensions = { { "hex.builtin.view.information.name", "hexinfo" } },
+              .extensions = { { "hex.builtin.view.information.name"_lang, "hexinfo" } },
               .encode = &ViewInformation::encodeConfig,
               .decode = &ViewInformation::decodeConfig
           }) {
@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewInformation::analyze() {
-        AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.analyze_file.name");
+        AchievementManager::unlockAchievement("hex.builtin.achievement.misc"_unlocalized, "hex.builtin.achievement.misc.analyze_file.name"_unlocalized);
 
         auto provider = ImHexApi::Provider::get();
         auto &analysis = m_analysisData.get(provider);
@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
         }
 
         // Run analyzers for each section
-        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing", ProgressValue::Count(analysis.informationSections.size()), [this, provider, &analysis](Task &task) {
+        analysis.task = TaskManager::createTask("hex.builtin.view.information.analyzing"_unlocalized, ProgressValue::Count(analysis.informationSections.size()), [this, provider, &analysis](Task &task) {
             u32 progress = 0;
             for (const auto &section : analysis.informationSections) {
                 // Only process the section if it is enabled

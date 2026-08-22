@@ -27,34 +27,34 @@ namespace hex::plugin::builtin {
 
     using namespace std::literals::chrono_literals;
 
-    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name", ICON_VS_EXTENSIONS) {
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
+    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name"_unlocalized, ICON_VS_EXTENSIONS) {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras"_unlocalized, "hex.builtin.view.store.name"_unlocalized }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
                 this->requestStore(false);
 
             this->getWindowOpenState() = true;
         });
 
-        addCategory("hex.builtin.view.store.tab.patterns",     "patterns",      &paths::Patterns);
-        addCategory("hex.builtin.view.store.tab.includes",     "includes",      &paths::PatternsInclude);
-        addCategory("hex.builtin.view.store.tab.magic",        "magic",         &paths::Magic, []{
+        addCategory("hex.builtin.view.store.tab.patterns"_unlocalized,     "patterns",      &paths::Patterns);
+        addCategory("hex.builtin.view.store.tab.includes"_unlocalized,     "includes",      &paths::PatternsInclude);
+        addCategory("hex.builtin.view.store.tab.magic"_unlocalized,        "magic",         &paths::Magic, []{
             magic::compile();
         });
-        addCategory("hex.builtin.view.store.tab.nodes",        "nodes",         &paths::Nodes);
-        addCategory("hex.builtin.view.store.tab.encodings",    "encodings",     &paths::Encodings);
-        addCategory("hex.builtin.view.store.tab.disassemblers","disassemblers", &paths::Disassemblers);
-        addCategory("hex.builtin.view.store.tab.constants",    "constants",     &paths::Constants);
-        addCategory("hex.builtin.view.store.tab.themes",       "themes",        &paths::Themes, [this]{
+        addCategory("hex.builtin.view.store.tab.nodes"_unlocalized,        "nodes",         &paths::Nodes);
+        addCategory("hex.builtin.view.store.tab.encodings"_unlocalized,    "encodings",     &paths::Encodings);
+        addCategory("hex.builtin.view.store.tab.disassemblers"_unlocalized,"disassemblers", &paths::Disassemblers);
+        addCategory("hex.builtin.view.store.tab.constants"_unlocalized,    "constants",     &paths::Constants);
+        addCategory("hex.builtin.view.store.tab.themes"_unlocalized,       "themes",        &paths::Themes, [this]{
             auto themeFile = wolv::io::File(m_downloadPath, wolv::io::File::Mode::Read);
 
             ThemeManager::addTheme(themeFile.readString());
         });
-        addCategory("hex.builtin.view.store.tab.yara",         "yara",         &paths::Yara);
+        addCategory("hex.builtin.view.store.tab.yara"_unlocalized,         "yara",         &paths::Yara);
 
         TaskManager::doLater([this] {
             // Force update all installed items after an update so that there's no old and incompatible versions around anymore
             {
-                const auto prevUpdateVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
+                const auto prevUpdateVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.prev_launch_version"_untranslated, "");
                 if (SemanticVersion(prevUpdateVersion) != ImHexApi::System::getImHexVersion()) {
                     updateAll();
                 }
@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                             } else if (!entry.installed) {
                                 if (ImGuiExt::DimmedIconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     entry.downloading = this->download(category.path, entry.fileName, entry.link);
-                                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.download_from_store.name");
+                                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc"_unlocalized, "hex.builtin.achievement.misc.download_from_store.name"_unlocalized);
                                 }
                                 ImGui::SetItemTooltip("%s", "hex.builtin.view.store.download"_lang.get());
                             } else {
@@ -321,7 +321,7 @@ namespace hex::plugin::builtin {
             }
 
             TaskManager::doLater([] {
-                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion().get(false));
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.prev_launch_version"_untranslated, ImHexApi::System::getImHexVersion().get(false));
             });
         });
     }

@@ -66,7 +66,7 @@ namespace hex {
                 OnSaveCallback callback;
             };
 
-            static AutoReset<std::map<std::string, std::map<std::string, std::vector<OnChange>>>> s_onChangeCallbacks;
+            static AutoReset<std::map<UnlocalizedString, std::map<UnlocalizedString, std::vector<OnChange>>>> s_onChangeCallbacks;
             static AutoReset<std::vector<OnSave>> s_onSaveCallbacks;
 
             static void runAllOnChangeCallbacks() {
@@ -76,7 +76,7 @@ namespace hex {
                             try {
                                 callback(getSetting(category, name, {}));
                             } catch (const std::exception &e) {
-                                log::error("Failed to load setting [{} / {}]: {}", category, name, e.what());
+                                log::error("Failed to load setting [{} / {}]: {}", category.get(), name.get(), e.what());
                             }
                         }
                     }
@@ -936,7 +936,7 @@ namespace hex {
         }
 
         void addSeparator() {
-            impl::s_nodes->push_back({ "", "", [] { return nullptr; } });
+            impl::s_nodes->push_back({ {}, {}, [] { return nullptr; } });
         }
 
     }
@@ -1061,7 +1061,7 @@ namespace hex {
         void addTaskBarMenuItem(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
             log::debug("Added new taskbar menu item to menu {} ", unlocalizedMainMenuNames[0].get());
 
-            unlocalizedMainMenuNames.insert(unlocalizedMainMenuNames.begin(), impl::TaskBarMenuValue);
+            unlocalizedMainMenuNames.insert(unlocalizedMainMenuNames.begin(), UntranslatedString(impl::TaskBarMenuValue));
             impl::s_menuItems->insert({
                 priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon="", .shortcut=Shortcut::None, .view=nullptr, .callback=function, .enabledCallback=enabledCallback, .selectedCallback=[]{ return false; }, .toolbarIndex=-1 }
             });
@@ -1141,8 +1141,8 @@ namespace hex {
 
         namespace ContentRegistry::Provider::impl {
 
-            void add(const std::string &typeName, ProviderCreationFunction creationFunction) {
-                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
+            void add(const UnlocalizedString &typeName, ProviderCreationFunction creationFunction) {
+                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const UnlocalizedString &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
                     if (name != expectedName) return;
 
                     auto newProvider = creationFunction();

@@ -74,7 +74,7 @@ namespace hex::plugin::builtin {
 
     class ViewPatternEditor::PopupAcceptPattern : public Popup<PopupAcceptPattern> {
     public:
-        explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern", ICON_VS_SYMBOL_NAMESPACE), m_view(view) {}
+        explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"_unlocalized, ICON_VS_SYMBOL_NAMESPACE), m_view(view) {}
 
         void drawContent() override {
             std::scoped_lock lock(m_view->m_possiblePatternFilesMutex);
@@ -213,7 +213,7 @@ namespace hex::plugin::builtin {
     PatternSourceCode::PatternSourceCode()
         : m_perProviderSource({
               .typeId = "hex.builtin.pattern-source",
-              .displayName = "hex.builtin.view.pattern_editor.name",
+              .displayName = "hex.builtin.view.pattern_editor.name"_unlocalized,
               .displayIcon = ICON_VS_FILE_CODE,
               .extensions = { { "Pattern File", "hexpat" }, { "Pattern Import File", "pat" } },
               .encode = [](const std::string &source) {
@@ -375,7 +375,7 @@ namespace hex::plugin::builtin {
         return langDef;
     }
 
-    ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name", ICON_VS_SYMBOL_NAMESPACE) {
+    ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name"_unlocalized, ICON_VS_SYMBOL_NAMESPACE) {
         m_editorRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
 
@@ -1569,7 +1569,7 @@ namespace hex::plugin::builtin {
             }
 
             if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
-                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
+                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_unlocalized,
                     [this] {
                         m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
                     }, [this] {
@@ -1833,7 +1833,7 @@ namespace hex::plugin::builtin {
             return true;
         });
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", ProgressValue::None(), [this, code, provider](auto &task) {
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating"_unlocalized, ProgressValue::None(), [this, code, provider](auto &task) {
             // Disable exception tracing to speed up evaluation
             trace::disableExceptionCaptureForCurrentThread();
 
@@ -1959,27 +1959,27 @@ namespace hex::plugin::builtin {
             m_hasUnparsedChanges.get(provider) = true;
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.tab_size", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.tab_size"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             if (ImHexApi::Provider::isValid())
                 m_textEditor.get(ImHexApi::Provider::get()).setTabSize(value.get<u32>(4));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.auto_indent", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.auto_indent"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             if (ImHexApi::Provider::isValid())
                 m_textEditor.get(ImHexApi::Provider::get()).setAutoIndent(value.get<bool>(true));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.disable_folds", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.disable_folds"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             if (ImHexApi::Provider::isValid())
                 m_textEditor.get(ImHexApi::Provider::get()).setDisableCodeFolds(value.get<bool>(false));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.syntactic_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.syntactic_highlighting"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
              if (ImHexApi::Provider::isValid())
                 m_textEditor.get(ImHexApi::Provider::get()).setEnableHighlighting(value.get<bool>(true));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.semantic_highlighting", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.semantic_highlighting"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             if (value.get<bool>(true) && !m_colorizeIdentifiers) {
                 if (auto provider = ImHexApi::Provider::get(); provider != nullptr)
                     m_identifierHighlighter.get(provider).getRequiredInputs().applyLinesOfColors();
@@ -1989,7 +1989,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.show_white_spaces", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.show_white_spaces"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             if (ImHexApi::Provider::isValid())
                 m_textEditor.get(ImHexApi::Provider::get()).setShowWhitespaces(value.get<bool>(false));
         });
@@ -2074,7 +2074,7 @@ namespace hex::plugin::builtin {
         const auto &selection = ImHexApi::HexEditor::getSelection();
 
         appendEditorText(fmt::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
-        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.place_menu.name");
+        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.place_menu.name"_unlocalized);
     }
 
     void ViewPatternEditor::appendArray(const std::string &type, size_t size) {
@@ -2102,13 +2102,13 @@ namespace hex::plugin::builtin {
 
 
         /* Open File */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.open_pattern" }, ICON_VS_FOLDER_OPENED, 1200, AllowWhileTyping + CTRLCMD + SHIFT + Keys::O, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.file.open_pattern"_unlocalized }, ICON_VS_FOLDER_OPENED, 1200, AllowWhileTyping + CTRLCMD + SHIFT + Keys::O, [this] {
             openPatternFile(true);
         }, [] { return ImHexApi::Provider::isValid(); },
         this);
 
         /* Save */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.save_pattern" }, ICON_VS_SAVE, 1350, AllowWhileTyping + CTRLCMD + Keys::S, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.file.save_pattern"_unlocalized }, ICON_VS_SAVE, 1350, AllowWhileTyping + CTRLCMD + Keys::S, [this] {
             savePatternToCurrentFile(true);
         },[this] {
             auto provider      = ImHexApi::Provider::get();
@@ -2119,24 +2119,24 @@ namespace hex::plugin::builtin {
         this);
 
         /* Save As */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.file.save_pattern_as" }, ICON_VS_SAVE_AS, 1375, AllowWhileTyping + CTRLCMD + SHIFT + Keys::S, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.file.save_pattern_as"_unlocalized }, ICON_VS_SAVE_AS, 1375, AllowWhileTyping + CTRLCMD + SHIFT + Keys::S, [this] {
             savePatternAsNewFile(true);
         },[] {
             return ImHexApi::Provider::isValid();
         },
         this);
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1500, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized }, 1500, this);
 
         /* Find */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find" }, ICON_VS_SEARCH, 1510, AllowWhileTyping + CTRLCMD + Keys::F, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.find"_unlocalized }, ICON_VS_SEARCH, 1510, AllowWhileTyping + CTRLCMD + Keys::F, [this] {
             m_replaceMode = false;
             m_openFindReplacePopUp = true;
         }, [] { return true; },
         this);
 
         /* Find Next */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_next" }, 1520, AllowWhileTyping + Keys::F3, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.find_next"_unlocalized }, 1520, AllowWhileTyping + Keys::F3, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->findMatch(editor, 1);
@@ -2154,7 +2154,7 @@ namespace hex::plugin::builtin {
         this);
 
         /* Find Previous */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.find_previous" }, 1530, AllowWhileTyping + SHIFT + Keys::F3, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.find_previous"_unlocalized }, 1530, AllowWhileTyping + SHIFT + Keys::F3, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->findMatch(editor, -1);
@@ -2163,7 +2163,7 @@ namespace hex::plugin::builtin {
             }
         }, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getFindWord().empty();
+                return ImHexApi::Provider::isValid() && !editor->getFindReplaceHandler()->getFindWord().empty();
             } else {
                 return false;
             }
@@ -2172,74 +2172,74 @@ namespace hex::plugin::builtin {
         this);
 
         /* Replace */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace" }, ICON_VS_REPLACE, 1540, AllowWhileTyping + CTRLCMD + Keys::H, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.replace"_unlocalized }, ICON_VS_REPLACE, 1540, AllowWhileTyping + CTRLCMD + Keys::H, [this] {
             m_replaceMode = true;
             m_openFindReplacePopUp = true;
         }, [this] { return m_focusedSubWindowName.contains(TextEditorView); },
         this);
 
         /* Replace Next */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_next" }, 1550, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.replace_next"_unlocalized }, 1550, Shortcut::None, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->replace(&m_textEditor.get(ImHexApi::Provider::get()), true);
         }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getReplaceWord().empty() && m_focusedSubWindowName.contains(TextEditorView); },
         []{ return false; },
         this);
 
         /* Replace Previous */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_previous" }, 1560, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.replace_previous"_unlocalized }, 1560, Shortcut::None, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->replace(&m_textEditor.get(ImHexApi::Provider::get()), false);
         }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getReplaceWord().empty() && m_focusedSubWindowName.contains(TextEditorView); },
         []{ return false; },
         this);
 
         /* Replace All */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.replace_all" }, ICON_VS_REPLACE_ALL, 1570, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.replace_all"_unlocalized }, ICON_VS_REPLACE_ALL, 1570, Shortcut::None, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->replaceAll(&m_textEditor.get(ImHexApi::Provider::get()));
         }, [this] { return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getReplaceWord().empty() && m_focusedSubWindowName.contains(TextEditorView); },
         this);
 
 
         /* Goto Line */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.pattern_editor.menu.goto_line" }, ICON_VS_DEBUG_STEP_INTO, 1600, AllowWhileTyping + CTRLCMD + Keys::G, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.pattern_editor.menu.goto_line"_unlocalized }, ICON_VS_DEBUG_STEP_INTO, 1600, AllowWhileTyping + CTRLCMD + Keys::G, [this] {
             m_openGotoLinePopUp = true;
         }, [] { return true; },
         this);
 
         /* Import Pattern */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 5600, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized, "hex.builtin.menu.file.import.pattern"_unlocalized }, ICON_VS_FILE_CODE, 5600, Shortcut::None, [this] {
             openPatternFile(false);
         }, ImHexApi::Provider::isValid);
 
         /* Export Pattern */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.export"_unlocalized, "hex.builtin.menu.file.export.pattern"_unlocalized }, ICON_VS_FILE_CODE, 7050, Shortcut::None, [this] {
             savePatternAsNewFile(false);
         }, [this] {
             return ImHexApi::Provider::isValid() && !wolv::util::trim(m_textEditor.get(ImHexApi::Provider::get()).getText()).empty();
         });
 
         /* Undo */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.undo" }, ICON_VS_DISCARD, 1250, AllowWhileTyping + CTRLCMD + Keys::Z, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.undo"_unlocalized }, ICON_VS_DISCARD, 1250, AllowWhileTyping + CTRLCMD + Keys::Z, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).undo();
         }, [this] { return ImHexApi::Provider::isValid() && m_textEditor.get(ImHexApi::Provider::get()).canUndo() && m_focusedSubWindowName.contains(TextEditorView); },
         this);
 
         /* Redo */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.redo" }, ICON_VS_REDO, 1275, AllowWhileTyping + CTRLCMD + Keys::Y, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.redo"_unlocalized }, ICON_VS_REDO, 1275, AllowWhileTyping + CTRLCMD + Keys::Y, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).redo();
         }, [this] { return ImHexApi::Provider::isValid() && m_textEditor.get(ImHexApi::Provider::get()).canRedo() && m_focusedSubWindowName.contains(TextEditorView); },
         this);
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1280, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized }, 1280, this);
 
 
         /* Cut */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.cut" }, ICON_VS_COMBINE, 1300, AllowWhileTyping + CTRLCMD + Keys::X, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.cut"_unlocalized }, ICON_VS_COMBINE, 1300, AllowWhileTyping + CTRLCMD + Keys::X, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).cut();
         }, [this] { return ImHexApi::Provider::isValid() && m_textEditor.get(ImHexApi::Provider::get()).hasSelection() && m_focusedSubWindowName.contains(TextEditorView); },
         this);
 
         /* Copy */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.copy" }, ICON_VS_COPY, 1400, AllowWhileTyping + CTRLCMD + Keys::C, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.copy"_unlocalized }, ICON_VS_COPY, 1400, AllowWhileTyping + CTRLCMD + Keys::C, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 editor->copy();
             } else {
@@ -2254,23 +2254,23 @@ namespace hex::plugin::builtin {
         this);
 
         /* Paste */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.paste" }, ICON_VS_OUTPUT, 1500, AllowWhileTyping + CTRLCMD + Keys::V, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.paste"_unlocalized }, ICON_VS_OUTPUT, 1500, AllowWhileTyping + CTRLCMD + Keys::V, [this] {
             m_textEditor.get(ImHexApi::Provider::get()).paste();
         }, [this] { return m_focusedSubWindowName.contains(TextEditorView); },
         this);
 
 
         /* Select All */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.select_all" }, ICON_VS_LIST_FLAT, 1650, AllowWhileTyping + CTRLCMD + Keys::A, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.select_all"_unlocalized }, ICON_VS_LIST_FLAT, 1650, AllowWhileTyping + CTRLCMD + Keys::A, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->selectAll();
         }, [] { return ImHexApi::Provider::isValid(); },
         this);
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1700, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized }, 1700, this);
 
         /* Add Breakpoint */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.add_breakpoint"}, ICON_VS_DEBUG_BREAKPOINT_DATA, 1750, Keys::F8 + AllowWhileTyping, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.add_breakpoint"_unlocalized}, ICON_VS_DEBUG_BREAKPOINT_DATA, 1750, Keys::F8 + AllowWhileTyping, [this] {
             const auto line = m_textEditor.get(ImHexApi::Provider::get()).getCursorPosition().getLine() + 1;
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
@@ -2289,7 +2289,7 @@ namespace hex::plugin::builtin {
         this);
 
         /* Trigger Evaluation */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.run_pattern" }, ICON_VS_PLAY, 1800, Keys::F5 + AllowWhileTyping, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized,"hex.builtin.view.pattern_editor.menu.edit.run_pattern"_unlocalized }, ICON_VS_PLAY, 1800, Keys::F5 + AllowWhileTyping, [this] {
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (runtime.isRunning()) {
                 m_breakpointHit = false;
@@ -2300,7 +2300,7 @@ namespace hex::plugin::builtin {
          this);
 
         /* Continue debugger */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.continue_debugger"}, ICON_VS_DEBUG_CONTINUE, 1850, SHIFT + Keys::F9 + AllowWhileTyping,  [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized,"hex.builtin.view.pattern_editor.menu.edit.continue_debugger"_unlocalized }, ICON_VS_DEBUG_CONTINUE, 1850, SHIFT + Keys::F9 + AllowWhileTyping,  [this] {
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (runtime.isRunning())
                 m_breakpointHit = false;
@@ -2308,7 +2308,7 @@ namespace hex::plugin::builtin {
          this);
 
         /* Step debugger */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.step_debugger" },ICON_VS_DEBUG_STEP_INTO, 1900, SHIFT + Keys::F7 + AllowWhileTyping,  [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized,"hex.builtin.view.pattern_editor.menu.edit.step_debugger"_unlocalized },ICON_VS_DEBUG_STEP_INTO, 1900, SHIFT + Keys::F7 + AllowWhileTyping,  [this] {
             const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (runtime.isRunning()) {
                 runtime.getInternals().evaluator->pauseNextLine();
@@ -2325,7 +2325,7 @@ namespace hex::plugin::builtin {
         }};
 
         /* Place pattern... */
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern" }, ICON_VS_LIBRARY, 3000,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.pattern_editor.menu.edit.place_pattern"_unlocalized }, ICON_VS_LIBRARY, 3000,
             [&, this] {
                 if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
                     if (menu::beginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
@@ -2371,7 +2371,7 @@ namespace hex::plugin::builtin {
                 }
             }, [this] {
                 return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && m_runningParsers == 0;
-            }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+            }, ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized));
     }
 
     void ViewPatternEditor::registerHandlers() {
@@ -2476,233 +2476,233 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle", [this] {
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.match_case_toggle"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->setMatchCase(editor, !findReplaceHandler->getMatchCase());
             }
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::R + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.regex_toggle", [this] {
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::R + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.regex_toggle"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->setFindRegEx(editor, !findReplaceHandler->getFindRegEx());
             }
         });
 
-        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::W + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.whole_word_toggle", [this] {
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::W + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.whole_word_toggle"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
                 ui::TextEditor::FindReplaceHandler *findReplaceHandler = editor->getFindReplaceHandler();
                 findReplaceHandler->setWholeWord(editor, !findReplaceHandler->getWholeWord());
             }
         });
 
-        ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete", [this] {
+        ShortcutManager::addShortcut(this, Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).deleteChar();
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_right"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveRight(1, true, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_right", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_right"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveRight(1, true, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_left", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_left"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveLeft(1, true, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_left", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_word_left"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveLeft(1, true, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_up", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_up"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveUp(1, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up", [this] {
+        ShortcutManager::addShortcut(this, SHIFT +Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_up"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveUp(editor->getPageSize(), true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_down"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveDown(1, true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down", [this] {
+        ShortcutManager::addShortcut(this, SHIFT +Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_page_down"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveDown(editor->getPageSize(), true);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_top"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveTop(true);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_bottom", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_bottom"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveBottom(true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_home", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_home"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveHome(true);
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_end", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.select_end"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveEnd(true);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Delete + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_right"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).deleteWordRight();
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.delete_word_left"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).deleteWordLeft();
         });
 
-        ShortcutManager::addShortcut(this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace", [this] {
+        ShortcutManager::addShortcut(this, Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).backspace();
         });
 
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace_shifted", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Backspace + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.backspace_shifted"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).backspace();
         });
 
-        ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert", [this] {
+        ShortcutManager::addShortcut(this, Keys::Insert + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.toggle_insert"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).setOverwrite(!m_textEditor.get(ImHexApi::Provider::get()).isOverwrite());
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_right"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveRight(1, false, true);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::T + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.swap_selection_end", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::T + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.swap_selection_end"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->swapSelectionEnds();
         });
 
-        ShortcutManager::addShortcut(this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right", [this] {
+        ShortcutManager::addShortcut(this, Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_right"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveRight(1, false, false);
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_right", [this] {
+        ShortcutManager::addShortcut(this, ALT + Keys::Right + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_right"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveRight(-1, false, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_word_left"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveLeft(1, false, true);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left", [this] {
+        ShortcutManager::addShortcut(this, Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_left"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveLeft(1, false, false);
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_left", [this] {
+        ShortcutManager::addShortcut(this, ALT + Keys::Left + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_left"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveLeft(-1, false, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up", [this] {
+        ShortcutManager::addShortcut(this, Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_up"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveUp(1, false);
         });
 
-        ShortcutManager::addShortcut(this, ALT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_up", [this] {
+        ShortcutManager::addShortcut(this, ALT + Keys::Up + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_up"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveUp(-1, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up", [this] {
+        ShortcutManager::addShortcut(this, Keys::PageUp + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_up"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveUp(editor->getPageSize(), false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down", [this] {
+        ShortcutManager::addShortcut(this, Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_down"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveDown(1, false);
         });
 
-        ShortcutManager::addShortcut(this, ALT+ Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_down", [this] {
+        ShortcutManager::addShortcut(this, ALT+ Keys::Down + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_pixel_down"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveDown(-1, false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down", [this] {
+        ShortcutManager::addShortcut(this, Keys::PageDown + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_page_down"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveDown(editor->getPageSize(), false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_top"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveTop(false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_bottom", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_bottom"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveBottom(false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_home", [this] {
+        ShortcutManager::addShortcut(this, Keys::Home + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_home"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveHome(false);
         });
 
-        ShortcutManager::addShortcut(this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end", [this] {
+        ShortcutManager::addShortcut(this, Keys::End + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_end"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveEnd(false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::M + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_matched_bracket", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::M + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.move_matched_bracket"_unlocalized, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr)
                 editor->moveToMatchedDelimiter(false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD  + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD  + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).codeFoldExpand();
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD  + ALT + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand_recursively", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD  + ALT + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand_recursively"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).codeFoldExpand(0,true,false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD  + SHIFT + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand_all", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD  + SHIFT + Keys::KeyPadAdd + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_expand_all"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).codeFoldExpand(0, false, true);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).codeFoldCollapse();
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + ALT + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse_recursively", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + ALT + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse_recursively"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).codeFoldCollapse(0, true, false);
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse_all", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::KeyPadSubtract + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.code_fold_collapse_all"_unlocalized, [this] {
             if (m_focusedSubWindowName.contains(TextEditorView))
                 m_textEditor.get(ImHexApi::Provider::get()).codeFoldCollapse(0, false, true);
         });
@@ -2846,7 +2846,7 @@ namespace hex::plugin::builtin {
             },
             [this, provider, trackFile](const std::fs::path &path) {
                 this->loadPatternFile(path, provider, trackFile);
-                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.load_existing.name"_unlocalized);
             }
         );
     }
@@ -2885,7 +2885,7 @@ namespace hex::plugin::builtin {
         ImGuiExt::TextFormattedWrapped("This is the Pattern Editor view which is used to write and edit pattern matching code to analyze the loaded data. For more information on how to write pattern code, please refer to the official documentation and check out the existing patterns included with ImHex.");
         ImGui::NewLine();
         ImGuiExt::TextFormattedWrapped("This view works in close conjunction with the Hex Editor view and the Pattern Data view. When you finished writing your code, click on the Play button at the bottom of the view or press {} to evaluate the pattern.",
-            ShortcutManager::getShortcutByName({ "hex.builtin.menu.edit","hex.builtin.view.pattern_editor.menu.edit.run_pattern" }).toString()
+            ShortcutManager::getShortcutByName({ "hex.builtin.menu.edit"_unlocalized ,"hex.builtin.view.pattern_editor.menu.edit.run_pattern"_unlocalized }).toString()
         );
         ImGuiExt::TextFormattedWrapped("This will execute your code, output any log messages to the console window below and create a pattern tree that gets displayed in the Pattern Data view and highlights matching regions in the Hex Editor view.");
     }

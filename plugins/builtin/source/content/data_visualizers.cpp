@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
     template<std::integral T>
     class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        explicit DataVisualizerHexadecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerHexadecimal(const UnlocalizedString &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
 
     class DataVisualizerHexii : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerHexii() : DataVisualizer("hex.builtin.visualizer.hexii", ByteCount, CharCount) { }
+        DataVisualizerHexii() : DataVisualizer("hex.builtin.visualizer.hexii"_unlocalized, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
     template<std::integral T>
     class DataVisualizerDecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        explicit DataVisualizerDecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerDecimal(const UnlocalizedString &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
     template<typename T>
     class DataVisualizerFloatingPoint : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        explicit DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerFloatingPoint(const UnlocalizedString &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
     template<>
     class DataVisualizerFloatingPoint<Float16> : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        explicit DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerFloatingPoint(const UnlocalizedString &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -227,7 +227,7 @@ namespace hex::plugin::builtin {
 
     class DataVisualizerRGBA8 : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerRGBA8() : DataVisualizer("hex.builtin.visualizer.rgba8", 4, 2) { }
+        DataVisualizerRGBA8() : DataVisualizer("hex.builtin.visualizer.rgba8"_unlocalized, 4, 2) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -271,7 +271,7 @@ namespace hex::plugin::builtin {
 
     class DataVisualizerBinary : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerBinary() : DataVisualizer("hex.builtin.visualizer.binary", 1, 8) { }
+        DataVisualizerBinary() : DataVisualizer("hex.builtin.visualizer.binary"_unlocalized, 1, 8) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool) override {
             std::ignore = address;
@@ -303,24 +303,24 @@ namespace hex::plugin::builtin {
     };
 
     void registerDataVisualizers() {
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u8>>("hex.builtin.visualizer.hexadecimal.8bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u16>>("hex.builtin.visualizer.hexadecimal.16bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u32>>("hex.builtin.visualizer.hexadecimal.32bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u64>>("hex.builtin.visualizer.hexadecimal.64bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u8>>("hex.builtin.visualizer.hexadecimal.8bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u16>>("hex.builtin.visualizer.hexadecimal.16bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u32>>("hex.builtin.visualizer.hexadecimal.32bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u64>>("hex.builtin.visualizer.hexadecimal.64bit"_unlocalized);
 
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u8>>("hex.builtin.visualizer.decimal.unsigned.8bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u16>>("hex.builtin.visualizer.decimal.unsigned.16bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u32>>("hex.builtin.visualizer.decimal.unsigned.32bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u64>>("hex.builtin.visualizer.decimal.unsigned.64bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u8>>("hex.builtin.visualizer.decimal.unsigned.8bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u16>>("hex.builtin.visualizer.decimal.unsigned.16bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u32>>("hex.builtin.visualizer.decimal.unsigned.32bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u64>>("hex.builtin.visualizer.decimal.unsigned.64bit"_unlocalized);
 
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i8>>("hex.builtin.visualizer.decimal.signed.8bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i16>>("hex.builtin.visualizer.decimal.signed.16bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i32>>("hex.builtin.visualizer.decimal.signed.32bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i64>>("hex.builtin.visualizer.decimal.signed.64bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i8>>("hex.builtin.visualizer.decimal.signed.8bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i16>>("hex.builtin.visualizer.decimal.signed.16bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i32>>("hex.builtin.visualizer.decimal.signed.32bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i64>>("hex.builtin.visualizer.decimal.signed.64bit"_unlocalized);
 
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<Float16>>("hex.builtin.visualizer.floating_point.16bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<float>>("hex.builtin.visualizer.floating_point.32bit");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<double>>("hex.builtin.visualizer.floating_point.64bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<Float16>>("hex.builtin.visualizer.floating_point.16bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<float>>("hex.builtin.visualizer.floating_point.32bit"_unlocalized);
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<double>>("hex.builtin.visualizer.floating_point.64bit"_unlocalized);
 
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerRGBA8>();
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexii>();

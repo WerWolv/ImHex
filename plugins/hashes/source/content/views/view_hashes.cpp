@@ -19,11 +19,11 @@ namespace hex::plugin::hashes {
     class PopupTextHash : public Popup<PopupTextHash> {
     public:
         explicit PopupTextHash(const ViewHashes::Function &hash)
-                : hex::Popup<PopupTextHash>(hash.getFunction().getName(), ICON_VS_SYMBOL_NUMERIC, true, false),
+            : hex::Popup<PopupTextHash>(UntranslatedString(hash.getFunction().getName()), ICON_VS_SYMBOL_NUMERIC, true, false),
                   m_hash(hash) { }
 
         void drawContent() override {
-            ImGuiExt::Header(this->getUnlocalizedName(), true);
+            ImGuiExt::Header(Lang(this->getUnlocalizedName()), true);
 
             ImGui::PushItemWidth(-1);
             if (ImGui::InputTextMultiline("##input", m_input)) {
@@ -69,12 +69,12 @@ namespace hex::plugin::hashes {
     };
 
     ViewHashes::ViewHashes()
-        : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY),
+        : View::Window("hex.hashes.view.hashes.name"_unlocalized, ICON_VS_KEY),
           m_hashDefinitions({
               .typeId = "hex.hashes.functions",
-              .displayName = "hex.hashes.view.hashes.name",
+              .displayName = "hex.hashes.view.hashes.name"_unlocalized,
               .displayIcon = ICON_VS_KEY,
-              .extensions = { { "hex.hashes.view.hashes.name", "hexhashes" } },
+              .extensions = { { "hex.hashes.view.hashes.name"_lang, "hexhashes" } },
               .encode = &ViewHashes::encodeHashes,
               .decode = &ViewHashes::decodeHashes
           }) {
@@ -209,7 +209,7 @@ namespace hex::plugin::hashes {
                         .settings = m_selectedHash.get(provider)->store()
                     });
                     m_hashDefinitions.markChanged(provider);
-                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc"_unlocalized, "hex.hashes.achievement.misc.create_hash.name"_unlocalized);
                     ImGui::CloseCurrentPopup();
                 }
             }
@@ -347,7 +347,7 @@ namespace hex::plugin::hashes {
                 continue;
 
             for (const auto &newHash : hashes) {
-                if (newHash->getUnlocalizedName() == hash["type"].get<std::string>()) {
+                if (newHash->getUnlocalizedName() == UntranslatedString(hash["type"].get<std::string>())) {
                     result.push_back({
                         .name = hash["name"].get<std::string>(),
                         .type = hash["type"].get<std::string>(),
@@ -385,7 +385,7 @@ namespace hex::plugin::hashes {
         std::list<Function> functions;
         for (const auto &definition : definitions) {
             for (const auto &hash : hashes) {
-                if (hash->getUnlocalizedName() != definition.type)
+                if (hash->getUnlocalizedName() != UntranslatedString(definition.type))
                     continue;
 
                 hash->load(definition.settings);

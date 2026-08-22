@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupFill::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.fill";
+        return "hex.builtin.view.hex_editor.menu.edit.fill"_unlocalized;
     }
 
     void PopupFill::fill(u64 address, size_t size, std::string input) {
@@ -113,9 +113,9 @@ namespace hex::plugin::builtin {
                 patchCount += 1;
             }
         }
-        provider->getUndoStack().groupOperations(patchCount, "hex.builtin.undo_operation.fill");
+        provider->getUndoStack().groupOperations(patchCount, "hex.builtin.undo_operation.fill"_unlocalized);
 
-        AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.fill.name");
+        AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor"_unlocalized, "hex.builtin.achievement.hex_editor.fill.name"_unlocalized);
     }
 
 }

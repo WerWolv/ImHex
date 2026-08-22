@@ -35,9 +35,9 @@ namespace hex::prv {
     }
 
     IProviderDataBackupable::IProviderDataBackupable(Provider* provider) : m_provider(provider) {
-        m_shouldCreateBackups = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.enable", true);
-        m_maxSize = ContentRegistry::Settings::read<u32>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.max_size", 1_MiB);
-        m_backupExtension = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.backups.file_backup.extension", ".bak");
+        m_shouldCreateBackups = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups.file_backup.enable"_unlocalized, true);
+        m_maxSize = ContentRegistry::Settings::read<u32>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups.file_backup.max_size"_unlocalized, 1_MiB);
+        m_backupExtension = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups.file_backup.extension"_unlocalized, ".bak");
     }
 
     void IProviderDataBackupable::createBackupIfNeeded(const std::fs::path &inputFilePath) {

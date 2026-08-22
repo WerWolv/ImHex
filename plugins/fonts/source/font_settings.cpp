@@ -322,7 +322,7 @@ namespace hex::fonts {
 
 
     ContentRegistry::Settings::Widgets::Widget::Interface& addFontSettingsWidget(UnlocalizedString name) {
-        return ContentRegistry::Settings::add<FontSelector>("hex.fonts.setting.font", "hex.fonts.setting.font.custom_font", name);
+        return ContentRegistry::Settings::add<FontSelector>("hex.fonts.setting.font"_unlocalized, "hex.fonts.setting.font.custom_font"_unlocalized, name);
     }
 
 }

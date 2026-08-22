@@ -78,7 +78,7 @@ namespace hex::prv {
     class IProviderMenuItems {
     public:
         struct MenuEntry {
-            std::string name;
+            UnlocalizedString name;
             const char *icon;
             std::function<void()> callback;
         };

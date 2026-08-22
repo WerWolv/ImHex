@@ -53,7 +53,7 @@ EXPORT_MODULE namespace hex {
          * @param description Description of the achievement
          * @return Reference to the achievement
          */
-        Achievement& setDescription(std::string description) {
+        Achievement& setDescription(UnlocalizedString description) {
             m_unlocalizedDescription = std::move(description);
 
             return *this;
@@ -64,7 +64,7 @@ EXPORT_MODULE namespace hex {
          * @param requirement Unlocalized name of the requirement
          * @return Reference to the achievement
          */
-        Achievement& addRequirement(std::string requirement) {
+        Achievement& addRequirement(UnlocalizedString requirement) {
             m_requirements.emplace_back(std::move(requirement));
 
             return *this;
@@ -75,7 +75,7 @@ EXPORT_MODULE namespace hex {
          * @param requirement Unlocalized name of the requirement
          * @return Reference to the achievement
          */
-        Achievement& addVisibilityRequirement(std::string requirement) {
+        Achievement& addVisibilityRequirement(UnlocalizedString requirement) {
             m_visibilityRequirements.emplace_back(std::move(requirement));
 
             return *this;
@@ -121,7 +121,7 @@ EXPORT_MODULE namespace hex {
          * @brief Returns the list of requirements of the achievement
          * @return List of requirements of the achievement
          */
-        [[nodiscard]] const std::vector<std::string> &getRequirements() const {
+        [[nodiscard]] const std::vector<UnlocalizedString> &getRequirements() const {
             return m_requirements;
         }
 
@@ -129,7 +129,7 @@ EXPORT_MODULE namespace hex {
          * @brief Returns the list of visibility requirements of the achievement
          * @return List of visibility requirements of the achievement
          */
-        [[nodiscard]] const std::vector<std::string> &getVisibilityRequirements() const {
+        [[nodiscard]] const std::vector<UnlocalizedString> &getVisibilityRequirements() const {
             return m_visibilityRequirements;
         }
 
@@ -235,7 +235,7 @@ EXPORT_MODULE namespace hex {
 
         bool m_blacked = false;
         bool m_invisible = false;
-        std::vector<std::string> m_requirements, m_visibilityRequirements;
+        std::vector<UnlocalizedString> m_requirements, m_visibilityRequirements;
 
         std::function<void(Achievement &)> m_clickCallback;
 

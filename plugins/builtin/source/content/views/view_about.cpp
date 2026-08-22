@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
     class PopupEE : public Popup<PopupEE> {
     public:
-        PopupEE() : Popup("Se" /* Not going to */ "cr" /* make it that easy */ "et", ICON_VS_RUBY) {
+        PopupEE() : Popup(UntranslatedString("Se" /* Not going to */ "cr" /* make it that easy */ "et"), ICON_VS_RUBY) {
 
         }
 
@@ -77,19 +77,19 @@ namespace hex::plugin::builtin {
         }
     };
 
-    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name", ICON_VS_HEART) {
+    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name"_unlocalized, ICON_VS_HEART) {
         // Add "About" menu item to the help menu
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help"_unlocalized, "hex.builtin.view.help.about.name"_unlocalized }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
             this->getWindowOpenState() = true;
         });
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.help"_unlocalized }, 2000);
 
 
         // Add documentation link to the help menu
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, ICON_VS_BOOK, 3000, Shortcut::None, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help"_unlocalized, "hex.builtin.view.help.documentation"_unlocalized }, ICON_VS_BOOK, 3000, Shortcut::None, [] {
             hex::openWebpage("https://docs.werwolv.net/imhex");
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out"_unlocalized, "hex.builtin.achievement.starting_out.docs.name"_unlocalized);
         });
     }
 

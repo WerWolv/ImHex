@@ -51,7 +51,7 @@ IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality")
     // Show a warning banner on debug builds
     #if defined(DEBUG)
         if (!hex::getEnvironmentVariable("NO_DEBUG_BANNER").has_value()) {
-            ui::BannerIcon::open(ICON_VS_ERROR, "You're running a Debug build of ImHex. Performance will be degraded!", ImColor(153, 58, 58));
+            ui::BannerIcon::open(ICON_VS_ERROR, "You're running a Debug build of ImHex. Performance will be degraded!"_untranslated, ImColor(153, 58, 58));
         }
         dbg::setDebugModeEnabled(true);
     #else

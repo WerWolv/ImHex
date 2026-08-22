@@ -12,7 +12,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name", ICON_VS_SETTINGS_GEAR) {
+    ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name"_unlocalized, ICON_VS_SETTINGS_GEAR) {
         // Handle window open requests
         RequestOpenWindow::subscribe(this, [this](const std::string &name) {
             if (name == "Settings") {
@@ -23,8 +23,8 @@ namespace hex::plugin::builtin {
         });
 
         // Add the settings menu item to the Extras menu
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma + AllowWhileTyping + ShowOnWelcomeScreen, [&, this] {
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.extras"_unlocalized }, 3000);
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras"_unlocalized, "hex.builtin.view.settings.name"_unlocalized }, ICON_VS_SETTINGS_GEAR, 4000, CTRLCMD + Keys::Comma + AllowWhileTyping + ShowOnWelcomeScreen, [&, this] {
             this->getWindowOpenState() = true;
         });
 
@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
         // If a restart is required, ask the user if they want to restart
         if (!this->getWindowOpenState() && m_triggerPopup) {
             m_triggerPopup = false;
-            ui::PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
+            ui::PopupQuestion::open("hex.builtin.view.settings.restart_question"_unlocalized,
                 ImHexApi::System::restartImHex,
                 [this]{
                     m_restartRequested = false;

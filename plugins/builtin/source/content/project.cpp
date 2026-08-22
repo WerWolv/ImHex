@@ -317,7 +317,7 @@ namespace hex::plugin::builtin {
             const auto destinationPath = root / destination;
             std::error_code error;
             if (!std::fs::exists(sourcePath, error) || std::fs::exists(destinationPath, error) || error) {
-                showProjectFileError("hex.builtin.popup.error.project.entry.move", "hex.builtin.popup.error.project.entry.move.details", source, error);
+                showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source, error);
                 return false;
             }
             if (std::fs::is_directory(sourcePath, error) && isSameOrDescendant(destination, source)) {
@@ -354,7 +354,7 @@ namespace hex::plugin::builtin {
 
             std::fs::rename(sourcePath, destinationPath, error);
             if (error) {
-                showProjectFileError("hex.builtin.popup.error.project.entry.move", "hex.builtin.popup.error.project.entry.move.details", source, error);
+                showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source, error);
                 return false;
             }
 
@@ -369,7 +369,7 @@ namespace hex::plugin::builtin {
 
         bool deleteProjectEntry(const std::fs::path &relativePath) {
             if (!isSafeProjectPath(relativePath) || isReservedProjectPath(relativePath) || containsProviderFile(relativePath)) {
-                showProjectFileError("hex.builtin.popup.error.project.entry.delete", "hex.builtin.popup.error.project.entry.delete.details", relativePath);
+                showProjectFileError("hex.builtin.popup.error.project.entry.delete"_unlocalized, "hex.builtin.popup.error.project.entry.delete.details"_unlocalized, relativePath);
                 return false;
             }
 
@@ -380,7 +380,7 @@ namespace hex::plugin::builtin {
             else
                 std::fs::remove(path, error);
             if (error) {
-                showProjectFileError("hex.builtin.popup.error.project.entry.delete", "hex.builtin.popup.error.project.entry.delete.details", relativePath, error);
+                showProjectFileError("hex.builtin.popup.error.project.entry.delete"_unlocalized, "hex.builtin.popup.error.project.entry.delete.details"_unlocalized, relativePath, error);
                 return false;
             }
 
@@ -457,7 +457,7 @@ namespace hex::plugin::builtin {
 
                     std::error_code error;
                     if (!std::fs::create_directory(ProjectManager::getProjectRoot() / relativePath, error))
-                        showProjectFileError("hex.builtin.popup.error.project.entry.create_folder", "hex.builtin.popup.error.project.entry.create_folder.details", relativePath, error);
+                        showProjectFileError("hex.builtin.popup.error.project.entry.create_folder"_unlocalized, "hex.builtin.popup.error.project.entry.create_folder.details"_unlocalized, relativePath, error);
                 } else if (edit.mode == InlineEditMode::CreateFile) {
                     auto *data = FileBackedProviderDataRegistry::get(edit.typeId);
                     if (data == nullptr || data->getType().extensions.empty())
@@ -469,7 +469,7 @@ namespace hex::plugin::builtin {
                     const auto relativePath = (edit.directory / fileName).lexically_normal();
                     if (!isSafeProjectPath(relativePath) || isReservedProjectPath(relativePath) ||
                         !FileBackedProviderDataRegistry::createFile(edit.typeId, ProjectManager::getProjectRoot() / relativePath))
-                        showProjectFileError("hex.builtin.popup.error.project.entry.create_file", "hex.builtin.popup.error.project.entry.create_file.details", relativePath);
+                        showProjectFileError("hex.builtin.popup.error.project.entry.create_file"_unlocalized, "hex.builtin.popup.error.project.entry.create_file.details"_unlocalized, relativePath);
                 } else {
                     auto fileName = std::fs::path(edit.name);
                     std::error_code error;
@@ -517,7 +517,7 @@ namespace hex::plugin::builtin {
         }
 
         void promptDeleteProjectEntry(const std::fs::path &relativePath) {
-            ui::PopupQuestion::open(fmt::format("hex.builtin.popup.project.delete_entry.confirm"_lang, relativePath.generic_string()),
+            ui::PopupQuestion::open(UntranslatedString(fmt::format("hex.builtin.popup.project.delete_entry.confirm"_lang, relativePath.generic_string())),
                 [relativePath] { deleteProjectEntry(relativePath); }, [] { });
         }
 
@@ -638,7 +638,7 @@ namespace hex::plugin::builtin {
 
             try {
                 const auto providerSettings = nlohmann::json::parse(storedSettings->second);
-                const auto providerType = providerSettings.at("type").get<std::string>();
+                const auto providerType = UnlocalizedString(providerSettings.at("type").get<std::string>());
                 auto provider = ImHexApi::Provider::createProvider(providerType, true, true);
                 if (provider == nullptr)
                     return false;
@@ -733,13 +733,13 @@ namespace hex::plugin::builtin {
                         s_projectProviderSettings[id] = serializedSettings;
                     const auto providerSettings = nlohmann::json::parse(std::move(serializedSettings));
                     providerName = getProviderName(providerSettings);
-                    const auto providerType = providerSettings.at("type").get<std::string>();
+                    const auto providerType = UnlocalizedString(providerSettings.at("type").get<std::string>());
                     if (s_closedProjectProviderIds.contains(id))
                         continue;
 
                     auto provider = ImHexApi::Provider::createProvider(providerType, true, false);
                     if (provider == nullptr) {
-                        log::warn("Failed to create project provider {} of type {}", id, providerType);
+                        log::warn("Failed to create project provider {} of type {}", id, providerType.get());
                         failedProviderNames.push_back(providerName);
                         continue;
                     }
@@ -1261,7 +1261,7 @@ namespace hex::plugin::builtin {
             // Request, as this puts us into a project state
             RequestUpdateWindowTitle::post();
 
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.save_project.name");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out"_unlocalized, "hex.builtin.achievement.starting_out.save_project.name"_unlocalized);
 
             EventProjectSaved::post();
         }
@@ -1327,7 +1327,7 @@ namespace hex::plugin::builtin {
 
         try {
             const auto descriptor = nlohmann::json::parse(storedSettings->second);
-            const auto providerType = descriptor.at("type").get<std::string>();
+            const auto providerType = UnlocalizedString(descriptor.at("type").get<std::string>());
             auto provider = ImHexApi::Provider::createProvider(providerType);
             if (provider == nullptr || !std::ranges::contains(ImHexApi::Provider::getProviders(), provider.get()))
                 return false;
@@ -1532,7 +1532,7 @@ namespace hex::plugin::builtin {
                         appliedPatches += 1;
                     }
                 if (appliedPatches > 0)
-                    provider->getUndoStack().groupOperations(appliedPatches, "hex.builtin.undo_operation.patches");
+                    provider->getUndoStack().groupOperations(appliedPatches, "hex.builtin.undo_operation.patches"_unlocalized);
                 if (appliedPatches != importedProvider.patches.size())
                     result.warnings.push_back(fmt::format("hex.builtin.popup.project.import_legacy.warning.patches_not_applied"_lang, providerName));
             } else if (!importedProvider.patches.empty()) {
@@ -1548,7 +1548,7 @@ namespace hex::plugin::builtin {
 
     void registerProjectHandlers() {
         hex::ProjectManager::setProjectFunctions(load, store);
-        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.sidebar.project.name", ICON_VS_NOTEBOOK, drawProjectSidebar, [] {
+        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.sidebar.project.name"_unlocalized, ICON_VS_NOTEBOOK, drawProjectSidebar, [] {
             return ProjectManager::isFolderProject();
         });
         EventFileBackedProviderDataChanged::subscribe([](prv::Provider *, FileBackedProviderDataBase *) {

@@ -21,7 +21,13 @@ namespace hex::plugin::builtin {
 
     class NodeReadData : public dp::Node {
     public:
-        NodeReadData() : Node("hex.builtin.nodes.data_access.read.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.size"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.read.data") }) { }
+        NodeReadData() : Node("hex.builtin.nodes.data_access.read.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.address"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.size"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.read.data"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &address = u64(this->getIntegerOnInput(0));
@@ -42,14 +48,20 @@ namespace hex::plugin::builtin {
 
     class NodeWriteData : public dp::Node {
     public:
-        NodeWriteData() : Node("hex.builtin.nodes.data_access.write.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.write.address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.write.data") }) { }
+        NodeWriteData() : Node(
+            "hex.builtin.nodes.data_access.write.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.write.address"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.write.data"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &address = u64(this->getIntegerOnInput(0));
             const auto &data    = this->getBufferOnInput(1);
 
             if (!data.empty()) {
-                AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.modify_data.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor"_unlocalized, "hex.builtin.achievement.data_processor.modify_data.name"_unlocalized);
             }
 
             this->setOverlayData(address, data);
@@ -58,7 +70,11 @@ namespace hex::plugin::builtin {
 
     class NodeDataSize : public dp::Node {
     public:
-        NodeDataSize() : Node("hex.builtin.nodes.data_access.size.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.size.size") }) { }
+        NodeDataSize() : Node("hex.builtin.nodes.data_access.size.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.size.size"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             auto size = ImHexApi::Provider::get()->getActualSize();
@@ -69,7 +85,13 @@ namespace hex::plugin::builtin {
 
     class NodeDataSelection : public dp::Node {
     public:
-        NodeDataSelection() : Node("hex.builtin.nodes.data_access.selection.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.size") }) {
+        NodeDataSelection() : Node(
+            "hex.builtin.nodes.data_access.selection.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.address"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.size"_unlocalized)
+            }
+        ) {
             EventRegionSelected::subscribe(this, [this](const auto &region) {
                 m_address = region.address;
                 m_size    = region.size;
@@ -92,7 +114,14 @@ namespace hex::plugin::builtin {
 
     class NodeCastIntegerToBuffer : public dp::Node {
     public:
-        NodeCastIntegerToBuffer() : Node("hex.builtin.nodes.casting.int_to_buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.size"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeCastIntegerToBuffer() : Node(
+            "hex.builtin.nodes.casting.int_to_buffer.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.size"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &input = this->getIntegerOnInput(0);
@@ -121,7 +150,13 @@ namespace hex::plugin::builtin {
 
     class NodeCastBufferToInteger : public dp::Node {
     public:
-        NodeCastBufferToInteger() : Node("hex.builtin.nodes.casting.buffer_to_int.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeCastBufferToInteger() : Node(
+            "hex.builtin.nodes.casting.buffer_to_int.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -138,7 +173,13 @@ namespace hex::plugin::builtin {
 
     class NodeCastFloatToBuffer : public dp::Node {
     public:
-        NodeCastFloatToBuffer() : Node("hex.builtin.nodes.casting.float_to_buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeCastFloatToBuffer() : Node(
+            "hex.builtin.nodes.casting.float_to_buffer.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &input = this->getFloatOnInput(0);
@@ -152,7 +193,13 @@ namespace hex::plugin::builtin {
 
     class NodeCastBufferToFloat : public dp::Node {
     public:
-        NodeCastBufferToFloat() : Node("hex.builtin.nodes.casting.buffer_to_float.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+        NodeCastBufferToFloat() : Node(
+            "hex.builtin.nodes.casting.buffer_to_float.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -169,7 +216,14 @@ namespace hex::plugin::builtin {
 
     class NodeBufferCombine : public dp::Node {
     public:
-        NodeBufferCombine() : Node("hex.builtin.nodes.buffer.combine.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBufferCombine() : Node(
+            "hex.builtin.nodes.buffer.combine.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &inputA = this->getBufferOnInput(0);
@@ -184,7 +238,15 @@ namespace hex::plugin::builtin {
 
     class NodeBufferSlice : public dp::Node {
     public:
-        NodeBufferSlice() : Node("hex.builtin.nodes.buffer.slice.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.slice.input.buffer"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.slice.input.from"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.slice.input.to"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBufferSlice() : Node(
+            "hex.builtin.nodes.buffer.slice.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.slice.input.buffer"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.slice.input.from"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.slice.input.to"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -204,7 +266,14 @@ namespace hex::plugin::builtin {
 
     class NodeBufferRepeat : public dp::Node {
     public:
-        NodeBufferRepeat() : Node("hex.builtin.nodes.buffer.repeat.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.repeat.input.buffer"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.repeat.input.count"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBufferRepeat() : Node(
+            "hex.builtin.nodes.buffer.repeat.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.repeat.input.buffer"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.repeat.input.count"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &buffer = this->getBufferOnInput(0);
@@ -222,7 +291,15 @@ namespace hex::plugin::builtin {
 
     class NodeBufferPatch : public dp::Node {
     public:
-        NodeBufferPatch() : Node("hex.builtin.nodes.buffer.patch.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.patch.input.patch"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.ui.common.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBufferPatch() : Node(
+            "hex.builtin.nodes.buffer.patch.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.patch.input.patch"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.ui.common.address"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             auto buffer     = this->getBufferOnInput(0);
@@ -243,7 +320,13 @@ namespace hex::plugin::builtin {
 
     class NodeBufferSize : public dp::Node {
     public:
-        NodeBufferSize() : Node("hex.builtin.nodes.buffer.size.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.size.output") }) { }
+        NodeBufferSize() : Node(
+            "hex.builtin.nodes.buffer.size.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.size.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             const auto &buffer = this->getBufferOnInput(0);
@@ -254,7 +337,12 @@ namespace hex::plugin::builtin {
 
     class NodeVisualizerDigram : public dp::Node {
     public:
-        NodeVisualizerDigram() : Node("hex.builtin.nodes.visualizer.digram.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeVisualizerDigram() : Node(
+            "hex.builtin.nodes.visualizer.digram.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }
+        ) { }
 
         void drawNode() override {
             m_digram.draw(scaled({ 200, 200 }));
@@ -276,7 +364,12 @@ namespace hex::plugin::builtin {
 
     class NodeVisualizerLayeredDistribution : public dp::Node {
     public:
-        NodeVisualizerLayeredDistribution() : Node("hex.builtin.nodes.visualizer.layered_dist.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeVisualizerLayeredDistribution() : Node(
+            "hex.builtin.nodes.visualizer.layered_dist.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }
+        ) { }
 
         void drawNode() override {
             m_layeredDistribution.draw(scaled({ 200, 200 }));
@@ -297,7 +390,12 @@ namespace hex::plugin::builtin {
 
     class NodeVisualizerImage : public dp::Node {
     public:
-        NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeVisualizerImage() : Node(
+            "hex.builtin.nodes.visualizer.image.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }
+        ) { }
 
         void drawNode() override {
             if (!m_texture.isValid() && !m_data.empty()) {
@@ -326,7 +424,14 @@ namespace hex::plugin::builtin {
 
     class NodeVisualizerImageRGBA : public dp::Node {
     public:
-        NodeVisualizerImageRGBA() : Node("hex.builtin.nodes.visualizer.image_rgba.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.width"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.height") }) { }
+        NodeVisualizerImageRGBA() : Node(
+            "hex.builtin.nodes.visualizer.image_rgba.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.width"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.height"_unlocalized)
+            }
+        ) { }
 
         void drawNode() override {
             if (!m_texture.isValid() && !m_data.empty()) {
@@ -368,7 +473,12 @@ namespace hex::plugin::builtin {
 
     class NodeVisualizerByteDistribution : public dp::Node {
     public:
-        NodeVisualizerByteDistribution() : Node("hex.builtin.nodes.visualizer.byte_distribution.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeVisualizerByteDistribution() : Node(
+            "hex.builtin.nodes.visualizer.byte_distribution.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }
+        ) { }
 
         void drawNode() override {
             drawPlot(scaled({ 400, 300 }));
@@ -415,7 +525,12 @@ namespace hex::plugin::builtin {
 
     class NodePatternLanguageOutVariable : public dp::Node {
     public:
-        NodePatternLanguageOutVariable() : Node("hex.builtin.nodes.pattern_language.out_var.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodePatternLanguageOutVariable() : Node(
+            "hex.builtin.nodes.pattern_language.out_var.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
@@ -462,7 +577,13 @@ namespace hex::plugin::builtin {
 
     class NodeBufferByteSwap : public dp::Node {
     public:
-        NodeBufferByteSwap() : Node("hex.builtin.nodes.buffer.byte_swap.header", {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBufferByteSwap() : Node(
+            "hex.builtin.nodes.buffer.byte_swap.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
+            }
+        ) { }
 
         void process() override {
             auto data = this->getBufferOnInput(0);
@@ -473,30 +594,30 @@ namespace hex::plugin::builtin {
     };
 
     void registerOtherDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeReadData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.read");
-        ContentRegistry::DataProcessor::add<NodeWriteData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.write");
-        ContentRegistry::DataProcessor::add<NodeDataSize>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.size");
-        ContentRegistry::DataProcessor::add<NodeDataSelection>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.selection");
+        ContentRegistry::DataProcessor::add<NodeReadData>("hex.builtin.nodes.data_access"_unlocalized, "hex.builtin.nodes.data_access.read"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeWriteData>("hex.builtin.nodes.data_access"_unlocalized, "hex.builtin.nodes.data_access.write"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeDataSize>("hex.builtin.nodes.data_access"_unlocalized, "hex.builtin.nodes.data_access.size"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeDataSelection>("hex.builtin.nodes.data_access"_unlocalized, "hex.builtin.nodes.data_access.selection"_unlocalized);
 
-        ContentRegistry::DataProcessor::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.int_to_buffer");
-        ContentRegistry::DataProcessor::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_int");
-        ContentRegistry::DataProcessor::add<NodeCastFloatToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.float_to_buffer");
-        ContentRegistry::DataProcessor::add<NodeCastBufferToFloat>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_float");
+        ContentRegistry::DataProcessor::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting"_unlocalized, "hex.builtin.nodes.casting.int_to_buffer"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting"_unlocalized, "hex.builtin.nodes.casting.buffer_to_int"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeCastFloatToBuffer>("hex.builtin.nodes.casting"_unlocalized, "hex.builtin.nodes.casting.float_to_buffer"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeCastBufferToFloat>("hex.builtin.nodes.casting"_unlocalized, "hex.builtin.nodes.casting.buffer_to_float"_unlocalized);
 
-        ContentRegistry::DataProcessor::add<NodeBufferCombine>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.combine");
-        ContentRegistry::DataProcessor::add<NodeBufferSlice>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.slice");
-        ContentRegistry::DataProcessor::add<NodeBufferRepeat>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.repeat");
-        ContentRegistry::DataProcessor::add<NodeBufferPatch>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.patch");
-        ContentRegistry::DataProcessor::add<NodeBufferSize>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.size");
-        ContentRegistry::DataProcessor::add<NodeBufferByteSwap>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.byte_swap");
+        ContentRegistry::DataProcessor::add<NodeBufferCombine>("hex.builtin.nodes.buffer"_unlocalized, "hex.builtin.nodes.buffer.combine"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBufferSlice>("hex.builtin.nodes.buffer"_unlocalized, "hex.builtin.nodes.buffer.slice"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBufferRepeat>("hex.builtin.nodes.buffer"_unlocalized, "hex.builtin.nodes.buffer.repeat"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBufferPatch>("hex.builtin.nodes.buffer"_unlocalized, "hex.builtin.nodes.buffer.patch"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBufferSize>("hex.builtin.nodes.buffer"_unlocalized, "hex.builtin.nodes.buffer.size"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBufferByteSwap>("hex.builtin.nodes.buffer"_unlocalized, "hex.builtin.nodes.buffer.byte_swap"_unlocalized);
 
-        ContentRegistry::DataProcessor::add<NodeVisualizerDigram>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.digram");
-        ContentRegistry::DataProcessor::add<NodeVisualizerLayeredDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.layered_dist");
-        ContentRegistry::DataProcessor::add<NodeVisualizerImage>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image");
-        ContentRegistry::DataProcessor::add<NodeVisualizerImageRGBA>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image_rgba");
-        ContentRegistry::DataProcessor::add<NodeVisualizerByteDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.byte_distribution");
+        ContentRegistry::DataProcessor::add<NodeVisualizerDigram>("hex.builtin.nodes.visualizer"_unlocalized, "hex.builtin.nodes.visualizer.digram"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeVisualizerLayeredDistribution>("hex.builtin.nodes.visualizer"_unlocalized, "hex.builtin.nodes.visualizer.layered_dist"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeVisualizerImage>("hex.builtin.nodes.visualizer"_unlocalized, "hex.builtin.nodes.visualizer.image"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeVisualizerImageRGBA>("hex.builtin.nodes.visualizer"_unlocalized, "hex.builtin.nodes.visualizer.image_rgba"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeVisualizerByteDistribution>("hex.builtin.nodes.visualizer"_unlocalized, "hex.builtin.nodes.visualizer.byte_distribution"_unlocalized);
 
-        ContentRegistry::DataProcessor::add<NodePatternLanguageOutVariable>("hex.builtin.nodes.pattern_language", "hex.builtin.nodes.pattern_language.out_var");
+        ContentRegistry::DataProcessor::add<NodePatternLanguageOutVariable>("hex.builtin.nodes.pattern_language"_unlocalized, "hex.builtin.nodes.pattern_language.out_var"_unlocalized);
     }
 
 }

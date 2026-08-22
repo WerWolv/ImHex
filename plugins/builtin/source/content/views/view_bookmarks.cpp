@@ -24,10 +24,10 @@
 namespace hex::plugin::builtin {
 
     ViewBookmarks::ViewBookmarks()
-        : View::Window("hex.builtin.view.bookmarks.name", ICON_VS_BOOKMARK),
+        : View::Window("hex.builtin.view.bookmarks.name"_unlocalized, ICON_VS_BOOKMARK),
           m_bookmarks({
               .typeId = "hex.builtin.bookmarks",
-              .displayName = "hex.builtin.view.bookmarks.name",
+              .displayName = "hex.builtin.view.bookmarks.name"_unlocalized,
               .displayIcon = ICON_VS_BOOKMARK,
               .extensions = { { "Bookmarks File", "hexbm" } },
               .encode = &ViewBookmarks::encodeBookmarks,
@@ -380,14 +380,14 @@ namespace hex::plugin::builtin {
                     if (ImGuiExt::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto provider = ImHexApi::Provider::get();
                         TaskManager::doLater([region, provider, name]{
-                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                            auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view"_unlocalized, true);
                             if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider.get()); viewProvider != nullptr) {
                                 viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
                                 viewProvider->setName(fmt::format("'{}' View", name));
 
                                 ImHexApi::Provider::openProvider(newProvider);
 
-                                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
+                                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor"_unlocalized, "hex.builtin.achievement.hex_editor.open_new_view.name"_unlocalized);
                             }
                         });
                     }
@@ -654,20 +654,20 @@ namespace hex::plugin::builtin {
 
     void ViewBookmarks::registerMenuItems() {
         /* Create bookmark */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, ICON_VS_BOOKMARK, 1900, CTRLCMD + Keys::B, [&] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.menu.edit.bookmark.create"_unlocalized }, ICON_VS_BOOKMARK, 1900, CTRLCMD + Keys::B, [&] {
             if (!ImHexApi::HexEditor::isSelectionValid())
                 return;
 
             auto selection = ImHexApi::HexEditor::getSelection();
             ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
         }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); },
-        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized));
 
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 5400);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized }, 5400);
 
         /* Import bookmarks */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, ICON_VS_BOOKMARK, 5500, Shortcut::None, [this]{
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized, "hex.builtin.menu.file.import.bookmark"_unlocalized }, ICON_VS_BOOKMARK, 5500, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 try {
                     this->importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
@@ -677,11 +677,11 @@ namespace hex::plugin::builtin {
             });
         }, ImHexApi::Provider::isValid);
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6200);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.export"_unlocalized }, 6200);
 
 
         /* Export bookmarks */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.bookmark" }, ICON_VS_BOOKMARK, 6250, Shortcut::None, [this]{
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.export"_unlocalized, "hex.builtin.menu.file.export.bookmark"_unlocalized }, ICON_VS_BOOKMARK, 6250, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 nlohmann::json json;
                 this->exportBookmarks(ImHexApi::Provider::get(), json);
@@ -702,8 +702,8 @@ namespace hex::plugin::builtin {
             "To create a Bookmark, select a byte region in the Hex Editor view and use the {} option in the {} menu or use the shortcut '{}'.",
             "hex.builtin.menu.edit.bookmark.create"_lang, "hex.builtin.menu.edit"_lang,
             ShortcutManager::getShortcutByName(
-                { "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" },
-                ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name")
+                { "hex.builtin.menu.edit"_unlocalized, "hex.builtin.menu.edit.bookmark.create"_unlocalized },
+                ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized)
             ).toString()
         );
     }

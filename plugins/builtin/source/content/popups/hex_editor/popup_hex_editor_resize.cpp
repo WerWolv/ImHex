@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupResize::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.resize";
+        return "hex.builtin.view.hex_editor.menu.edit.resize"_unlocalized;
     }
 
     void PopupResize::resize(size_t newSize) {

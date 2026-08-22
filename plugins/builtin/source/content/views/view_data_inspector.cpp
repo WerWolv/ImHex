@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
     static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.data_inspector_exact_size_only"> onlyShowExactSizeMatchEntries = false;
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
-    ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
+    ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name"_unlocalized, ICON_VS_INSPECT) {
         // Handle region selection
         EventRegionSelected::subscribe(this, [this](const auto &region) {
             // Save current selection
@@ -54,12 +54,12 @@ namespace hex::plugin::builtin {
             m_selectedRegion = { Region::Invalid(), nullptr };
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.data_inspector"_unlocalized, "hex.builtin.setting.data_inspector.hidden_rows"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             auto filterValues = value.get<std::vector<std::string>>({});
             m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::E, "hex.builtin.view.data_inspector.toggle_endianness", [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::E, "hex.builtin.view.data_inspector.toggle_endianness"_untranslated, [this] {
             if (m_endian == std::endian::little) m_endian = std::endian::big;
             else m_endian = std::endian::little;
             m_shouldInvalidate = true;
@@ -135,7 +135,7 @@ namespace hex::plugin::builtin {
                 entry.editingFunction,
                 false,
                 entry.requiredSize,
-                entry.unlocalizedName
+                entry.unlocalizedName.get()
             );
         }
 
@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
 
             // Insert the inspector containing the error message into the list
             m_workData.emplace_back(
-                wolv::util::toUTF8String(path.filename()),
+                UntranslatedString(wolv::util::toUTF8String(path.filename())),
                 std::move(displayFunction),
                 std::nullopt,
                 false,
@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
 
                 // Insert the inspector into the list
                 m_workData.emplace_back(
-                    pattern->getDisplayName(),
+                    UntranslatedString(pattern->getDisplayName()),
                     displayFunction,
                     editingFunction,
                     false,
@@ -267,14 +267,14 @@ namespace hex::plugin::builtin {
                     wolv::util::toUTF8String(path) + ":" + pattern->getVariableName()
                 );
 
-                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns",
-                                                      "hex.builtin.achievement.patterns.data_inspector.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized,
+                                                      "hex.builtin.achievement.patterns.data_inspector.name"_unlocalized);
             } catch (const pl::core::err::EvaluatorError::Exception &) {
                 auto displayFunction = createPatternErrorDisplayFunction(path);
 
                 // Insert the inspector containing the error message into the list
                 m_workData.emplace_back(
-                    wolv::util::toUTF8String(path.filename()),
+                    UntranslatedString(wolv::util::toUTF8String(path.filename())),
                     std::move(displayFunction),
                     std::nullopt,
                     false,
@@ -452,8 +452,8 @@ namespace hex::plugin::builtin {
                 std::vector filterValues(m_hiddenValues.begin(), m_hiddenValues.end());
 
                 ContentRegistry::Settings::write<std::vector<std::string>>(
-                        "hex.builtin.setting.data_inspector",
-                        "hex.builtin.setting.data_inspector.hidden_rows", filterValues);
+                        "hex.builtin.setting.data_inspector"_unlocalized,
+                        "hex.builtin.setting.data_inspector.hidden_rows"_untranslated, filterValues);
             }
 
             ImGui::PopStyleColor();

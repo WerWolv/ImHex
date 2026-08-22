@@ -7,7 +7,7 @@ namespace hex::prv {
         PatternMatcherProviderType(Provider *provider) : PatternMatcher(provider) { }
 
         bool match(const std::string& parameter) override {
-            return getProvider()->getTypeName() == parameter;
+            return getProvider()->getTypeName() == UnlocalizedString(parameter);
         }
     };
 

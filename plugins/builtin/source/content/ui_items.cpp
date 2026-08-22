@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
 
     void addTitleBarButtons() {
         if (dbg::debugModeEnabled()) {
-            ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_DEBUG, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.debug_build", []{
+            ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_DEBUG, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.debug_build"_unlocalized, []{
                 if (ImGui::GetIO().KeyShift) {
                     RequestOpenPopup::post("DebugMenu");
                 } else {
@@ -45,11 +45,11 @@ namespace hex::plugin::builtin {
             });
         }
 
-        ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_SMILEY, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.feedback", []{
+        ContentRegistry::UserInterface::addTitleBarButton(ICON_VS_SMILEY, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.feedback"_unlocalized, []{
             hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/feedback");
         });
 
-        ContentRegistry::UserInterface::addTitleBarButton(ICON_TA_HELP, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.interactive_help", []{
+        ContentRegistry::UserInterface::addTitleBarButton(ICON_TA_HELP, ImGuiCustomCol_ToolbarGray, "hex.builtin.title_bar_button.interactive_help"_unlocalized, []{
             TutorialManager::startHelpHover();
         });
     }
@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
                         ImGui::Checkbox("Show Debug Variables", &dbg::impl::getDebugWindowState());
                         if (ImGui::Button("Request a restart")) {
                             TaskManager::doLater([] {
-                                ui::PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
+                                ui::PopupQuestion::open("hex.builtin.view.settings.restart_question"_unlocalized,
                                     ImHexApi::System::restartImHex,
                                     []{}
                                 );
@@ -245,6 +245,7 @@ namespace hex::plugin::builtin {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight));
                 ImGui::TextUnformatted(ICON_VS_SHIELD);
                 ImGui::PopStyleColor();
+                ImGui::SetItemTooltip("%s", "hex.builtin.footer.elevated"_lang.get());
             });
         }
 
@@ -436,7 +437,7 @@ namespace hex::plugin::builtin {
     static void drawProviderContextMenu(prv::Provider *provider) {
         if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(provider); menuItemProvider != nullptr) {
             for (const auto &menuEntry : menuItemProvider->getMenuEntries()) {
-                if (ImGui::MenuItemEx(menuEntry.name.c_str(), menuEntry.icon)) {
+                if (ImGui::MenuItemEx(Lang(menuEntry.name), menuEntry.icon)) {
                     menuEntry.callback();
                 }
             }
@@ -481,14 +482,14 @@ namespace hex::plugin::builtin {
     }
 
     void addToolbarItems() {
-        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider", []{
+        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider"_unlocalized, []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
             if (currIndex > 0)
                 ImHexApi::Provider::setCurrentProvider(currIndex - 1);
         });
 
-        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Right, "hex.builtin.shortcut.next_provider", []{
+        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Right, "hex.builtin.shortcut.next_provider"_unlocalized, []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
             const auto &providers = ImHexApi::Provider::getProviders();
@@ -638,13 +639,13 @@ namespace hex::plugin::builtin {
         });
 
         EventImHexStartupFinished::subscribe([] {
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.undo" }, ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.redo" }, ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.menu.file.create_file" }, ImGuiCustomCol_ToolbarGray);
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ImGuiCustomCol_ToolbarBrown);
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save" }, ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as" }, ImGuiCustomCol_ToolbarBlue);
-            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, ImGuiCustomCol_ToolbarGreen);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.undo"_unlocalized }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.redo"_unlocalized }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.create_file"_unlocalized }, ImGuiCustomCol_ToolbarGray);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.open_file"_unlocalized }, ImGuiCustomCol_ToolbarBrown);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.save"_unlocalized }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.save_as"_unlocalized }, ImGuiCustomCol_ToolbarBlue);
+            ContentRegistry::UserInterface::addMenuItemToToolbar({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.menu.edit.bookmark.create"_unlocalized }, ImGuiCustomCol_ToolbarGreen);
         });
     }
 

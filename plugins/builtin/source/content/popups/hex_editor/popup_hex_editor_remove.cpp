@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupRemove::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.remove";
+        return "hex.builtin.view.hex_editor.menu.edit.remove"_unlocalized;
     }
 
     void PopupRemove::remove(u64 address, size_t size) {

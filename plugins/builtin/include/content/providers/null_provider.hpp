@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.null";
+            return "hex.builtin.provider.null"_unlocalized;
         }
     };
 

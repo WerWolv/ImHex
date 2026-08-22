@@ -42,105 +42,9 @@ namespace hex::plugin::hashes {
 
     }
 
-    class HashMD5 : public ContentRegistry::Hashes::Hash {
-    public:
-        HashMD5() : Hash("hex.hashes.hash.md5") {}
-
-        Function create(std::string name) const override {
-            return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto array = crypt::md5(provider, region.address, region.size);
-
-                return { array.begin(), array.end() };
-            });
-        }
-
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
-    };
-
-    class HashSHA1 : public ContentRegistry::Hashes::Hash {
-    public:
-        HashSHA1() : Hash("hex.hashes.hash.sha1") {}
-
-        Function create(std::string name) const override {
-            return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto array = crypt::sha1(provider, region.address, region.size);
-
-                return { array.begin(), array.end() };
-            });
-        }
-
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
-    };
-
-    class HashSHA224 : public ContentRegistry::Hashes::Hash {
-    public:
-        HashSHA224() : Hash("hex.hashes.hash.sha224") {}
-
-        Function create(std::string name) const override {
-            return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto array = crypt::sha224(provider, region.address, region.size);
-
-                return { array.begin(), array.end() };
-            });
-        }
-
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
-    };
-
-    class HashSHA256 : public ContentRegistry::Hashes::Hash {
-    public:
-        HashSHA256() : Hash("hex.hashes.hash.sha256") {}
-
-        Function create(std::string name) const override {
-            return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto array = crypt::sha256(provider, region.address, region.size);
-
-                return { array.begin(), array.end() };
-            });
-        }
-
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
-    };
-
-    class HashSHA384 : public ContentRegistry::Hashes::Hash {
-    public:
-        HashSHA384() : Hash("hex.hashes.hash.sha384") {}
-
-        Function create(std::string name) const override {
-            return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto array = crypt::sha384(provider, region.address, region.size);
-
-                return { array.begin(), array.end() };
-            });
-        }
-
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
-    };
-
-    class HashSHA512 : public ContentRegistry::Hashes::Hash {
-    public:
-        HashSHA512() : Hash("hex.hashes.hash.sha512") {}
-
-        Function create(std::string name) const override {
-            return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto array = crypt::sha512(provider, region.address, region.size);
-
-                return { array.begin(), array.end() };
-            });
-        }
-
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
-    };
-
     class HashCRC : public ContentRegistry::Hashes::Hash {
     public:
-        HashCRC() : Hash("Cyclic Redundancy Check (CRC)") {
+        HashCRC() : Hash("hex.hashes.hash.crc"_unlocalized) {
             m_crcs.push_back(HashFactory::Checksum::CreateCRC(3, 0, 0, false, false, 0, 0, { "hex.hashes.hash.common.standard.custom" }));
 
             for (CRCStandard standard = CRC3_GSM; standard < CRC64_XZ; standard = CRCStandard(int(standard) + 1)) {
@@ -234,7 +138,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHash(*)();
 
-        explicit HashBasic(FactoryFunction function) : Hash(function()->GetName()), m_factoryFunction(function) {}
+        explicit HashBasic(FactoryFunction function) : Hash(UntranslatedString(function()->GetName())), m_factoryFunction(function) {}
 
         Function create(std::string name) const override {
             return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -258,7 +162,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHashWithKey(*)();
 
-        explicit HashWithKey(FactoryFunction function) : Hash(function()->GetName()), m_factoryFunction(function) {}
+        explicit HashWithKey(FactoryFunction function) : Hash(UntranslatedString(function()->GetName())), m_factoryFunction(function) {}
 
         void draw() override {
             ImGui::InputText("hex.hashes.hash.common.key"_lang, m_key, ImGuiInputTextFlags_CharsHexadecimal);
@@ -300,7 +204,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHash(*)(const Int32);
 
-        explicit HashInitialValue(FactoryFunction function) : Hash(function(0)->GetName()), m_factoryFunction(function) {}
+        explicit HashInitialValue(FactoryFunction function) : Hash(UntranslatedString(function(0)->GetName())), m_factoryFunction(function) {}
 
         void draw() override {
             ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
@@ -340,7 +244,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHash(*)(const Int32, const HashRounds&);
 
-        explicit HashTiger(std::string name, FactoryFunction function) : Hash(std::move(name)), m_factoryFunction(function) {}
+        explicit HashTiger(UnlocalizedString name, FactoryFunction function) : Hash(std::move(name)), m_factoryFunction(function) {}
         void draw() override {
             ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0");
             ImGui::Combo("hex.hashes.hash.common.rounds"_lang, &m_hashRounds, "3 Rounds\0" "4 Rounds\0" "5 Rounds\0" "8 Rounds\0");
@@ -399,7 +303,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHash(*)(T1 a_Config, T2 a_TreeConfig);
 
-        explicit HashBlake2(std::string name, FactoryFunction function) : Hash(std::move(name)), m_factoryFunction(function) {}
+        explicit HashBlake2(UnlocalizedString name, FactoryFunction function) : Hash(std::move(name)), m_factoryFunction(function) {}
         void draw() override {
             ImGui::InputText("hex.hashes.hash.common.salt"_lang, m_salt, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::InputText("hex.hashes.hash.common.key"_lang, m_key, ImGuiInputTextFlags_CharsHexadecimal);
@@ -464,7 +368,7 @@ namespace hex::plugin::hashes {
 
     class HashSum : public ContentRegistry::Hashes::Hash {
     public:
-        HashSum() : Hash("hex.hashes.hash.sum") {}
+        HashSum() : Hash("hex.hashes.hash.sum"_unlocalized) {}
 
         Function create(std::string name) const override {
             return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -556,7 +460,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHash(*)(Int32 a_security_level, const HashSize &a_hash_size);
 
-        explicit HashSnefru(FactoryFunction function) : Hash("Snefru"), m_factoryFunction(function) {}
+        explicit HashSnefru(FactoryFunction function) : Hash("hex.hashes.hash.snefru"_unlocalized), m_factoryFunction(function) {}
         void draw() override {
             ImGui::SliderInt("hex.hashes.hash.common.security_level"_lang, &m_securityLevel, 1, 1024);
             ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "256 Bits\0");
@@ -606,7 +510,7 @@ namespace hex::plugin::hashes {
     public:
         using FactoryFunction = IHash(*)(const HashRounds& a_rounds, const HashSize& a_hash_size);
 
-        explicit HashHaval(FactoryFunction function) : Hash("Haval"), m_factoryFunction(function) {}
+        explicit HashHaval(FactoryFunction function) : Hash("hex.hashes.hash.haval"_unlocalized), m_factoryFunction(function) {}
         void draw() override {
             ImGui::Combo("hex.hashes.hash.common.rounds"_lang, &m_hashRounds, "3 Rounds\0" "4 Rounds\0" "5 Rounds\0");
             ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0" "224 Bits\0" "256 Bits\0");
@@ -661,7 +565,7 @@ namespace hex::plugin::hashes {
 
     class HashHMAC : public ContentRegistry::Hashes::Hash {
     public:
-        HashHMAC() : Hash("HMAC") { }
+        HashHMAC() : Hash("hex.hashes.hash.hmac"_unlocalized) { }
 
         void draw() override {
             const auto hashes = this->getAvailableHashes();
@@ -748,7 +652,7 @@ namespace hex::plugin::hashes {
             try {
                 m_key = data.at("key").get<std::string>();
                 m_blockSize = data.at("blockSize").get<u64>();
-                const auto hashName = data.at("hash").get<std::string>();
+                const auto hashName = UntranslatedString(data.at("hash").get<std::string>());
 
                 for (auto hash : this->getAvailableHashes()) {
                     if (hash->getUnlocalizedName() == hashName) {
@@ -831,11 +735,11 @@ namespace hex::plugin::hashes {
         ContentRegistry::Hashes::add<HashSnefru>(HashFactory::Crypto::CreateSnefru);
         ContentRegistry::Hashes::add<HashHaval>(HashFactory::Crypto::CreateHaval);
 
-        ContentRegistry::Hashes::add<HashTiger>("Tiger", HashFactory::Crypto::CreateTiger);
-        ContentRegistry::Hashes::add<HashTiger>("Tiger2", HashFactory::Crypto::CreateTiger2);
+        ContentRegistry::Hashes::add<HashTiger>("hex.hashes.hash.tiger"_unlocalized, HashFactory::Crypto::CreateTiger);
+        ContentRegistry::Hashes::add<HashTiger>("hex.hashes.hash.tiger2"_unlocalized, HashFactory::Crypto::CreateTiger2);
 
-        ContentRegistry::Hashes::add<HashBlake2<Blake2BConfig, IBlake2BConfig, IBlake2BTreeConfig>>("Blake2b", HashFactory::Crypto::CreateBlake2B);
-        ContentRegistry::Hashes::add<HashBlake2<Blake2SConfig, IBlake2SConfig, IBlake2STreeConfig>>("Blake2s", HashFactory::Crypto::CreateBlake2S);
+        ContentRegistry::Hashes::add<HashBlake2<Blake2BConfig, IBlake2BConfig, IBlake2BTreeConfig>>("hex.hashes.hash.blake2b"_unlocalized, HashFactory::Crypto::CreateBlake2B);
+        ContentRegistry::Hashes::add<HashBlake2<Blake2SConfig, IBlake2SConfig, IBlake2STreeConfig>>("hex.hashes.hash.blake2s"_unlocalized, HashFactory::Crypto::CreateBlake2S);
 
         ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateAP);
         ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBKDR);

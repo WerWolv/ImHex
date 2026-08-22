@@ -56,7 +56,7 @@ namespace hex::ui {
     class PopupInfo : public impl::PopupNotification<PopupInfo> {
     public:
         explicit PopupInfo(std::string message)
-        : PopupNotification("hex.ui.common.info", ICON_VS_INFO, std::move(message), [this] {
+        : PopupNotification("hex.ui.common.info"_unlocalized, ICON_VS_INFO, std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -64,7 +64,7 @@ namespace hex::ui {
     class PopupWarning : public impl::PopupNotification<PopupWarning> {
     public:
         explicit PopupWarning(std::string message)
-        : PopupNotification("hex.ui.common.warning", ICON_VS_WARNING, std::move(message), [this] {
+        : PopupNotification("hex.ui.common.warning"_unlocalized, ICON_VS_WARNING, std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -72,7 +72,7 @@ namespace hex::ui {
     class PopupError : public impl::PopupNotification<PopupError> {
     public:
         explicit PopupError(std::string message)
-        : PopupNotification("hex.ui.common.error", ICON_VS_ERROR, std::move(message), [this] {
+        : PopupNotification("hex.ui.common.error"_unlocalized, ICON_VS_ERROR, std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -80,7 +80,7 @@ namespace hex::ui {
     class PopupFatal : public impl::PopupNotification<PopupFatal> {
     public:
         explicit PopupFatal(std::string message)
-        : PopupNotification("hex.ui.common.fatal", ICON_VS_BUG, std::move(message), [this] {
+        : PopupNotification("hex.ui.common.fatal"_unlocalized, ICON_VS_BUG, std::move(message), [this] {
             ImHexApi::System::closeImHex();
             Popup::close();
         }) { }

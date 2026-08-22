@@ -9,7 +9,13 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticAdd : public dp::Node {
     public:
-        NodeArithmeticAdd() : Node("hex.builtin.nodes.arithmetic.add.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticAdd() : Node(
+            "hex.builtin.nodes.arithmetic.add.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -23,7 +29,13 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticSubtract : public dp::Node {
     public:
-        NodeArithmeticSubtract() : Node("hex.builtin.nodes.arithmetic.sub.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticSubtract() : Node(
+            "hex.builtin.nodes.arithmetic.sub.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -37,7 +49,13 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticMultiply : public dp::Node {
     public:
-        NodeArithmeticMultiply() : Node("hex.builtin.nodes.arithmetic.mul.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticMultiply() : Node(
+            "hex.builtin.nodes.arithmetic.mul.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -51,7 +69,13 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticDivide : public dp::Node {
     public:
-        NodeArithmeticDivide() : Node("hex.builtin.nodes.arithmetic.div.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticDivide() : Node(
+            "hex.builtin.nodes.arithmetic.div.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -68,7 +92,13 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticModulus : public dp::Node {
     public:
-        NodeArithmeticModulus() : Node("hex.builtin.nodes.arithmetic.mod.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticModulus() : Node(
+            "hex.builtin.nodes.arithmetic.mod.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.a"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input.b"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &inputA = this->getIntegerOnInput(0);
@@ -85,7 +115,11 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticAverage : public dp::Node {
     public:
-        NodeArithmeticAverage() : Node("hex.builtin.nodes.arithmetic.average.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticAverage() : Node(
+            "hex.builtin.nodes.arithmetic.average.header"_unlocalized, {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -98,7 +132,12 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticMedian : public dp::Node {
     public:
-        NodeArithmeticMedian() : Node("hex.builtin.nodes.arithmetic.median.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticMedian() : Node(
+            "hex.builtin.nodes.arithmetic.median.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -120,7 +159,12 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticCeil : public dp::Node {
     public:
-        NodeArithmeticCeil() : Node("hex.builtin.nodes.arithmetic.ceil.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticCeil() : Node(
+            "hex.builtin.nodes.arithmetic.ceil.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &input = this->getFloatOnInput(0);
@@ -131,7 +175,12 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticFloor : public dp::Node {
     public:
-        NodeArithmeticFloor() : Node("hex.builtin.nodes.arithmetic.floor.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticFloor() : Node(
+            "hex.builtin.nodes.arithmetic.floor.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &input = this->getFloatOnInput(0);
@@ -142,7 +191,12 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticRound : public dp::Node {
     public:
-        NodeArithmeticRound() : Node("hex.builtin.nodes.arithmetic.round.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticRound() : Node(
+            "hex.builtin.nodes.arithmetic.round.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output"_unlocalized)
+            }) { }
 
         void process() override {
             const auto &input = this->getFloatOnInput(0);
@@ -152,16 +206,16 @@ namespace hex::plugin::builtin {
     };
         
     void registerMathDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.add");
-        ContentRegistry::DataProcessor::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.sub");
-        ContentRegistry::DataProcessor::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
-        ContentRegistry::DataProcessor::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.div");
-        ContentRegistry::DataProcessor::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
-        ContentRegistry::DataProcessor::add<NodeArithmeticAverage>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.average");
-        ContentRegistry::DataProcessor::add<NodeArithmeticMedian>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.median");
-        ContentRegistry::DataProcessor::add<NodeArithmeticCeil>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.ceil");
-        ContentRegistry::DataProcessor::add<NodeArithmeticFloor>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.floor");
-        ContentRegistry::DataProcessor::add<NodeArithmeticRound>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.round");
+        ContentRegistry::DataProcessor::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.add"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.sub"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.mul"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.div"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.mod"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticAverage>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.average"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticMedian>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.median"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticCeil>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.ceil"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticFloor>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.floor"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeArithmeticRound>("hex.builtin.nodes.arithmetic"_unlocalized, "hex.builtin.nodes.arithmetic.round"_unlocalized);
     }
 
 }

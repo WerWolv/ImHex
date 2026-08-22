@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
     class InformationProvider : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationProvider() : InformationSection("hex.builtin.information_section.provider_information") { }
+        InformationProvider() : InformationSection("hex.builtin.information_section.provider_information"_unlocalized) { }
         ~InformationProvider() override = default;
 
         void process(Task &task, prv::Provider *provider, Region region) override {
@@ -72,7 +72,7 @@ namespace hex::plugin::builtin {
 
     class InformationMagic : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationMagic() : InformationSection("hex.builtin.information_section.magic") { }
+        InformationMagic() : InformationSection("hex.builtin.information_section.magic"_unlocalized) { }
         ~InformationMagic() override = default;
 
         void process(Task &task, prv::Provider *provider, Region region) override {
@@ -239,7 +239,7 @@ namespace hex::plugin::builtin {
 
     class InformationByteAnalysis : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationByteAnalysis() : InformationSection("hex.builtin.information_section.info_analysis", "", true) {
+        InformationByteAnalysis() : InformationSection("hex.builtin.information_section.info_analysis"_unlocalized, {}, true) {
             EventRegionSelected::subscribe(this, [this](const ImHexApi::HexEditor::ProviderRegion &region) {
                 m_byteTypesDistribution.setHandlePosition(region.getStartAddress());
                 m_chunkBasedEntropy.setHandlePosition(region.getStartAddress());
@@ -473,7 +473,7 @@ namespace hex::plugin::builtin {
 
 class InformationByteRelationshipAnalysis : public ContentRegistry::DataInformation::InformationSection {
     public:
-        InformationByteRelationshipAnalysis() : InformationSection("hex.builtin.information_section.relationship_analysis", "", true) {
+        InformationByteRelationshipAnalysis() : InformationSection("hex.builtin.information_section.relationship_analysis"_unlocalized, {}, true) {
 
         }
 

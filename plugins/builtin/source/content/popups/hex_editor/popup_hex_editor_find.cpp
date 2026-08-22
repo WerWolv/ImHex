@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
 
         if (ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "hex.builtin.view.hex_editor.search.advanced"_lang)) {
             TaskManager::doLater([editor] {
-                const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
+                const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name"_unlocalized);
 
                 view->getWindowOpenState() = true;
                 ImGui::SetWindowFocus(view->getName().c_str());
@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
             this->processInputString();
 
             if (!m_searchTask.isRunning() && !m_searchByteSequence.empty()) {
-                m_searchTask = TaskManager::createTask("hex.ui.common.processing",
+                m_searchTask = TaskManager::createTask("hex.ui.common.processing"_unlocalized,
                                                        ProgressValue::Size(ImHexApi::Provider::get()->getActualSize()),
                                                        doSearch);
             }
@@ -327,6 +327,6 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] UnlocalizedString PopupFind::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.file.search";
+        return "hex.builtin.view.hex_editor.menu.file.search"_unlocalized;
     }
 }

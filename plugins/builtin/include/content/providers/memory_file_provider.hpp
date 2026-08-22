@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
         std::vector<MenuEntry> getMenuEntries() override;
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.mem_file";
+            return "hex.builtin.provider.mem_file"_unlocalized;
         }
 
         [[nodiscard]] const char* getIcon() const override {

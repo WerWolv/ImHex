@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
             return;
         }
 
-        m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing", ProgressValue::None(), [this](Task &task) {
+        m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing"_unlocalized, ProgressValue::None(), [this](Task &task) {
             m_mimeType = magic::getMIMEType(&m_provider);
             if (!magic::isValidMIMEType(m_mimeType)) {
                 m_mimeType.clear();

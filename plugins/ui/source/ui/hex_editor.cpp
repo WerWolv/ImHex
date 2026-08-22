@@ -22,7 +22,7 @@ namespace hex::ui {
 
     class DataVisualizerAscii : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerAscii() : DataVisualizer("ASCII", 1, 1) { }
+        DataVisualizerAscii() : DataVisualizer("ASCII"_untranslated, 1, 1) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             std::ignore = address;
@@ -486,7 +486,7 @@ namespace hex::ui {
                         }
                     }
 
-                    m_provider->getUndoStack().groupOperations(writtenBytes, "hex.builtin.undo_operation.modification");
+                    m_provider->getUndoStack().groupOperations(writtenBytes, "hex.builtin.undo_operation.modification"_unlocalized);
                 }
 
                 if (!m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !anyMouseButtonClicked && !ImGui::IsKeyDown(ImGuiKey_Escape)) {
@@ -504,7 +504,7 @@ namespace hex::ui {
                             m_provider->insert(nextEditingAddress, size);
 
                             if (!shouldExitEditingMode)
-                                m_provider->getUndoStack().groupOperations(2, "hex.builtin.undo_operation.insert");
+                                m_provider->getUndoStack().groupOperations(2, "hex.builtin.undo_operation.insert"_unlocalized);
                         }
                     }
                 } else {
@@ -632,7 +632,7 @@ namespace hex::ui {
         const auto CharacterSize          = ImGui::CalcTextSize("0");
 
         if (m_currDataVisualizer == nullptr) {
-            if (const auto &visualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit"); visualizer != nullptr) {
+            if (const auto &visualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit"_unlocalized); visualizer != nullptr) {
                 m_currDataVisualizer = visualizer;
                 return;
             }
