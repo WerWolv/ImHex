@@ -20,8 +20,7 @@ namespace hex::plugin::builtin {
         u64 m_baseAddress;
         u64 m_byteAddress;
         u64 m_byteOffset;
-        bool m_setBaseAddressFlag;
-        bool m_setByteAddressFlag;
-        bool m_setByteAddressEnable;
+        bool m_byteAddressMode;
+        bool m_byteAddressDisable;
     };
 }

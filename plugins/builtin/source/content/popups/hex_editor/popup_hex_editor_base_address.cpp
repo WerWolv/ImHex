@@ -1,20 +1,16 @@
 #include "content/popups/hex_editor/popup_hex_editor_base_address.hpp"
 #include "content/views/view_hex_editor.hpp"
 
+#include <fonts/tabler_icons.hpp>
+
 namespace hex::plugin::builtin {
 
     PopupBaseAddress::PopupBaseAddress(const ImHexApi::HexEditor::ProviderRegion &selection) 
             : m_selection(selection), m_baseAddress(0), m_byteAddress(0), m_byteOffset(0), 
-              m_setBaseAddressFlag(true), m_setByteAddressFlag(false), m_setByteAddressEnable(false) {
-        // If popup is opened without selecting bytes, try to use current provider
-        if (selection.getProvider() == nullptr) {
-            m_selection.provider = ImHexApi::Provider::get();
-        }
-
+              m_byteAddressMode(false), m_byteAddressDisable(true) {
         if (m_selection.getProvider() != nullptr) {
             m_baseAddress = m_selection.getProvider()->getBaseAddress();
-            m_setByteAddressEnable = ((m_selection.getProvider()->getActualSize() == 0) || 
-                                      (m_selection.getSize() != 1)) ? false : true;
+            m_byteAddressDisable = ((m_selection.getProvider()->getActualSize() == 0) || (m_selection.getSize() != 1));
             m_byteAddress = m_selection.getStartAddress();
 
             if (m_byteAddress >= m_baseAddress) {
@@ -26,31 +22,17 @@ namespace hex::plugin::builtin {
     void PopupBaseAddress::draw(ViewHexEditor *editor) {
         const auto width = ImGui::GetWindowWidth();
 
-        if (m_setBaseAddressFlag){ // Set base address
-            ImGuiExt::InputHexadecimal("##base_address_input", &m_baseAddress, ImGuiInputTextFlags_AutoSelectAll);
-        } else { // Set byte address
-            ImGuiExt::InputHexadecimal("##byte_address_input", &m_byteAddress, ImGuiInputTextFlags_AutoSelectAll);
-        }
+        // Set base address
+        ImGuiExt::InputHexadecimal("##base_address_input", 
+                                   m_byteAddressMode ? &m_byteAddress : &m_baseAddress, 
+                                   ImGuiInputTextFlags_AutoSelectAll);
 
-        ImGui::Spacing();
+        ImGui::SameLine();
 
-        ImGui::BeginDisabled(!m_setByteAddressEnable);
+        ImGui::BeginDisabled(m_byteAddressDisable);
         {
-            if (ImGui::Checkbox("hex.builtin.view.hex_editor.menu.edit.set_base_address"_lang, &m_setBaseAddressFlag)) {
-                if (m_setBaseAddressFlag) {
-                    m_setByteAddressFlag = false;
-                } else {
-                    m_setBaseAddressFlag = true;
-                }
-            }
-
-            if (ImGui::Checkbox("hex.builtin.view.hex_editor.menu.edit.set_byte_address"_lang, &m_setByteAddressFlag)) {
-                if (m_setByteAddressFlag) {
-                    m_setBaseAddressFlag = false;
-                } else {
-                    m_setByteAddressFlag = true;
-                }
-            }
+            ImGuiExt::DimmedIconToggle(ICON_TA_ANCHOR, ICON_TA_ANCHOR_OFF, &m_byteAddressMode);
+            ImGuiExt::InfoTooltip("hex.builtin.view.hex_editor.menu.edit.set_byte_address"_lang);
         }
         ImGui::EndDisabled();
 
@@ -100,12 +82,12 @@ namespace hex::plugin::builtin {
         const auto providerSize = m_selection.getProvider()->getActualSize();
         auto newBaseAddress = m_baseAddress;
 
-        if (m_setBaseAddressFlag) { // Set base address
+        if (!m_byteAddressMode) { // Set base address
             if (providerSize == 0) {
                 return true;
             }
         } else { // Set byte address
-            if (providerSize == 0 || (m_byteAddress < m_byteOffset)) {
+            if ((providerSize == 0) || (m_byteAddress < m_byteOffset)) {
                 return false;
             }
             newBaseAddress = (m_byteAddress - m_byteOffset);
@@ -117,7 +99,7 @@ namespace hex::plugin::builtin {
     void PopupBaseAddress::setBaseAddress() const {
         auto newBaseAddress = m_baseAddress;
 
-        if (m_setByteAddressFlag) { // Set byte address
+        if (m_byteAddressMode) { // Set byte address
             newBaseAddress = (m_byteAddress - m_byteOffset);
         }
 
