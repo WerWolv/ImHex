@@ -60,7 +60,7 @@ namespace hex {
     static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
             case WM_DPICHANGED: {
-                int interfaceScaleSetting = int(hex::ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F) * 10.0F);
+                int interfaceScaleSetting = int(hex::ContentRegistry::Settings::read<float>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.scaling_factor"_unlocalized, 0.0F) * 10.0F);
                 if (interfaceScaleSetting != 0)
                     break;
 

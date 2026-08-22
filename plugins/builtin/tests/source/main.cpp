@@ -17,7 +17,7 @@ using namespace hex::plugin::builtin;
 TEST_SEQUENCE("Providers/ReadWrite") {
     INIT_PLUGIN("Built-in");
 
-    auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
 
     TEST_ASSERT(provider.getSize() == 0);
     TEST_ASSERT(!provider.isDataDirty());
@@ -43,7 +43,7 @@ TEST_SEQUENCE("Providers/ReadWrite") {
 TEST_SEQUENCE("Providers/InvalidResize") {
     INIT_PLUGIN("Built-in");
 
-    auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
 
     
     TEST_ASSERT(!pr.resize(-1));
@@ -249,7 +249,7 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     TEST_ASSERT(providers.size() == 2);
     TEST_ASSERT(std::ranges::none_of(providers, [](const auto *provider) { return provider->getID() == 100; }));
 
-    auto temporaryProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto temporaryProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(temporaryProvider->getID() > 100);
     ImHexApi::Provider::remove(temporaryProvider.get(), true);
 
@@ -299,7 +299,7 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto importResult = project::importProviders({ std::move(unavailableProvider) });
     TEST_ASSERT(importResult.success);
     TEST_ASSERT(importResult.failedProviderIds == std::vector<u32>({ 200 }));
-    auto postImportProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto postImportProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(postImportProvider->getID() > 200);
 
     TEST_SUCCESS();

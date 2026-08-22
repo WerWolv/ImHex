@@ -3,12 +3,14 @@
 #include <wolv/io/file.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
 #include <hex/test/test_provider.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <charconv>
 #include <chrono>
 #include <thread>
 
 using namespace std::literals::string_literals;
+using namespace hex;
 
 TEST_SEQUENCE("FileAccess") {
     const auto FilePath    = std::fs::current_path() / "file.txt";
@@ -55,12 +57,12 @@ TEST_SEQUENCE("FileBackedProviderData") {
     std::fs::remove(filePath);
 
     std::vector<u8> providerBytes;
-    hex::test::TestProvider provider(&providerBytes);
-    hex::test::TestProvider secondProvider(&providerBytes);
+    test::TestProvider provider(&providerBytes);
+    test::TestProvider secondProvider(&providerBytes);
     u32 encodeCalls = 0;
-    hex::FileBackedProviderData<int> data({
+    FileBackedProviderData<int> data({
         .typeId = "hex.test.file_backed_provider_data",
-        .displayName = "Test data",
+        .displayName = "Test data"_untranslated,
         .displayIcon = "T",
         .extensions = { { "Test data", "txt" } },
         .encode = [&encodeCalls](const int &value) {
@@ -81,7 +83,7 @@ TEST_SEQUENCE("FileBackedProviderData") {
         .debounce = 0ms
     });
     u32 notifications = 0;
-    data.setChangedCallback([&](hex::prv::Provider *changedProvider) {
+    data.setChangedCallback([&](prv::Provider *changedProvider) {
         if (changedProvider == &provider)
             notifications += 1;
     });
@@ -91,7 +93,7 @@ TEST_SEQUENCE("FileBackedProviderData") {
     TEST_ASSERT(constData.get(&secondProvider) == 7);
     const auto createdFilePath = std::fs::current_path() / "file_backed_provider_data_created.txt";
     std::fs::remove(createdFilePath);
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::createFile(data.getType().typeId, createdFilePath));
+    TEST_ASSERT(FileBackedProviderDataRegistry::createFile(data.getType().typeId, createdFilePath));
     {
         wolv::io::File file(createdFilePath, wolv::io::File::Mode::Read);
         TEST_ASSERT(file.readString() == "7");
@@ -101,18 +103,18 @@ TEST_SEQUENCE("FileBackedProviderData") {
     TEST_ASSERT(data.hasPendingData(&secondProvider));
     TEST_ASSERT(!secondProvider.isMetadataDirty());
     TEST_ASSERT(!data.isBound(&secondProvider));
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::get("hex.test.file_backed_provider_data") == &data);
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::bind(&provider, data.getType().typeId, filePath));
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::isBound(&provider, data.getType().typeId));
+    TEST_ASSERT(FileBackedProviderDataRegistry::get("hex.test.file_backed_provider_data") == &data);
+    TEST_ASSERT(FileBackedProviderDataRegistry::bind(&provider, data.getType().typeId, filePath));
+    TEST_ASSERT(FileBackedProviderDataRegistry::isBound(&provider, data.getType().typeId));
 
     const auto encodeCallsBeforeIdleFrames = encodeCalls;
-    hex::EventFrameEnd::post();
-    hex::EventFrameEnd::post();
-    hex::EventFrameEnd::post();
+    EventFrameEnd::post();
+    EventFrameEnd::post();
+    EventFrameEnd::post();
     TEST_ASSERT(encodeCalls == encodeCallsBeforeIdleFrames);
 
     data.set(42, &provider);
-    hex::EventFrameEnd::post();
+    EventFrameEnd::post();
     {
         wolv::io::File file(filePath, wolv::io::File::Mode::Read);
         TEST_ASSERT(file.isValid());
@@ -123,14 +125,14 @@ TEST_SEQUENCE("FileBackedProviderData") {
     std::fs::remove(relocatedFilePath);
     data.set(43, &provider);
     std::fs::rename(filePath, relocatedFilePath);
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::relocate(&provider, data.getType().typeId, relocatedFilePath));
-    hex::EventFrameEnd::post();
+    TEST_ASSERT(FileBackedProviderDataRegistry::relocate(&provider, data.getType().typeId, relocatedFilePath));
+    EventFrameEnd::post();
     {
         wolv::io::File file(relocatedFilePath, wolv::io::File::Mode::Read);
         TEST_ASSERT(file.readString() == "43");
     }
     std::fs::rename(relocatedFilePath, filePath);
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::relocate(&provider, data.getType().typeId, filePath));
+    TEST_ASSERT(FileBackedProviderDataRegistry::relocate(&provider, data.getType().typeId, filePath));
 
     std::this_thread::sleep_for(100ms);
     {
@@ -141,7 +143,7 @@ TEST_SEQUENCE("FileBackedProviderData") {
     const auto reloadDeadline = std::chrono::steady_clock::now() + 2500ms;
     while (data.get(&provider) != 84 && std::chrono::steady_clock::now() < reloadDeadline) {
         std::this_thread::sleep_for(50ms);
-        hex::EventFrameEnd::post();
+        EventFrameEnd::post();
     }
     TEST_ASSERT(data.get(&provider) == 84);
 
@@ -149,7 +151,7 @@ TEST_SEQUENCE("FileBackedProviderData") {
     const auto deletionDeadline = std::chrono::steady_clock::now() + 2500ms;
     while (data.get(&provider) != 7 && std::chrono::steady_clock::now() < deletionDeadline) {
         std::this_thread::sleep_for(50ms);
-        hex::EventFrameEnd::post();
+        EventFrameEnd::post();
     }
     TEST_ASSERT(data.get(&provider) == 7);
     TEST_ASSERT(data.isBound(&provider));
@@ -161,19 +163,19 @@ TEST_SEQUENCE("FileBackedProviderData") {
     const auto recreationDeadline = std::chrono::steady_clock::now() + 2500ms;
     while (data.get(&provider) != 21 && std::chrono::steady_clock::now() < recreationDeadline) {
         std::this_thread::sleep_for(50ms);
-        hex::EventFrameEnd::post();
+        EventFrameEnd::post();
     }
     TEST_ASSERT(data.get(&provider) == 21);
 
     const auto notificationsBeforeUnbind = notifications;
-    TEST_ASSERT(hex::FileBackedProviderDataRegistry::unbind(&provider, data.getType().typeId));
+    TEST_ASSERT(FileBackedProviderDataRegistry::unbind(&provider, data.getType().typeId));
     TEST_ASSERT(notifications == notificationsBeforeUnbind + 1);
     TEST_ASSERT(data.get(&provider) == 7);
-    TEST_ASSERT(!hex::FileBackedProviderDataRegistry::getBinding(&provider, data.getType().typeId).has_value());
+    TEST_ASSERT(!FileBackedProviderDataRegistry::getBinding(&provider, data.getType().typeId).has_value());
 
     data.get(&provider) = 9;
     const auto encodeCallsBeforeUnmarkedChange = encodeCalls;
-    hex::EventFrameEnd::post();
+    EventFrameEnd::post();
     TEST_ASSERT(data.get(&provider) == 9);
     TEST_ASSERT(encodeCalls == encodeCallsBeforeUnmarkedChange);
     data.markChanged(&provider);
