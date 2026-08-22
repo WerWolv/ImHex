@@ -520,6 +520,10 @@ namespace hex {
 
         std::shared_ptr<prv::Provider> createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
             std::shared_ptr<prv::Provider> result = nullptr;
+
+            if (!ProjectManager::hasPath())
+                ProjectManager::loadDefaultProject();
+
             RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 
             return result;

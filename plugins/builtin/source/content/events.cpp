@@ -518,9 +518,6 @@ namespace hex::plugin::builtin {
         });
 
         RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider, TaskHolder *task) {
-            if (!ProjectManager::hasPath())
-                ProjectManager::loadDefaultProject();
-
             *task = TaskManager::createBlockingTask("hex.builtin.provider.opening", TaskManager::NoProgress, [provider]() {
                 auto result = provider->open();
                 if (result.isFailure()) {
