@@ -29,12 +29,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
 
-        [[nodiscard]] OpenResult open() override {
-            if (ImHexApi::Provider::getProviders().empty())
-                return {};
-
-            return OpenResult::redirect(ImHexApi::Provider::get());
-        }
+        [[nodiscard]] OpenResult open() override { return {}; }
         void close() override { }
 
         void readRaw(u64 offset, void *buffer, size_t size) override {

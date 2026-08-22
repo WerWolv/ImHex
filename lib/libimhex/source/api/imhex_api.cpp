@@ -1,9 +1,6 @@
-#include "hex/api/project_manager.hpp"
-#include "hex/helpers/default_paths.hpp"
-
 #include <hex/api/imhex_api/bookmarks.hpp>
-#include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/api/imhex_api/fonts.hpp>
 #include <hex/api/imhex_api/messaging.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/system.hpp>
@@ -492,14 +489,8 @@ namespace hex {
             if (s_currentProvider >= i64(s_providers->size()) && !s_providers->empty())
                 setCurrentProvider(s_providers->size() - 1);
 
-            if (s_providers->empty()) {
+            if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
-
-                if (ProjectManager::hasPath() && ProjectManager::isDefaultProject()) {
-                    ProjectManager::store();
-                    ProjectManager::clearPath();
-                }
-            }
 
             EventProviderClosed::post(providerToRemove);
             RequestUpdateWindowTitle::post();

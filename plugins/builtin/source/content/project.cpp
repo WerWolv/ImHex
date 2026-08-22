@@ -994,19 +994,17 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginChild("##ProjectTree", ImVec2(0, 0), ImGuiChildFlags_Borders)) {
                 const auto providers = ImHexApi::Provider::getProviders();
                 const auto projectRoot = ProjectManager::getProjectRoot();
-                const auto projectLabel = fmt::format("{}  {}", ICON_VS_PROJECT, ProjectManager::isDefaultProject() ? "" : wolv::util::toUTF8String(projectRoot.filename()));
+                const auto projectLabel = fmt::format("{}  {}", ICON_VS_PROJECT, wolv::util::toUTF8String(projectRoot.filename()));
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
                 const bool projectOpen = ImGui::TreeNodeEx("##Project",
                     ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth,
                     "%s", projectLabel.c_str()
                 );
 
-                if (!ProjectManager::isDefaultProject()) {
-                    ImGui::SameLine();
-                    fonts::Default().pushItalic();
-                    ImGui::TextDisabled("%s", wolv::util::toUTF8String(projectRoot).c_str());
-                    fonts::Default().pop();
-                }
+                ImGui::SameLine();
+                fonts::Default().pushItalic();
+                ImGui::TextDisabled("%s", wolv::util::toUTF8String(projectRoot).c_str());
+                fonts::Default().pop();
 
                 if (projectOpen) {
                     std::optional<u32> providerToOpen;

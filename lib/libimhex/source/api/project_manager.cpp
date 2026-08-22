@@ -1,7 +1,5 @@
 #include <hex/api/project_manager.hpp>
 
-#include "hex/helpers/default_paths.hpp"
-
 #include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/io/fs.hpp>
@@ -10,12 +8,12 @@ namespace hex {
 
     namespace {
 
+
         AutoReset<std::fs::path> s_currProjectPath;
-        AutoReset<bool> s_folderProject, s_defaultProject;
+        AutoReset<bool> s_folderProject;
 
         AutoReset<std::function<bool(const std::fs::path&)>> s_loadProjectFunction;
         AutoReset<std::function<bool(std::optional<std::fs::path>, bool)>> s_storeProjectFunction;
-
 
     }
 
@@ -29,28 +27,7 @@ namespace hex {
     }
 
     bool ProjectManager::load(const std::fs::path &filePath) {
-        s_defaultProject = false;
-        return (*s_loadProjectFunction)(filePath);
-    }
-
-    bool ProjectManager::loadDefaultProject() {
-        for (const auto &path : paths::Backups.write()) {
-            const auto projectPath = path / "default_project";
-            s_defaultProject = true;
-            wolv::io::fs::createDirectories(projectPath);
-            const auto result = (*s_loadProjectFunction)(projectPath);
-
-            if (!result)
-                s_defaultProject = false;
-
-            return result;
-        }
-
-        return false;
-    }
-
-    bool ProjectManager::isDefaultProject() {
-        return s_defaultProject;
+      return (*s_loadProjectFunction)(filePath);
     }
 
     bool ProjectManager::store(std::optional<std::fs::path> filePath, bool updateLocation) {

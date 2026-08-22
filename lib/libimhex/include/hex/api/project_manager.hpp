@@ -44,9 +44,6 @@ EXPORT_MODULE namespace hex {
          */
         static bool load(const std::filesystem::path &filePath);
 
-        static bool loadDefaultProject();
-        static bool isDefaultProject();
-
         /**
          * @brief Store a project file
          *
