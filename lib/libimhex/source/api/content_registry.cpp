@@ -1447,12 +1447,12 @@ namespace hex {
         namespace impl {
 
             std::unique_ptr<mcp::Server>& getMcpServerInstance() {
-                static std::unique_ptr<mcp::Server> server;
+                static AutoReset<std::unique_ptr<mcp::Server>> server;
 
-                if (server == nullptr)
+                if (*server == nullptr)
                     server = std::make_unique<mcp::Server>();
 
-                return server;
+                return *server;
             }
 
             static bool s_mcpEnabled = false;
