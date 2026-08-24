@@ -15,17 +15,80 @@
 
 namespace hex::plugin::builtin {
 
+    static bool hasPendingFileBackedData(const prv::Provider *provider) {
+        return std::ranges::any_of(FileBackedProviderDataRegistry::getTypes(), [provider](const auto *data) {
+            return data->hasPendingData(provider);
+        });
+    }
+
+    static bool flushFileBackedData() {
+        bool result = true;
+        for (auto *data : FileBackedProviderDataRegistry::getTypes())
+            result = data->flush() && result;
+        return result;
+    }
+
+    bool saveProviderData() {
+        bool result = true;
+        for (auto *provider : ImHexApi::Provider::getProviders()) {
+            if (!provider->isDataDirty())
+                continue;
+
+            if (provider->isSavable()) {
+                provider->save();
+            } else if (auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider); filePicker != nullptr && filePicker->flushFile()) {
+                provider->markDataDirty(false);
+            }
+
+            result = !provider->isDataDirty() && result;
+        }
+        return result;
+    }
+
     void openProject() {
         fs::openFileBrowser(fs::DialogMode::Folder, { },
                             [](const auto &path) {
-                                if (!ProjectManager::load(path)) {
-                                    ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                                const auto finishOpening = [path](bool saveData, bool saveMetadata) {
+                                    if ((saveData || saveMetadata) && !flushFileBackedData()) {
+                                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                                        return;
+                                    }
+                                    if (saveData && !saveProviderData()) {
+                                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                                        return;
+                                    }
+                                    if (saveMetadata && !saveProject())
+                                        return;
+                                    if (!ProjectManager::load(path))
+                                        ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                                };
+
+                                std::vector<ProviderDirtyState> dirtyStates;
+                                for (auto *provider : ImHexApi::Provider::getProviders()) {
+                                    const bool metadataDirty = provider->isMetadataDirty() || hasPendingFileBackedData(provider);
+                                    if (provider->isDataDirty() || metadataDirty) {
+                                        dirtyStates.push_back({
+                                            .provider = provider,
+                                            .dataDirty = provider->isDataDirty(),
+                                            .metadataDirty = metadataDirty
+                                        });
+                                    }
                                 }
+                                if (dirtyStates.empty()) {
+                                    finishOpening(false, false);
+                                    return;
+                                }
+
+                                PopupUnsavedChanges::open(std::move(dirtyStates),
+                                    [finishOpening] { finishOpening(true, false); },
+                                    [finishOpening] { finishOpening(true, true); },
+                                    [finishOpening] { finishOpening(false, false); },
+                                    [] { });
                             });
     }
 
     void closeProject() {
-        if (!ProjectManager::isFolderProject())
+        if (!ProjectManager::isFolderProject() || ProjectManager::isTemporaryProject())
             return;
 
         std::vector<ProviderDirtyState> dirtyStates;
@@ -40,13 +103,17 @@ namespace hex::plugin::builtin {
         }
 
         const auto finishClosing = [](bool saveData, bool saveMetadata) {
-            for (auto *data : FileBackedProviderDataRegistry::getTypes())
-                std::ignore = data->flush();
+            if (saveData || saveMetadata) {
+                if (!flushFileBackedData()) {
+                    ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                    return;
+                }
+            }
 
             if (saveData) {
-                for (auto *provider : ImHexApi::Provider::getProviders()) {
-                    if (provider->isDataDirty() && provider->isSavable())
-                        provider->save();
+                if (!saveProviderData()) {
+                    ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                    return;
                 }
             }
 
@@ -54,11 +121,12 @@ namespace hex::plugin::builtin {
                 return;
 
             const auto providers = ImHexApi::Provider::getProviders();
-            ProjectManager::store();
             ProjectManager::clearPath();
             EventProjectClosed::post();
             for (auto *provider : providers)
                 ImHexApi::Provider::remove(provider, true);
+            if (!ProjectManager::loadTemporaryProject())
+                log::error("Failed to restore the temporary project");
             RequestUpdateWindowTitle::post();
         };
 

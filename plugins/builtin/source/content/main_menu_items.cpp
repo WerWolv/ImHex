@@ -433,12 +433,12 @@ namespace hex::plugin::builtin {
                                                  openProject, noRunningTasks);
 
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.project"_unlocalized, "hex.builtin.menu.file.project.create"_unlocalized }, ICON_VS_NEW_FOLDER, 1500,
-                                                 ALT + SHIFT + Keys::S + AllowWhileTyping,
-                                                 saveProjectAs, [&] { return noRunningTasks() && !ProjectManager::hasPath(); });
+                                                  ALT + SHIFT + Keys::S + AllowWhileTyping,
+                                                  saveProjectAs, [&] { return noRunningTasks() && ProjectManager::isTemporaryProject(); });
 
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.project"_unlocalized, "hex.builtin.menu.file.project.close"_unlocalized }, ICON_VS_CLOSE, 1510,
-                                                 Shortcut::None,
-                                                 closeProject, [&] { return noRunningTasks() && ProjectManager::isFolderProject(); });
+                                                  Shortcut::None,
+                                                  closeProject, [&] { return noRunningTasks() && ProjectManager::isFolderProject() && !ProjectManager::isTemporaryProject(); });
 
 
         ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized }, 2000);

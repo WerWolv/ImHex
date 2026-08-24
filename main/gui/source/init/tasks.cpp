@@ -251,7 +251,6 @@ namespace hex::init {
         };
 
         keepNewest(10, paths::Logs);
-        keepNewest(25, paths::Backups);
 
         // Remove all old update files
         for (const auto &path : paths::Updates.all()) {

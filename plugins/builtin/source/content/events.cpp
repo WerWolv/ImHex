@@ -33,6 +33,7 @@
 #include <popups/popup_notification.hpp>
 #include <content/popups/popup_tasks_waiting.hpp>
 #include <content/popups/popup_unsaved_changes.hpp>
+#include <content/project.hpp>
 #include <content/popups/popup_crash_recovered.hpp>
 
 #include <GLFW/glfw3.h>
@@ -124,11 +125,15 @@ namespace hex::plugin::builtin {
             PopupUnsavedChanges::open(std::move(dirtyStates),
                 [window] {
                     // Save data: write file data to disk for each dirty provider
-                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                        if (provider->isDataDirty() && provider->isSavable())
-                            provider->save();
+                    if (!saveProviderData()) {
+                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                        return;
                     }
 
+                    if (!project::prepareForShutdown()) {
+                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                        return;
+                    }
                     imhexClosing = true;
                     for (const auto &provider : ImHexApi::Provider::getProviders())
                         ImHexApi::Provider::remove(provider, true);
@@ -136,15 +141,20 @@ namespace hex::plugin::builtin {
                 },
                 [window] {
                     // Save providers data
-                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                        if (provider->isDataDirty() && provider->isSavable())
-                            provider->save();
+                    if (!saveProviderData()) {
+                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                        return;
                     }
 
                     // Save project metadata
-                    ProjectManager::hasPath() ? saveProject() : saveProjectAs();
+                    if (!(ProjectManager::hasPath() ? saveProject() : saveProjectAs()))
+                        return;
 
                     // Close
+                    if (!project::prepareForShutdown()) {
+                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                        return;
+                    }
                     imhexClosing = true;
                     for (const auto &provider : ImHexApi::Provider::getProviders())
                         ImHexApi::Provider::remove(provider, true);
@@ -152,6 +162,7 @@ namespace hex::plugin::builtin {
                 },
                 [window] {
                     // Discard: remove all providers and close without saving
+                    std::ignore = project::prepareForShutdown(false);
                     imhexClosing = true;
                     for (const auto &provider : ImHexApi::Provider::getProviders())
                         ImHexApi::Provider::remove(provider, true);
@@ -204,6 +215,10 @@ namespace hex::plugin::builtin {
                         });
                     });
                 } else {
+                    if (!project::prepareForShutdown()) {
+                        ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+                        return;
+                    }
                     for (const auto &provider : ImHexApi::Provider::getProviders())
                         ImHexApi::Provider::remove(provider);
                     glfwSetWindowShouldClose(ImHexApi::System::getMainWindowHandle(), GLFW_TRUE);

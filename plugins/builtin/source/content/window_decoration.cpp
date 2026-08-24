@@ -840,7 +840,7 @@ namespace hex::plugin::builtin {
             std::string prefix, postfix;
             std::string title = DefaultImHexTitle;
 
-            if (ProjectManager::hasPath()) {
+            if (ProjectManager::hasPath() && !ProjectManager::isTemporaryProject()) {
                 // If a project is open, show the project name instead of the file name
 
                 prefix  = "Project ";

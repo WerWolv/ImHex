@@ -481,7 +481,6 @@ namespace hex::plugin::builtin {
                 { "Config",                         &paths::Config               },
                 { "Variables",                      &paths::Variables            },
                 { "Updates",                        &paths::Updates              },
-                { "Backups",                        &paths::Backups              },
                 { "Resources",                      &paths::Resources            },
                 { "Constants lists",                &paths::Constants            },
                 { "Custom encodings",               &paths::Encodings            },

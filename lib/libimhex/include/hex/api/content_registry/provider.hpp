@@ -17,10 +17,12 @@ EXPORT_MODULE namespace hex {
 
         namespace impl {
 
-            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions, bool hidden);
+            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon,
+                                     std::vector<fs::ItemFilter> validFileExtensions, bool hidden);
 
             using ProviderCreationFunction = std::function<std::shared_ptr<prv::Provider>()>;
             void add(const UnlocalizedString &typeName, ProviderCreationFunction creationFunction);
+            std::shared_ptr<prv::Provider> create(const UnlocalizedString &typeName);
 
             struct Entry {
                 UnlocalizedString unlocalizedName;

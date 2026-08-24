@@ -55,44 +55,37 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen"> s_simplifiedWelcomeScreen = false;
 
-        class PopupRestoreBackup : public Popup<PopupRestoreBackup> {
+        class PopupCrashReport : public Popup<PopupCrashReport> {
         private:
             std::fs::path m_logFilePath;
-            bool m_hasAutoBackups;
-            std::function<void()> m_restoreCallback;
-            std::function<void()> m_deleteCallback;
+            std::fs::path m_crashFilePath;
             bool m_reportError = true;
         public:
-            PopupRestoreBackup(std::fs::path logFilePath, bool hasAutoBackups, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
-                    : Popup("hex.builtin.popup.safety_backup.title"_unlocalized, ICON_VS_ARCHIVE),
+            PopupCrashReport(std::fs::path logFilePath, std::fs::path crashFilePath)
+                    : Popup("hex.builtin.popup.crash_report.title"_unlocalized, ICON_VS_ERROR),
                     m_logFilePath(std::move(logFilePath)),
-                    m_hasAutoBackups(hasAutoBackups),
-                    m_restoreCallback(restoreCallback),
-                    m_deleteCallback(deleteCallback) {
+                    m_crashFilePath(std::move(crashFilePath)) {
 
                 m_reportError = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, true);
             }
 
             void drawContent() override {
-                ImGui::TextUnformatted("hex.builtin.popup.safety_backup.desc"_lang);
+                ImGui::TextUnformatted("hex.builtin.popup.crash_report.desc"_lang);
                 if (!m_logFilePath.empty()) {
                     ImGui::NewLine();
-                    ImGui::TextUnformatted("hex.builtin.popup.safety_backup.log_file"_lang);
+                    ImGui::TextUnformatted("hex.builtin.popup.crash_report.log_file"_lang);
                     ImGui::SameLine(0, 2_scaled);
                     if (ImGuiExt::Hyperlink(m_logFilePath.filename().string().c_str())) {
                         fs::openFolderWithSelectionExternal(m_logFilePath);
                     }
 
-                    ImGui::Checkbox("hex.builtin.popup.safety_backup.report_error"_lang, &m_reportError);
+                    ImGui::Checkbox("hex.builtin.popup.crash_report.report_error"_lang, &m_reportError);
                     ImGui::NewLine();
                 }
 
                 auto width = ImGui::GetWindowWidth();
                 ImGui::SetCursorPosX(width / 9);
-                if (ImGui::Button("hex.builtin.popup.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                    m_restoreCallback();
-                    m_deleteCallback();
-
+                if (ImGui::Button("hex.builtin.popup.crash_report.report"_lang, ImVec2(width / 3, 0))) {
                     if (m_reportError) {
                         wolv::io::File logFile(m_logFilePath, wolv::io::File::Mode::Read);
                         if (logFile.isValid()) {
@@ -117,21 +110,14 @@ namespace hex::plugin::builtin {
                     }
 
                     ContentRegistry::Settings::write<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.upload_crash_logs"_unlocalized, m_reportError);
-
+                    wolv::io::fs::remove(m_crashFilePath);
                     this->close();
                 }
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(width / 9 * 5);
-                if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-                    m_deleteCallback();
-
+                if (ImGui::Button("hex.ui.common.close"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                    wolv::io::fs::remove(m_crashFilePath);
                     this->close();
-                }
-
-                if (m_hasAutoBackups) {
-                    if (ImGui::Button("hex.builtin.popup.safety_backup.show_auto_backups"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                        recent::PopupAutoBackups::open();
-                    }
                 }
             }
         };
@@ -576,7 +562,7 @@ namespace hex::plugin::builtin {
                             } else {
                                 drawWelcomeScreenBackground();
 
-                                if (ProjectManager::isFolderProject()) {
+                                if (ProjectManager::isFolderProject() && !ProjectManager::isTemporaryProject()) {
                                     drawEmptyProjectWelcomeScreen();
                                 } else {
                                     if (s_simplifiedWelcomeScreen)
@@ -782,9 +768,8 @@ namespace hex::plugin::builtin {
 
         recent::addMenuItems();
 
-        // Check for crash backup
+        // Check for a previous crash report. Project state is restored independently.
         constexpr static auto CrashFileName = "crash.json";
-        constexpr static auto BackupFileName = "crash_backup";
         bool hasCrashed = false;
 
         for (const auto &path : paths::Config.read()) {
@@ -802,69 +787,7 @@ namespace hex::plugin::builtin {
                     continue;
                 }
 
-                bool hasProject = !crashFileData.value("project", "").empty();
-
-                auto backupFilePath = path / BackupFileName;
-                auto backupFilePathOld = path / "crash_backup.old";
-
-                bool autoBackupsEnabled = ContentRegistry::Settings::read<int>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups.auto_backup_time"_unlocalized, 0) > 0;
-                auto autoBackups = recent::PopupAutoBackups::getAutoBackups();
-                bool hasAutoBackups = autoBackupsEnabled && !autoBackups.empty();
-
-                bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
-
-                if (!hasProject && !hasBackupFile) {
-                    log::warn("No project file or backup file found in crash.json file");
-
-                    crashFile.close();
-
-                    // Delete crash.json file
-                    wolv::io::fs::remove(crashFilePath);
-
-                    // Delete old backup file
-                    wolv::io::fs::removeAll(backupFilePathOld);
-
-                    // Try to move current backup file to the old backup location
-                    std::error_code error;
-                    std::fs::rename(backupFilePath, backupFilePathOld, error);
-                    continue;
-                }
-
-                PopupRestoreBackup::open(
-                    // Path of log file
-                    crashFileData.value("logFile", ""),
-                    hasAutoBackups,
-
-                    // Restore callback
-                    [crashFileData, backupFilePath, hasProject, hasBackupFile, hasAutoBackups, autoBackups = std::move(autoBackups)] {
-                        if (hasBackupFile) {
-                            if (ProjectManager::load(backupFilePath)) {
-                                if (hasProject) {
-                                    ProjectManager::setPath(crashFileData["project"].get<std::string>());
-                                } else if (hasAutoBackups) {
-                                    ProjectManager::setPath(autoBackups.front().path);
-                                } else {
-                                    ProjectManager::setPath("");
-                                }
-                                RequestUpdateWindowTitle::post();
-                            } else {
-                                ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(backupFilePath)));
-                            }
-                        } else {
-                            if (hasProject) {
-                                ProjectManager::setPath(crashFileData["project"].get<std::string>());
-                            } else if (hasAutoBackups) {
-                                ProjectManager::setPath(autoBackups.front().path);
-                            }
-                        }
-                    },
-
-                    // Delete callback (also executed after restore)
-                    [crashFilePath, backupFilePath] {
-                        wolv::io::fs::remove(crashFilePath);
-                        wolv::io::fs::removeAll(backupFilePath);
-                    }
-                );
+                PopupCrashReport::open(crashFileData.value("logFile", ""), crashFilePath);
             }
         }
 

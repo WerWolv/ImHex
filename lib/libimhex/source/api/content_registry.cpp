@@ -1141,7 +1141,10 @@ namespace hex {
 
         namespace ContentRegistry::Provider::impl {
 
+            static AutoReset<std::map<std::string, ProviderCreationFunction>> s_providerCreationFunctions;
+
             void add(const UnlocalizedString &typeName, ProviderCreationFunction creationFunction) {
+                (*s_providerCreationFunctions)[typeName.get()] = creationFunction;
                 (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const UnlocalizedString &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
                     if (name != expectedName) return;
 
@@ -1154,12 +1157,20 @@ namespace hex {
                 });
             }
 
+            std::shared_ptr<prv::Provider> create(const UnlocalizedString &typeName) {
+                const auto function = s_providerCreationFunctions->find(typeName.get());
+                if (function == s_providerCreationFunctions->end())
+                    return nullptr;
+                return function->second();
+            }
+
             static AutoReset<std::vector<Entry>> s_providerNames;
             const std::vector<Entry>& getEntries() {
                 return *s_providerNames;
             }
 
-            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions, bool hidden) {
+            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon,
+                                     std::vector<fs::ItemFilter> validFileExtensions, bool hidden) {
                 log::debug("Registered new provider: {}", unlocalizedName.get());
 
                 s_providerNames->emplace_back(unlocalizedName, icon, std::move(validFileExtensions), hidden);

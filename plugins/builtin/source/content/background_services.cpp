@@ -1,23 +1,12 @@
-#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/content_registry/communication_interface.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/background_services.hpp>
-#include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
-#include <hex/api/project_manager.hpp>
 
-#include <hex/helpers/fmt.hpp>
-#include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/providers/provider.hpp>
 
-#include <content/popups/popup_unsaved_changes.hpp>
-
-#include <wolv/utils/guards.hpp>
-#include <wolv/utils/string.hpp>
 #include <wolv/net/socket_server.hpp>
 
-#include <fmt/chrono.h>
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
 #include <toasts/toast_notification.hpp>
@@ -25,7 +14,6 @@
 namespace hex::plugin::builtin {
 
     static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.network_interface"> s_networkInterfaceServiceEnabled = false;
-    static ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time"> s_autoBackupTime = 0;
 
     namespace {
 
@@ -72,44 +60,6 @@ namespace hex::plugin::builtin {
             });
         }
 
-        bool s_dataDirty = false;
-        void handleAutoBackup() {
-            auto now = std::chrono::steady_clock::now();
-            static std::chrono::time_point<std::chrono::steady_clock> lastBackupTime = now;
-
-            if (s_autoBackupTime > 0 && (now - lastBackupTime) > std::chrono::seconds(s_autoBackupTime * 30)) {
-                lastBackupTime = now;
-
-                if (ImHexApi::Provider::isValid() && s_dataDirty) {
-                    s_dataDirty = false;
-
-                    std::vector<ProviderDirtyState> dirtyStates;
-                    for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                        if (provider->isDataDirty() || provider->isMetadataDirty()) {
-                            dirtyStates.push_back({ .provider = provider, .dataDirty = provider->isDataDirty(), .metadataDirty = provider->isMetadataDirty() });
-                        }
-                    }
-
-                    for (const auto &path : paths::Backups.write()) {
-                        const auto backupPath = path / fmt::format("auto_backup.{:%y%m%d_%H%M%S}", fmt::gmtime(std::chrono::system_clock::now()));
-                        if (ProjectManager::store(backupPath, false)) {
-                            log::info("Created auto-backup file '{}'", wolv::util::toUTF8String(backupPath));
-                            break;
-                        }
-                    }
-
-                    for (const auto &entry : dirtyStates) {
-                        if (entry.dataDirty)
-                            entry.provider->markDataDirty();
-                        if (entry.metadataDirty)
-                            entry.provider->markMetadataDirty();
-                    }
-                }
-            }
-
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-
         void handleMCPServer() {
             if (!ContentRegistry::MCP::isEnabled()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -128,15 +78,10 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface"_unlocalized, handleNetworkInterfaceService);
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup"_unlocalized, handleAutoBackup);
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.mcp"_unlocalized, handleMCPServer);
 
         EventImHexClosing::subscribe([] {
             ContentRegistry::MCP::impl::getMcpServerInstance().reset();
-        });
-
-        EventProviderDirtied::subscribe([](prv::Provider *) {
-            s_dataDirty = true;
         });
     }
 

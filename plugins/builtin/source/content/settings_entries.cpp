@@ -222,35 +222,6 @@ for (const auto &path : m_paths) {
             float m_value = 0.0F;
         };
 
-        class AutoBackupWidget : public ContentRegistry::Settings::Widgets::Widget {
-        public:
-            bool draw(const std::string &name) override {
-                auto format = [this]() -> std::string {
-                    auto value = m_value * 30;
-                    if (value == 0)
-                        return "hex.ui.common.off"_lang;
-                    else if (value < 60)
-                        return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.simple"_lang, value);
-                    else
-                        return fmt::format("hex.builtin.setting.general.backups.auto_backup_time.format.extended"_lang, value / 60, value % 60);
-                }();
-
-                return ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput);
-            }
-
-            void load(const nlohmann::json &data) override {
-                if (data.is_number())
-                    m_value = data.get<int>();
-            }
-
-            nlohmann::json store() override {
-                return m_value;
-            }
-
-        private:
-            int m_value = 5 * 2;
-        };
-
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             KeybindingWidget(View *view, const Shortcut &shortcut, const std::vector<UnlocalizedString> &fullName)
@@ -785,9 +756,6 @@ for (const auto &path : m_paths) {
                     .setEnabledCallback([trackingAllowed]() { return trackingAllowed; });
             #endif
 
-
-            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.auto_backup_time"_unlocalized);
-            ContentRegistry::Settings::add<Widgets::Spacer>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, {});
 
             auto fileBackupEnabledWidget = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.file_backup.enable"_unlocalized, true);
             ContentRegistry::Settings::add<Widgets::SliderDataSize>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.backups"_unlocalized, "hex.builtin.setting.general.backups.file_backup.max_size"_unlocalized, 512_MiB, 0_bytes, 32_GiB, 1_MiB)

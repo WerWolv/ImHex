@@ -45,6 +45,21 @@ EXPORT_MODULE namespace hex {
         static bool load(const std::filesystem::path &filePath);
 
         /**
+         * @brief Load the persistent project used when no explicit project is open.
+         */
+        static bool loadTemporaryProject();
+
+        /**
+         * @brief Check whether the current project is ImHex's implicit temporary project.
+         */
+        static bool isTemporaryProject();
+
+        /**
+         * @brief Get the storage location of ImHex's implicit temporary project.
+         */
+        static std::filesystem::path getTemporaryProjectPath();
+
+        /**
          * @brief Store a project file
          *
          * @param filePath Path to the project file

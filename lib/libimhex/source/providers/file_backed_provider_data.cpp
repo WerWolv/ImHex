@@ -3,8 +3,83 @@
 #include <map>
 #include <mutex>
 #include <stdexcept>
+#include <algorithm>
+#include <cerrno>
+#include <limits>
+
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#else
+    #include <fcntl.h>
+    #include <unistd.h>
+#endif
 
 namespace hex {
+
+    bool detail::writeFileAtomically(const std::fs::path &path, std::span<const u8> data) {
+        static std::atomic<u64> counter = 0;
+        std::fs::path temporaryPath;
+
+        #if defined(OS_WINDOWS)
+            HANDLE handle = INVALID_HANDLE_VALUE;
+            do {
+                temporaryPath = path;
+                temporaryPath += L".imhex-" + std::to_wstring(++counter);
+                handle = CreateFileW(temporaryPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+            } while (handle == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_EXISTS);
+            if (handle == INVALID_HANDLE_VALUE)
+                return false;
+
+            size_t offset = 0;
+            bool result = true;
+            while (offset < data.size()) {
+                DWORD written = 0;
+                const auto chunkSize = static_cast<DWORD>(std::min<size_t>(data.size() - offset, std::numeric_limits<DWORD>::max()));
+                if (!WriteFile(handle, data.data() + offset, chunkSize, &written, nullptr) || written == 0) {
+                    result = false;
+                    break;
+                }
+                offset += written;
+            }
+            result = result && FlushFileBuffers(handle);
+            CloseHandle(handle);
+            if (result)
+                result = MoveFileExW(temporaryPath.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+        #else
+            int handle = -1;
+            do {
+                temporaryPath = path;
+                temporaryPath += ".imhex-" + std::to_string(++counter);
+                handle = ::open(temporaryPath.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0666);
+            } while (handle < 0 && errno == EEXIST);
+            if (handle < 0)
+                return false;
+
+            size_t offset = 0;
+            bool result = true;
+            while (offset < data.size()) {
+                const auto written = ::write(handle, data.data() + offset, data.size() - offset);
+                if (written <= 0) {
+                    result = false;
+                    break;
+                }
+                offset += written;
+            }
+            result = result && ::fsync(handle) == 0;
+            result = ::close(handle) == 0 && result;
+            if (result) {
+                std::error_code error;
+                std::fs::rename(temporaryPath, path, error);
+                result = !error;
+            }
+        #endif
+
+        if (!result) {
+            std::error_code error;
+            std::fs::remove(temporaryPath, error);
+        }
+        return result;
+    }
 
     namespace {
 

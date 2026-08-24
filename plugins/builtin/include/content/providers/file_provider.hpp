@@ -55,6 +55,8 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] OpenResult open() override;
         void close() override;
+        bool relocateFile(const std::fs::path &path) override;
+        bool flushFile() override;
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
@@ -84,6 +86,7 @@ namespace hex::plugin::builtin {
         wolv::io::ChangeTracker m_changeTracker;
         std::vector<u8> m_data;
         bool m_loadedIntoMemory = false;
+        bool m_writeFailed = false;
         bool m_ignoreNextChangeEvent = false;
         bool m_changeEventAcknowledgementPending = false;
 

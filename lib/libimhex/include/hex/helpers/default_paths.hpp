@@ -74,7 +74,6 @@ namespace hex::paths {
     const static inline impl::DataPath Magic("magic");
     const static inline impl::DataPath Yara("yara");
     const static inline impl::DataPath YaraAdvancedAnalysis("yara/advanced_analysis");
-    const static inline impl::DataPath Backups("backups");
     const static inline impl::DataPath Resources("resources");
     const static inline impl::DataPath Constants("constants");
     const static inline impl::DataPath Encodings("encodings");
@@ -87,7 +86,7 @@ namespace hex::paths {
     const static inline impl::DataPath Workspaces("workspaces");
     const static inline impl::DataPath Disassemblers("disassemblers");
 
-    constexpr static inline std::array<const impl::DefaultPath*, 23> All = {
+    constexpr static inline std::array<const impl::DefaultPath*, 22> All = {
         &Config,
         &Variables,
         &Recent,
@@ -101,7 +100,6 @@ namespace hex::paths {
         &Magic,
         &Yara,
         &YaraAdvancedAnalysis,
-        &Backups,
         &Resources,
         &Constants,
         &Encodings,

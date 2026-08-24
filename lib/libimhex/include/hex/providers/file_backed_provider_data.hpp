@@ -26,6 +26,10 @@
 
 namespace hex {
 
+    namespace detail {
+        bool writeFileAtomically(const std::fs::path &path, std::span<const u8> data);
+    }
+
     #if !defined(HEX_MODULE_EXPORT)
         namespace prv {
             class Provider;
@@ -481,11 +485,7 @@ namespace hex {
         }
 
         static bool writeFile(const std::fs::path &path, const SerializedData &data) {
-            wolv::io::File file(path, wolv::io::File::Mode::Create);
-            if (!file.isValid())
-                return false;
-
-            return file.writeVector(data) == static_cast<i64>(data.size()) && file.flush();
+            return detail::writeFileAtomically(path, data);
         }
 
         void notify(const prv::Provider *provider) const {
