@@ -4,11 +4,13 @@
 
 #include "hex/subcommands/subcommands.hpp"
 
+#include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_lifecycle.hpp>
-#include <hex/api/plugin_manager.hpp>
 #include <hex/api/imhex_api/messaging.hpp>
-#include <hex/helpers/logger.hpp>
+#include <hex/api/plugin_manager.hpp>
+
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include "hex/api/content_registry/settings.hpp"
 
@@ -123,6 +125,7 @@ namespace hex::subcommands {
         }
 
         if (pluginsInitialized) {
+            TaskManager::exit();
             ImHexApi::System::impl::cleanup();
             EventManager::clear();
             PluginManager::unload();
