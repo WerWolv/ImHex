@@ -27,21 +27,26 @@ namespace hex::plugin::builtin {
     void PopupFill::draw(ViewHexEditor *editor) {
         ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
         ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
-        auto width = ImGui::GetItemRectSize().x;
+        const auto width = ImGui::CalcItemWidth();
 
         ImGui::Separator();
 
         const auto padding = ImGui::GetStyle().FramePadding.x;
-        ImGui::PushItemWidth(width - (ImGui::GetStyle().ItemSpacing.x * 2 + ImGui::CalcTextSize(ICON_TA_ARROWS_SHUFFLE).x + padding * 3));
         ImGui::BeginDisabled(m_randomBytes);
-        ImGuiExt::InputTextIcon("##Bytes", ICON_VS_SYMBOL_NAMESPACE, m_input);
+        {
+            ImGui::SetNextItemWidth(width - padding - (ImGui::CalcTextSize(ICON_TA_ARROWS_SHUFFLE).x + padding * 2.0f));
+            ImGuiExt::InputTextIcon("##Bytes", ICON_VS_SYMBOL_NAMESPACE, m_input);
+        }
         ImGui::EndDisabled();
-        ImGui::PopItemWidth();
+
         ImGui::SameLine(0, padding);
         ImGuiExt::DimmedIconToggle(ICON_TA_ARROWS_SHUFFLE, &m_randomBytes);
-        ImGui::SetItemTooltip("%s", "hex.builtin.view.hex_editor.menu.edit.fill.random"_lang.get());
+        ImGuiExt::InfoTooltip("hex.builtin.view.hex_editor.menu.edit.fill.random"_lang);
+
         ImGui::SameLine(0, padding);
         ImGui::TextUnformatted("hex.ui.common.bytes"_lang);
+
+        ImGui::Separator();
 
         ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
         [&, this] {
@@ -89,7 +94,7 @@ namespace hex::plugin::builtin {
                 batchData = std::move(bytes);
             }
 
-            const auto startAddress = provider->getBaseAddress() + address;
+            const auto startAddress = address;
             for (u64 i = 0; i < size; i += batchData.size()) {
                 const auto remainingSize = std::min<size_t>(size - i, batchData.size());
                 provider->write(startAddress + i, batchData.data(), remainingSize);
@@ -101,7 +106,7 @@ namespace hex::plugin::builtin {
             std::uniform_int_distribution<u16> uniformDist(std::numeric_limits<u8>::min(), std::numeric_limits<u8>::max());
 
             std::vector<u8> batchData(BatchFillSize);
-            const auto startAddress = provider->getBaseAddress() + address;
+            const auto startAddress = address;
             for (u64 i = 0; i < size; i += batchData.size()) {
                 const auto remainingSize = std::min<size_t>(size - i, batchData.size());
 
