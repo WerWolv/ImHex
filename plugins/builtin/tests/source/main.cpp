@@ -7,6 +7,7 @@
 #include <hex/api/project_manager.hpp>
 #include <hex/helpers/tar.hpp>
 #include <content/legacy_project_importer.hpp>
+#include <content/recent.hpp>
 
 #include <nlohmann/json.hpp>
 #include <wolv/io/file.hpp>
@@ -261,6 +262,27 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto canonicalClosedSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(canonicalClosedSettings["settings"]["path"] == "closed.bin");
+
+    const recent::RecentEntry closedRecentEntry {
+        .displayName = "closed.bin",
+        .type = "hex.builtin.provider.file",
+        .entryFilePath = {},
+        .data = {
+            { "baseAddress", 0 },
+            { "currPage", 0 },
+            { "path", (root / "closed.bin").string() }
+        }
+    };
+    recent::loadRecentEntry(closedRecentEntry);
+    providers = ImHexApi::Provider::getProviders();
+    const auto reopenedProvider = std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 100; });
+    TEST_ASSERT(reopenedProvider != providers.end());
+    TEST_ASSERT(providers.size() == 3);
+    recent::loadRecentEntry(closedRecentEntry);
+    TEST_ASSERT(ImHexApi::Provider::get()->getID() == 100);
+    TEST_ASSERT(ImHexApi::Provider::getProviders().size() == 3);
+    ImHexApi::Provider::remove(*reopenedProvider, true);
+    providers = ImHexApi::Provider::getProviders();
 
     const auto providerToClose = *std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 42; });
     providerToClose->resize(3);

@@ -540,6 +540,14 @@ namespace hex::plugin::builtin {
         });
 
         RequestOpenProvider::subscribe([](std::shared_ptr<prv::Provider> provider, TaskHolder *task) {
+            auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider.get());
+            auto *existingProvider = filePicker == nullptr ? nullptr : project::openProviderForPath(filePicker->getPickedPath(), provider.get());
+            if (existingProvider != nullptr) {
+                ImHexApi::Provider::remove(provider.get(), true);
+                ImHexApi::Provider::setCurrentProvider(existingProvider);
+                return;
+            }
+
             *task = TaskManager::createBlockingTask("hex.builtin.provider.opening"_unlocalized, ProgressValue::None(), [provider]() {
                 auto result = provider->open();
                 if (result.isFailure()) {

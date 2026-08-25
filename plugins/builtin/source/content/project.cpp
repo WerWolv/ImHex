@@ -807,6 +807,39 @@ namespace hex::plugin::builtin {
             }
         }
 
+        bool isSameFile(const std::fs::path &left, const std::fs::path &right) {
+            std::error_code error;
+            return std::fs::equivalent(left, right, error) && !error;
+        }
+
+        std::optional<u32> findClosedProviderForPath(const std::fs::path &path) {
+            if (!ProjectManager::isFolderProject())
+                return std::nullopt;
+
+            for (const auto id : s_closedProjectProviderIds) {
+                const auto settings = s_projectProviderSettings.find(id);
+                if (settings == s_projectProviderSettings.end())
+                    continue;
+
+                try {
+                    const auto descriptor = nlohmann::json::parse(settings->second);
+                    const auto providerType = UnlocalizedString(descriptor.at("type").get<std::string>());
+                    const auto provider = ContentRegistry::Provider::impl::create(providerType);
+                    auto *filePicker = provider == nullptr ? nullptr : dynamic_cast<prv::IProviderFilePicker *>(provider.get());
+                    if (filePicker == nullptr)
+                        continue;
+
+                    provider->loadSettings(descriptor.at("settings"));
+                    if (isSameFile(filePicker->getPickedPath(), path))
+                        return id;
+                } catch (const std::exception &exception) {
+                    log::warn("Failed to inspect closed project provider {}: {}", id, exception.what());
+                }
+            }
+
+            return std::nullopt;
+        }
+
         bool isProviderReplacement(const prv::Provider *provider) {
             return s_providerReplacements.contains(provider);
         }
@@ -1643,6 +1676,25 @@ namespace hex::plugin::builtin {
             log::warn("Failed to reconfigure project provider {}: {}", id, error.what());
             return false;
         }
+    }
+
+    prv::Provider *project::openProviderForPath(const std::filesystem::path &path, const prv::Provider *excludedProvider) {
+        for (auto *provider : ImHexApi::Provider::getProviders()) {
+            if (provider == excludedProvider)
+                continue;
+            auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider);
+            if (filePicker == nullptr)
+                continue;
+
+            if (isSameFile(filePicker->getPickedPath(), path)) {
+                return provider;
+            }
+        }
+
+        const auto providerId = findClosedProviderForPath(path);
+        if (!providerId.has_value() || !openStoredProjectProvider(*providerId))
+            return nullptr;
+        return getProviderById(*providerId);
     }
 
     project::ImportResult project::importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
