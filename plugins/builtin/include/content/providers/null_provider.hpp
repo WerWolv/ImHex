@@ -28,6 +28,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isWritable() const override { return false; }
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
+        [[nodiscard]] bool isSavableAsRecent() const override { return false; }
 
         [[nodiscard]] OpenResult open() override { return {}; }
         void close() override { }

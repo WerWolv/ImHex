@@ -37,6 +37,13 @@ namespace hex::plugin::builtin {
             auto &projectState = state();
             const auto replacement = projectState.providerReplacements.find(provider);
             const bool isReplacement = replacement != projectState.providerReplacements.end();
+            if (!canPersistProvider(provider)) {
+                if (isReplacement)
+                    projectState.providerReplacements.erase(replacement);
+                if (projectState.projectProviderIds.contains(provider->getID()))
+                    removeProviderFromProject(provider->getID());
+                return;
+            }
             if (isReplacement) {
                 provider->setID(replacement->second);
                 projectState.providerReplacements.erase(replacement);

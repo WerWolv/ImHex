@@ -552,8 +552,10 @@ namespace hex::plugin::builtin::project::impl {
 
                 std::set<u32> openProviderIds;
                 for (auto *provider : providers) {
-                    const bool partOfProject = projectState.projectProviderIds.contains(provider->getID());
                     openProviderIds.insert(provider->getID());
+                    if (!canPersistProvider(provider))
+                        continue;
+                    const bool partOfProject = projectState.projectProviderIds.contains(provider->getID());
 
                     ImGui::PushID(provider);
                     const auto associations = projectState.associations.find(provider->getID());

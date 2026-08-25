@@ -26,6 +26,18 @@ namespace hex::plugin::builtin::project {
             return result;
         }
 
+        for (const auto &provider : providers) {
+            if (!provider.descriptor.contains("type") || !provider.descriptor["type"].is_string() ||
+                !provider.descriptor.contains("settings") || !provider.descriptor["settings"].is_object()) {
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.invalid_provider_settings"_lang,
+                    impl::getProviderName(provider.descriptor));
+                return result;
+            }
+        }
+        std::erase_if(providers, [](const auto &provider) {
+            return !impl::canPersistProvider(provider.descriptor);
+        });
+
         auto &projectState = impl::state();
         std::set<u32> usedIds = projectState.projectProviderIds;
         for (const auto *provider : ImHexApi::Provider::getProviders())
@@ -40,12 +52,6 @@ namespace hex::plugin::builtin::project {
                 result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.duplicate_provider_id"_lang, providerName);
                 return result;
             }
-            if (!provider.descriptor.contains("type") || !provider.descriptor["type"].is_string() ||
-                !provider.descriptor.contains("settings") || !provider.descriptor["settings"].is_object()) {
-                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.invalid_provider_settings"_lang, providerName);
-                return result;
-            }
-
             auto id = provider.id;
             if (id >= std::numeric_limits<u32>::max() - 1) {
                 result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.reserved_provider_id"_lang, providerName);

@@ -50,8 +50,10 @@ namespace hex::plugin::builtin::project::impl {
             projectState.projectProviderIds.clear();
             projectState.closedProjectProviderIds.clear();
             projectState.projectProviderSettings.clear();
-            for (const auto *provider : ImHexApi::Provider::getProviders())
-                projectState.projectProviderIds.insert(provider->getID());
+            for (const auto *provider : ImHexApi::Provider::getProviders()) {
+                if (canPersistProvider(provider))
+                    projectState.projectProviderIds.insert(provider->getID());
+            }
 
             std::error_code error;
             std::fs::create_directories(filePath / ProjectManager::ProjectDirectory, error);
@@ -189,8 +191,10 @@ namespace hex::plugin::builtin::project::impl {
             projectState.projectProviderIds.clear();
             projectState.closedProjectProviderIds.clear();
             projectState.projectProviderSettings.clear();
-            for (const auto *provider : ImHexApi::Provider::getProviders())
-                projectState.projectProviderIds.insert(provider->getID());
+            for (const auto *provider : ImHexApi::Provider::getProviders()) {
+                if (canPersistProvider(provider))
+                    projectState.projectProviderIds.insert(provider->getID());
+            }
         }
 
         materializeRegisteredData();

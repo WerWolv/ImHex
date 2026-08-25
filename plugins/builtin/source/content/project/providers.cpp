@@ -57,7 +57,28 @@ namespace hex::plugin::builtin::project::impl {
         }
     }
 
+    bool canPersistProvider(const prv::Provider *provider) {
+        return provider != nullptr && provider->isSavableAsRecent();
+    }
+
+    bool canPersistProvider(const nlohmann::json &descriptor) {
+        try {
+            const auto providerType = UnlocalizedString(descriptor.at("type").get<std::string>());
+            const auto provider = ContentRegistry::Provider::impl::create(providerType);
+            if (provider == nullptr)
+                return true;
+            if (!canPersistProvider(provider.get()))
+                return false;
+            provider->loadSettings(descriptor.at("settings"));
+            return canPersistProvider(provider.get());
+        } catch (const std::exception &) {
+            return true;
+        }
+    }
+
     void snapshotProviderSettings(prv::Provider *provider) {
+        if (!canPersistProvider(provider))
+            return;
         try {
             state().projectProviderSettings[provider->getID()] = nlohmann::json({
                 { "type", provider->getTypeName() },
@@ -116,7 +137,7 @@ namespace hex::plugin::builtin::project::impl {
         auto &projectState = state();
         bool associationsChanged = false;
         for (auto *provider : ImHexApi::Provider::getProviders()) {
-            if (!projectState.projectProviderIds.contains(provider->getID()))
+            if (!canPersistProvider(provider) || !projectState.projectProviderIds.contains(provider->getID()))
                 continue;
 
             for (auto *data : FileBackedProviderDataRegistry::getTypes()) {
@@ -266,28 +287,32 @@ namespace hex::plugin::builtin::project::impl {
         if (!manifest.has_value())
             return false;
         const auto &providerIds = manifest->providerIds;
-        const auto &closedProviderIds = manifest->closedProviderIds;
+        const std::set<u32> closedProviderIds(manifest->closedProviderIds.begin(), manifest->closedProviderIds.end());
         auto &projectState = state();
 
-        projectState.projectProviderIds = { providerIds.begin(), providerIds.end() };
-        projectState.closedProjectProviderIds = { closedProviderIds.begin(), closedProviderIds.end() };
+        projectState.projectProviderIds.clear();
+        projectState.closedProjectProviderIds.clear();
         projectState.projectProviderSettings.clear();
-
-        for (const auto id : providerIds)
-            prv::Provider::reserveID(id);
 
         if (providerIds.empty())
             return true;
 
         std::vector<std::string> failedProviderNames;
         for (const auto id : providerIds) {
-            auto providerName = getStoredProviderName(id);
+            std::string providerName = "hex.builtin.sidebar.project.provider_fallback"_lang;
             try {
                 auto serializedSettings = readProjectFile(root, basePath / fmt::format("{}.json", id));
-                if (!serializedSettings.empty())
-                    projectState.projectProviderSettings[id] = serializedSettings;
                 const auto providerSettings = nlohmann::json::parse(std::move(serializedSettings));
                 providerName = getProviderName(providerSettings);
+                if (!canPersistProvider(providerSettings))
+                    continue;
+
+                projectState.projectProviderIds.insert(id);
+                if (closedProviderIds.contains(id))
+                    projectState.closedProjectProviderIds.insert(id);
+                projectState.projectProviderSettings[id] = providerSettings.dump(4);
+                prv::Provider::reserveID(id);
+
                 const auto providerType = UnlocalizedString(providerSettings.at("type").get<std::string>());
                 if (projectState.closedProjectProviderIds.contains(id))
                     continue;
@@ -331,10 +356,34 @@ namespace hex::plugin::builtin::project::impl {
     bool storeProviders(const std::fs::path &root, const std::fs::path &sourceRoot, ProviderSettings &storedSettings) {
         const auto basePath = std::fs::path(ProjectManager::ProjectDirectory) / "providers";
         auto &projectState = state();
+
+        std::set<u32> excludedProviderIds;
+        for (const auto id : projectState.projectProviderIds) {
+            if (const auto *provider = getProviderById(id); provider != nullptr) {
+                if (!canPersistProvider(provider))
+                    excludedProviderIds.insert(id);
+            } else if (const auto settings = projectState.projectProviderSettings.find(id);
+                       settings != projectState.projectProviderSettings.end()) {
+                try {
+                    if (!canPersistProvider(nlohmann::json::parse(settings->second)))
+                        excludedProviderIds.insert(id);
+                } catch (const std::exception &) {
+                }
+            }
+        }
+        for (const auto id : excludedProviderIds) {
+            projectState.projectProviderIds.erase(id);
+            projectState.closedProjectProviderIds.erase(id);
+            projectState.projectProviderSettings.erase(id);
+            projectState.associations.erase(id);
+            std::error_code error;
+            std::fs::remove(root / basePath / fmt::format("{}.json", id), error);
+        }
+
         auto providerSettings = projectState.projectProviderSettings;
         std::set<u32> serializedActiveProviderIds;
         for (const auto *provider : ImHexApi::Provider::getProviders()) {
-            if (!projectState.projectProviderIds.contains(provider->getID()))
+            if (!canPersistProvider(provider) || !projectState.projectProviderIds.contains(provider->getID()))
                 continue;
             if (isProviderReplacement(provider))
                 continue;

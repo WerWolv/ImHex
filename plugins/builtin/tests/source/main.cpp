@@ -107,18 +107,19 @@ TEST_SEQUENCE("Project/ImportLegacy") {
 
     const auto root = std::filesystem::current_path() / "legacy_project_import";
     const auto projectPath = std::filesystem::current_path() / "legacy_project_import.hexproj";
+    const auto sourcePath = std::filesystem::current_path() / "legacy_project_import.bin";
     std::filesystem::remove_all(root);
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     std::filesystem::create_directory(root);
+    wolv::io::File(sourcePath, wolv::io::File::Mode::Create).writeVector({ 0x01, 0x02, 0x03 });
 
     nlohmann::json descriptor = {
-        { "type", "hex.builtin.provider.mem_file" },
+        { "type", "hex.builtin.provider.file" },
         { "settings", {
             { "baseAddress", 0 },
             { "currPage", 0 },
-            { "data", std::vector<u8> { 0x01, 0x02, 0x03 } },
-            { "name", "Imported" },
-            { "readOnly", false }
+            { "path", sourcePath.string() }
         } }
     };
     {
@@ -151,6 +152,7 @@ TEST_SEQUENCE("Project/ImportLegacy") {
     TEST_ASSERT(wolv::io::File(root / relativePath, wolv::io::File::Mode::Read).readString() == R"({"bookmarks":[]})");
 
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     TEST_SUCCESS();
 };
 
@@ -159,18 +161,19 @@ TEST_SEQUENCE("Project/MigrateLegacy") {
 
     const auto root = std::filesystem::current_path() / "legacy_project_migrated";
     const auto projectPath = std::filesystem::current_path() / "legacy_project_migration.hexproj";
+    const auto sourcePath = std::filesystem::current_path() / "legacy_project_migration.bin";
     std::filesystem::remove_all(root);
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     std::filesystem::create_directory(root);
+    wolv::io::File(sourcePath, wolv::io::File::Mode::Create).writeVector({ 0xCA, 0xFE });
 
     const nlohmann::json descriptor = {
-        { "type", "hex.builtin.provider.mem_file" },
+        { "type", "hex.builtin.provider.file" },
         { "settings", {
             { "baseAddress", 0 },
             { "currPage", 0 },
-            { "data", std::vector<u8> { 0xCA, 0xFE } },
-            { "name", "Migrated" },
-            { "readOnly", false }
+            { "path", sourcePath.string() }
         } }
     };
     {
@@ -200,6 +203,7 @@ TEST_SEQUENCE("Project/MigrateLegacy") {
     TEST_ASSERT(project::createEmptyProject(root) == std::string("hex.builtin.popup.error.project.create.metadata_exists"_lang));
 
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     TEST_SUCCESS();
 };
 
@@ -214,15 +218,14 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     std::filesystem::remove_all(backupRoot);
     std::filesystem::create_directories(providersRoot);
 
-    const auto makeDescriptor = [](const std::string &name) {
+    const auto makeDescriptor = [](const std::string &name, const std::string &path) {
         return nlohmann::json {
-            { "type", "hex.builtin.provider.mem_file" },
+            { "type", "hex.builtin.provider.file" },
             { "settings", {
                 { "baseAddress", 0 },
                 { "currPage", 0 },
-                { "data", std::vector<u8> { 0x01 } },
-                { "name", name },
-                { "readOnly", false }
+                { "displayName", name },
+                { "path", path }
             } }
         };
     };
@@ -230,11 +233,23 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create)
         .writeString(R"({"version":1,"associations":{}})");
     wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Create)
-        .writeString(R"({"providers":[41,42,100],"closedProviders":[100]})");
+        .writeString(R"({"providers":[41,42,43,100],"closedProviders":[100]})");
     for (const auto id : { 41, 42 }) {
+        const auto fileName = fmt::format("open-{}.bin", id);
+        wolv::io::File(root / fileName, wolv::io::File::Mode::Create).writeVector({ 0x01 });
         wolv::io::File(providersRoot / fmt::format("{}.json", id), wolv::io::File::Mode::Create)
-            .writeString(makeDescriptor(fmt::format("Provider {}", id)).dump());
+            .writeString(makeDescriptor(fmt::format("Provider {}", id), fileName).dump());
     }
+    wolv::io::File(providersRoot / "43.json", wolv::io::File::Mode::Create).writeString(nlohmann::json {
+        { "type", "hex.builtin.provider.mem_file" },
+        { "settings", {
+            { "baseAddress", 0 },
+            { "currPage", 0 },
+            { "data", std::vector<u8> { 0x01 } },
+            { "name", "Excluded Provider" },
+            { "readOnly", false }
+        } }
+    }.dump());
     wolv::io::File(root / "closed.bin", wolv::io::File::Mode::Create).writeVector({ 0xAA });
     wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Create).writeString(nlohmann::json {
         { "type", "hex.builtin.provider.file" },
@@ -249,12 +264,17 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     auto providers = ImHexApi::Provider::getProviders();
     TEST_ASSERT(providers.size() == 2);
     TEST_ASSERT(std::ranges::none_of(providers, [](const auto *provider) { return provider->getID() == 100; }));
+    TEST_ASSERT(std::ranges::none_of(providers, [](const auto *provider) { return provider->getID() == 43; }));
 
     auto temporaryProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(temporaryProvider->getID() > 100);
     ImHexApi::Provider::remove(temporaryProvider.get(), true);
 
     TEST_ASSERT(ProjectManager::store(backupRoot, false));
+    const auto backupManifest = nlohmann::json::parse(
+        wolv::io::File(backupRoot / ".imhex/providers/providers.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(backupManifest["providers"].get<std::set<u32>>() == std::set<u32>({ 41, 42, 100 }));
+    TEST_ASSERT(!std::filesystem::exists(backupRoot / ".imhex/providers/43.json"));
     const auto backupClosedSettings = nlohmann::json::parse(
         wolv::io::File(backupRoot / ".imhex/providers/100.json", wolv::io::File::Mode::Read).readString());
     const auto expectedBackupPath = std::filesystem::proximate(root / "closed.bin", backupRoot);
@@ -296,7 +316,7 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     TEST_ASSERT(manifest["closedProviders"].get<std::set<u32>>() == std::set<u32>({ 42, 100 }));
     const auto closedProviderSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / "42.json", wolv::io::File::Mode::Read).readString());
-    TEST_ASSERT(closedProviderSettings["settings"]["data"].size() == 3);
+    TEST_ASSERT(closedProviderSettings["settings"]["path"] == "open-42.bin");
 
     TEST_ASSERT(ProjectManager::load(root));
     providers = ImHexApi::Provider::getProviders();

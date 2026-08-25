@@ -115,10 +115,13 @@ namespace hex::plugin::builtin::project::impl {
             const auto settings = nlohmann::json::parse(readProjectFile(root, projectSettingsPath()));
             const auto association = settings.value("associations", nlohmann::json::object());
             for (const auto &[providerId, entries] : association.items()) {
+                const auto id = std::stoul(providerId);
+                if (!state().projectProviderIds.contains(id))
+                    continue;
                 for (const auto &[handler, pathValue] : entries.items()) {
                     auto path = std::fs::path(pathValue.get<std::string>());
                     if (isSafeProjectPath(path) && !path.generic_string().starts_with(".imhex/"))
-                        associations[std::stoul(providerId)][handler] = std::move(path);
+                        associations[id][handler] = std::move(path);
                 }
             }
         } catch (const std::exception &error) {
@@ -130,6 +133,8 @@ namespace hex::plugin::builtin::project::impl {
     bool storeAssociations(const std::fs::path &root) {
         nlohmann::json associations = nlohmann::json::object();
         for (const auto &[providerId, entries] : state().associations) {
+            if (!state().projectProviderIds.contains(providerId))
+                continue;
             for (const auto &[handler, path] : entries)
                 associations[std::to_string(providerId)][handler] = path.generic_string();
         }

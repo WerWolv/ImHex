@@ -54,6 +54,8 @@ namespace hex::plugin::builtin::project::impl {
 
     std::string getProviderName(const nlohmann::json &descriptor);
     std::string getStoredProviderName(u32 id);
+    bool canPersistProvider(const prv::Provider *provider);
+    bool canPersistProvider(const nlohmann::json &descriptor);
 
     bool isSafeProjectPath(const std::fs::path &path);
     bool validateProjectSettings(const std::fs::path &root);
