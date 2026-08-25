@@ -61,6 +61,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
         [[nodiscard]] bool isDumpable() const override { return false; }
+        [[nodiscard]] bool isSavableAsRecent() const override { return false; }
 
         void readRaw(u64 address, void *buffer, size_t size) override;
         void writeRaw(u64 address, const void *buffer, size_t size) override;
