@@ -1155,7 +1155,7 @@ namespace hex::plugin::builtin {
                 const auto providers = ImHexApi::Provider::getProviders();
                 const auto projectRoot = ProjectManager::getProjectRoot();
                 const auto projectName = ProjectManager::isTemporaryProject()
-                    ? std::string("hex.builtin.sidebar.project.temporary"_lang)
+                    ? std::string("hex.builtin.sidebar.project.temporary"_lang.get())
                     : wolv::util::toUTF8String(projectRoot.filename());
                 const auto projectLabel = fmt::format("{}  {}", ICON_VS_PROJECT, projectName);
                 ImGui::SetNextItemOpen(true, ImGuiCond_Once);
