@@ -137,9 +137,6 @@ namespace hex::plugin::builtin::project::impl {
         auto &projectState = state();
         bool associationsChanged = false;
         for (auto *provider : ImHexApi::Provider::getProviders()) {
-            if (!canPersistProvider(provider) || !projectState.projectProviderIds.contains(provider->getID()))
-                continue;
-
             for (auto *data : FileBackedProviderDataRegistry::getTypes()) {
                 const auto &type = data->getType();
                 if (data->isBound(provider) || !data->hasPendingData(provider) || type.extensions.empty())

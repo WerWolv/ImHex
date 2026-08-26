@@ -3,9 +3,12 @@
 #include <hex/api/plugin_manager.hpp>
 #include <content/views/view_patches.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/imhex_api/bookmarks.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/project_manager.hpp>
 #include <hex/helpers/tar.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 #include <content/legacy_project_importer.hpp>
 #include <content/recent.hpp>
 
@@ -122,21 +125,33 @@ TEST_SEQUENCE("Project/ImportLegacy") {
             { "path", sourcePath.string() }
         } }
     };
+    const nlohmann::json excludedDescriptor = {
+        { "type", "hex.builtin.provider.mem_file" },
+        { "settings", {
+            { "baseAddress", 0 },
+            { "currPage", 0 },
+            { "data", std::vector<u8> { 0x04 } },
+            { "name", "Excluded" },
+            { "readOnly", false }
+        } }
+    };
     {
         Tar tar(projectPath, Tar::Mode::Create);
         nlohmann::json manifest;
-        manifest["providers"] = std::vector<u32> { 11 };
+        manifest["providers"] = std::vector<u32> { 11, 12 };
         tar.writeString("IMHEX_METADATA", "HEX\n1.39.0");
         tar.writeString("providers/providers.json", manifest.dump());
         tar.writeString("providers/11.json", descriptor.dump());
+        tar.writeString("providers/12.json", excludedDescriptor.dump());
         tar.writeString("11/bookmarks.json", R"({"bookmarks":[]})");
+        tar.writeString("12/bookmarks.json", R"({"bookmarks":["excluded"]})");
     }
 
     TEST_ASSERT(ProjectManager::load(root));
     const auto imported = importLegacyProject(projectPath);
     TEST_ASSERT(imported.success, "{}", imported.error);
     TEST_ASSERT(imported.importedProviderCount == 1);
-    TEST_ASSERT(imported.importedFileCount == 1);
+    TEST_ASSERT(imported.importedFileCount == 2);
     TEST_ASSERT(imported.failedProviderIds.empty());
 
     const auto providers = ImHexApi::Provider::getProviders();
@@ -150,6 +165,8 @@ TEST_SEQUENCE("Project/ImportLegacy") {
         projectSettings["associations"][providerId]["hex.builtin.bookmarks"].get<std::string>());
     TEST_ASSERT(std::filesystem::is_regular_file(root / relativePath));
     TEST_ASSERT(wolv::io::File(root / relativePath, wolv::io::File::Mode::Read).readString() == R"({"bookmarks":[]})");
+    TEST_ASSERT(std::filesystem::is_regular_file(root / "Excluded-12.hexbm"));
+    TEST_ASSERT(wolv::io::File(root / "Excluded-12.hexbm", wolv::io::File::Mode::Read).readString() == R"({"bookmarks":["excluded"]})");
 
     std::filesystem::remove(projectPath);
     std::filesystem::remove(sourcePath);
@@ -268,6 +285,15 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
 
     auto temporaryProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(temporaryProvider->getID() > 100);
+    EventProviderOpened::post(temporaryProvider.get());
+    TEST_ASSERT(ImHexApi::Bookmarks::add(0, 1, "Excluded provider bookmark", "", 0) != 0);
+    const auto bookmarkPath = FileBackedProviderDataRegistry::getBinding(temporaryProvider.get(), "hex.builtin.bookmarks");
+    TEST_ASSERT(bookmarkPath.has_value());
+    TEST_ASSERT(std::filesystem::is_regular_file(*bookmarkPath));
+    TEST_ASSERT(!wolv::io::File(*bookmarkPath, wolv::io::File::Mode::Read).readString().empty());
+    const auto manifestAfterBookmark = nlohmann::json::parse(
+        wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(!manifestAfterBookmark["providers"].get<std::set<u32>>().contains(temporaryProvider->getID()));
     ImHexApi::Provider::remove(temporaryProvider.get(), true);
 
     TEST_ASSERT(ProjectManager::store(backupRoot, false));

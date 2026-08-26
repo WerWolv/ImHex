@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
         }
         [[nodiscard]] u64 getActualSize() const override { return 0x00; }
 
-        [[nodiscard]] std::string getName() const override { return "ImHex"; }
+        [[nodiscard]] std::string getName() const override { return "hex.builtin.provider.null.name"_lang; }
 
         [[nodiscard]] const char* getIcon() const override {
             return "";

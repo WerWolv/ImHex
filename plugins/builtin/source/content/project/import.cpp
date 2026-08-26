@@ -34,10 +34,6 @@ namespace hex::plugin::builtin::project {
                 return result;
             }
         }
-        std::erase_if(providers, [](const auto &provider) {
-            return !impl::canPersistProvider(provider.descriptor);
-        });
-
         auto &projectState = impl::state();
         std::set<u32> usedIds = projectState.projectProviderIds;
         for (const auto *provider : ImHexApi::Provider::getProviders())
@@ -180,7 +176,9 @@ namespace hex::plugin::builtin::project {
             preparedProjectFiles.push_back(std::move(relativePath));
         }
 
-        result.importedProviderCount = providers.size();
+        result.importedProviderCount = std::ranges::count_if(providers, [](const auto &provider) {
+            return impl::canPersistProvider(provider.descriptor);
+        });
         result.importedFileCount = preparedFiles.size() + preparedProjectFiles.size();
         std::ranges::stable_sort(providers, [](const auto &left, const auto &right) {
             return left.descriptor["type"] != "hex.builtin.provider.view" &&
@@ -188,6 +186,9 @@ namespace hex::plugin::builtin::project {
         });
         for (auto &importedProvider : providers) {
             const auto id = importedProvider.id;
+            if (!impl::canPersistProvider(importedProvider.descriptor))
+                continue;
+
             auto providerName = impl::getProviderName(importedProvider.descriptor);
             projectState.projectProviderIds.insert(id);
             projectState.projectProviderSettings[id] = importedProvider.descriptor.dump(4);

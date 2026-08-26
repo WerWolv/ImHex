@@ -501,6 +501,7 @@
     "hex.builtin.provider.motorola_srec": "Motorola SREC File",
     "hex.builtin.provider.motorola_srec.name": "Motorola SREC {0}",
     "hex.builtin.provider.null": "Null Provider",
+    "hex.builtin.provider.null.name": "Unnamed",
     "hex.builtin.provider.opening": "Opening Data Source...",
     "hex.builtin.provider.process_memory": "Process Memory",
     "hex.builtin.provider.process_memory.enumeration_failed": "Failed to enumerate processes",
