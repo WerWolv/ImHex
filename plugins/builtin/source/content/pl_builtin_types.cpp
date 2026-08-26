@@ -64,6 +64,10 @@ namespace hex::plugin::builtin {
             }
         }
 
+        std::string toString() override {
+            return m_encodedString;
+        }
+
     protected:
         [[nodiscard]] std::string formatDisplayValue() override {
             auto size = std::min<size_t>(this->getSize(), 0x7F);
@@ -71,8 +75,7 @@ namespace hex::plugin::builtin {
             if (size == 0)
                 return "\"\"";
 
-            std::string buffer(size, 0x00);
-            this->getEvaluator()->readData(this->getOffset(), buffer.data(), size, this->getSection());
+            auto buffer = m_encodedString.substr(0, size);
 
             return Pattern::callUserFormatFunc(buffer).value_or(fmt::format("\"{0}\" {1}", buffer, size > this->getSize() ? "(truncated)" : ""));
         }
