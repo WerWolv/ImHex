@@ -306,16 +306,25 @@ namespace hex::plugin::builtin {
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
         auto intervals = m_data.overlapping({ .start=address, .end=address });
         if (intervals.empty()) {
-            return { Region(address, 1), false };
+            const auto previousInterval = m_data.prevInterval(address);
+            const auto nextInterval = m_data.nextInterval(address);
+            const u64 providerEnd = this->getActualSize() > std::numeric_limits<u64>::max() - this->getBaseAddress()
+                ? std::numeric_limits<u64>::max()
+                : this->getBaseAddress() + this->getActualSize();
+            const u64 invalidStart = previousInterval.has_value()
+                ? previousInterval->interval.end + 1
+                : this->getBaseAddress();
+            const u64 invalidEnd = nextInterval.has_value() ? nextInterval->interval.start : providerEnd;
+            return { Region(invalidStart, invalidEnd > invalidStart ? invalidEnd - invalidStart : 1), false };
         }
 
-        decltype(m_data)::Interval closestInterval = { .start=0, .end=0 };
+        auto closestInterval = intervals.front().interval;
         for (const auto &[interval, data] : intervals) {
-            if (interval.start <= closestInterval.end)
-                closestInterval = interval;
+            closestInterval.start = std::min(closestInterval.start, interval.start);
+            closestInterval.end = std::max(closestInterval.end, interval.end);
         }
 
-        return { Region { .address=closestInterval.start, .size=(closestInterval.end - closestInterval.start) + 1}, Provider::getRegionValidity(address).second };
+        return { Region { .address=closestInterval.start, .size=(closestInterval.end - closestInterval.start) + 1}, true };
     }
 
     bool IntelHexProvider::memoryRegionFilter(const std::string& search, const MemoryRegion& memoryRegion) {

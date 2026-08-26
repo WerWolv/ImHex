@@ -113,6 +113,40 @@ namespace hex::ui {
         void drawMinimap(ImVec2 characterSize);
         void drawMinimapPopup();
 
+        struct CollapsedRegion {
+            u64 firstRow;
+            u64 endRow;
+        };
+
+        struct CollapsedState {
+            std::vector<CollapsedRegion> regions;
+            u64 bytesPerRow = 0;
+            u64 pageAddress = 0;
+        };
+
+        class CollapsedStateStorage {
+        public:
+            CollapsedStateStorage() = default;
+            CollapsedStateStorage(const CollapsedStateStorage&) { }
+            CollapsedStateStorage(CollapsedStateStorage&&) noexcept { }
+            CollapsedStateStorage& operator=(const CollapsedStateStorage&) { return *this; }
+            CollapsedStateStorage& operator=(CollapsedStateStorage&&) noexcept { return *this; }
+
+            CollapsedState& get(const prv::Provider *provider) { return m_states.get(provider); }
+            const CollapsedState& get(const prv::Provider *provider) const { return m_states.get(provider); }
+
+        private:
+            PerProvider<CollapsedState> m_states;
+        };
+
+        [[nodiscard]] u64 getPhysicalNumberOfRows() const;
+        [[nodiscard]] u64 displayRowToPhysicalRow(u64 row, bool *collapsed = nullptr) const;
+        [[nodiscard]] u64 physicalRowToDisplayRow(u64 row) const;
+        [[nodiscard]] std::optional<CollapsedRegion> getCollapsibleRegion(const Region &region) const;
+        [[nodiscard]] std::optional<CollapsedRegion> getCollapsibleRegion(u64 row) const;
+        void initializeCollapsedRegions();
+        void expandCollapsedRegion(u64 row);
+
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
         std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
 
@@ -468,6 +502,7 @@ namespace hex::ui {
 
         std::optional<EncodingFile> m_currCustomEncoding;
         std::vector<u64> m_encodingLineStartAddresses;
+        CollapsedStateStorage m_collapsedState;
 
         std::pair<Region, bool> m_currValidRegion = { Region::Invalid(), false };
 

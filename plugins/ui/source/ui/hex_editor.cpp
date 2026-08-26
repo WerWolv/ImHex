@@ -1,6 +1,9 @@
 #include <ui/hex_editor.hpp>
 
 #include <hex/api/content_registry/hex_editor.hpp>
+
+#include "fonts/tabler_icons.hpp"
+
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/encoding_file.hpp>
@@ -224,13 +227,162 @@ namespace hex::ui {
         ImGui::PopStyleVar();
     }
 
-    u64 HexEditor::getNumberOfRows() const {
+    u64 HexEditor::getPhysicalNumberOfRows() const {
         if (m_provider == nullptr)
             return 0;
 
         const auto bytesPerCell = m_currDataVisualizer->getBytesPerCell();
         const auto bytesPerRow  =  m_bytesPerRow / bytesPerCell * bytesPerCell;
         return (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0LLU : 1LLU);
+    }
+
+    u64 HexEditor::getNumberOfRows() const {
+        u64 rowCount = this->getPhysicalNumberOfRows();
+        if (m_provider == nullptr)
+            return rowCount;
+
+        for (const auto &region : m_collapsedState.get(m_provider).regions)
+            rowCount -= region.endRow - region.firstRow - 1;
+
+        return rowCount;
+    }
+
+    u64 HexEditor::displayRowToPhysicalRow(u64 row, bool *collapsed) const {
+        if (collapsed != nullptr)
+            *collapsed = false;
+        if (m_provider == nullptr)
+            return row;
+
+        u64 removedRows = 0;
+        for (const auto &region : m_collapsedState.get(m_provider).regions) {
+            const u64 displayStart = region.firstRow - removedRows;
+            if (row < displayStart)
+                break;
+            if (row == displayStart) {
+                if (collapsed != nullptr)
+                    *collapsed = true;
+                return region.firstRow;
+            }
+
+            removedRows += region.endRow - region.firstRow - 1;
+        }
+
+        return row + removedRows;
+    }
+
+    u64 HexEditor::physicalRowToDisplayRow(u64 row) const {
+        if (m_provider == nullptr)
+            return row;
+
+        u64 removedRows = 0;
+        for (const auto &region : m_collapsedState.get(m_provider).regions) {
+            if (row < region.firstRow)
+                break;
+            if (row < region.endRow)
+                return region.firstRow - removedRows;
+
+            removedRows += region.endRow - region.firstRow - 1;
+        }
+
+        return row - removedRows;
+    }
+
+    std::optional<HexEditor::CollapsedRegion> HexEditor::getCollapsibleRegion(const Region &region) const {
+        if (m_provider == nullptr)
+            return std::nullopt;
+
+        const u64 bytesPerCell = m_currDataVisualizer->getBytesPerCell();
+        const u64 bytesPerRow = m_bytesPerRow / bytesPerCell * bytesPerCell;
+        const u64 pageStart = m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+        if (region == Region::Invalid())
+            return std::nullopt;
+
+        const u64 pageSize = m_provider->getSize();
+        const u64 pageEnd = pageSize > std::numeric_limits<u64>::max() - pageStart ? std::numeric_limits<u64>::max() : pageStart + pageSize;
+        const u64 invalidStart = std::max(region.getStartAddress(), pageStart);
+        const u64 invalidRegionEnd = region.getSize() > std::numeric_limits<u64>::max() - region.getStartAddress()
+            ? std::numeric_limits<u64>::max()
+            : region.getStartAddress() + region.getSize();
+        const u64 invalidEnd = std::min(invalidRegionEnd, pageEnd);
+        if (invalidEnd <= invalidStart)
+            return std::nullopt;
+
+        const u64 invalidOffset = invalidStart - pageStart;
+        const u64 firstFullRow = invalidOffset / bytesPerRow + (invalidOffset % bytesPerRow != 0 ? 1 : 0);
+        const u64 endFullRow = (invalidEnd - pageStart) / bytesPerRow;
+        if (endFullRow <= firstFullRow || endFullRow - firstFullRow < 2)
+            return std::nullopt;
+
+        return CollapsedRegion { firstFullRow, endFullRow };
+    }
+
+    std::optional<HexEditor::CollapsedRegion> HexEditor::getCollapsibleRegion(u64 row) const {
+        if (m_provider == nullptr)
+            return std::nullopt;
+
+        const u64 bytesPerCell = m_currDataVisualizer->getBytesPerCell();
+        const u64 bytesPerRow = m_bytesPerRow / bytesPerCell * bytesPerCell;
+        const u64 pageStart = m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+        const auto [region, valid] = m_provider->getRegionValidity(pageStart + row * bytesPerRow);
+        if (valid)
+            return std::nullopt;
+
+        auto collapsibleRegion = this->getCollapsibleRegion(region);
+        if (!collapsibleRegion.has_value() || collapsibleRegion->firstRow != row)
+            return std::nullopt;
+
+        return collapsibleRegion;
+    }
+
+    void HexEditor::initializeCollapsedRegions() {
+        if (m_provider == nullptr || m_currDataVisualizer == nullptr || !m_provider->isReadable())
+            return;
+
+        const u64 bytesPerCell = m_currDataVisualizer->getBytesPerCell();
+        const u64 bytesPerRow = m_bytesPerRow / bytesPerCell * bytesPerCell;
+        const u64 pageAddress = m_provider->getCurrentPageAddress();
+        auto &collapsedState = m_collapsedState.get(m_provider);
+        if (collapsedState.bytesPerRow == bytesPerRow && collapsedState.pageAddress == pageAddress)
+            return;
+
+        collapsedState.regions.clear();
+        collapsedState.bytesPerRow = bytesPerRow;
+        collapsedState.pageAddress = pageAddress;
+
+        const u64 pageStart = m_provider->getBaseAddress() + pageAddress;
+        const u64 pageSize = m_provider->getSize();
+        const u64 pageEnd = pageSize > std::numeric_limits<u64>::max() - pageStart
+            ? std::numeric_limits<u64>::max()
+            : pageStart + pageSize;
+
+        for (u64 address = pageStart; address < pageEnd;) {
+            const auto [region, valid] = m_provider->getRegionValidity(address);
+            if (region == Region::Invalid())
+                break;
+
+            const u64 regionEnd = region.getSize() > std::numeric_limits<u64>::max() - region.getStartAddress()
+                ? std::numeric_limits<u64>::max()
+                : region.getStartAddress() + region.getSize();
+            if (region.getStartAddress() > address || regionEnd <= address)
+                break;
+
+            if (!valid) {
+                if (const auto collapsedRegion = this->getCollapsibleRegion(region); collapsedRegion.has_value())
+                    collapsedState.regions.push_back(*collapsedRegion);
+            }
+
+            address = std::min(regionEnd, pageEnd);
+        }
+    }
+
+    void HexEditor::expandCollapsedRegion(u64 row) {
+        if (m_provider == nullptr)
+            return;
+
+        auto &collapsedRegions = m_collapsedState.get(m_provider).regions;
+        std::erase_if(collapsedRegions, [row](const auto &region) {
+            return row >= region.firstRow && row < region.endRow;
+        });
     }
 
     void HexEditor::swapCursorStartEnd() {
@@ -242,9 +394,11 @@ namespace hex::ui {
             m_cursorPosition = m_selectionStart;
 
         const auto bytesPerRow = getBytesPerRow();
-        if (m_cursorPosition < u64(m_scrollPosition * bytesPerRow))
+        const auto pageAddress = m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+        const auto cursorRow = this->physicalRowToDisplayRow((m_cursorPosition.value() - pageAddress) / bytesPerRow);
+        if (cursorRow < u64(m_scrollPosition))
             this->jumpToSelection(0.0F);
-        if (m_cursorPosition > u64((m_scrollPosition + m_visibleRowCount) * bytesPerRow))
+        if (cursorRow > u64(m_scrollPosition + m_visibleRowCount))
             this->jumpToSelection(1.0F);
     }
 
@@ -302,7 +456,9 @@ namespace hex::ui {
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
         const auto bytesPerRow     = m_bytesPerRow / bytesPerCell * bytesPerCell;
 
-        ImS64 numRows = (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0 : 1);
+        const ImS64 numRows = this->getNumberOfRows();
+        if (numRows == 0)
+            return;
 
         auto window = ImGui::GetCurrentWindowRead();
         const auto outerRect = window->Rect();
@@ -355,10 +511,17 @@ namespace hex::ui {
         std::vector<u8> rowData(bytesPerRow);
         std::vector<ImColor> rowColors;
         const auto drawStart = std::max<ImS64>(0, scrollPos - grabPos);
-        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + rowCount, m_provider->getSize() / bytesPerRow); y += 1) {
-            const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
+        for (ImS64 displayY = drawStart; displayY < std::min<ImS64>(drawStart + rowCount, numRows); displayY += 1) {
+            const auto rowStart = bb.Min + ImVec2(0, (displayY - drawStart) * rowHeight);
             const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
             const auto rowSize = rowEnd - rowStart;
+
+            bool collapsed = false;
+            const u64 y = this->displayRowToPhysicalRow(displayY, &collapsed);
+            if (collapsed) {
+                drawList->AddRectFilled(rowStart, rowEnd, ImGui::GetColorU32(ImGuiCol_TextDisabled, 0.35F));
+                continue;
+            }
 
             const auto address = y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
             m_provider->read(address, rowData.data(), rowData.size());
@@ -647,6 +810,8 @@ namespace hex::ui {
         const u64 columnCount      = m_bytesPerRow / bytesPerCell;
         const auto bytesPerRow     = columnCount * bytesPerCell;
 
+        this->initializeCollapsedRegions();
+
         auto byteColumnCount       = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
 
         if (byteColumnCount >= IMGUI_TABLE_MAX_COLUMNS) {
@@ -680,8 +845,8 @@ namespace hex::ui {
                     maxAddress = m_provider->getActualSize();
                     if (maxAddress > 0)
                         maxAddress--;
-                    if ((m_scrollPosition + m_visibleRowCount) * bytesPerRow < maxAddress)
-                        maxAddress = (m_scrollPosition + m_visibleRowCount) * bytesPerRow;
+                    if (u64(m_scrollPosition + m_visibleRowCount) < this->getNumberOfRows())
+                        maxAddress = this->displayRowToPhysicalRow(m_scrollPosition + m_visibleRowCount) * bytesPerRow;
 
                     if (maxAddress + m_provider->getCurrentPageAddress() < std::numeric_limits<u64>::max() - m_provider->getBaseAddress())
                         maxAddress += m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
@@ -692,8 +857,12 @@ namespace hex::ui {
                         maxAddress += 1;
                 }
 
+                fonts::HexEditor().push(0.5);
+                const auto collapseButtonSize = ImMax(ImGui::CalcTextSize(ICON_TA_PLUS), ImGui::CalcTextSize(ICON_TA_MINUS));
+                fonts::HexEditor().pop();
                 ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_WidthFixed,
                     m_provider == nullptr ? 0 :
+                    collapseButtonSize.x + ImGui::GetStyle().ItemSpacing.x +
                     CharacterSize.x * std::max(fmt::formatted_size("{:08X}: ", maxAddress),m_separatorStride == 0 ? 0 : fmt::formatted_size("{} {}", "hex.ui.common.segment"_lang, maxAddress / m_separatorStride))
                 );
                 ImGui::TableSetupColumn("");
@@ -749,7 +918,7 @@ namespace hex::ui {
                         return currRegionValid;
                     };
 
-                    ImS64 numRows = (m_provider->getSize() / bytesPerRow) + ((m_provider->getSize() % bytesPerRow) == 0 ? 0 : 1);
+                    const ImS64 numRows = this->getNumberOfRows();
 
                     if (numRows == 0) {
                         ImGui::TableNextRow();
@@ -764,7 +933,12 @@ namespace hex::ui {
                     // Loop over rows
                     std::vector<u8> bytes(bytesPerRow, 0x00);
                     std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors(bytesPerRow / bytesPerCell);
-                    for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
+                    std::optional<CollapsedRegion> regionToCollapse;
+                    std::optional<u64> regionToExpand;
+                    for (ImS64 displayY = m_scrollPosition; displayY < (m_scrollPosition + m_visibleRowCount + 5) && displayY < numRows && numRows != 0; displayY++) {
+                        bool collapsed = false;
+                        const u64 y = this->displayRowToPhysicalRow(displayY, &collapsed);
+
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -772,11 +946,40 @@ namespace hex::ui {
                         double addressWidth = ImGui::GetCursorPosX();
                         {
                             const auto rowAddress = y * bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                            const auto addressCursor = ImGui::GetCursorPos();
+                            ImGui::SetCursorPosY(addressCursor.y + std::max(0.0F, (CharacterSize.y - collapseButtonSize.y) / 2));
+
+                            fonts::HexEditor().push(0.5);
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 1_scaled));
+                            ImGui::PushID(rowAddress);
+                            bool drewCollapseButton = false;
+                            if (collapsed) {
+                                const auto &collapsedRegions = m_collapsedState.get(m_provider).regions;
+                                const auto region = std::ranges::find(collapsedRegions, y, &CollapsedRegion::firstRow);
+                                if (region != collapsedRegions.end()) {
+                                    drewCollapseButton = true;
+                                    if (ImGuiExt::DimmedIconButton(ICON_TA_PLUS, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, scaled(1, 0)))
+                                        regionToExpand = region->firstRow;
+                                }
+                            } else if (const auto region = this->getCollapsibleRegion(y); region.has_value()) {
+                                drewCollapseButton = true;
+                                if (ImGuiExt::DimmedIconButton(ICON_TA_MINUS, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), {}, scaled(1, 0)))
+                                    regionToCollapse = *region;
+                            }
+
+                            if (!drewCollapseButton)
+                                ImGui::Dummy(collapseButtonSize);
+
+                            ImGui::PopStyleVar();
+                            fonts::HexEditor().pop();
+
+                            ImGui::SetCursorPos(ImVec2(addressCursor.x + collapseButtonSize.x + ImGui::GetStyle().ItemSpacing.x, addressCursor.y));
 
                             if (m_separatorStride > 0 && rowAddress % m_separatorStride < bytesPerRow && !ImGui::GetIO().KeyShift)
                                 ImGuiExt::TextFormattedColored(ImGui::GetStyleColorVec4(ImGuiCol_SeparatorActive), "{} {}", "hex.ui.common.segment"_lang, rowAddress / m_separatorStride);
                             else
                                 ImGuiExt::TextFormattedSelectable("{0}: ", formatAddress(rowAddress, 8));
+                            ImGui::PopID();
                         }
 
                         ImGui::TableNextColumn();
@@ -856,7 +1059,7 @@ namespace hex::ui {
                                         adjustedCellSize.x += SeparatorColumWidth + 1;
                                 }
 
-                                if (y == m_scrollPosition)
+                                if (displayY == m_scrollPosition)
                                     adjustedCellSize.y -= (ImGui::GetStyle().CellPadding.y);
 
                                 backgroundColor = applySelectionColor(byteAddress, backgroundColor);
@@ -1079,13 +1282,13 @@ namespace hex::ui {
                         if (m_shouldScrollToSelection && isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
                             if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left))) {
-                                if (y == (m_scrollPosition + 1)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 1) * bytesPerRow)) {
+                                if (displayY == (m_scrollPosition + 1)) {
+                                    if (this->physicalRowToDisplayRow((m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) / bytesPerRow) <= u64(m_scrollPosition + 1)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition -= 3;
                                     }
-                                } else if (y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (ImS64((m_scrollPosition + m_visibleRowCount) - 2) * bytesPerRow)) {
+                                } else if (displayY == ((m_scrollPosition + m_visibleRowCount) - 1)) {
+                                    if (this->physicalRowToDisplayRow((m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) / bytesPerRow) >= u64((m_scrollPosition + m_visibleRowCount) - 2)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition += 3;
                                     }
@@ -1100,12 +1303,28 @@ namespace hex::ui {
                                 auto newSelection = getSelection();
                                 newSelection.address -= pageAddress;
 
-                                if ((newSelection.getStartAddress()) < u64(m_scrollPosition * bytesPerRow))
+                                if (this->physicalRowToDisplayRow(newSelection.getStartAddress() / bytesPerRow) < u64(m_scrollPosition))
                                     this->jumpToSelection(0.0F);
-                                if ((newSelection.getEndAddress()) > u64((m_scrollPosition + m_visibleRowCount) * bytesPerRow))
+                                if (this->physicalRowToDisplayRow(newSelection.getEndAddress() / bytesPerRow) > u64(m_scrollPosition + m_visibleRowCount))
                                     this->jumpToSelection(1.0F);
                             }
                         }
+                    }
+
+                    auto &collapsedRegions = m_collapsedState.get(m_provider).regions;
+                    if (regionToExpand.has_value()) {
+                        std::erase_if(collapsedRegions, [firstRow = *regionToExpand](const auto &region) {
+                            return region.firstRow == firstRow;
+                        });
+                    } else if (regionToCollapse.has_value()) {
+                        collapsedRegions.push_back(*regionToCollapse);
+                        std::ranges::sort(collapsedRegions, { }, &CollapsedRegion::firstRow);
+                    }
+
+                    if (m_selectionChanged && m_cursorPosition.has_value()) {
+                        const u64 pageAddress = m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
+                        if (*m_cursorPosition >= pageAddress && *m_cursorPosition - pageAddress < m_provider->getSize())
+                            this->expandCollapsedRegion((*m_cursorPosition - pageAddress) / bytesPerRow);
                     }
 
                     // Handle jumping to selection
@@ -1115,7 +1334,10 @@ namespace hex::ui {
                         m_provider->setCurrentPage(m_provider->getPageOfAddress(jumpAddress).value_or(0));
 
                         const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
-                        const auto targetRowNumber = (jumpAddress - pageAddress) / bytesPerRow;
+                        this->initializeCollapsedRegions();
+                        const u64 targetPhysicalRow = (jumpAddress - pageAddress) / bytesPerRow;
+                        this->expandCollapsedRegion(targetPhysicalRow);
+                        const auto targetRowNumber = this->physicalRowToDisplayRow(targetPhysicalRow);
 
                         // Calculate the current top and bottom row numbers of the viewport
                         ImS64 currentTopRow = m_scrollPosition;
