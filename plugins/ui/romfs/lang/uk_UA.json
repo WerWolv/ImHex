@@ -95,7 +95,6 @@
     "hex.ui.common.endian": "Порядок байтів",
     "hex.ui.common.hexadecimal": "Шістнадцяткова",
     "hex.ui.common.loading": "Завантаження...",
-    "hex.ui.common.off": "Вимк",
     "hex.ui.common.project": "Проект",
     "hex.ui.common.remove": "Видалити",
     "hex.ui.common.type.i32": "int32_t",
