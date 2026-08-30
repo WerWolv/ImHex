@@ -498,17 +498,24 @@ namespace hex::plugin::builtin {
                 if (GetModuleInformation(m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
                     continue;
 
-                char moduleName[MAX_PATH];
-                if (GetModuleFileNameExA(m_processHandle, module, moduleName, MAX_PATH) == FALSE)
+                wchar_t moduleName[4096];
+                if (GetModuleFileNameExW(m_processHandle, module, moduleName, std::size(moduleName)) == 0)
                     continue;
 
                 m_memoryRegions.insert({ { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, std::fs::path(moduleName).filename().string() });
             }
 
+            SYSTEM_INFO sysInfo;
+            GetSystemInfo(&sysInfo);
+            const u64 minAddress = reinterpret_cast<u64>(sysInfo.lpMinimumApplicationAddress);
+            const u64 maxAddress = reinterpret_cast<u64>(sysInfo.lpMaximumApplicationAddress);
+        
             MEMORY_BASIC_INFORMATION memoryInfo;
-            for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
+            for (u64 address = minAddress; address < maxAddress; address = (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize) {
                 if (VirtualQueryEx(m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
                     break;
+                // Invalid region
+                if (!memoryInfo.RegionSize) break;
 
                 std::string name;
                 if (memoryInfo.State & MEM_IMAGE)   continue;
