@@ -49,7 +49,10 @@ namespace hex::plugin::builtin {
                 projectState.providerReplacements.erase(replacement);
             }
             if (ProjectManager::isFolderProject() && !projectState.loadingProject) {
-                if (ProjectManager::isTemporaryProject())
+                std::fs::path relativePath;
+                const auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider);
+                if (ProjectManager::isTemporaryProject() ||
+                    (filePicker != nullptr && isPathInProject(filePicker->getPickedPath(), ProjectManager::getProjectRoot(), relativePath)))
                     projectState.projectProviderIds.insert(provider->getID());
                 projectState.closedProjectProviderIds.erase(provider->getID());
                 snapshotProviderSettings(provider);

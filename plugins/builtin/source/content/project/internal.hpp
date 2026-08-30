@@ -25,6 +25,8 @@ namespace hex {
 
 namespace hex::plugin::builtin::project::impl {
 
+    constexpr u32 ProjectFormatVersion = 1;
+
     using Associations = std::map<u32, std::map<std::string, std::fs::path>>;
     using ProviderSettings = std::map<u32, std::string>;
 
@@ -36,6 +38,7 @@ namespace hex::plugin::builtin::project::impl {
         std::map<const prv::Provider *, u32> providerReplacements;
         ProviderSettings projectProviderSettings;
         bool loadingProject = false;
+        bool storingProject = false;
         bool skipShutdownStore = false;
     };
 

@@ -113,6 +113,10 @@ namespace hex::plugin::builtin::project::impl {
             return false;
 
         auto &projectState = state();
+        if (projectState.storingProject)
+            return false;
+        projectState.storingProject = true;
+        auto resetStoring = SCOPE_GUARD { projectState.storingProject = false; };
         const bool promotingTemporaryProject = updateLocation &&
             originalPath.lexically_normal() == ProjectManager::getTemporaryProjectPath().lexically_normal() &&
             filePath->lexically_normal() != originalPath.lexically_normal();
@@ -312,7 +316,7 @@ namespace hex::plugin::builtin::project {
         }
 
         const bool initialized = impl::writeProjectFile(path, impl::projectSettingsPath(), nlohmann::json({
-                { "version", 1 },
+                { "version", impl::ProjectFormatVersion },
                 { "associations", nlohmann::json::object() }
             }).dump(4)) &&
             impl::writeProjectFile(path, std::filesystem::path(ProjectManager::ProjectDirectory) / "providers/providers.json", nlohmann::json({

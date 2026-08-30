@@ -132,7 +132,7 @@ TEST_SEQUENCE("Project/ImportLegacy") {
             { "currPage", 0 },
             { "data", std::vector<u8> { 0x04 } },
             { "name", "Excluded" },
-            { "readOnly", false }
+            { "readOnly", true }
         } }
     };
     {
@@ -150,17 +150,26 @@ TEST_SEQUENCE("Project/ImportLegacy") {
     TEST_ASSERT(ProjectManager::load(root));
     const auto imported = importLegacyProject(projectPath);
     TEST_ASSERT(imported.success, "{}", imported.error);
-    TEST_ASSERT(imported.importedProviderCount == 1);
-    TEST_ASSERT(imported.importedFileCount == 2);
+    TEST_ASSERT(imported.importedProviderCount == 2);
+    TEST_ASSERT(imported.importedFileCount == 3);
     TEST_ASSERT(imported.failedProviderIds.empty());
 
     const auto providers = ImHexApi::Provider::getProviders();
-    TEST_ASSERT(providers.size() == 1);
-    TEST_ASSERT(providers.front()->getActualSize() == 3);
+    TEST_ASSERT(providers.size() == 2);
+    const auto importedFile = std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 11; });
+    const auto importedMemoryFile = std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 12; });
+    TEST_ASSERT(importedFile != providers.end());
+    TEST_ASSERT(importedMemoryFile != providers.end());
+    TEST_ASSERT((*importedFile)->getActualSize() == 3);
+    const auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(*importedMemoryFile);
+    TEST_ASSERT(filePicker != nullptr);
+    TEST_ASSERT(!(*importedMemoryFile)->isWritable());
+    TEST_ASSERT(filePicker->getPickedPath() == root / "Excluded-12.bin");
+    TEST_ASSERT(wolv::io::File(filePicker->getPickedPath(), wolv::io::File::Mode::Read).readVector() == std::vector<u8>({ 0x04 }));
 
     const auto projectSettings = nlohmann::json::parse(
         wolv::io::File(root / ".imhex/project.json", wolv::io::File::Mode::Read).readString());
-    const auto providerId = std::to_string(providers.front()->getID());
+    const auto providerId = std::to_string((*importedFile)->getID());
     const auto relativePath = std::filesystem::path(
         projectSettings["associations"][providerId]["hex.builtin.bookmarks"].get<std::string>());
     TEST_ASSERT(std::filesystem::is_regular_file(root / relativePath));
@@ -304,7 +313,8 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto backupClosedSettings = nlohmann::json::parse(
         wolv::io::File(backupRoot / ".imhex/providers/100.json", wolv::io::File::Mode::Read).readString());
     const auto expectedBackupPath = std::filesystem::proximate(root / "closed.bin", backupRoot);
-    TEST_ASSERT(std::filesystem::path(backupClosedSettings["settings"]["path"].get<std::string>()) == expectedBackupPath);
+    const auto actualBackupPath = std::filesystem::path(backupClosedSettings["settings"]["path"].get<std::string>());
+    TEST_ASSERT(actualBackupPath == expectedBackupPath, "{} != {}", actualBackupPath.string(), expectedBackupPath.string());
     const auto canonicalClosedSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(canonicalClosedSettings["settings"]["path"] == "closed.bin");
@@ -349,11 +359,30 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     TEST_ASSERT(providers.size() == 1);
     TEST_ASSERT(providers.front()->getID() == 41);
 
+    const auto validManifest = manifest;
     manifest.erase("closedProviders");
     wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Create).writeString(manifest.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+    providers = ImHexApi::Provider::getProviders();
+    TEST_ASSERT(providers.size() == 1);
+
+    wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Create).writeString(validManifest.dump());
+    auto projectSettings = nlohmann::json::parse(
+        wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Read).readString());
+    const auto validProjectSettings = projectSettings;
+    projectSettings["version"] = 2;
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+
+    projectSettings = validProjectSettings;
+    projectSettings.erase("associations");
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(validProjectSettings.dump());
     TEST_ASSERT(ProjectManager::load(root));
     providers = ImHexApi::Provider::getProviders();
-    TEST_ASSERT(providers.size() == 3);
+    TEST_ASSERT(providers.size() == 1);
 
     project::ImportedProvider unavailableProvider {
         .id = 200,
@@ -369,6 +398,19 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     TEST_ASSERT(importResult.failedProviderIds == std::vector<u32>({ 200 }));
     auto postImportProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(postImportProvider->getID() > 200);
+
+    const auto localPath = root / "project-local.bin";
+    wolv::io::File(localPath, wolv::io::File::Mode::Create).writeVector({ 0x01 });
+    auto localProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.file"_unlocalized, true);
+    auto *localFilePicker = dynamic_cast<prv::IProviderFilePicker *>(localProvider.get());
+    TEST_ASSERT(localFilePicker != nullptr);
+    localFilePicker->setPickedPath(localPath);
+    TEST_ASSERT(localProvider->open().isSuccess());
+    EventProviderOpened::post(localProvider.get());
+    TEST_ASSERT(ProjectManager::store());
+    const auto manifestWithLocalFile = nlohmann::json::parse(
+        wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(manifestWithLocalFile["providers"].get<std::set<u32>>().contains(localProvider->getID()));
 
     TEST_SUCCESS();
 };

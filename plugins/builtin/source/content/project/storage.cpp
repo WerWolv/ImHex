@@ -39,7 +39,11 @@ namespace hex::plugin::builtin::project::impl {
     bool validateProjectSettings(const std::fs::path &root) {
         try {
             const auto settings = nlohmann::json::parse(readProjectFile(root, projectSettingsPath()));
-            const auto associations = settings.value("associations", nlohmann::json::object());
+            const auto version = settings.at("version").get<u32>();
+            if (version != ProjectFormatVersion)
+                throw std::runtime_error("Unsupported project format version " + std::to_string(version));
+
+            const auto &associations = settings.at("associations");
             if (!associations.is_object())
                 return false;
 
@@ -113,7 +117,7 @@ namespace hex::plugin::builtin::project::impl {
 
         try {
             const auto settings = nlohmann::json::parse(readProjectFile(root, projectSettingsPath()));
-            const auto association = settings.value("associations", nlohmann::json::object());
+            const auto &association = settings.at("associations");
             for (const auto &[providerId, entries] : association.items()) {
                 const auto id = std::stoul(providerId);
                 if (!state().projectProviderIds.contains(id))
@@ -140,7 +144,7 @@ namespace hex::plugin::builtin::project::impl {
         }
 
         return writeProjectFile(root, projectSettingsPath(), nlohmann::json({
-            { "version", 1 },
+            { "version", ProjectFormatVersion },
             { "associations", std::move(associations) }
         }).dump(4));
     }

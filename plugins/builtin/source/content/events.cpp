@@ -317,8 +317,7 @@ namespace hex::plugin::builtin {
 
         RequestOpenWindow::subscribe([](const std::string &name) {
             if (name == "Create File") {
-                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
-                ImHexApi::Provider::openProvider(newProvider);
+                std::ignore = project::createProjectFile();
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     openFile(path);

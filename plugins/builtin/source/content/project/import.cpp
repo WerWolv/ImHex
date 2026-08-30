@@ -88,53 +88,118 @@ namespace hex::plugin::builtin::project {
         std::vector<PreparedFile> preparedFiles;
         std::vector<std::fs::path> preparedProjectFiles;
         std::set<std::fs::path> reservedPaths;
-        for (const auto &importedProvider : providers) {
-            auto stem = fmt::format("provider-{}", importedProvider.id);
-            if (const auto settings = importedProvider.descriptor.find("settings"); settings != importedProvider.descriptor.end()) {
-                auto name = settings->value("displayName", std::string());
-                if (name.empty())
-                    name = settings->value("name", std::string());
-                for (auto &character : name) {
-                    const auto value = static_cast<unsigned char>(character);
-                    if (!std::isalnum(value) && character != '-' && character != '_')
-                        character = '-';
-                }
-                if (!name.empty())
-                    stem = fmt::format("{}-{}", name, importedProvider.id);
+        const auto cleanupPreparedFiles = [&] {
+            for (const auto &prepared : preparedFiles) {
+                std::error_code error;
+                std::fs::remove(root / prepared.relativePath, error);
             }
+            for (const auto &prepared : preparedProjectFiles) {
+                std::error_code error;
+                std::fs::remove(root / prepared, error);
+            }
+        };
+        const auto makeProviderStem = [](const ImportedProvider &provider) {
+            auto stem = fmt::format("provider-{}", provider.id);
+            const auto settings = provider.descriptor.find("settings");
+            if (settings == provider.descriptor.end())
+                return stem;
+
+            auto name = settings->value("displayName", std::string());
+            if (name.empty())
+                name = settings->value("name", std::string());
+            for (auto &character : name) {
+                const auto value = static_cast<unsigned char>(character);
+                if (!std::isalnum(value) && character != '-' && character != '_')
+                    character = '-';
+            }
+            if (!name.empty())
+                stem = fmt::format("{}-{}", name, provider.id);
+            return stem;
+        };
+        const auto makeUniquePath = [&](const std::string &stem, const std::string &extension) -> std::optional<std::fs::path> {
+            auto relativePath = std::fs::path(fmt::format("{}.{}", stem, extension));
+            for (u32 suffix = 2; ; suffix += 1) {
+                std::error_code statusError;
+                const auto status = std::fs::symlink_status(root / relativePath, statusError);
+                if (statusError && statusError != std::errc::no_such_file_or_directory) {
+                    cleanupPreparedFiles();
+                    result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.inspect_path_failed"_lang,
+                        relativePath.generic_string(), statusError.message());
+                    return std::nullopt;
+                }
+                if (status.type() == std::fs::file_type::not_found && !reservedPaths.contains(relativePath))
+                    break;
+                relativePath = std::fs::path(fmt::format("{}-{}.{}", stem, suffix, extension));
+            }
+            reservedPaths.insert(relativePath);
+            return relativePath;
+        };
+        const auto writeProjectFile = [&](const std::fs::path &relativePath, const std::vector<u8> &contents) {
+            wolv::io::File output(root / relativePath, wolv::io::File::Mode::Create);
+            if (output.isValid() && output.writeVector(contents) == static_cast<i64>(contents.size()) && output.flush())
+                return true;
+
+            output.close();
+            std::error_code error;
+            std::fs::remove(root / relativePath, error);
+            cleanupPreparedFiles();
+            result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.write_file_failed"_lang, relativePath.generic_string());
+            return false;
+        };
+
+        for (auto &provider : providers) {
+            if (provider.descriptor["type"] != "hex.builtin.provider.mem_file")
+                continue;
+
+            auto &settings = provider.descriptor["settings"];
+            std::vector<u8> contents;
+            bool readOnly = false;
+            try {
+                contents = settings.at("data").get<std::vector<u8>>();
+                readOnly = settings.value("readOnly", false);
+            } catch (const std::exception &) {
+                cleanupPreparedFiles();
+                result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.invalid_provider_settings"_lang,
+                    impl::getProviderName(provider.descriptor));
+                return result;
+            }
+
+            const auto relativePath = makeUniquePath(makeProviderStem(provider), "bin");
+            if (!relativePath.has_value() || !writeProjectFile(*relativePath, contents))
+                return result;
+            if (readOnly) {
+                std::error_code permissionsError;
+                std::fs::permissions(root / *relativePath,
+                    std::fs::perms::owner_write | std::fs::perms::group_write | std::fs::perms::others_write,
+                    std::fs::perm_options::remove, permissionsError);
+                if (permissionsError) {
+                    std::error_code removeError;
+                    std::fs::remove(root / *relativePath, removeError);
+                    cleanupPreparedFiles();
+                    result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.write_file_failed"_lang,
+                        relativePath->generic_string());
+                    return result;
+                }
+            }
+            preparedProjectFiles.push_back(*relativePath);
+
+            provider.descriptor["type"] = "hex.builtin.provider.file";
+            settings["path"] = relativePath->generic_string();
+            settings.erase("data");
+        }
+
+        for (const auto &importedProvider : providers) {
+            const auto stem = makeProviderStem(importedProvider);
 
             for (const auto &file : importedProvider.files) {
                 if (file.typeId.empty() || file.extension.empty())
                     continue;
 
-                auto relativePath = std::fs::path(fmt::format("{}.{}", stem, file.extension));
-                for (u32 suffix = 2; ; suffix += 1) {
-                    std::error_code statusError;
-                    const auto status = std::fs::symlink_status(root / relativePath, statusError);
-                    if (statusError && statusError != std::errc::no_such_file_or_directory) {
-                        result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.inspect_path_failed"_lang,
-                            relativePath.generic_string(), statusError.message());
-                        return result;
-                    }
-                    if (status.type() == std::fs::file_type::not_found && !reservedPaths.contains(relativePath))
-                        break;
-                    relativePath = std::fs::path(fmt::format("{}-{}.{}", stem, suffix, file.extension));
-                }
-                reservedPaths.insert(relativePath);
-
-                wolv::io::File output(root / relativePath, wolv::io::File::Mode::Create);
-                if (!output.isValid() || output.writeVector(file.contents) != static_cast<i64>(file.contents.size()) || !output.flush()) {
-                    std::error_code currentFileError;
-                    std::fs::remove(root / relativePath, currentFileError);
-                    for (const auto &prepared : preparedFiles) {
-                        std::error_code error;
-                        std::fs::remove(root / prepared.relativePath, error);
-                    }
-                    result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.write_file_failed"_lang, relativePath.generic_string());
+                const auto relativePath = makeUniquePath(stem, file.extension);
+                if (!relativePath.has_value() || !writeProjectFile(*relativePath, file.contents))
                     return result;
-                }
 
-                preparedFiles.push_back({ importedProvider.id, file.typeId, std::move(relativePath) });
+                preparedFiles.push_back({ importedProvider.id, file.typeId, *relativePath });
             }
         }
 
@@ -148,6 +213,7 @@ namespace hex::plugin::builtin::project {
                 std::error_code statusError;
                 const auto status = std::fs::symlink_status(root / relativePath, statusError);
                 if (statusError && statusError != std::errc::no_such_file_or_directory) {
+                    cleanupPreparedFiles();
                     result.error = fmt::format("hex.builtin.popup.error.project.import_legacy.inspect_path_failed"_lang,
                         relativePath.generic_string(), statusError.message());
                     return result;

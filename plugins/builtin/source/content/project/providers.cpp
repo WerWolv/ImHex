@@ -3,6 +3,7 @@
 #include <content/project.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <limits>
 
@@ -20,6 +21,7 @@
 #include <fonts/vscode_icons.hpp>
 #include <toasts/toast_notification.hpp>
 
+#include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
 
@@ -258,7 +260,7 @@ namespace hex::plugin::builtin::project::impl {
         try {
             const auto manifest = nlohmann::json::parse(readProjectFile(root, basePath / "providers.json"));
             auto providerIds = manifest.at("providers").get<std::vector<u32>>();
-            auto closedProviderIds = manifest.value("closedProviders", std::vector<u32> {});
+            auto closedProviderIds = manifest.at("closedProviders").get<std::vector<u32>>();
 
             const std::set<u32> providerIdSet(providerIds.begin(), providerIds.end());
             const std::set<u32> closedProviderIdSet(closedProviderIds.begin(), closedProviderIds.end());
@@ -446,7 +448,7 @@ namespace hex::plugin::builtin::project::impl {
 
     bool persistProjectMetadata() {
         auto &projectState = state();
-        if (projectState.loadingProject || !ProjectManager::isFolderProject())
+        if (projectState.loadingProject || projectState.storingProject || !ProjectManager::isFolderProject())
             return false;
 
         const auto root = ProjectManager::getProjectRoot();
@@ -495,6 +497,52 @@ namespace hex::plugin::builtin::project::impl {
 }
 
 namespace hex::plugin::builtin::project {
+
+    bool createProjectFile() {
+        const auto reportFailure = [] {
+            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.entry.create_file"_lang, "Untitled.bin"));
+            return false;
+        };
+        if (!ProjectManager::isFolderProject() && !ProjectManager::loadTemporaryProject())
+            return reportFailure();
+
+        const auto root = ProjectManager::getProjectRoot();
+        auto relativePath = std::fs::path("Untitled.bin");
+        for (u32 suffix = 2; ; suffix += 1) {
+            std::error_code error;
+            const auto status = std::fs::symlink_status(root / relativePath, error);
+            if (error && error != std::errc::no_such_file_or_directory)
+                return reportFailure();
+            if (status.type() == std::fs::file_type::not_found)
+                break;
+            relativePath = fmt::format("Untitled-{}.bin", suffix);
+        }
+
+        const auto path = root / relativePath;
+        wolv::io::File file(path, wolv::io::File::Mode::Create);
+        const std::array<u8, 1> contents = { 0x00 };
+        if (!file.isValid() || file.writeBuffer(contents.data(), contents.size()) != static_cast<i64>(contents.size()) || !file.flush()) {
+            file.close();
+            std::error_code error;
+            std::fs::remove(path, error);
+            return reportFailure();
+        }
+        file.close();
+
+        auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file"_unlocalized, true);
+        auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider.get());
+        if (filePicker == nullptr) {
+            if (provider != nullptr)
+                ImHexApi::Provider::remove(provider.get(), true);
+            std::error_code error;
+            std::fs::remove(path, error);
+            return reportFailure();
+        }
+
+        filePicker->setPickedPath(path);
+        ImHexApi::Provider::openProvider(std::move(provider));
+        return true;
+    }
 
     prv::Provider *openProviderForPath(const std::filesystem::path &path, const prv::Provider *excludedProvider) {
         for (auto *provider : ImHexApi::Provider::getProviders()) {

@@ -23,6 +23,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <content/global_actions.hpp>
+#include <content/project.hpp>
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_text_input.hpp>
 
@@ -376,11 +377,7 @@ namespace hex::plugin::builtin {
 
         /* Create File */
         const auto createFile = [] {
-            auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
-            if (newProvider != nullptr && newProvider->open().isFailure())
-                hex::ImHexApi::Provider::remove(newProvider.get());
-            else
-                EventProviderOpened::post(newProvider.get());
+            std::ignore = project::createProjectFile();
         };
 
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.create_file"_unlocalized }, ICON_VS_FILE, 1050, CTRLCMD + Keys::N + AllowWhileTyping + ShowOnWelcomeScreen,

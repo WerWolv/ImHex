@@ -18,6 +18,7 @@
 #include <hex/api/events/requests_gui.hpp>
 
 #include <hex/ui/view.hpp>
+#include <content/project.hpp>
 #include <toasts/toast_notification.hpp>
 
 #include <hex/helpers/http_requests.hpp>
@@ -380,11 +381,7 @@ namespace hex::plugin::builtin {
                         auto startPos = ImGui::GetCursorPos();
                         if (ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.start"_lang, nullptr, ImVec2(), ImGuiChildFlags_AutoResizeX)) {
                             if (ImGuiExt::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
-                                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
-                                if (newProvider != nullptr && newProvider->open().isFailure())
-                                    hex::ImHexApi::Provider::remove(newProvider.get());
-                                else
-                                    EventProviderOpened::post(newProvider.get());
+                                std::ignore = project::createProjectFile();
                             }
                             if (ImGuiExt::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
                                 RequestOpenWindow::post("Open File");
