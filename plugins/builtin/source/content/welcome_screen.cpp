@@ -81,12 +81,13 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::Checkbox("hex.builtin.popup.crash_report.report_error"_lang, &m_reportError);
-                    ImGui::NewLine();
                 }
+
+                ImGui::NewLine();
 
                 auto width = ImGui::GetWindowWidth();
                 ImGui::SetCursorPosX(width / 9);
-                if (ImGui::Button("hex.builtin.popup.crash_report.report"_lang, ImVec2(width / 3, 0))) {
+                if (ImGuiExt::DimmedButton("hex.builtin.popup.crash_report.report"_lang, ImVec2(width / 3, 0))) {
                     if (m_reportError) {
                         wolv::io::File logFile(m_logFilePath, wolv::io::File::Mode::Read);
                         if (logFile.isValid()) {
@@ -116,7 +117,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(width / 9 * 5);
-                if (ImGui::Button("hex.ui.common.close"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+                if (ImGuiExt::DimmedButton("hex.ui.common.close"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                     wolv::io::fs::remove(m_crashFilePath);
                     this->close();
                 }
