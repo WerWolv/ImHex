@@ -360,6 +360,7 @@ namespace hex::plugin::builtin {
 
         m_changeEventAcknowledgementPending = false;
         m_writeFailed = false;
+        m_ignoreNextChangeEvent = false;
 
         return {};
     }

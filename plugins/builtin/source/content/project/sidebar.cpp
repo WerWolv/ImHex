@@ -4,6 +4,7 @@
 #include <cctype>
 
 #include <hex/api/content_registry/file_type_handler.hpp>
+#include <hex/api/content_registry/provider.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/project_manager.hpp>
 #include <hex/api/task_manager.hpp>
@@ -24,6 +25,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <imgui_internal.h>
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin::project::impl {
 
@@ -115,7 +117,7 @@ namespace hex::plugin::builtin::project::impl {
                 ui::ToastError::open(fmt::format(Lang(message), path.generic_string()));
         }
 
-        bool moveProjectEntry(const std::fs::path &source, const std::fs::path &destination) {
+        bool moveProjectEntryInternal(const std::fs::path &source, const std::fs::path &destination) {
             if (!isSafeProjectPath(source) || !isSafeProjectPath(destination) ||
                 isReservedProjectPath(source) || isReservedProjectPath(destination) || source == destination)
                 return false;
@@ -128,11 +130,42 @@ namespace hex::plugin::builtin::project::impl {
                 showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source, error);
                 return false;
             }
-            if (std::fs::is_directory(sourcePath, error) && isSameOrDescendant(destination, source)) {
+
+            const bool sourceIsDirectory = std::fs::is_directory(sourcePath, error);
+            if (sourceIsDirectory && isSameOrDescendant(destination, source)) {
                 ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.entry.move_into_self"_lang, source.generic_string()));
                 return false;
             }
-            if (containsProviderFile(source)) {
+
+            struct ProviderFileRelocation {
+                prv::Provider *provider;
+                prv::IProviderFilePicker *filePicker;
+                std::fs::path oldPath;
+                std::fs::path newPath;
+            };
+            std::vector<ProviderFileRelocation> providerRelocations;
+            const auto canonicalRoot = std::fs::weakly_canonical(root, error);
+            for (auto *provider : ImHexApi::Provider::getProviders()) {
+                auto *fileBacked = dynamic_cast<prv::IProviderFileBacked *>(provider);
+                if (fileBacked == nullptr)
+                    continue;
+
+                for (const auto &backedPath : fileBacked->getBackedFiles()) {
+                    error.clear();
+                    const auto relativeBackedPath = std::fs::weakly_canonical(backedPath, error).lexically_relative(canonicalRoot);
+                    if (error || !isSameOrDescendant(relativeBackedPath, source))
+                        continue;
+
+                    auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider);
+                    if (sourceIsDirectory || filePicker == nullptr || !isSameFile(filePicker->getPickedPath(), sourcePath)) {
+                        ui::ToastError::open("hex.builtin.popup.error.project.entry.backing_file_in_use"_lang);
+                        return false;
+                    }
+                    if (std::ranges::none_of(providerRelocations, [provider](const auto &entry) { return entry.provider == provider; }))
+                        providerRelocations.push_back({ provider, filePicker, sourcePath, destinationPath });
+                }
+            }
+            if (containsProviderFile(source) && providerRelocations.empty()) {
                 ui::ToastError::open("hex.builtin.popup.error.project.entry.backing_file_in_use"_lang);
                 return false;
             }
@@ -142,7 +175,7 @@ namespace hex::plugin::builtin::project::impl {
                 std::string typeId;
                 std::fs::path path;
             };
-            std::vector<BindingRelocation> relocations;
+            std::vector<BindingRelocation> bindingRelocations;
             auto updatedAssociations = state().associations;
             for (auto &[providerId, entries] : updatedAssociations) {
                 auto *provider = getProviderById(providerId);
@@ -155,23 +188,108 @@ namespace hex::plugin::builtin::project::impl {
                     if (provider != nullptr) {
                         const auto binding = FileBackedProviderDataRegistry::getBinding(provider, typeId);
                         if (binding.has_value() && binding->lexically_normal() == (root / oldPath).lexically_normal())
-                            relocations.push_back({ provider, typeId, root / path });
+                            bindingRelocations.push_back({ provider, typeId, root / path });
                     }
                 }
             }
 
-            std::fs::rename(sourcePath, destinationPath, error);
-            if (error) {
-                showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source, error);
-                return false;
+            auto updatedProviderSettings = state().projectProviderSettings;
+            for (auto &[id, serializedSettings] : updatedProviderSettings) {
+                if (getProviderById(id) != nullptr)
+                    continue;
+
+                try {
+                    auto descriptor = nlohmann::json::parse(serializedSettings);
+                    const auto providerType = UnlocalizedString(descriptor.at("type").get<std::string>());
+                    const auto provider = ContentRegistry::Provider::impl::create(providerType);
+                    if (provider == nullptr || dynamic_cast<prv::IProviderFilePicker *>(provider.get()) == nullptr)
+                        continue;
+
+                    auto &settings = descriptor.at("settings");
+                    if (!settings.contains("path") || !settings["path"].is_string())
+                        continue;
+
+                    const auto storedPathString = settings["path"].get<std::string>();
+                    const auto storedPath = std::fs::path(std::u8string(storedPathString.begin(), storedPathString.end()));
+                    error.clear();
+                    const auto absolutePath = std::fs::weakly_canonical(storedPath.is_absolute() ? storedPath : root / storedPath, error);
+                    const auto relativePath = absolutePath.lexically_relative(canonicalRoot);
+                    if (error || !isSameOrDescendant(relativePath, source))
+                        continue;
+
+                    const auto remappedPath = remapProjectPath(relativePath, source, destination);
+                    settings["path"] = wolv::io::fs::toNormalizedPathString(storedPath.is_absolute() ? root / remappedPath : remappedPath);
+                    serializedSettings = descriptor.dump(4);
+                } catch (const std::exception &exception) {
+                    log::warn("Failed to update project provider {} while moving '{}': {}", id, source.string(), exception.what());
+                }
             }
 
-            for (const auto &[provider, typeId, path] : relocations) {
+            if (providerRelocations.empty()) {
+                std::fs::rename(sourcePath, destinationPath, error);
+                if (error) {
+                    showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source, error);
+                    return false;
+                }
+            } else {
+                for (const auto &entry : providerRelocations) {
+                    if (entry.provider->isWritable() && !entry.filePicker->flushFile()) {
+                        showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source);
+                        return false;
+                    }
+                }
+
+                for (const auto &entry : providerRelocations) {
+                    entry.provider->close();
+                    entry.filePicker->setPickedPath({});
+                }
+
+                const auto reopenProviders = [&](const bool atDestination) {
+                    bool result = true;
+                    for (const auto &entry : providerRelocations) {
+                        entry.filePicker->setPickedPath(atDestination ? entry.newPath : entry.oldPath);
+                        const auto openResult = entry.provider->open();
+                        result = !openResult.isFailure() && !openResult.isRedirecting() &&
+                            entry.provider->isAvailable() && entry.provider->isReadable() && result;
+                    }
+                    return result;
+                };
+
+                std::fs::rename(sourcePath, destinationPath, error);
+                if (error) {
+                    if (!reopenProviders(false))
+                        log::error("Failed to reopen provider after moving '{}' failed", source.string());
+                    showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source, error);
+                    return false;
+                }
+
+                if (!reopenProviders(true)) {
+                    for (const auto &entry : providerRelocations) {
+                        entry.provider->close();
+                        entry.filePicker->setPickedPath({});
+                    }
+                    error.clear();
+                    std::fs::rename(destinationPath, sourcePath, error);
+                    if (!error && !reopenProviders(false))
+                        log::error("Failed to reopen provider after rolling back move of '{}'", source.string());
+                    showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, source);
+                    return false;
+                }
+            }
+
+            for (const auto &[provider, typeId, path] : bindingRelocations) {
                 if (!FileBackedProviderDataRegistry::relocate(provider, typeId, path))
                     log::error("Failed to relocate provider data binding '{}' to '{}'", typeId, path.string());
             }
             state().associations = std::move(updatedAssociations);
-            persistAssociations();
+            state().projectProviderSettings = std::move(updatedProviderSettings);
+            for (const auto &entry : providerRelocations)
+                snapshotProviderSettings(entry.provider);
+            if (!persistProjectMetadata()) {
+                log::error("Failed to persist project after moving '{}' to '{}'", source.string(), destination.string());
+                showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, destination);
+                return false;
+            }
             return true;
         }
 
@@ -283,7 +401,7 @@ namespace hex::plugin::builtin::project::impl {
                     std::error_code error;
                     if (std::fs::is_regular_file(ProjectManager::getProjectRoot() / edit.source, error) && !fileName.has_extension())
                         fileName += edit.source.extension();
-                    moveProjectEntry(edit.source, edit.directory / fileName);
+                    moveProjectEntryInternal(edit.source, edit.directory / fileName);
                 }
             });
         }
@@ -407,7 +525,7 @@ namespace hex::plugin::builtin::project::impl {
                 const auto source = std::fs::path(static_cast<const char *>(payload->Data));
                 const auto destination = (directory / source.filename()).lexically_normal();
                 if (source != destination)
-                    TaskManager::doLater([source, destination] { moveProjectEntry(source, destination); });
+                    TaskManager::doLater([source, destination] { moveProjectEntryInternal(source, destination); });
             }
             ImGui::EndDragDropTarget();
         }
@@ -675,6 +793,14 @@ namespace hex::plugin::builtin::project::impl {
             }
         }
         ImGui::EndChild();
+    }
+
+}
+
+namespace hex::plugin::builtin::project {
+
+    bool moveProjectEntry(const std::filesystem::path &source, const std::filesystem::path &destination) {
+        return impl::moveProjectEntryInternal(source, destination);
     }
 
 }

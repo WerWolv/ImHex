@@ -67,7 +67,8 @@ namespace hex::prv {
 
     static bool containsEqualPath(const std::set<std::fs::path> &paths, const std::fs::path &path) {
         return std::ranges::find_if(paths, [&path](const std::fs::path &lockedPath) {
-            return std::fs::equivalent(path, lockedPath);
+            std::error_code error;
+            return std::fs::equivalent(path, lockedPath, error) && !error;
         }) != paths.end();
     }
 

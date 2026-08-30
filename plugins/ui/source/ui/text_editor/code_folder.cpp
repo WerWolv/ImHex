@@ -355,7 +355,7 @@ namespace hex::ui {
                             }
                             next(-1);
                             auto column = m_curr[0].location.column - 1;
-                            if (line.m_colors[column] != (char) PaletteIndex::UserDefinedType) {
+                            if (column < line.m_colors.size() && line.m_colors[column] != (char) PaletteIndex::UserDefinedType) {
                                 next(2);
                                 if (peek(tkn::Separator::EndOfProgram, -1)) {
                                     return result;

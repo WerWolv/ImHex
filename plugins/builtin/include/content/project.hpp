@@ -44,6 +44,7 @@ namespace hex::plugin::builtin::project {
 
     std::string createEmptyProject(const std::filesystem::path &path);
     bool createProjectFile();
+    bool moveProjectEntry(const std::filesystem::path &source, const std::filesystem::path &destination);
     ImportResult importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles = {});
     prv::Provider *openProviderForPath(const std::filesystem::path &path, const prv::Provider *excludedProvider = nullptr);
     bool prepareForShutdown(bool persist = true);

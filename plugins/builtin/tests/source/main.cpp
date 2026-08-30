@@ -10,6 +10,7 @@
 #include <hex/helpers/tar.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
 #include <content/legacy_project_importer.hpp>
+#include <content/project.hpp>
 #include <content/recent.hpp>
 
 #include <nlohmann/json.hpp>
@@ -176,6 +177,9 @@ TEST_SEQUENCE("Project/ImportLegacy") {
     TEST_ASSERT(wolv::io::File(root / relativePath, wolv::io::File::Mode::Read).readString() == R"({"bookmarks":[]})");
     TEST_ASSERT(std::filesystem::is_regular_file(root / "Excluded-12.hexbm"));
     TEST_ASSERT(wolv::io::File(root / "Excluded-12.hexbm", wolv::io::File::Mode::Read).readString() == R"({"bookmarks":["excluded"]})");
+    TEST_ASSERT(project::moveProjectEntry("Excluded-12.bin", "Renamed-Excluded-12.bin"));
+    TEST_ASSERT(filePicker->getPickedPath() == root / "Renamed-Excluded-12.bin");
+    TEST_ASSERT(!(*importedMemoryFile)->isWritable());
 
     std::filesystem::remove(projectPath);
     std::filesystem::remove(sourcePath);
@@ -318,15 +322,19 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto canonicalClosedSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(canonicalClosedSettings["settings"]["path"] == "closed.bin");
+    TEST_ASSERT(project::moveProjectEntry("closed.bin", "renamed-closed.bin"));
+    const auto renamedClosedSettings = nlohmann::json::parse(
+        wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(renamedClosedSettings["settings"]["path"] == "renamed-closed.bin");
 
     const recent::RecentEntry closedRecentEntry {
-        .displayName = "closed.bin",
+        .displayName = "renamed-closed.bin",
         .type = "hex.builtin.provider.file",
         .entryFilePath = {},
         .data = {
             { "baseAddress", 0 },
             { "currPage", 0 },
-            { "path", (root / "closed.bin").string() }
+            { "path", (root / "renamed-closed.bin").string() }
         }
     };
     recent::loadRecentEntry(closedRecentEntry);
@@ -411,6 +419,19 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto manifestWithLocalFile = nlohmann::json::parse(
         wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(manifestWithLocalFile["providers"].get<std::set<u32>>().contains(localProvider->getID()));
+
+    TEST_ASSERT(project::moveProjectEntry("project-local.bin", "renamed-project-local.bin"));
+    const auto renamedLocalPath = root / "renamed-project-local.bin";
+    TEST_ASSERT(!std::filesystem::exists(localPath));
+    TEST_ASSERT(std::filesystem::is_regular_file(renamedLocalPath));
+    TEST_ASSERT(localFilePicker->getPickedPath() == renamedLocalPath);
+    const u8 renamedValue = 0xA5;
+    localProvider->write(0, &renamedValue, sizeof(renamedValue));
+    TEST_ASSERT(localFilePicker->flushFile());
+    TEST_ASSERT(wolv::io::File(renamedLocalPath, wolv::io::File::Mode::Read).readVector() == std::vector<u8>({ renamedValue }));
+    const auto renamedProviderSettings = nlohmann::json::parse(
+        wolv::io::File(providersRoot / fmt::format("{}.json", localProvider->getID()), wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(renamedProviderSettings["settings"]["path"] == "renamed-project-local.bin");
 
     TEST_SUCCESS();
 };
