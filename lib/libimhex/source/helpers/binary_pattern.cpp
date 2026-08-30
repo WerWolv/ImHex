@@ -163,6 +163,9 @@ namespace hex {
     }
 
     bool BinaryPattern::matchesByte(u8 byte, u32 offset) const {
+        if (offset >= m_patterns.size()) [[unlikely]]
+            return false;
+
         const auto &pattern = m_patterns[offset];
 
         return (byte & pattern.mask) == pattern.value;
