@@ -502,7 +502,7 @@ namespace hex::ui {
 
         std::optional<EncodingFile> m_currCustomEncoding;
         std::vector<u64> m_encodingLineStartAddresses;
-        CollapsedStateStorage m_collapsedState;
+        mutable CollapsedStateStorage m_collapsedState;
 
         std::pair<Region, bool> m_currValidRegion = { Region::Invalid(), false };
 
