@@ -156,16 +156,16 @@ namespace hex::plugin::builtin::project::impl {
             std::ignore = storeAssociations(ProjectManager::getProjectRoot());
     }
 
-    bool openStoredProjectProvider(u32 id) {
+    prv::Provider::OpenResult openStoredProjectProvider(u32 id) {
         if (auto *provider = getProviderById(id); provider != nullptr) {
             ImHexApi::Provider::setCurrentProvider(provider);
-            return true;
+            return {};
         }
 
         auto &projectState = state();
         const auto storedSettings = projectState.projectProviderSettings.find(id);
         if (storedSettings == projectState.projectProviderSettings.end())
-            return false;
+            return prv::Provider::OpenResult::failure(fmt::format("Project provider {} has no stored settings", id));
 
         projectState.providerOpenAttempts.insert(id);
         auto finishOpenAttempt = SCOPE_GUARD { projectState.providerOpenAttempts.erase(id); };
@@ -175,24 +175,24 @@ namespace hex::plugin::builtin::project::impl {
             const auto providerType = UnlocalizedString(providerSettings.at("type").get<std::string>());
             auto provider = ImHexApi::Provider::createProvider(providerType, true, true);
             if (provider == nullptr)
-                return false;
+                return prv::Provider::OpenResult::failure(fmt::format("Failed to create provider of type {}", providerType.get()));
 
             provider->setID(id);
             provider->loadSettings(providerSettings.at("settings"));
             const auto result = provider->open();
             if (result.isFailure() || result.isRedirecting() || !provider->isAvailable() || !provider->isReadable()) {
                 removeProviderForProjectLoad(provider.get());
-                return false;
+                return prv::Provider::OpenResult::failure(fmt::format("Failed to open provider {}", id));
             }
 
             EventProviderOpened::post(provider.get());
             bindRegisteredData();
-            return true;
+            return {};
         } catch (const std::exception &error) {
             log::warn("Failed to reopen project provider {}: {}", id, error.what());
             if (auto *provider = getProviderById(id); provider != nullptr)
                 removeProviderForProjectLoad(provider);
-            return false;
+            return prv::Provider::OpenResult::failure(fmt::format("Failed to open provider {}: {}", id, error.what()));
         }
     }
 
@@ -557,8 +557,15 @@ namespace hex::plugin::builtin::project {
         }
 
         const auto providerId = impl::findClosedProviderForPath(path);
-        if (!providerId.has_value() || !impl::openStoredProjectProvider(*providerId))
+        if (!providerId.has_value())
             return nullptr;
+
+        auto result = impl::openStoredProjectProvider(*providerId);
+        if (result.isFailure()) {
+            ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, result.getErrorMessage()));
+            return nullptr;
+        }
+
         return impl::getProviderById(*providerId);
     }
 

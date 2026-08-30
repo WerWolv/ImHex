@@ -758,8 +758,8 @@ namespace hex::plugin::builtin::project::impl {
 
                 if (providerToOpen.has_value()) {
                     TaskManager::doLater([id = *providerToOpen] {
-                        if (!openStoredProjectProvider(id))
-                            ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, getStoredProviderName(id)));
+                        if (const auto result = openStoredProjectProvider(id); result.isFailure())
+                            ui::ToastError::open(fmt::format("hex.builtin.provider.error.open"_lang, result.getErrorMessage()));
                     });
                 }
                 if (providerToReplace.has_value()) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hex/providers/provider.hpp"
+
 #include <hex.hpp>
 
 #include <wolv/io/fs.hpp>
@@ -74,7 +76,7 @@ namespace hex::plugin::builtin::project::impl {
     prv::Provider *getProviderById(u32 id);
     void bindRegisteredData();
     void materializeRegisteredData();
-    bool openStoredProjectProvider(u32 id);
+    prv::Provider::OpenResult openStoredProjectProvider(u32 id);
     bool isSameFile(const std::fs::path &left, const std::fs::path &right);
     std::optional<u32> findClosedProviderForPath(const std::fs::path &path);
     bool isProviderReplacement(const prv::Provider *provider);
