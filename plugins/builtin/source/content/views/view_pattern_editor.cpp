@@ -2829,7 +2829,7 @@ namespace hex::plugin::builtin {
             [this, createRuntime](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
                 static std::mutex mutex;
 
-                std::lock_guard lock(mutex);
+                std::scoped_lock lock(mutex);
 
                 if (auto it = m_patternNames.find(path); it != m_patternNames.end()) {
                     return it->second;
@@ -2844,14 +2844,12 @@ namespace hex::plugin::builtin {
 
                     const auto pragmaValues = runtime->getPragmaValues(file.readString());
 
-                    std::lock_guard lock(mutex);
+                    std::scoped_lock lock(mutex);
                     if (auto it = pragmaValues.find("description"); it != pragmaValues.end() && !it->second.empty()) {
                         m_patternNames[path] = fmt::format("{} ({})", it->second, fileName);
                     } else {
                         m_patternNames[path] = fileName;
                     }
-
-                    return m_patternNames[path];
                 });
 
                 return fileName;
