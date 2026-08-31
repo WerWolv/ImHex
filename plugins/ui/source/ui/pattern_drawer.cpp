@@ -129,7 +129,7 @@ namespace hex::ui {
 
             ImGui::TableNextColumn();
 
-            if (pattern.isPatternLocal()) {
+            if (pattern.isLocal() || pattern.isPatternLocal()) {
                 ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
                 ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset());
