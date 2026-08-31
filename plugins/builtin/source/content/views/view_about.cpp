@@ -586,6 +586,7 @@ namespace hex::plugin::builtin {
 
     void ViewAbout::drawCommitHistoryPage() {
         static std::vector<GitHubApi::Commit> commits;
+        static std::string errorText;
 
         // Set up the request to get the commit history the first time the page is opened
         AT_FIRST_TIME {
@@ -599,7 +600,7 @@ namespace hex::plugin::builtin {
                 if (response.isSuccess()) {
                     commits = response.getData();
                 } else {
-                    ImGuiExt::TextFormatted("{}: {}", "hex.ui.common.error"_lang, response.getErrorMessage());
+                    errorText = fmt::format("{}: {}", "hex.ui.common.error"_lang, response.getErrorMessage());
                     commits = {};
                 }
                 m_commitHistoryRequest = { };
@@ -610,7 +611,12 @@ namespace hex::plugin::builtin {
         }
 
         // Draw commits table
-        if (commits.empty()) return;
+        if (commits.empty()) {
+            if (!errorText.empty()) {
+                ImGuiExt::TextFormatted("{}", errorText);
+            }
+            return;
+        }
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
         auto result = ImGuiExt::BeginSubWindow("Commits", nullptr, ImGui::GetContentRegionAvail());
