@@ -165,7 +165,7 @@ namespace hex::plugin::builtin::project::impl {
         auto &projectState = state();
         const auto storedSettings = projectState.projectProviderSettings.find(id);
         if (storedSettings == projectState.projectProviderSettings.end())
-            return prv::Provider::OpenResult::failure(fmt::format("Project provider {} has no stored settings", id));
+            return prv::Provider::OpenResult::failure(fmt::format("Project data source '{}' has no stored settings", getStoredProviderName(id)));
 
         projectState.providerOpenAttempts.insert(id);
         auto finishOpenAttempt = SCOPE_GUARD { projectState.providerOpenAttempts.erase(id); };
@@ -182,7 +182,7 @@ namespace hex::plugin::builtin::project::impl {
             const auto result = provider->open();
             if (result.isFailure() || result.isRedirecting() || !provider->isAvailable() || !provider->isReadable()) {
                 removeProviderForProjectLoad(provider.get());
-                return prv::Provider::OpenResult::failure(fmt::format("Failed to open provider {}", id));
+                return prv::Provider::OpenResult::failure(fmt::format("Failed to open data source {}", getStoredProviderName(id)));
             }
 
             EventProviderOpened::post(provider.get());
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin::project::impl {
             log::warn("Failed to reopen project provider {}: {}", id, error.what());
             if (auto *provider = getProviderById(id); provider != nullptr)
                 removeProviderForProjectLoad(provider);
-            return prv::Provider::OpenResult::failure(fmt::format("Failed to open provider {}: {}", id, error.what()));
+            return prv::Provider::OpenResult::failure(fmt::format("Failed to open data source {}: {}", getStoredProviderName(id), error.what()));
         }
     }
 
