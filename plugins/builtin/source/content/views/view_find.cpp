@@ -1113,6 +1113,9 @@ namespace hex::plugin::builtin {
             }
             ImGuiExt::EndSubWindow();
 
+            if (m_searchSettings.region.getSize() == 0)
+                m_settingsValid = false;
+
             ImGui::BeginDisabled(!m_settingsValid);
             {
                 if (ImGuiExt::DimmedIconButton(ICON_VS_SEARCH, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
