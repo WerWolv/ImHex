@@ -2826,23 +2826,35 @@ namespace hex::plugin::builtin {
 
         ui::PopupNamedFileChooser::open(
             basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
-            [this, runtime = createRuntime()](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+            [this, createRuntime](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
+                static std::mutex mutex;
+
+                std::lock_guard lock(mutex);
+
                 if (auto it = m_patternNames.find(path); it != m_patternNames.end()) {
                     return it->second;
                 }
 
                 const auto fileName = wolv::util::toUTF8String(adjustedPath.filename());
 
-                wolv::io::File file(path, wolv::io::File::Mode::Read);
+                m_patternNames[path] = fileName;
 
-                const auto pragmaValues = runtime->getPragmaValues(file.readString());
-                if (auto it = pragmaValues.find("description"); it != pragmaValues.end() && !it->second.empty()) {
-                    m_patternNames[path] = fmt::format("{} ({})", it->second, fileName);
-                } else {
-                    m_patternNames[path] = fileName;
-                }
+                TaskManager::createBackgroundTask("Parsing pattern names", [this, path, fileName, runtime = createRuntime()] {
+                    wolv::io::File file(path, wolv::io::File::Mode::Read);
 
-                return m_patternNames[path];
+                    const auto pragmaValues = runtime->getPragmaValues(file.readString());
+
+                    std::lock_guard lock(mutex);
+                    if (auto it = pragmaValues.find("description"); it != pragmaValues.end() && !it->second.empty()) {
+                        m_patternNames[path] = fmt::format("{} ({})", it->second, fileName);
+                    } else {
+                        m_patternNames[path] = fileName;
+                    }
+
+                    return m_patternNames[path];
+                });
+
+                return fileName;
             },
             [this, provider, trackFile](const std::fs::path &path) {
                 this->loadPatternFile(path, provider, trackFile);
