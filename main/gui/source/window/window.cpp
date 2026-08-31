@@ -555,7 +555,7 @@ namespace hex {
                         popupDelay = 0.2;
                     } else {
                         popupDelay -= io.DeltaTime;
-                        if (popupDelay < 0 || popups.size() == 1) {
+                        if (currPopup == nullptr && (popupDelay < 0 || popups.size() == 1)) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
                             popupName = fmt::format("{} {}", currPopup->getIcon(), Lang(currPopup->getUnlocalizedName()));
