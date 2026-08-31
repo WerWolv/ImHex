@@ -479,11 +479,13 @@ namespace hex::plugin::builtin {
 
     void FileProvider::convertToMemoryFile() {
         this->close();
+        this->unlockFile(getPickedPath());
         this->open(false);
     }
 
     void FileProvider::convertToDirectAccess() {
         this->close();
+        this->unlockFile(getPickedPath());
         this->open(true);
     }
 
