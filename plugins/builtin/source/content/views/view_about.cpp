@@ -599,7 +599,8 @@ namespace hex::plugin::builtin {
                 if (response.isSuccess()) {
                     commits = response.getData();
                 } else {
-                    commits = { { "hex.ui.common.error"_lang, response.getErrorMessage(), "", "", "", "" } };
+                    ImGuiExt::TextFormatted("{}: {}", "hex.ui.common.error"_lang, response.getErrorMessage());
+                    commits = {};
                 }
                 m_commitHistoryRequest = { };
             } else {
