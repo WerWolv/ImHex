@@ -55,8 +55,10 @@ IMHEX_PLUGIN_SETUP_BUILTIN("Built-in", "WerWolv", "Default ImHex functionality")
         }
         dbg::setDebugModeEnabled(true);
     #else
-        const auto enabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.debug_mode_enabled"_untranslated, false);
-        dbg::setDebugModeEnabled(enabled);
+        if (!dbg::debugModeEnabled()) {
+            const auto enabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.debug_mode_enabled"_untranslated, false);
+            dbg::setDebugModeEnabled(enabled);
+        }
     #endif
 
     hex::log::debug("Using romfs: '{}'", romfs::name());
