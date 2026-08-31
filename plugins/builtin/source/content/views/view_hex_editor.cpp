@@ -645,6 +645,51 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpIfOffScreen();
         });
 
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Home, "hex.builtin.view.hex_editor.shortcut.selection_file_up", [this] {
+            auto selection = getSelection();
+            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+
+            if (m_hexEditor.getMode() == ui::HexEditor::Mode::Insert)
+                return;
+
+            u64 startAddress = 0;
+
+            if (cursor != selection.getStartAddress()) {
+                setSelection(selection.getStartAddress(), startAddress);
+                m_hexEditor.setCursorPosition(startAddress);
+            } else {
+                setSelection(startAddress, selection.getEndAddress());
+                m_hexEditor.setCursorPosition(startAddress);
+            }
+
+            m_hexEditor.jumpIfOffScreen();
+        });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::End, "hex.builtin.view.hex_editor.shortcut.selection_file_down", [this] {
+            auto selection = getSelection();
+            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+
+            if (m_hexEditor.getMode() == ui::HexEditor::Mode::Insert)
+                return;
+
+            auto provider = m_hexEditor.getProvider();
+            if (provider == nullptr)
+                return;
+
+            auto fileSize = provider->getSize();
+            auto endAddress = fileSize > 0 ? fileSize - 1 : 0;
+
+            if (cursor != selection.getStartAddress()) {
+                setSelection(selection.getStartAddress(), endAddress);
+                m_hexEditor.setCursorPosition(endAddress);
+            } else {
+                setSelection(endAddress, selection.getEndAddress());
+                m_hexEditor.setCursorPosition(endAddress);
+            }
+
+            m_hexEditor.jumpIfOffScreen();
+        });
+
     }
 
     void ViewHexEditor::registerEvents() {
