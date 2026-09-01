@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
             bool outVariable;
 
             pl::core::Token::ValueType type;
-            pl::core::Token::Literal value;
+            std::optional<pl::core::Token::Literal> value;
         };
 
         enum class EnvVarType : u8

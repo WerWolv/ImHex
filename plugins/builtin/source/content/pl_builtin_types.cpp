@@ -102,7 +102,7 @@ namespace hex::plugin::builtin {
         }
 
         void jsonToPattern(pl::core::Evaluator *evaluator, const nlohmann::json &json, std::vector<std::shared_ptr<pl::ptrn::Pattern>> &entries) {
-            u64 index = 0;
+            u32 index = 0;
             for (auto it = json.begin(); it != json.end(); ++it, ++index) {
                 using ValueType = nlohmann::json::value_t;
                 switch (it->type()) {

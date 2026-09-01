@@ -38,6 +38,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
+#include <wolv/utils/charconv.hpp>
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/lock.hpp>
 
@@ -1303,41 +1304,78 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushItemWidth(-1);
                     if (variable.outVariable) {
-                        ImGuiExt::TextFormattedSelectable("{}", variable.value.toString(true).c_str());
+                        ImGuiExt::TextFormattedSelectable("{}", variable.value.value_or(std::string()).toString(true).c_str());
                     } else if (variable.inVariable) {
                         const std::string label { "##" + name };
 
                         if (pl::core::Token::isSigned(variable.type)) {
-                            i64 value = i64(hex::get_or<i128>(variable.value, 0ll));
-                            if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
-                                m_hasUnparsedChanges.get(provider) = true;
-                            variable.value = i128(value);
+                            auto buffer = variable.value.has_value() ? variable.value->toString(true) : std::string();
+                            if (ImGui::InputTextWithHint(label.c_str(), "hex.builtin.view.pattern_editor.in_default_value"_lang, buffer, ImGuiInputTextFlags_CharsDecimal)) {
+                                if (buffer.empty()) {
+                                    variable.value.reset();
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                } else if (const auto value = wolv::util::from_chars<i64>(buffer); value.has_value()) {
+                                    variable.value = i128(*value);
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                }
+                            }
                         } else if (pl::core::Token::isUnsigned(variable.type)) {
-                            u64 value = u64(hex::get_or<u128>(variable.value, 0));
-                            if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
-                                m_hasUnparsedChanges.get(provider) = true;
-                            variable.value = u128(value);
+                            auto buffer = variable.value.has_value() ? variable.value->toString(true) : std::string();
+                            if (ImGui::InputTextWithHint(label.c_str(), "hex.builtin.view.pattern_editor.in_default_value"_lang, buffer, ImGuiInputTextFlags_CharsDecimal)) {
+                                if (buffer.empty()) {
+                                    variable.value.reset();
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                } else if (const auto value = wolv::util::from_chars<u64>(buffer); value.has_value()) {
+                                    variable.value = u128(*value);
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                }
+                            }
                         } else if (pl::core::Token::isFloatingPoint(variable.type)) {
-                            auto value = hex::get_or<double>(variable.value, 0.0);
-                            if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
-                                m_hasUnparsedChanges.get(provider) = true;
-                            variable.value = value;
+                            auto buffer = variable.value.has_value() ? variable.value->toString(true) : std::string();
+                            if (ImGui::InputTextWithHint(label.c_str(), "hex.builtin.view.pattern_editor.in_default_value"_lang, buffer, ImGuiInputTextFlags_CharsScientific)) {
+                                if (buffer.empty()) {
+                                    variable.value.reset();
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                } else if (const auto value = wolv::util::from_chars<double>(buffer); value.has_value()) {
+                                    variable.value = *value;
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                }
+                            }
                         } else if (variable.type == pl::core::Token::ValueType::Boolean) {
                             ImGui::SameLine(0, ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing());
-                            auto value = hex::get_or<bool>(variable.value, false);
-                            if (ImGui::Checkbox(label.c_str(), &value))
+                            const bool hasValue = variable.value.has_value();
+                            auto value = hex::get_or<bool>(variable.value.value_or(false), false);
+                            ImGui::PushItemFlag(ImGuiItemFlags_MixedValue, !hasValue);
+                            if (ImGui::Checkbox(label.c_str(), &value)) {
+                                variable.value = value;
+                                if (value && !hasValue)
+                                    variable.value = true;
+                                else if (!value && hasValue)
+                                    variable.value = false;
+                                else
+                                    variable.value.reset();
+
                                 m_hasUnparsedChanges.get(provider) = true;
-                            variable.value = value;
+                            }
+                            ImGui::PopItemFlag();
                         } else if (variable.type == pl::core::Token::ValueType::Character) {
-                            std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
-                            if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
+                            std::array<char, 2> buffer = { hex::get_or<char>(variable.value.value_or('\x00'), '\x00') };
+                            if (ImGui::InputTextWithHint(label.c_str(), "hex.builtin.view.pattern_editor.in_default_value"_lang, buffer.data(), buffer.size())) {
+                                if (buffer[0] == '\x00')
+                                    variable.value.reset();
+                                else
+                                    variable.value = buffer[0];
                                 m_hasUnparsedChanges.get(provider) = true;
-                            variable.value = buffer[0];
+                            }
                         } else if (variable.type == pl::core::Token::ValueType::String) {
-                            auto buffer = hex::get_or<std::string>(variable.value, "");
-                            if (ImGui::InputText(label.c_str(), buffer))
+                            auto buffer = hex::get_or<std::string>(variable.value.value_or(std::string()), "");
+                            if (ImGui::InputTextWithHint(label.c_str(), "hex.builtin.view.pattern_editor.in_default_value"_lang, buffer)) {
+                                if (buffer.empty())
+                                    variable.value.reset();
+                                else
+                                    variable.value = buffer;
                                 m_hasUnparsedChanges.get(provider) = true;
-                            variable.value = buffer;
+                            }
                         }
                     }
                     ImGui::PopItemWidth();
@@ -1778,7 +1816,7 @@ namespace hex::plugin::builtin {
                         .inVariable  = variableDecl->isInVariable(),
                         .outVariable = variableDecl->isOutVariable(),
                         .type        = builtinType->getType(),
-                        .value       = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : pl::core::Token::Literal()
+                        .value       = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : std::nullopt
                     };
 
                     if (variable.inVariable || variable.outVariable) {
@@ -1866,8 +1904,8 @@ namespace hex::plugin::builtin {
 
             std::map<std::string, pl::core::Token::Literal> inVariables;
             for (auto &[name, variable] : *m_patternVariables) {
-                if (variable.inVariable)
-                    inVariables[name] = variable.value;
+                if (variable.inVariable && variable.value.has_value())
+                    inVariables[name] = *variable.value;
             }
 
             runtime.setDangerousFunctionCallHandler([this]{
