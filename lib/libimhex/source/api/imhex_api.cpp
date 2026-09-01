@@ -1219,12 +1219,13 @@ namespace hex {
             return getFont(m_fontName).regular;
         }
 
-        void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<float> fontSizeMultiplier) {
+        void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset, std::optional<float> fontSizeMultiplier, bool colorGlyphs) {
             impl::s_fonts->emplace_back(
                 name,
                 data,
                 offset,
-                fontSizeMultiplier
+                fontSizeMultiplier,
+                colorGlyphs
             );
 
             #if defined(OS_MACOS)
