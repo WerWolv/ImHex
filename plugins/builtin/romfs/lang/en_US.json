@@ -1107,6 +1107,7 @@
     "hex.builtin.view.pattern_editor.menu.replace_all": "Replace All",
     "hex.builtin.view.pattern_editor.name": "Pattern editor",
     "hex.builtin.view.pattern_editor.no_in_out_vars": "Define some global variables with the 'in' or 'out' specifier for them to appear here.",
+    "hex.builtin.view.pattern_editor.in_default_value": "Default",
     "hex.builtin.view.pattern_data.virtual_files.no_virtual_files": "Visualize regions of data as a virtual folder structure by adding them using the hex::core::add_virtual_file function.",
     "hex.builtin.view.pattern_editor.no_env_vars": "The content of Environment Variables created here can be accessed from Pattern scripts using the std::env function.",
     "hex.builtin.view.pattern_editor.no_results": "no results",
