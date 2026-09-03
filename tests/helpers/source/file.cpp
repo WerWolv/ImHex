@@ -87,6 +87,17 @@ TEST_SEQUENCE("FileBackedProviderData") {
         if (changedProvider == &provider)
             notifications += 1;
     });
+    const auto waitForContents = [](const std::fs::path &path, std::string_view expected) {
+        const auto deadline = std::chrono::steady_clock::now() + 2500ms;
+        while (std::chrono::steady_clock::now() < deadline) {
+            EventFrameEnd::post();
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
+            if (file.isValid() && file.readString() == expected)
+                return true;
+            std::this_thread::sleep_for(10ms);
+        }
+        return false;
+    };
 
     TEST_ASSERT(data.get(&provider) == 7);
     const auto &constData = data;
@@ -106,6 +117,7 @@ TEST_SEQUENCE("FileBackedProviderData") {
     TEST_ASSERT(FileBackedProviderDataRegistry::get("hex.test.file_backed_provider_data") == &data);
     TEST_ASSERT(FileBackedProviderDataRegistry::bind(&provider, data.getType().typeId, filePath));
     TEST_ASSERT(FileBackedProviderDataRegistry::isBound(&provider, data.getType().typeId));
+    TEST_ASSERT(waitForContents(filePath, "7"));
 
     const auto encodeCallsBeforeIdleFrames = encodeCalls;
     EventFrameEnd::post();
@@ -114,23 +126,14 @@ TEST_SEQUENCE("FileBackedProviderData") {
     TEST_ASSERT(encodeCalls == encodeCallsBeforeIdleFrames);
 
     data.set(42, &provider);
-    EventFrameEnd::post();
-    {
-        wolv::io::File file(filePath, wolv::io::File::Mode::Read);
-        TEST_ASSERT(file.isValid());
-        TEST_ASSERT(file.readString() == "42");
-    }
+    TEST_ASSERT(waitForContents(filePath, "42"));
 
     const auto relocatedFilePath = std::fs::current_path() / "file_backed_provider_data_relocated.txt";
     std::fs::remove(relocatedFilePath);
     data.set(43, &provider);
     std::fs::rename(filePath, relocatedFilePath);
     TEST_ASSERT(FileBackedProviderDataRegistry::relocate(&provider, data.getType().typeId, relocatedFilePath));
-    EventFrameEnd::post();
-    {
-        wolv::io::File file(relocatedFilePath, wolv::io::File::Mode::Read);
-        TEST_ASSERT(file.readString() == "43");
-    }
+    TEST_ASSERT(waitForContents(relocatedFilePath, "43"));
     std::fs::rename(relocatedFilePath, filePath);
     TEST_ASSERT(FileBackedProviderDataRegistry::relocate(&provider, data.getType().typeId, filePath));
 

@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <cctype>
 #include <limits>
 
@@ -101,6 +103,22 @@ namespace hex::plugin::builtin::project::impl {
 
     namespace {
 
+        using ProjectSaveClock = std::chrono::steady_clock;
+        constexpr auto ProjectSaveDelay = std::chrono::seconds(1);
+
+        struct ProjectMetadataSnapshot {
+            std::fs::path root;
+            ProviderSettings providerSettings;
+            std::set<u32> removedProviderIds;
+            std::optional<std::string> providerManifest;
+            std::optional<std::string> associations;
+        };
+
+        std::optional<ProjectSaveClock::time_point> s_projectSaveDeadline;
+        std::atomic<u64> s_projectSaveGeneration = 0;
+        bool s_projectSaveInProgress = false;
+        std::mutex s_projectStorageMutex;
+
         std::string getProviderFileStem(prv::Provider *provider) {
             auto name = provider->getName();
             for (auto &character : name) {
@@ -115,6 +133,97 @@ namespace hex::plugin::builtin::project::impl {
 
         void removeProviderForProjectLoad(prv::Provider *provider) {
             ImHexApi::Provider::remove(provider, true);
+        }
+
+        std::optional<ProjectMetadataSnapshot> createProjectMetadataSnapshot() {
+            auto &projectState = state();
+            if (projectState.loadingProject || projectState.storingProject || !ProjectManager::isFolderProject())
+                return std::nullopt;
+
+            ProjectMetadataSnapshot snapshot {
+                .root = ProjectManager::getProjectRoot(),
+                .providerSettings = {},
+                .removedProviderIds = projectState.removedProviderSettings,
+                .providerManifest = std::nullopt,
+                .associations = std::nullopt
+            };
+            auto providerIds = projectState.projectProviderIds;
+            auto closedProviderIds = projectState.closedProjectProviderIds;
+
+            try {
+                for (const auto id : projectState.dirtyProviderSettings) {
+                    if (!providerIds.contains(id))
+                        continue;
+                    bool excluded = false;
+                    if (const auto *provider = getProviderById(id); provider != nullptr) {
+                        excluded = !canPersistProvider(provider);
+                        if (!excluded && !isProviderReplacement(provider)) {
+                            snapshot.providerSettings[id] = nlohmann::json({
+                                { "type", provider->getTypeName() },
+                                { "settings", provider->storeSettings({}) }
+                            }).dump(4);
+                        }
+                    } else if (const auto settings = projectState.projectProviderSettings.find(id);
+                               settings != projectState.projectProviderSettings.end()) {
+                        excluded = !canPersistProvider(nlohmann::json::parse(settings->second));
+                        if (!excluded)
+                            snapshot.providerSettings[id] = settings->second;
+                    }
+                    if (excluded)
+                        snapshot.removedProviderIds.insert(id);
+                }
+                for (const auto id : snapshot.removedProviderIds) {
+                    providerIds.erase(id);
+                    closedProviderIds.erase(id);
+                    snapshot.providerSettings.erase(id);
+                }
+
+                if (projectState.providerManifestDirty || !snapshot.removedProviderIds.empty()) {
+                    snapshot.providerManifest = nlohmann::json({
+                        { "providers", providerIds },
+                        { "closedProviders", closedProviderIds }
+                    }).dump(4);
+                }
+                if (projectState.associationsDirty || !snapshot.removedProviderIds.empty()) {
+                    nlohmann::json associations = nlohmann::json::object();
+                    for (const auto &[providerId, entries] : projectState.associations) {
+                        if (!providerIds.contains(providerId))
+                            continue;
+                        for (const auto &[handler, path] : entries)
+                            associations[std::to_string(providerId)][handler] = path.generic_string();
+                    }
+                    snapshot.associations = nlohmann::json({
+                        { "version", ProjectFormatVersion },
+                        { "associations", std::move(associations) }
+                    }).dump(4);
+                }
+            } catch (const std::exception &error) {
+                log::error("Failed to prepare project autosave: {}", error.what());
+                return std::nullopt;
+            }
+
+            return snapshot;
+        }
+
+        bool writeProjectMetadataSnapshot(const ProjectMetadataSnapshot &snapshot) {
+            const auto basePath = std::fs::path(ProjectManager::ProjectDirectory) / "providers";
+            for (const auto &[id, settings] : snapshot.providerSettings) {
+                if (!writeProjectFile(snapshot.root, basePath / fmt::format("{}.json", id), settings))
+                    return false;
+            }
+            if (snapshot.associations.has_value() &&
+                !writeProjectFile(snapshot.root, projectSettingsPath(), *snapshot.associations))
+                return false;
+            if (snapshot.providerManifest.has_value() &&
+                !writeProjectFile(snapshot.root, basePath / "providers.json", *snapshot.providerManifest))
+                return false;
+            for (const auto id : snapshot.removedProviderIds) {
+                std::error_code error;
+                std::fs::remove(snapshot.root / basePath / fmt::format("{}.json", id), error);
+                if (error)
+                    return false;
+            }
+            return true;
         }
 
     }
@@ -153,7 +262,7 @@ namespace hex::plugin::builtin::project::impl {
             }
         }
         if (associationsChanged)
-            std::ignore = storeAssociations(ProjectManager::getProjectRoot());
+            projectState.associationsDirty = true;
     }
 
     prv::Provider::OpenResult openStoredProjectProvider(u32 id) {
@@ -292,6 +401,10 @@ namespace hex::plugin::builtin::project::impl {
         projectState.projectProviderIds.clear();
         projectState.closedProjectProviderIds.clear();
         projectState.projectProviderSettings.clear();
+        projectState.dirtyProviderSettings.clear();
+        projectState.removedProviderSettings.clear();
+        projectState.providerManifestDirty = false;
+        projectState.associationsDirty = false;
 
         if (providerIds.empty())
             return true;
@@ -436,35 +549,131 @@ namespace hex::plugin::builtin::project::impl {
             }
         }
 
-        std::error_code error;
-        std::fs::remove(ProjectManager::getProjectRoot() / ProjectManager::ProjectDirectory / "providers" /
-            fmt::format("{}.json", id), error);
-        if (error)
-            log::warn("Failed to remove project provider metadata: {}", error.message());
-
-        std::ignore = storeAssociations(ProjectManager::getProjectRoot());
-        scheduleProjectMetadataSave();
+        scheduleProviderMetadataRemoval(id);
     }
 
-    bool persistProjectMetadata() {
+    bool persistImportedProjectMetadata() {
         auto &projectState = state();
         if (projectState.loadingProject || projectState.storingProject || !ProjectManager::isFolderProject())
             return false;
 
-        const auto root = ProjectManager::getProjectRoot();
+        cancelScheduledProjectMetadataSave();
+        std::scoped_lock storageLock(projectStorageMutex());
         ProviderSettings storedSettings;
-        if (!storeProviders(root, root, storedSettings) || !storeAssociations(root)) {
-            log::error("Failed to update project metadata at {}", root.string());
+        const auto root = ProjectManager::getProjectRoot();
+        if (!storeProviders(root, root, storedSettings) || !storeAssociations(root))
             return false;
-        }
+
         projectState.projectProviderSettings = std::move(storedSettings);
-        for (auto *provider : ImHexApi::Provider::getProviders())
-            provider->markMetadataDirty(false);
+        projectState.dirtyProviderSettings.clear();
+        projectState.removedProviderSettings.clear();
+        projectState.providerManifestDirty = false;
+        projectState.associationsDirty = false;
         return true;
     }
 
-    void scheduleProjectMetadataSave() {
-        std::ignore = persistProjectMetadata();
+    static bool scheduleProjectMetadataSave() {
+        const auto &projectState = state();
+        if (projectState.loadingProject || projectState.storingProject || !ProjectManager::isFolderProject())
+            return false;
+
+        s_projectSaveGeneration.fetch_add(1, std::memory_order_relaxed);
+        s_projectSaveDeadline = ProjectSaveClock::now() + ProjectSaveDelay;
+        return true;
+    }
+
+    void scheduleProviderMetadataSave(u32 id, bool manifestChanged) {
+        auto &projectState = state();
+        if (!projectState.projectProviderIds.contains(id) || !scheduleProjectMetadataSave())
+            return;
+        projectState.dirtyProviderSettings.insert(id);
+        projectState.removedProviderSettings.erase(id);
+        projectState.providerManifestDirty = projectState.providerManifestDirty || manifestChanged;
+    }
+
+    void scheduleProviderMetadataRemoval(u32 id) {
+        if (!scheduleProjectMetadataSave())
+            return;
+        auto &projectState = state();
+        projectState.dirtyProviderSettings.erase(id);
+        projectState.removedProviderSettings.insert(id);
+        projectState.providerManifestDirty = true;
+        projectState.associationsDirty = true;
+    }
+
+    void scheduleAssociationSave() {
+        if (!scheduleProjectMetadataSave())
+            return;
+        state().associationsDirty = true;
+    }
+
+    void processScheduledProjectMetadataSave() {
+        if (s_projectSaveInProgress || !s_projectSaveDeadline.has_value() ||
+            ProjectSaveClock::now() < *s_projectSaveDeadline)
+            return;
+
+        materializeRegisteredData();
+        const auto generation = s_projectSaveGeneration.load(std::memory_order_relaxed);
+        auto snapshot = createProjectMetadataSnapshot();
+        if (!snapshot.has_value()) {
+            s_projectSaveDeadline = ProjectSaveClock::now() + ProjectSaveDelay;
+            return;
+        }
+
+        s_projectSaveDeadline.reset();
+        s_projectSaveInProgress = true;
+        TaskManager::createBackgroundTask("Saving project metadata", [generation, snapshot = std::move(*snapshot)](Task &) mutable {
+            bool success = false;
+            {
+                std::scoped_lock storageLock(projectStorageMutex());
+                if (generation == s_projectSaveGeneration.load(std::memory_order_relaxed))
+                    success = writeProjectMetadataSnapshot(snapshot);
+            }
+
+            TaskManager::doLater([generation, success, snapshot = std::move(snapshot)]() mutable {
+                s_projectSaveInProgress = false;
+                if (generation != s_projectSaveGeneration.load(std::memory_order_relaxed))
+                    return;
+                if (!success) {
+                    log::error("Failed to autosave project metadata at {}", snapshot.root.string());
+                    s_projectSaveDeadline = ProjectSaveClock::now() + ProjectSaveDelay;
+                    return;
+                }
+                if (!ProjectManager::isFolderProject() ||
+                    ProjectManager::getProjectRoot().lexically_normal() != snapshot.root.lexically_normal())
+                    return;
+
+                auto &projectState = state();
+                for (const auto id : snapshot.removedProviderIds) {
+                    projectState.projectProviderIds.erase(id);
+                    projectState.closedProjectProviderIds.erase(id);
+                    projectState.associations.erase(id);
+                }
+                for (auto &[id, settings] : snapshot.providerSettings) {
+                    projectState.projectProviderSettings[id] = std::move(settings);
+                    projectState.dirtyProviderSettings.erase(id);
+                    if (auto *provider = getProviderById(id); provider != nullptr)
+                        provider->markMetadataDirty(false);
+                }
+                for (const auto id : snapshot.removedProviderIds) {
+                    projectState.projectProviderSettings.erase(id);
+                    projectState.removedProviderSettings.erase(id);
+                }
+                if (snapshot.providerManifest.has_value())
+                    projectState.providerManifestDirty = false;
+                if (snapshot.associations.has_value())
+                    projectState.associationsDirty = false;
+            });
+        });
+    }
+
+    void cancelScheduledProjectMetadataSave() {
+        s_projectSaveGeneration.fetch_add(1, std::memory_order_relaxed);
+        s_projectSaveDeadline.reset();
+    }
+
+    std::mutex &projectStorageMutex() {
+        return s_projectStorageMutex;
     }
 
     bool reopenProviderWithNewSettings(u32 id) {

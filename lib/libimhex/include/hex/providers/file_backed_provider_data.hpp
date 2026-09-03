@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_gui.hpp>
 #include <hex/api/events/events_lifecycle.hpp>
@@ -13,6 +14,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <ranges>
 #include <span>
@@ -26,7 +28,7 @@
 
 namespace hex {
 
-    namespace detail {
+    namespace impl {
         bool writeFileAtomically(const std::fs::path &path, std::span<const u8> data);
     }
 
@@ -135,6 +137,7 @@ namespace hex {
             });
 
             MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
+                this->finishSynchronization();
                 auto node = m_entries.extract(from);
                 if (node.empty())
                     return;
@@ -155,6 +158,7 @@ namespace hex {
             EventImHexClosing::unsubscribe(this);
             EventProviderDeleted::unsubscribe(this);
             EventProviderOpened::unsubscribe(this);
+            m_synchronizationTask.wait();
         }
 
         T *operator->() { return &this->get(); }
@@ -204,6 +208,7 @@ namespace hex {
          */
         void markChanged(const prv::Provider *provider = ImHexApi::Provider::get()) {
             auto &entry = this->getOrCreate(provider);
+            entry.revision += 1;
             entry.touched = true;
             if (entry.path.has_value()) {
                 entry.dirtySince = Clock::now();
@@ -231,6 +236,7 @@ namespace hex {
             this->validateProvider(provider);
             if (path.empty())
                 return false;
+            this->finishSynchronization();
 
             auto &entry = this->getOrCreate(provider);
             std::error_code error;
@@ -251,26 +257,29 @@ namespace hex {
                     return false;
             } else {
                 serialized = m_descriptor.encode(entry.value);
-                if (!writeFile(path, serialized))
-                    return false;
             }
 
             entry.tracker.stopTracking();
             if (decoded.has_value())
                 entry.value = std::move(*decoded);
             entry.serialized = serialized;
-            entry.diskSerialized = std::move(serialized);
+            entry.diskSerialized = fileExists ? std::move(serialized) : SerializedData {};
             entry.dirtySince.reset();
-            entry.touched = false;
+            if (!fileExists)
+                entry.dirtySince = Clock::now() - m_descriptor.debounce;
+            entry.touched = !fileExists;
             entry.missing = false;
             entry.reloadPending.store(false, std::memory_order_release);
             entry.path = path;
             entry.missing = false;
             entry.tracker = wolv::io::ChangeTracker(path);
-            entry.tracker.startTracking([this, pending = &entry.reloadPending] {
+            entry.tracker.startTracking([this, pending = &entry.reloadPending, revision = &entry.reloadRevision] {
+                revision->fetch_add(1, std::memory_order_relaxed);
                 pending->store(true, std::memory_order_release);
                 m_externalWorkPending.store(true, std::memory_order_release);
             });
+            if (!fileExists)
+                m_nextSaveTime = Clock::now();
 
             this->notify(provider);
             return true;
@@ -286,6 +295,7 @@ namespace hex {
 
         [[nodiscard]] bool relocate(prv::Provider *provider, const std::fs::path &path) override {
             this->validateProvider(provider);
+            this->finishSynchronization();
             const auto it = m_entries.find(provider);
             if (it == m_entries.end() || !it->second->path.has_value() || path.empty())
                 return false;
@@ -296,7 +306,8 @@ namespace hex {
             entry.path = path;
             entry.missing = false;
             entry.tracker = wolv::io::ChangeTracker(path);
-            entry.tracker.startTracking([this, pending = &entry.reloadPending] {
+            entry.tracker.startTracking([this, pending = &entry.reloadPending, revision = &entry.reloadRevision] {
+                revision->fetch_add(1, std::memory_order_relaxed);
                 pending->store(true, std::memory_order_release);
                 m_externalWorkPending.store(true, std::memory_order_release);
             });
@@ -305,6 +316,7 @@ namespace hex {
 
         void unbind(prv::Provider *provider) override {
             this->validateProvider(provider);
+            this->finishSynchronization();
             auto defaultValue = m_descriptor.createDefault();
             auto serialized = m_descriptor.encode(defaultValue);
             auto &entry = this->getOrCreate(provider);
@@ -343,56 +355,41 @@ namespace hex {
         }
 
         void synchronize() override {
+            this->applySynchronizationResults();
+            if (m_synchronizationTask.isRunning())
+                return;
+
             const auto now = Clock::now();
             const bool externalWorkPending = m_externalWorkPending.exchange(false, std::memory_order_acq_rel);
             if (!externalWorkPending && (!m_nextSaveTime.has_value() || now < *m_nextSaveTime))
                 return;
 
-            std::vector<const prv::Provider *> changedProviders;
-            std::vector<const prv::Provider *> settledProviders;
+            std::vector<SynchronizationOperation> operations;
             m_nextSaveTime.reset();
 
             for (auto &[provider, entryPtr] : m_entries) {
                 auto &entry = *entryPtr;
-                bool changed = false;
-                bool settled = false;
 
-                if (entry.path.has_value() && entry.reloadPending.exchange(false, std::memory_order_acq_rel)) {
-                    auto contents = readFile(*entry.path);
-                    if (!contents.has_value()) {
-                        if (!entry.missing) {
-                            entry.value = m_descriptor.createDefault();
-                            entry.serialized = m_descriptor.encode(entry.value);
-                            entry.diskSerialized.clear();
-                            entry.dirtySince.reset();
-                            entry.touched = false;
-                            entry.missing = true;
-                            changed = true;
-                        }
-                    } else if (*contents != entry.diskSerialized) {
-                        auto decoded = m_descriptor.decode(std::span<const u8>(*contents));
-                        if (decoded.has_value()) {
-                            entry.value = std::move(*decoded);
-                            entry.serialized = *contents;
-                            entry.dirtySince.reset();
-                            entry.touched = false;
-                            entry.missing = false;
-                            changed = true;
-                        }
-                        entry.diskSerialized = std::move(*contents);
-                    }
-                }
-
-                if (entry.path.has_value() && entry.dirtySince.has_value() &&
-                    now - *entry.dirtySince >= m_descriptor.debounce) {
-                    auto serialized = m_descriptor.encode(entry.value);
-                    if (writeFile(*entry.path, serialized)) {
-                        entry.serialized = std::move(serialized);
-                        entry.diskSerialized = entry.serialized;
-                        entry.dirtySince.reset();
-                        entry.touched = false;
-                        settled = true;
-                    }
+                if (entry.path.has_value() && !entry.dirtySince.has_value() &&
+                    entry.reloadPending.exchange(false, std::memory_order_acq_rel)) {
+                    operations.push_back({
+                        .type = SynchronizationOperation::Type::Read,
+                        .provider = provider,
+                        .path = *entry.path,
+                        .revision = entry.revision,
+                        .reloadRevision = entry.reloadRevision.load(std::memory_order_relaxed),
+                        .data = {}
+                    });
+                } else if (entry.path.has_value() && entry.dirtySince.has_value() &&
+                           now - *entry.dirtySince >= m_descriptor.debounce) {
+                    operations.push_back({
+                        .type = SynchronizationOperation::Type::Write,
+                        .provider = provider,
+                        .path = *entry.path,
+                        .revision = entry.revision,
+                        .reloadRevision = 0,
+                        .data = m_descriptor.encode(entry.value)
+                    });
                 }
 
                 if (entry.dirtySince.has_value()) {
@@ -401,19 +398,32 @@ namespace hex {
                         m_nextSaveTime = deadline;
                 }
 
-                if (changed)
-                    changedProviders.push_back(provider);
-                else if (settled)
-                    settledProviders.push_back(provider);
             }
 
-            for (auto *provider : changedProviders)
-                this->notify(provider);
-            for (auto *provider : settledProviders)
-                this->notifyStateChanged(provider);
+            if (operations.empty())
+                return;
+
+            m_synchronizationTask = TaskManager::createBackgroundTask(
+                "Synchronizing " + this->getType().typeId,
+                [operations = std::move(operations), results = &m_synchronizationResults,
+                 resultsMutex = &m_synchronizationResultsMutex] mutable {
+                    for (auto &operation : operations) {
+                        if (operation.type == SynchronizationOperation::Type::Read) {
+                            auto data = readFile(operation.path);
+                            operation.success = data.has_value();
+                            if (data.has_value())
+                                operation.data = std::move(*data);
+                        } else {
+                            operation.success = writeFile(operation.path, operation.data);
+                        }
+                    }
+                    std::scoped_lock lock(*resultsMutex);
+                    *results = std::move(operations);
+                });
         }
 
         [[nodiscard]] bool flush() override {
+            this->finishSynchronization();
             bool result = true;
             for (auto &[provider, entryPtr] : m_entries) {
                 if (!entryPtr->path.has_value() || (entryPtr->missing && !entryPtr->touched))
@@ -425,6 +435,7 @@ namespace hex {
 
         [[nodiscard]] bool flush(const prv::Provider *provider) {
             this->validateProvider(provider);
+            this->finishSynchronization();
             const auto it = m_entries.find(provider);
             if (it == m_entries.end() || !it->second->path.has_value() ||
                 (it->second->missing && !it->second->touched))
@@ -452,11 +463,28 @@ namespace hex {
             std::optional<std::fs::path> path;
             wolv::io::ChangeTracker tracker;
             std::atomic_bool reloadPending = false;
+            std::atomic<u64> reloadRevision = 0;
             SerializedData serialized;
             SerializedData diskSerialized;
             std::optional<Clock::time_point> dirtySince;
             bool missing = false;
             bool touched = false;
+            u64 revision = 0;
+        };
+
+        struct SynchronizationOperation {
+            enum class Type : u8 {
+                Read,
+                Write
+            };
+
+            Type type;
+            const prv::Provider *provider;
+            std::fs::path path;
+            u64 revision;
+            u64 reloadRevision;
+            SerializedData data;
+            bool success = false;
         };
 
         static void validateProvider(const prv::Provider *provider) {
@@ -485,7 +513,86 @@ namespace hex {
         }
 
         static bool writeFile(const std::fs::path &path, const SerializedData &data) {
-            return detail::writeFileAtomically(path, data);
+            return impl::writeFileAtomically(path, data);
+        }
+
+        void finishSynchronization() {
+            m_synchronizationTask.wait();
+            this->applySynchronizationResults();
+        }
+
+        void applySynchronizationResults() {
+            if (m_synchronizationTask.isRunning())
+                return;
+
+            std::vector<SynchronizationOperation> results;
+            {
+                std::scoped_lock lock(m_synchronizationResultsMutex);
+                results.swap(m_synchronizationResults);
+            }
+            if (results.empty())
+                return;
+
+            std::vector<const prv::Provider *> changedProviders;
+            std::vector<const prv::Provider *> settledProviders;
+            for (auto &result : results) {
+                const auto it = m_entries.find(result.provider);
+                if (it == m_entries.end())
+                    continue;
+
+                auto &entry = *it->second;
+                if (!entry.path.has_value() || *entry.path != result.path || entry.revision != result.revision)
+                    continue;
+
+                if (result.type == SynchronizationOperation::Type::Write) {
+                    if (result.success) {
+                        entry.serialized = std::move(result.data);
+                        entry.diskSerialized = entry.serialized;
+                        entry.dirtySince.reset();
+                        entry.touched = false;
+                        entry.missing = false;
+                        settledProviders.push_back(result.provider);
+                    } else {
+                        entry.dirtySince = Clock::now();
+                    }
+                    continue;
+                }
+
+                if (entry.dirtySince.has_value() ||
+                    entry.reloadRevision.load(std::memory_order_relaxed) != result.reloadRevision) {
+                    entry.reloadPending.store(true, std::memory_order_release);
+                    m_externalWorkPending.store(true, std::memory_order_release);
+                    continue;
+                }
+
+                if (!result.success) {
+                    if (!entry.missing) {
+                        entry.value = m_descriptor.createDefault();
+                        entry.serialized = m_descriptor.encode(entry.value);
+                        entry.diskSerialized.clear();
+                        entry.dirtySince.reset();
+                        entry.touched = false;
+                        entry.missing = true;
+                        changedProviders.push_back(result.provider);
+                    }
+                } else if (result.data != entry.diskSerialized) {
+                    auto decoded = m_descriptor.decode(std::span<const u8>(result.data));
+                    if (decoded.has_value()) {
+                        entry.value = std::move(*decoded);
+                        entry.serialized = result.data;
+                        entry.dirtySince.reset();
+                        entry.touched = false;
+                        entry.missing = false;
+                        changedProviders.push_back(result.provider);
+                    }
+                    entry.diskSerialized = std::move(result.data);
+                }
+            }
+
+            for (auto *provider : changedProviders)
+                this->notify(provider);
+            for (auto *provider : settledProviders)
+                this->notifyStateChanged(provider);
         }
 
         void notify(const prv::Provider *provider) const {
@@ -506,6 +613,9 @@ namespace hex {
         std::function<void(prv::Provider *)> m_changedCallback;
         std::atomic_bool m_externalWorkPending = false;
         std::optional<Clock::time_point> m_nextSaveTime;
+        TaskHolder m_synchronizationTask;
+        std::mutex m_synchronizationResultsMutex;
+        std::vector<SynchronizationOperation> m_synchronizationResults;
         mutable std::map<const prv::Provider *, std::unique_ptr<Entry>> m_entries;
     };
 

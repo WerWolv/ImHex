@@ -68,10 +68,12 @@ namespace hex::plugin::builtin::project::impl {
             return store(std::nullopt, true);
         }
 
+        std::scoped_lock storageLock(projectStorageMutex());
         if (!validateProjectSettings(filePath))
             return false;
         if (!readProviderManifest(filePath, true).has_value())
             return false;
+        cancelScheduledProjectMetadataSave();
 
         auto originalPath = ProjectManager::getPath();
         projectState.loadingProject = true;
@@ -115,6 +117,9 @@ namespace hex::plugin::builtin::project::impl {
         auto &projectState = state();
         if (projectState.storingProject)
             return false;
+        if (updateLocation)
+            cancelScheduledProjectMetadataSave();
+        std::scoped_lock storageLock(projectStorageMutex());
         projectState.storingProject = true;
         auto resetStoring = SCOPE_GUARD { projectState.storingProject = false; };
         const bool promotingTemporaryProject = updateLocation &&
@@ -214,11 +219,20 @@ namespace hex::plugin::builtin::project::impl {
         if (!result)
             return false;
 
-        if (updateLocation)
+        if (updateLocation) {
             projectState.projectProviderSettings = std::move(storedSettings);
+            projectState.dirtyProviderSettings.clear();
+            projectState.removedProviderSettings.clear();
+            projectState.providerManifestDirty = false;
+            projectState.associationsDirty = false;
+        }
 
-        for (const auto &provider : ImHexApi::Provider::getProviders())
-            provider->markMetadataDirty(false);
+        if (updateLocation) {
+            for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                if (projectState.projectProviderIds.contains(provider->getID()))
+                    provider->markMetadataDirty(false);
+            }
+        }
 
         if (updateLocation) {
             if (promotingTemporaryProject) {
@@ -337,13 +351,8 @@ namespace hex::plugin::builtin::project {
     bool prepareForShutdown(bool persist) {
         auto &projectState = impl::state();
         if (ProjectManager::isFolderProject()) {
-            if (persist) {
-                bool result = true;
-                for (auto *data : FileBackedProviderDataRegistry::getTypes())
-                    result = data->flush() && result;
-                if (!impl::persistProjectMetadata() || !result)
-                    return false;
-            }
+            if (persist && !ProjectManager::store())
+                return false;
             projectState.skipShutdownStore = true;
         }
         projectState.loadingProject = true;

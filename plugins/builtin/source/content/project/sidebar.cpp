@@ -62,10 +62,6 @@ namespace hex::plugin::builtin::project::impl {
             return nullptr;
         }
 
-        void persistAssociations() {
-            std::ignore = storeAssociations(ProjectManager::getProjectRoot());
-        }
-
         bool isReservedProjectPath(const std::fs::path &path) {
             return std::ranges::any_of(path, [](const auto &part) { return part == ProjectManager::ProjectDirectory; });
         }
@@ -285,7 +281,7 @@ namespace hex::plugin::builtin::project::impl {
             state().projectProviderSettings = std::move(updatedProviderSettings);
             for (const auto &entry : providerRelocations)
                 snapshotProviderSettings(entry.provider);
-            if (!persistProjectMetadata()) {
+            if (!ProjectManager::store()) {
                 log::error("Failed to persist project after moving '{}' to '{}'", source.string(), destination.string());
                 showProjectFileError("hex.builtin.popup.error.project.entry.move"_unlocalized, "hex.builtin.popup.error.project.entry.move.details"_unlocalized, destination);
                 return false;
@@ -332,7 +328,7 @@ namespace hex::plugin::builtin::project::impl {
 
             for (const auto &[provider, typeId] : bindings)
                 std::ignore = FileBackedProviderDataRegistry::unbind(provider, typeId);
-            persistAssociations();
+            scheduleAssociationSave();
             return true;
         }
 
@@ -478,7 +474,7 @@ namespace hex::plugin::builtin::project::impl {
             providerAssociations->second.erase(association);
             if (providerAssociations->second.empty())
                 associations.erase(providerAssociations);
-            persistAssociations();
+            scheduleAssociationSave();
         }
 
         const char *getProjectFileIcon(const std::fs::path &path) {
@@ -502,7 +498,7 @@ namespace hex::plugin::builtin::project::impl {
             const auto typeId = data->getType().typeId;
             if (data->bind(provider, ProjectManager::getProjectRoot() / relativePath)) {
                 state().associations[provider->getID()][typeId] = relativePath;
-                persistAssociations();
+                scheduleAssociationSave();
                 return true;
             }
             return false;
@@ -693,8 +689,10 @@ namespace hex::plugin::builtin::project::impl {
                             if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.remove_from_project"_lang, ICON_VS_TRASH))
                                 providerToRemove = provider->getID();
                         } else {
-                            if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.add_to_project"_lang, ICON_VS_ADD))
+                            if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.add_to_project"_lang, ICON_VS_ADD)) {
                                 projectState.projectProviderIds.insert(provider->getID());
+                                scheduleProviderMetadataSave(provider->getID(), true);
+                            }
                         }
 
                         if (ImGui::MenuItemEx("hex.ui.common.close"_lang, ICON_VS_CLOSE))

@@ -300,6 +300,7 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     TEST_ASSERT(temporaryProvider->getID() > 100);
     EventProviderOpened::post(temporaryProvider.get());
     TEST_ASSERT(ImHexApi::Bookmarks::add(0, 1, "Excluded provider bookmark", "", 0) != 0);
+    TEST_ASSERT(ProjectManager::store());
     const auto bookmarkPath = FileBackedProviderDataRegistry::getBinding(temporaryProvider.get(), "hex.builtin.bookmarks");
     TEST_ASSERT(bookmarkPath.has_value());
     TEST_ASSERT(std::filesystem::is_regular_file(*bookmarkPath));

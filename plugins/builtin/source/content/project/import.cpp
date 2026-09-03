@@ -293,7 +293,7 @@ namespace hex::plugin::builtin::project {
             }
         }
 
-        result.success = impl::persistProjectMetadata();
+        result.success = impl::persistImportedProjectMetadata();
         if (!result.success)
             result.error = "hex.builtin.popup.error.project.import_legacy.save_metadata_failed"_lang.get();
         return result;

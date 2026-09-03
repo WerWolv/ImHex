@@ -163,12 +163,14 @@ namespace hex::plugin::builtin {
     }
 
     bool saveProjectAs() {
-        return fs::openFileBrowser(fs::DialogMode::Folder, { },
-                            [](const std::fs::path &path) {
-                                if (!ProjectManager::store(path)) {
-                                    ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
-                                }
-                            });
+        bool saved = false;
+        if (!fs::openFileBrowser(fs::DialogMode::Folder, { }, [&saved](const std::fs::path &path) {
+            saved = ProjectManager::store(path);
+            if (!saved)
+                ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
+        }))
+            return false;
+        return saved;
     }
 
 }

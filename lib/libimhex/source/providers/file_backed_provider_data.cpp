@@ -16,7 +16,7 @@
 
 namespace hex {
 
-    bool detail::writeFileAtomically(const std::fs::path &path, std::span<const u8> data) {
+    bool impl::writeFileAtomically(const std::fs::path &path, std::span<const u8> data) {
         static std::atomic<u64> counter = 0;
         std::fs::path temporaryPath;
 

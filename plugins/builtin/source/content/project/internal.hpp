@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <map>
+#include <mutex>
 #include <optional>
 #include <set>
 #include <string>
@@ -39,6 +40,10 @@ namespace hex::plugin::builtin::project::impl {
         std::set<u32> providerOpenAttempts;
         std::map<const prv::Provider *, u32> providerReplacements;
         ProviderSettings projectProviderSettings;
+        std::set<u32> dirtyProviderSettings;
+        std::set<u32> removedProviderSettings;
+        bool providerManifestDirty = false;
+        bool associationsDirty = false;
         bool loadingProject = false;
         bool storingProject = false;
         bool skipShutdownStore = false;
@@ -85,8 +90,13 @@ namespace hex::plugin::builtin::project::impl {
     bool loadProviders(const std::fs::path &root);
     bool storeProviders(const std::fs::path &root, const std::fs::path &sourceRoot, ProviderSettings &storedSettings);
     void removeProviderFromProject(u32 id);
-    bool persistProjectMetadata();
-    void scheduleProjectMetadataSave();
+    bool persistImportedProjectMetadata();
+    void scheduleProviderMetadataSave(u32 id, bool manifestChanged = false);
+    void scheduleProviderMetadataRemoval(u32 id);
+    void scheduleAssociationSave();
+    void processScheduledProjectMetadataSave();
+    void cancelScheduledProjectMetadataSave();
+    std::mutex &projectStorageMutex();
     bool reopenProviderWithNewSettings(u32 id);
 
     void drawProjectSidebar();

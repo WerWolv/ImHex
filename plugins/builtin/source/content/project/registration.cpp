@@ -28,11 +28,10 @@ namespace hex::plugin::builtin {
             if (!ProjectManager::isFolderProject())
                 return;
 
-            materializeRegisteredData();
-            if (provider != nullptr && data != nullptr && data->hasPendingData(provider))
-                std::ignore = data->flush();
-            std::ignore = persistProjectMetadata();
+            if (provider != nullptr && data != nullptr && data->hasPendingData(provider) && !data->isBound(provider))
+                scheduleAssociationSave();
         });
+        EventFrameEnd::subscribe([] { processScheduledProjectMetadataSave(); });
         EventProviderOpened::subscribe([](prv::Provider *provider) {
             auto &projectState = state();
             const auto replacement = projectState.providerReplacements.find(provider);
@@ -55,11 +54,10 @@ namespace hex::plugin::builtin {
                     (filePicker != nullptr && isPathInProject(filePicker->getPickedPath(), ProjectManager::getProjectRoot(), relativePath)))
                     projectState.projectProviderIds.insert(provider->getID());
                 projectState.closedProjectProviderIds.erase(provider->getID());
-                snapshotProviderSettings(provider);
                 if (isReplacement)
                     bindRegisteredData();
+                scheduleProviderMetadataSave(provider->getID(), true);
             }
-            scheduleProjectMetadataSave();
         });
         EventProviderRemoving::subscribe([](prv::Provider *provider) {
             const auto &projectState = state();
@@ -81,9 +79,11 @@ namespace hex::plugin::builtin {
                 return;
 
             projectState.closedProjectProviderIds.insert(provider->getID());
-            scheduleProjectMetadataSave();
+            scheduleProviderMetadataSave(provider->getID(), true);
         });
         EventProjectClosed::subscribe([] {
+            cancelScheduledProjectMetadataSave();
+            std::scoped_lock storageLock(projectStorageMutex());
             auto &projectState = state();
             projectState.associations.clear();
             projectState.projectProviderIds.clear();
@@ -91,10 +91,15 @@ namespace hex::plugin::builtin {
             projectState.providerOpenAttempts.clear();
             projectState.providerReplacements.clear();
             projectState.projectProviderSettings.clear();
+            projectState.dirtyProviderSettings.clear();
+            projectState.removedProviderSettings.clear();
+            projectState.providerManifestDirty = false;
+            projectState.associationsDirty = false;
             resetSidebarState();
         });
-        EventProviderDirtied::subscribe([](prv::Provider *) {
-            scheduleProjectMetadataSave();
+        EventProviderDirtied::subscribe([](prv::Provider *provider) {
+            if (provider != nullptr)
+                scheduleProviderMetadataSave(provider->getID());
         });
         EventWindowDeinitializing::subscribe([](GLFWwindow *) {
             if (ProjectManager::isFolderProject() && !state().skipShutdownStore)
