@@ -599,20 +599,25 @@ namespace hex::plugin::builtin {
         });
 
         hex::subcommands::registerSubCommand("pattern", [](std::span<const std::string> args){
-            std::string patternSourceCode;
-            if (std::fs::exists(args[0])) {
-                wolv::io::File file(args[0], wolv::io::File::Mode::Read);
-                if (!file.isValid()) {
-                    patternSourceCode = args[0];
-                } else {
-                    patternSourceCode = file.readString();
-                }
-            } else {
-                patternSourceCode = args[0];
-            }
+            if (args.empty())
+                return;
 
-            RequestSetPatternLanguageCode::post(patternSourceCode);
-            RequestTriggerPatternEvaluation::post();
+            TaskManager::doLater([argument = args[0]] {
+                std::string patternSourceCode;
+                if (std::fs::exists(argument)) {
+                    wolv::io::File file(argument, wolv::io::File::Mode::Read);
+                    if (!file.isValid()) {
+                        patternSourceCode = argument;
+                    } else {
+                        patternSourceCode = file.readString();
+                    }
+                } else {
+                    patternSourceCode = argument;
+                }
+
+                RequestSetPatternLanguageCode::post(patternSourceCode);
+                RequestTriggerPatternEvaluation::post();
+            });
         });
     }
 

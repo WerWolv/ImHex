@@ -4,6 +4,7 @@
 #include <content/views/view_patches.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/imhex_api/bookmarks.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/project_manager.hpp>
@@ -416,6 +417,18 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     localFilePicker->setPickedPath(localPath);
     TEST_ASSERT(localProvider->open().isSuccess());
     EventProviderOpened::post(localProvider.get());
+
+    std::set<u32> patternSourceChanges;
+    u8 patternSourceListener = 0;
+    EventFileBackedProviderDataChanged::subscribe(&patternSourceListener, [&](prv::Provider *provider, FileBackedProviderDataBase *data) {
+        if (data->getType().typeId == "hex.builtin.pattern-source")
+            patternSourceChanges.insert(provider->getID());
+    });
+    ImHexApi::Provider::setCurrentProvider(localProvider.get());
+    RequestSetPatternLanguageCode::post("u8 cli_test @ 0x00;");
+    EventFileBackedProviderDataChanged::unsubscribe(&patternSourceListener);
+    TEST_ASSERT(patternSourceChanges == std::set<u32>({ localProvider->getID() }));
+
     TEST_ASSERT(ProjectManager::store());
     const auto manifestWithLocalFile = nlohmann::json::parse(
         wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());

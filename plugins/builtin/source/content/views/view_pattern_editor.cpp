@@ -230,17 +230,8 @@ namespace hex::plugin::builtin {
     }
 
     void PatternSourceCode::set(prv::Provider *provider, std::string source) {
-        if (m_perProviderSource.isBound(provider)) {
-            if (m_perProviderSource.get(provider) != source)
-                m_perProviderSource.set(std::move(source), provider);
-            return;
-        }
-
-        m_sharedSource = std::move(source);
-        for (auto *openProvider : ImHexApi::Provider::getProviders()) {
-            if (!m_perProviderSource.isBound(openProvider) && m_perProviderSource.get(openProvider) != m_sharedSource)
-                m_perProviderSource.set(m_sharedSource, openProvider);
-        }
+        if (m_perProviderSource.get(provider) != source)
+            m_perProviderSource.set(std::move(source), provider);
     }
 
     bool PatternSourceCode::bind(prv::Provider *provider, const std::fs::path &path) {
@@ -1581,7 +1572,7 @@ namespace hex::plugin::builtin {
                 m_hasUnparsedChanges.get(provider) = false;
             }
 
-            if (m_triggerAutoEvaluate.exchange(false)) {
+            if (provider->isAvailable() && m_triggerAutoEvaluate.exchange(false)) {
                 this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
             }
 

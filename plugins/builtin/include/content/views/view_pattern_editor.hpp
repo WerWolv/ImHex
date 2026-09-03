@@ -34,7 +34,6 @@ namespace hex::plugin::builtin {
 
     private:
         FileBackedProviderData<std::string> m_perProviderSource;
-        std::string m_sharedSource;
     };
 
     using IdentifierHighlighter = hex::plugin::builtin::IdentifierHighlighter;
