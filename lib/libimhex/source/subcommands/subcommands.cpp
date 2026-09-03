@@ -116,10 +116,10 @@ namespace hex::subcommands {
         }
 
         // Run the subcommands
-        int exitCode = 0;
+        CommandResult exitCode;
         for (const auto &[subcommand, subCommandArgs] : subCommands) {
             exitCode = subcommand.callback(subCommandArgs);
-            if (exitCode != EXIT_CONTINUE) {
+            if (exitCode.getType() != CommandResult::Type::Continue) {
                 break;
             }
         }
@@ -136,8 +136,8 @@ namespace hex::subcommands {
             std::exit(0);
         }
 
-        if (exitCode != EXIT_CONTINUE) {
-            std::exit(exitCode);
+        if (exitCode.getType() != CommandResult::Type::Continue) {
+            std::exit(exitCode.getExitCode());
         }
     }
 
