@@ -65,6 +65,14 @@
             headers.push_back(nullptr);
             m_attr.requestHeaders = headers.data();
 
+            // Reject any request that isn't explicitly using HTTPS. The browser's fetch
+            // backend validates the server's TLS certificate, but it will happily perform
+            // plaintext HTTP requests, so enforce HTTPS-only here to avoid sending request
+            // data unencrypted or accepting unauthenticated responses.
+            if (m_url.rfind("https://", 0) != 0) {
+                return Result<T>(BackendStatus(0));
+            }
+
             // Send request
             emscripten_fetch_t* fetch = emscripten_fetch(&m_attr, m_url.c_str());
             if (fetch == nullptr) {
