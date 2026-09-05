@@ -17,7 +17,7 @@ namespace hex {
             [[nodiscard]] operator Type() {
                 try {
                     return (*m_json)[getPathKey()].template get<Type>();
-                } catch (const nlohmann::json::exception &e) {
+                } catch (const nlohmann::json::exception &) {
                     // If value can't be loaded, default construct it
                     (*m_json)[getPathKey()] = Type();
                     return Type();
