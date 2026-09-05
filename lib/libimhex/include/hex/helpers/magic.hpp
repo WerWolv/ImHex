@@ -40,7 +40,7 @@ namespace hex::magic {
         bool remote;
 
         bool operator<(const FoundPattern &other) const {
-            return patternFilePath.filename() < other.patternFilePath.filename();
+            return patternFilePath < other.patternFilePath;
         }
     };
 
