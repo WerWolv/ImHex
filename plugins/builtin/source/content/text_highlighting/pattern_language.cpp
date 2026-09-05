@@ -1212,22 +1212,22 @@ namespace hex::plugin::builtin {
                     m_requiredInputs.usedNamespaces.push_back(nameSpace);
             }
         }
+        m_curr = curr;
+        i32 tokenIndex = getTokenId();
+        if (tokenIndex > 3)
+            next(-3);
+        else
+            return;
+        if (peek(tkn::Separator::RightBrace,0)) {
 
-        u32 line = m_curr->location.line;
-        i32 tokenIndex;
-
-        while (!peek(tkn::Separator::Semicolon, -1)) {
-
-            if (line = previousLine(line); line > m_firstTokenIdOfLine.size()-1)
-                return;
-
-            if (tokenIndex = m_firstTokenIdOfLine.at(line); !isTokenIdValid(tokenIndex))
-                return;
-
-            m_curr = m_startToken;
-            next(tokenIndex);
-            while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1))
+            while (!peek(tkn::Separator::Semicolon, -1) && tokenIndex > 0) {
+                while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1))
+                    next(-1);
                 next(-1);
+                tokenIndex = getTokenId();
+            }
+        } else{
+            tokenIndex = m_firstTokenIdOfLine.at(m_curr->location.line - 1);
         }
 
         while (peek(tkn::Literal::Comment) || peek(tkn::Literal::DocComment))

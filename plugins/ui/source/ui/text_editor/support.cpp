@@ -3,6 +3,7 @@
 #include <wolv/utils/string.hpp>
 #include <pl/api.hpp>
 #include <pl/core/preprocessor.hpp>
+#include <hex/helpers/file_attached_data.hpp>
 
 #include <algorithm>
 
@@ -554,7 +555,7 @@ namespace hex::ui {
     }
 
     bool CodeFold::isDetected() {
-        return lines->m_codeFoldHighlighted == key;
+        return m_lines->m_codeFoldHighlighted == m_key;
     }
 
     TextEditor *TextEditor::getSourceCodeEditor() {
@@ -719,22 +720,29 @@ namespace hex::ui {
         auto ctrl = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
         auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
-        if (ImGui::IsWindowHovered()) {
-            if (!alt) {
-                auto click = ImGui::IsMouseClicked(0);
-                auto doubleClick = ImGui::IsMouseDoubleClicked(0);
-                auto rightClick = ImGui::IsMouseClicked(1);
-                auto t = ImGui::GetTime();
-                auto tripleClick = click && !doubleClick && (m_lastClick != -1.0f && (t - m_lastClick) < io.MouseDoubleClickTime);
-                bool resetBlinking = false;
-                /*
-                Left mouse button triple click
-                */
+        if (!alt) {
+            auto click = ImGui::IsMouseClicked(0);
+            auto doubleClick = ImGui::IsMouseDoubleClicked(0);
+            auto rightClick = ImGui::IsMouseClicked(1);
+            auto t = ImGui::GetTime();
+            auto tripleClick = click && !doubleClick && (m_lastClick != -1.0f && (t - m_lastClick) < io.MouseDoubleClickTime);
+            bool resetBlinking = false;
+
+            auto window = ImGui::GetCurrentWindow();
+            auto barSize = ImGui::GetStyle().ScrollbarSize;
+            auto rectMin = window->Pos;
+            auto rectMax = rectMin + window->Size - ImVec2(m_scrollY ? barSize : 0, m_scrollX ? barSize : 0);
+            rectMin.y -= m_lines.m_charAdvance.y;
+
+            if (ImGui::IsMouseHoveringRect(rectMin, rectMax, false)) {
 
                 auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
                 if (coordinates == Invalid)
                     return;
 
+                /*
+                Left mouse button triple click
+                */
                 if (tripleClick) {
                     if (!ctrl) {
                         m_lines.m_state.m_cursorPosition = coordinates;
@@ -776,7 +784,7 @@ namespace hex::ui {
                 } else if (rightClick) {
                     auto cursorPosition = coordinates;
 
-                    if (!m_lines.hasSelection() || !m_lines.m_state.m_selection.contains(cursorPosition,Range::EndsInclusive::Both))
+                    if (!m_lines.hasSelection() || !m_lines.m_state.m_selection.contains(cursorPosition, Range::EndsInclusive::Both))
                         m_lines.setEditorState(cursorPosition);
 
                     resetBlinking = true;
@@ -785,6 +793,11 @@ namespace hex::ui {
                 }
                 // Mouse left button dragging (=> update selection)
                 else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0)) {
+                    auto active_id = ImGui::GetActiveID();
+
+                    if (active_id != 0 && (active_id == ImGui::GetWindowScrollbarID(window, ImGuiAxis_X) || active_id == ImGui::GetWindowScrollbarID(window, ImGuiAxis_Y)))
+                        return;
+
                     io.WantCaptureMouse = true;
                     m_lines.setEditorState(coordinates, false);
                     m_lines.ensureCursorVisible();
@@ -1198,7 +1211,7 @@ namespace hex::ui {
 
     ImRect Lines::getBoxForRow(u32 row) {
         auto boxSize = m_charAdvance.x + (((u32) m_charAdvance.x % 2) ? 2.0f : 1.0f);
-        auto lineStartScreenPos = getLineStartScreenPos(0,row);
+        auto lineStartScreenPos = getLineStartScreenPos(0, row);
         ImVec2 lineNumberStartScreenPos = ImVec2(m_lineNumbersStartPos.x + m_lineNumberFieldWidth, lineStartScreenPos.y);
         ImRect result;
         result.Min = ImVec2(lineNumberStartScreenPos.x - (boxSize - 1) / 2, lineNumberStartScreenPos.y);
@@ -1214,32 +1227,34 @@ namespace hex::ui {
     }
 
     bool CodeFold::startHovered() {
-        return codeFoldStartCursorBox.trigger();
+        return m_codeFoldStartCursorBox.trigger();
     }
 
     bool CodeFold::endHovered() {
         if (isOpen())
-            return codeFoldEndCursorBox.trigger();
+            return m_codeFoldEndCursorBox.trigger();
         return false;
     }
 
     bool CodeFold::isOpen() const {
-        return lines->m_codeFoldState[key];
+        if (m_lines->m_codeFoldState.contains(m_key))
+            return m_lines->m_codeFoldState[m_key];
+        return true;
     }
 
     void CodeFold::open() {
 
-        lines->openCodeFold(key);
+        m_lines->openCodeFold(m_key);
     }
 
     void CodeFold::close() {
-        lines->closeCodeFold(key, true);
+        m_lines->closeCodeFold(m_key, true);
     }
 
     void CodeFold::moveFold(float lineCount, float lineHeight) {
-        codeFoldStartCursorBox.shiftBoxVertically(lineCount, lineHeight);
-        codeFoldEndActionBox.shiftBoxVertically(lineCount, lineHeight);
-        codeFoldEndCursorBox.shiftBoxVertically(lineCount, lineHeight);
+        m_codeFoldStartCursorBox.shiftBoxVertically(lineCount, lineHeight);
+        m_codeFoldEndActionBox.shiftBoxVertically(lineCount, lineHeight);
+        m_codeFoldEndCursorBox.shiftBoxVertically(lineCount, lineHeight);
         shiftBoxVertically(lineCount, lineHeight);
     }
 
@@ -1292,40 +1307,6 @@ namespace hex::ui {
 
       i32 TextEditor::getTotalLines() const {
         return m_lines.size();
-    }
-
-    void Lines::removeHiddenLinesFromPattern() {
-        i32 lineIndex = 0;
-        const auto totalLines = (i32)m_unfoldedLines.size();
-        while (lineIndex < totalLines && m_unfoldedLines[lineIndex].m_chars.starts_with("//+-"))
-            lineIndex++;
-        if (lineIndex > 0) {
-            m_hiddenLines.clear();
-            setSelection(Range(lineCoordinates(0, 0), lineCoordinates(lineIndex, 0)));
-            for (i32 i = 0; i < lineIndex; i++) {
-                HiddenLine hiddenLine(i, m_unfoldedLines[i].m_chars);
-                m_hiddenLines.emplace_back(std::move(hiddenLine));
-                m_useSavedFoldStatesRequested = true;
-            }
-            deleteSelection();
-            setTextChanged(false);
-        }
-    }
-
-    void Lines::addHiddenLinesToPattern() {
-        if (m_hiddenLines.empty())
-            return;
-        for (const auto &hiddenLine : m_hiddenLines) {
-            i32 lineIndex;
-            if (hiddenLine.m_lineIndex < 0)
-                lineIndex = size() + hiddenLine.m_lineIndex;
-            else
-                lineIndex = hiddenLine.m_lineIndex;
-            if (m_unfoldedLines[lineIndex].m_chars.starts_with("//+-"))
-                m_unfoldedLines.erase(m_unfoldedLines.begin() + lineIndex);
-            insertLine(lineIndex, hiddenLine.m_line);
-            setTextChanged(false);
-        }
     }
 
     i32 TextEditor::getCodeFoldLevel(i32 line) const {

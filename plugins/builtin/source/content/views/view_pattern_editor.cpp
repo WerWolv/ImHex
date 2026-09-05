@@ -27,6 +27,7 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/file_attached_data.hpp>
 
 #include <hex/providers/memory_provider.hpp>
 
@@ -374,11 +375,13 @@ namespace hex::plugin::builtin {
         m_sourceCode.setChangedCallback([this](prv::Provider *provider) {
             auto sourceCode = m_sourceCode.get(provider);
             auto &editor = m_textEditor.get(provider);
-            if (editor.getText(true) == sourceCode)
+            if (m_sourceCode.getBinding(provider).has_value()) {
+                auto path = m_sourceCode.getBinding(provider)->string();
+                editor.setPath(path);
+            }
+            if (editor.getText() == sourceCode)
                 return;
-
-            editor.setText(std::move(sourceCode));
-            editor.removeHiddenLinesFromPattern();
+            editor.setText(sourceCode);
             editor.setTextChanged(false);
             m_hasUnparsedChanges.get(provider) = true;
         });
@@ -547,7 +550,7 @@ namespace hex::plugin::builtin {
             fonts::CodeEditor().pop();
 
             m_consoleHoverBox = ImGui::GetCurrentWindow()->Rect();
-            m_consoleHoverBox.Min.y = m_textEditorHoverBox.Max.y + ImGui::GetTextLineHeightWithSpacing() * 1.5F;
+            m_consoleHoverBox.Min.y = m_textEditorHoverBox.Max.y;
 
             if (m_textEditor.get(provider).raiseContextMenu())  {
                 RequestOpenPopup::post("hex.builtin.menu.edit");
@@ -718,7 +721,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawTextEditorFindReplacePopup(ui::TextEditor *textEditor) {
-        auto provider = ImHexApi::Provider::get();
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
             static std::string findWord;
@@ -1045,34 +1047,31 @@ namespace hex::plugin::builtin {
             // Escape key to close the popup
             if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
                 m_popupWindowHeight = 0;
-                m_textEditor.get(provider).setTopMarginChanged(0);
+                textEditor->setTopMarginChanged(0);
                 ImGui::CloseCurrentPopup();
             }
 
             ImGui::EndChild();
-            if (m_focusedSubWindowName.contains(TextEditorView)) {
-                if (auto window = ImGui::GetCurrentWindow(); window != nullptr) {
-                    auto height = window->Size.y;
-                    auto heightChange = height - m_popupWindowHeight;
-                    auto heightChangeChange = heightChange - m_popupWindowHeightChange;
-                    if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0) {
-                        m_textEditor.get(provider).setTopMarginChanged(height);
-                    }
-                    m_popupWindowHeightChange = heightChange;
-                    m_popupWindowHeight = height;
-                }
+            if (auto window = ImGui::GetCurrentWindow(); window != nullptr) {
+                auto height = window->Size.y;
+                auto heightChange = height - m_popupWindowHeight;
+                auto heightChangeChange = heightChange - m_popupWindowHeightChange;
+                if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0)
+                    textEditor->setTopMarginChanged(height);
+
+                m_popupWindowHeightChange = heightChange;
+                m_popupWindowHeight = height;
             }
             ImGui::EndPopup();
             m_findReplacePopupIsClosed = false;
         } else if (!m_findReplacePopupIsClosed) {
             m_findReplacePopupIsClosed = true;
             m_popupWindowHeight = 0;
-            m_textEditor.get(provider).setTopMarginChanged(0);
+            textEditor->setTopMarginChanged(0);
         }
     }
 
     void ViewPatternEditor::drawTextEditorGotoLinePopup(ui::TextEditor *textEditor) {
-        auto provider = ImHexApi::Provider::get();
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_goto_line_popup", popupFlags)) {
             std::string childName;
@@ -1105,29 +1104,27 @@ namespace hex::plugin::builtin {
             }
             if (ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
                 m_popupWindowHeight = 0;
-                m_textEditor.get(provider).setTopMarginChanged(0);
+                textEditor->setTopMarginChanged(0);
                 ImGui::CloseCurrentPopup();
             }
 
             ImGui::EndChild();
-            if (m_focusedSubWindowName.contains(TextEditorView)) {
-                if (auto window = ImGui::GetCurrentWindow(); window != nullptr) {
-                    auto height = window->Size.y;
-                    auto heightChange = height - m_popupWindowHeight;
-                    auto heightChangeChange = heightChange - m_popupWindowHeightChange;
-                    if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0) {
-                        m_textEditor.get(provider).setTopMarginChanged(height);
-                    }
-                    m_popupWindowHeightChange = heightChange;
-                    m_popupWindowHeight = height;
-                }
+            if (auto window = ImGui::GetCurrentWindow(); window != nullptr) {
+                auto height = window->Size.y;
+                auto heightChange = height - m_popupWindowHeight;
+                auto heightChangeChange = heightChange - m_popupWindowHeightChange;
+                if (std::fabs(heightChange) < 0.5 && std::fabs(heightChangeChange) > 1.0)
+                    textEditor->setTopMarginChanged(height);
+
+                m_popupWindowHeightChange = heightChange;
+                m_popupWindowHeight = height;
             }
             ImGui::EndPopup();
             m_gotoPopupIsClosed = false;
         } else if (!m_gotoPopupIsClosed) {
             m_gotoPopupIsClosed = true;
             m_popupWindowHeight = 0;
-            m_textEditor.get(provider).setTopMarginChanged(0);
+            textEditor->setTopMarginChanged(0);
         }
     }
 
@@ -1156,9 +1153,14 @@ namespace hex::plugin::builtin {
             m_consoleNeedsUpdate = false;
         }
 
-        fonts::CodeEditor().push();
-        m_consoleEditor.get(provider).render("##console", size, true);
-        fonts::CodeEditor().pop();
+        if (ImGui::BeginChild("##console_border", size, ImGuiChildFlags_Borders)) {
+            fonts::CodeEditor().push();
+            m_consoleEditor.get(provider).render("##console", ImGui::GetContentRegionAvail(), false);
+            fonts::CodeEditor().pop();
+        }
+
+        ImGui::EndChild();
+
 
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
@@ -1542,7 +1544,7 @@ namespace hex::plugin::builtin {
 
             if (m_textEditor.get(provider).isTextChanged()) {
                 m_textEditor.get(provider).setTextChanged(false);
-                m_sourceCode.set(provider, m_textEditor.get(provider).getText(true));
+                m_sourceCode.set(provider, m_textEditor.get(provider).getText());
                 m_hasUnparsedChanges.get(provider) = true;
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
             }
@@ -1592,8 +1594,9 @@ namespace hex::plugin::builtin {
                 TaskManager::createBackgroundTask("hex.builtin.task.highlighting_pattern", [this,provider](auto &) { m_identifierHighlighter.get(provider).highlightSourceCode(); });
             } else if (m_changesWereColored && !m_allStepsCompleted) {
                 m_identifierHighlighter.get(provider).setRequestedIdentifierColors(m_colorizeIdentifiers);
-                m_textEditor.get(provider).getLines().setAllCodeFolds();
-                m_textEditor.get(provider).getLines().applyCodeFoldStates();
+                if (m_sourceCode.getBinding(provider).has_value()) {
+                    m_textEditor.get(provider).getLines().setAllCodeFolds(m_sourceCode.getBinding(provider)->string());
+                }
                 m_allStepsCompleted = true;
             }
 
@@ -1753,22 +1756,29 @@ namespace hex::plugin::builtin {
 
 
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
-        std::string code;
+        wolv::io::File file(path, wolv::io::File::Mode::Write);
+        if (!file.isValid())
+            return;
+        auto code = wolv::util::preprocessText(file.readString());
+        file.writeString(code);
+        file.flush();
+
         if (trackFile) {
             if (!m_sourceCode.bind(provider, path))
                 return;
             code = m_sourceCode.get(provider);
         } else {
-            wolv::io::File file(path, wolv::io::File::Mode::Read);
-            if (!file.isValid())
-                return;
             code = wolv::util::preprocessText(file.readString());
             m_sourceCode.set(provider, code);
         }
 
         this->evaluatePattern(code, provider);
         m_textEditor.get(provider).setText(code, true);
-        m_textEditor.get(provider).removeHiddenLinesFromPattern();
+        if (m_sourceCode.getBinding(provider).has_value()) {
+            hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
+            auto states = closedFoldData.get(path);
+            m_textEditor.get(provider).getLines().applyCodeFoldStates(m_sourceCode.getBinding(provider)->string());
+        }
         ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
             std::ignore = runtime;
             auto baseAddress = wolv::util::from_chars<u64>(value);
@@ -1983,8 +1993,13 @@ namespace hex::plugin::builtin {
                 return;
 
             m_textEditor.get(provider).setText(wolv::util::preprocessText(code));
-            m_textEditor.get(provider).removeHiddenLinesFromPattern();
-            m_sourceCode.set(provider, m_textEditor.get(provider).getText(true));
+            m_sourceCode.set(provider, m_textEditor.get(provider).getText());
+            if (m_sourceCode.getBinding(provider).has_value()) {
+                auto path = m_sourceCode.getBinding(provider)->string();
+                hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
+                auto states = closedFoldData.get(path);
+                m_textEditor.get(provider).getLines().applyCodeFoldStates(path);
+            }
             m_hasUnparsedChanges.get(provider) = true;
         });
 
@@ -2031,9 +2046,12 @@ namespace hex::plugin::builtin {
             m_textEditor.get(provider).setShowWhitespaces(m_showWhiteSpaces);
             m_textEditor.get(provider).setDisableCodeFolds(m_codeFoldsDisabled);
             m_textEditor.get(provider).setAutoIndent(m_autoIndent);
-            //if (getLastFocusedView() == this) {
-            //    m_textEditor.get(provider).setFocus(true);
-            //}
+            if (m_sourceCode.getBinding(provider).has_value()) {
+                auto path = m_sourceCode.getBinding(provider)->string();
+                hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
+                auto states = closedFoldData.get(path);
+                m_textEditor.get(provider).getLines().applyCodeFoldStates(path);
+            }
 
 
             m_consoleEditor.get(provider).setLanguageDefinition(ConsoleLog());
@@ -2071,6 +2089,12 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(newProvider).setDisableCodeFolds(m_codeFoldsDisabled);
                 m_textEditor.get(newProvider).setAutoIndent(m_autoIndent);
                 m_hasUnparsedChanges.get(newProvider) = true;
+                if (m_sourceCode.getBinding(newProvider).has_value()) {
+                    auto path = m_sourceCode.getBinding(newProvider)->string();
+                    hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
+                    auto states = closedFoldData.get(path);
+                    m_textEditor.get(newProvider).getLines().applyCodeFoldStates(path);
+                }
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
                 m_consoleEditor.get(newProvider).getLines().setScroll(m_consoleScroll.get(newProvider));
             }
@@ -2174,7 +2198,7 @@ namespace hex::plugin::builtin {
             }
         }, [this] {
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
-                return ImHexApi::Provider::isValid() && !editor->getFindReplaceHandler()->getFindWord().empty();
+                return ImHexApi::Provider::isValid() && !m_textEditor.get(ImHexApi::Provider::get()).getFindReplaceHandler()->getFindWord().empty();
             } else {
                 return false;
             }
@@ -2901,7 +2925,7 @@ namespace hex::plugin::builtin {
                 if (!file.isValid())
                     return;
 
-                file.writeString(m_textEditor.get(provider).getText(true));
+                file.writeString(m_textEditor.get(provider).getText());
                 file.flush();
                 if (trackFile)
                     std::ignore = m_sourceCode.bind(provider, path);

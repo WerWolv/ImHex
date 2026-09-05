@@ -111,7 +111,7 @@ namespace hex {
             std::function<SerializedData(const T &)> encode;
             std::function<std::optional<T>(std::span<const u8>)> decode;
             std::function<T()> createDefault = [] { return T(); };
-            std::chrono::milliseconds debounce = std::chrono::milliseconds(500);
+            std::chrono::milliseconds debounce = std::chrono::milliseconds(10000ll);
         };
 
         explicit FileBackedProviderData(Descriptor descriptor)
@@ -426,7 +426,7 @@ namespace hex {
             this->finishSynchronization();
             bool result = true;
             for (auto &[provider, entryPtr] : m_entries) {
-                if (!entryPtr->path.has_value() || (entryPtr->missing && !entryPtr->touched))
+                if (!entryPtr->path.has_value() || entryPtr->missing || !entryPtr->touched)
                     continue;
                 result = this->flush(provider) && result;
             }
@@ -438,7 +438,7 @@ namespace hex {
             this->finishSynchronization();
             const auto it = m_entries.find(provider);
             if (it == m_entries.end() || !it->second->path.has_value() ||
-                (it->second->missing && !it->second->touched))
+                it->second->missing || !it->second->touched)
                 return false;
 
             auto &entry = *it->second;

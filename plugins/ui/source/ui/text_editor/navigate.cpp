@@ -143,6 +143,7 @@ namespace hex::ui {
             setScrollY();
             return;
         }
+        auto pageSize = std::floor(m_numberOfLinesDisplayed);
         auto row = lineIndexToRow(m_state.m_cursorPosition.m_line);
         if (isMultiLineRow(row)) {
             auto position = unfoldedToFoldedCoords(m_state.m_cursorPosition);
@@ -151,8 +152,16 @@ namespace hex::ui {
         if (row < amount) {
             row = 0;
             m_state.m_cursorPosition.m_column = 0;
-        } else
+        } else {
             row -= amount;
+            if (amount >= pageSize) {
+                auto numberOfPagesToScroll = std::floor(amount / pageSize);
+                auto numberOfAvailablePages = std::floor(m_topRow / pageSize);
+                auto numberOfPages = std::min(numberOfPagesToScroll, numberOfAvailablePages);
+                m_topRowToSet = m_topRow - numberOfPages * pageSize;
+                setFirstRow();
+            }
+        }
         if (isMultiLineRow(row)) {
             auto position = foldedToUnfoldedCoords(Coordinates( rowToLineIndex(row), m_state.m_cursorPosition.m_column));
             m_state.m_cursorPosition = position;
@@ -180,28 +189,39 @@ namespace hex::ui {
             setScrollY();
             return;
         }
+        auto pageSize = std::floor(m_numberOfLinesDisplayed);
+        auto row = lineIndexToRow(oldPos.m_line);
+        auto column = oldPos.m_column;
 
-        if (isLastLine(oldPos.m_line) && m_state.m_cursorPosition.m_column == lineMaxColumn(oldPos.m_line)) {
-            if (m_topRow < getGlobalRowMax()) {
-                m_topRow += amount;
-                m_topRow = std::clamp(m_topRow, 0.0F, getGlobalRowMax());
-                setFirstRow();
-                ensureCursorVisible();
-            }
+        if (row + amount > getGlobalRowMax() && column >= lineMaxColumn(rowToLineIndex(getGlobalRowMax()))) {
+            row += amount;
+            row = std::clamp(row, 0.0F, getGlobalRowMax());
+            m_state.m_cursorPosition.m_line = rowToLineIndex(row);
+            m_topRowToSet = m_topRow + amount;
+            m_topRowToSet = std::clamp(m_topRowToSet, 0.0F, getGlobalRowMax());
+            setFirstRow();
+            ensureCursorVisible();
             return;
         }
 
-        auto row = lineIndexToRow(m_state.m_cursorPosition.m_line);
         if (isMultiLineRow(row)) {
-            auto position = unfoldedToFoldedCoords(m_state.m_cursorPosition);
+            auto position = unfoldedToFoldedCoords(oldPos);
             m_state.m_cursorPosition.m_column = position.m_column;
         }
         if (row + amount > getGlobalRowMax()) {
             row = getGlobalRowMax();
             m_state.m_cursorPosition.m_column = lineMaxColumn(rowToLineIndex(row));
-        } else
+        } else {
             row += amount;
-
+            if (amount >= pageSize) {
+                auto numberOfPagesToScroll = std::floor(amount / pageSize);
+                auto numberOfAvailablePages = std::floor((getGlobalRowMax() - m_topRow) / pageSize);
+                auto numberOfPages = std::min(numberOfPagesToScroll, numberOfAvailablePages);
+                m_topRowToSet = m_topRow + numberOfPages * pageSize;
+                setFirstRow();
+            } else
+                ensureCursorVisible();
+        }
         if (isMultiLineRow(row)) {
             auto position = foldedToUnfoldedCoords(Coordinates( rowToLineIndex(row), m_state.m_cursorPosition.m_column));
             m_state.m_cursorPosition = position;
@@ -415,7 +435,8 @@ namespace hex::ui {
         } else {
             m_setScrollY = false;
             auto scrollY = ImGui::GetScrollY();
-            ImGui::SetScrollY(std::clamp(scrollY + m_scrollYIncrement, 0.0f, ImGui::GetScrollMaxY()));
+            m_scroll.y = std::clamp(scrollY + m_scrollYIncrement, 0.0f, ImGui::GetScrollMaxY());
+            ImGui::SetScrollY(m_scroll.y);
         }
     }
 
@@ -426,7 +447,8 @@ namespace hex::ui {
         } else {
             m_setScrollX = false;
             auto scrollX = ImGui::GetScrollX();
-            ImGui::SetScrollX(std::clamp(scrollX + m_scrollXIncrement, 0.0f, ImGui::GetScrollMaxX()));
+            m_scroll.x = std::clamp(scrollX + m_scrollXIncrement, 0.0f, ImGui::GetScrollMaxX());
+            ImGui::SetScrollX(m_scroll.x);
         }
     }
 
@@ -494,10 +516,10 @@ namespace hex::ui {
             m_line = std::clamp(m_line, 0, lineCount - 1);
 
 
-        auto maxColumn = lines.lineMaxColumn(m_line) + 1;
+        auto maxColumn = lines.lineMaxColumn(m_line);
         if (m_column < 0) {
-            m_column = std::clamp(m_column, -maxColumn, -1);
-            m_column = maxColumn + m_column;
+            m_column = std::clamp(m_column, -maxColumn - 1, -1);
+            m_column = maxColumn + m_column + 1;
         } else
             m_column = std::clamp(m_column, 0, maxColumn);
 
