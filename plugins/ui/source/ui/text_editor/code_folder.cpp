@@ -3,6 +3,7 @@
 #include <pl/core/token.hpp>
 #include <wolv/utils/string.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file_attached_data.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
 #include <pl/core/preprocessor.hpp>
 #include <pl/api.hpp>
@@ -318,7 +319,7 @@ namespace hex::ui {
         i32 lineIndex = location.line - 1;
         std::string delimiters, openDelimiter, closeDelimiter;
         i32 currentTokenId = from;
-        auto line = operator[](lineIndex);
+        auto line = m_unfoldedLines[lineIndex];
         if (isOpenFound) {
             delimiters = s_openDelimiters + s_closeDelimiters;
             if (auto columnIndex = line.m_chars.find_first_of(s_delimiters, location.column - 1); columnIndex != std::string::npos) {
@@ -340,7 +341,7 @@ namespace hex::ui {
                 if (currentTokenId < 0) {
                     return result;
                 }
-                line = operator[](m_curr->location.line - 1);
+                line = m_unfoldedLines[m_curr->location.line - 1];
                 size_t stringIndex = line.columnIndex(m_curr->location.column);
                 std::string currentChar = std::string(1, line[static_cast<u64>(stringIndex - 1)]);
                 location = m_curr->location;
@@ -403,13 +404,14 @@ namespace hex::ui {
         return result;
     }
 
-    void TextEditor::saveCodeFoldStates() {
-        m_lines.saveCodeFoldStates();
-    }
-
-    void Lines::saveCodeFoldStates() {
+    void Lines::saveCodeFoldStates(std::string path) {
+        if (m_codeFoldKeys.empty()) {
+            m_saveCodeFoldStateRequested = true;
+            return;
+        }
         i32 codeFoldIndex = 0;
         Indices closedFoldIncrements;
+        std::string result;
         for (auto key: m_codeFoldKeys) {
             if (m_codeFoldState.contains(key) && !m_codeFoldState[key]) {
                 closedFoldIncrements.push_back(codeFoldIndex);
@@ -417,31 +419,18 @@ namespace hex::ui {
             } else
                 codeFoldIndex++;
         }
-        if (!m_hiddenLines.empty())
-            m_hiddenLines.clear();
         if (!closedFoldIncrements.empty()) {
-            std::string result = "//+-#:";
             for (u32 i = 0; i < closedFoldIncrements.size(); ++i) {
                 result += std::to_string(closedFoldIncrements[i]);
                 if (i < closedFoldIncrements.size() - 1)
                     result += ",";
             }
-            auto lineIndex = 0;
-            m_hiddenLines.emplace_back(lineIndex, result);
         }
-    }
-
-    void TextEditor::applyCodeFoldStates() {
-        m_lines.applyCodeFoldStates();
-    }
-
-    void Lines::setCodeFoldState(CodeFoldState state) {
-        m_codeFoldState = state;
-        saveCodeFoldStates();
-    }
-
-    CodeFoldState Lines::getCodeFoldState() const {
-        return m_codeFoldState;
+        hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
+        if (result.empty())
+            closedFoldData.erase(path);
+        else
+           closedFoldData.get(path) = result;
     }
 
     void Lines::resetCodeFoldStates() {
@@ -450,20 +439,11 @@ namespace hex::ui {
             m_codeFoldState[key] = true;
     }
 
-    void Lines::applyCodeFoldStates() {
+    void Lines::applyCodeFoldStates(std::string path) {
+        hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
 
-        std::string commentLine;
-        for (const auto& line: m_hiddenLines) {
-            if (line.m_line.starts_with("//+-#:")) {
-                commentLine = line.m_line;
-                break;
-            }
-        }
-        if (commentLine.size() < 6 || !commentLine.starts_with("//+-#:")) {
-            resetCodeFoldStates();
-            return;
-        }
-        auto states = commentLine.substr(6);
+        std::string states = closedFoldData.get(path);
+
         i32 count;
         StringVector stringVector;
         if (states.empty())
@@ -471,6 +451,10 @@ namespace hex::ui {
         else {
             stringVector = wolv::util::splitString(states, ",", true);
             count = stringVector.size();
+            if (m_codeFoldKeys.empty()) {
+                m_useSavedFoldStatesRequested = true;
+                return;
+            }
         }
         if (count == 1 && stringVector[0].empty())
             return;
@@ -615,9 +599,9 @@ namespace hex::ui {
         if (userTriggered) {
             auto topLine = lineCoordinates( rowToLineIndex(topRow), 0);
             if (key.contains(topLine))
-                m_topRow = lineIndexToRow(key.m_start.m_line);
+                m_topRowToSet = lineIndexToRow(key.m_start.m_line);
             else
-                m_topRow = topRow;
+                m_topRowToSet = topRow;
             m_setTopRow = true;
             m_saveCodeFoldStateRequested = true;
             m_globalRowMaxChanged = true;
@@ -812,19 +796,14 @@ namespace hex::ui {
         }
     }
 
-    void Lines::setAllCodeFolds() {
-        initializeCodeFolds();
+    void Lines::setAllCodeFolds(std::string path) {
+        initializeCodeFolds(path);
         tokensFromSource();
         m_foldPoints.clear();
         findFoldDelimiters(0, false);
         setIndentBlocks();
         nonDelimitedFolds();
         m_codeFoldKeys.clear();
-        m_codeFolds.clear();
-        m_codeFoldKeyMap.clear();
-        m_codeFoldValueMap.clear();
-        m_codeFoldKeyLineMap.clear();
-        m_codeFoldValueLineMap.clear();
         m_codeFoldDelimiters.clear();
         m_indentBlocks.clear();
         m_indentBlocks.insert(Range(lineCoordinates(0, 0), lineCoordinates(size() - 1, m_unfoldedLines.back().size())));
@@ -846,6 +825,16 @@ namespace hex::ui {
                 foldDelimiters.first = foldDelimiters.second - 2 + (foldDelimiters.second == ')');
             m_codeFoldKeys.insert(foldInterval);
             m_codeFoldDelimiters[foldInterval] = foldDelimiters;
+        }
+        initializeCodeFolds(path);
+    }
+
+    void Lines::setCdeFoldMaps() {
+        m_codeFoldKeyMap.clear();
+        m_codeFoldKeyLineMap.clear();
+        m_codeFoldValueMap.clear();
+        m_codeFoldValueLineMap.clear();
+        for (auto foldInterval: m_codeFoldKeys) {
             if (!m_codeFoldKeyMap.contains(foldInterval.m_start))
                 m_codeFoldKeyMap[foldInterval.m_start] = foldInterval.m_end;
             if (!m_codeFoldValueMap.contains(foldInterval.m_end))

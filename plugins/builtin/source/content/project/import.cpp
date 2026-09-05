@@ -10,6 +10,7 @@
 #include <hex/api/project_manager.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file_attached_data.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
 #include <hex/providers/provider.hpp>
 
@@ -18,6 +19,17 @@
 #include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin::project {
+    std::string removeHiddenLinesFromPattern(std::string &sourceCode) {
+        auto stringVector = wolv::util::splitString(sourceCode, "\n");
+        std::string result;
+        if (stringVector[0].starts_with("//+-#:")) {
+            result = stringVector[0].substr(6);
+            stringVector.erase(stringVector.begin());
+        }
+        sourceCode = wolv::util::combineStrings(stringVector, "\n");
+        return result;
+    }
+
 
     ImportResult importProviders(std::vector<ImportedProvider> providers, std::vector<ImportedProjectFile> projectFiles) {
         ImportResult result;
@@ -274,6 +286,22 @@ namespace hex::plugin::builtin::project {
                     !FileBackedProviderDataRegistry::bind(provider, file.typeId, root / file.relativePath)) {
                     log::warn("Failed to bind imported project file '{}' to provider {}", file.relativePath.string(), id);
                 }
+                if (file.typeId == "hex.builtin.pattern-source") {
+                    wolv::io::File patternFile(root / file.relativePath, wolv::io::File::Mode::Write);
+                    if (!patternFile.isValid())
+                        continue;
+
+                    auto code = patternFile.readString();
+                    auto states = removeHiddenLinesFromPattern(code);
+                    if (!states.empty()) {
+                        hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
+                        closedFoldData.get(root / file.relativePath) = std::move(states);
+                    }
+                    patternFile.setSize(0);
+                    if (!patternFile.writeString(code))
+                        continue;
+                }
+
             }
 
             if (provider != nullptr && provider->isWritable() && !importedProvider.patches.empty()) {

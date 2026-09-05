@@ -182,26 +182,35 @@ namespace hex::ui {
     Coordinates TextEditor::screenPosCoordinates(const ImVec2 &position) {
         auto boxSize = m_lines.m_charAdvance.x + (((u32)m_lines.m_charAdvance.x % 2) ? 2.0f : 1.0f);
         if (m_lines.isEmpty())
-            return m_lines.lineCoordinates( 0, 0);
+            return lineCoordinates(0, 0);
         auto lineSize = m_lines.size();
         if (position.y > m_lines.getLineStartScreenPos(0, lineIndexToRow(lineSize - 1)).y + m_lines.m_charAdvance.y)
-            return m_lines.lineCoordinates( -1, -1);
+            return lineCoordinates(-1, -1);
 
         auto local = position - m_lines.m_cursorScreenPosition;
         auto row = screenPosToRow(position);
-
-        Coordinates result = lineCoordinates(0,0);
+        auto scrollX = ImGui::GetScrollX();
+        auto scrollY = ImGui::GetScrollY();
+        Coordinates result = Coordinates(0, 0);
         i32 lineIndex= rowToLineIndex((i32) std::floor(row));
-        if (lineIndex < 0 || lineIndex >= m_lines.size())
+
+        if ((local.y > ImGui::GetWindowHeight() + scrollY - (m_scrollX ? ImGui::GetStyle().ScrollbarSize : 0))) {
             return Invalid;
+        }
+        if (local.y < 0)
+            return result;
+
+        if (lineIndex < 0 ||  lineIndex >= m_lines.size())
+                return Invalid;
+
+
         result.m_line = lineIndex;
         if (m_lines.m_codeFoldKeyLineMap.contains(lineIndex) || m_lines.m_codeFoldValueLineMap.contains(lineIndex)) {
             if (local.x < (boxSize - 1)/2)
-                return Invalid;
-        }
-        else if (local.x < 0 || m_lines[result.m_line].empty())
-            return m_lines.lineCoordinates( result.m_line, 0);
+                return {lineIndex, 0};
 
+        } else if (local.x < 0 || m_lines[lineIndex].empty())
+            return {lineIndex, 0};
 
         auto &line = m_lines[result.m_line].m_chars;
         i32 count = 0;
@@ -217,7 +226,12 @@ namespace hex::ui {
         result = m_lines.lineIndexCoords(lineIndex + 1, count - increase);
         result = m_lines.foldedToUnfoldedCoords(result);
         if (result == Invalid)
-            return {0, 0};
+            return Invalid;
+
+        auto maxX = ImGui::GetWindowWidth() + scrollX - (m_scrollY ? ImGui::GetStyle().ScrollbarSize : 0);
+        if (local.x > maxX)
+            return Invalid;
+
         return result;
     }
 

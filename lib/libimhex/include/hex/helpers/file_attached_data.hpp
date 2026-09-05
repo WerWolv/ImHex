@@ -2,7 +2,7 @@
 
 #include "default_paths.hpp"
 #include "hex/api/project_manager.hpp"
-
+#include <hex/api/content_registry/settings.hpp>
 #include <wolv/types/static_string.hpp>
 
 namespace hex {
@@ -29,6 +29,11 @@ namespace hex {
                 save();
 
                 return *this;
+            }
+
+            void erase() {
+                m_json->erase(getPathKey());
+                save();
             }
 
         private:
@@ -70,6 +75,11 @@ namespace hex {
         Data get(const std::fs::path &path) {
             loadDataIfNeeded();
             return Data(path, &m_data);
+        }
+
+        void erase(const std::fs::path &path) {
+            loadDataIfNeeded();
+            Data(path, &m_data).erase();
         }
 
     private:

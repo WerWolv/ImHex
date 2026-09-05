@@ -285,11 +285,11 @@ namespace hex::ui {
             void close();
             void moveFold(float lineCount, float lineHeight);
         private:
-            Lines *lines = nullptr;
-            Range key;
-            CursorChangeBox codeFoldStartCursorBox;
-            ActionableBox codeFoldEndActionBox;
-            CursorChangeBox codeFoldEndCursorBox;
+            Lines *m_lines = nullptr;
+            Range m_key;
+            CursorChangeBox m_codeFoldStartCursorBox;
+            ActionableBox m_codeFoldEndActionBox;
+            CursorChangeBox m_codeFoldEndCursorBox;
         };
 
         class CodeFoldTooltip : public ActionableBox {
@@ -550,9 +550,6 @@ namespace hex::ui {
             static const LanguageDefinition &Lua();
         };
 
-        TextEditor();
-        ~TextEditor();
-
         class UndoRecord {
         public:
             friend class TextEditor;
@@ -587,16 +584,6 @@ namespace hex::ui {
             UndoRecords m_records;
         };
 
-        class HiddenLine {
-        public:
-            friend class Lines;
-            HiddenLine() = default;
-            HiddenLine(i32 lineIndex, std::string lineContent) : m_lineIndex(lineIndex), m_line(std::move(lineContent)) {}
-        private:
-            i32 m_lineIndex{};
-            std::string m_line;
-        };
-
         enum class FoldSymbol : u8 { Line, Up, Down, Square };
 
         using CodeFolds             = std::map<Range, CodeFold>;
@@ -605,7 +592,6 @@ namespace hex::ui {
         using UndoBuffer            = std::vector<UndoAction>;
         using FoldedLines           = std::map<i32, FoldedLine>;
         using UnfoldedLines         = std::vector<Line>;
-        using HiddenLines           = std::vector<HiddenLine>;
         using FoldSymbols           = std::map<i32, FoldSymbol>;
         using StringVector          = std::vector<std::string>;
         using RangeFromCoordinates  = std::pair<Coordinates, Coordinates>;
@@ -615,7 +601,7 @@ namespace hex::ui {
         class Lines {
         public:
             friend class TextEditor;
-            Lines() : m_unfoldedLines({}), m_foldedLines({}), m_hiddenLines({}), m_defines({}) {}
+            Lines() : m_unfoldedLines({}), m_foldedLines({}), m_defines({}) {}
 
             Line &at(i32 index);
             Line &operator[](i32 index);
@@ -638,12 +624,12 @@ namespace hex::ui {
             void clearCodeFolds();
             void addClickableText(std::string text) { m_clickableText.push_back(text); }
             Breakpoints &getBreakpoints() { return m_breakpoints; }
-            void saveCodeFoldStates();
-            void applyCodeFoldStates();
+            void saveCodeFoldStates(std::string path);
+            void applyCodeFoldStates(std::string path);
             float lineIndexToRow(i32 lineNumber);
             float rowToLineIndex(i32 row);
             void getRowSegments();
-            void initializeCodeFolds();
+            void initializeCodeFolds(std::string path);
             bool updateCodeFolds();
             ImRect getBoxForRow(u32 lineNumber);
             void setFirstRow();
@@ -669,8 +655,6 @@ namespace hex::ui {
             friend bool Range::Coordinates::isValid(Lines &lines);
             friend TextEditor::Coordinates Range::Coordinates::sanitize(Lines &lines);
             void appendLine(const std::string &value);
-            void removeHiddenLinesFromPattern();
-            void addHiddenLinesToPattern();
             void setSelection(const Range &selection);
             Range getSelection() const;
             ImVec2 getLineStartScreenPos(float leftMargin, float lineNumber);
@@ -727,7 +711,7 @@ namespace hex::ui {
             void removeLines(i32 start, i32 end);
             void removeLine(i32 index);
             float textDistanceToLineStart(const Coordinates &from);
-            std::string getText(bool addHiddenLines = false);
+            std::string getText();
             void setCursorPosition();
             void setEditorState(const Coordinates &coordinates, bool setInteractiveStart = true);
             void ensureSelectionNotFolded();
@@ -751,9 +735,7 @@ namespace hex::ui {
             i32 getTokenId();
             void loadFirstTokenIdOfLine();
             i32 nextLineIndex(i32 lineIndex);
-            void setAllCodeFolds();
-            void setCodeFoldState(CodeFoldState states);
-            CodeFoldState getCodeFoldState() const;
+            void setAllCodeFolds(std::string path);
             void advanceToNextLine(i32 &lineIndex, i32 &currentTokenId, Location &location);
             void incrementTokenId(i32 &lineIndex, i32 &currentTokenId, Location &location);
             void moveToStringIndex(i32 stringIndex, i32 &currentTokenId, Location &location);
@@ -764,6 +746,7 @@ namespace hex::ui {
             void setScroll(ImVec2 scroll);
             ImVec2 getScroll() const {return m_scroll;}
             void swapSelectionEnds();
+            void setCdeFoldMaps();
 
             constexpr static u32 Normal = 0;
             constexpr static u32 Not    = 1;
@@ -793,9 +776,8 @@ namespace hex::ui {
         private:
             UnfoldedLines m_unfoldedLines;
             FoldedLines m_foldedLines;
-            HiddenLines m_hiddenLines;
             FoldSymbols m_rowToFoldSymbol;
-            MatchedDelimiter m_matchedDelimiter{};
+            MatchedDelimiter m_matchedDelimiter;
             bool m_colorizerEnabled = true;
             StringVector m_defines;
             FindReplaceHandler m_findReplaceHandler;
@@ -831,6 +813,7 @@ namespace hex::ui {
             StringVector m_clickableText;
             float m_topRow = 0.0F;
             bool m_setTopRow = false;
+            float m_topRowToSet = 0.0F;
             bool m_restoreSavedFolds = true;
             ImVec2 m_charAdvance;
             float m_leftMargin = 0.0F;
@@ -873,6 +856,10 @@ namespace hex::ui {
             bool m_hasVertScroll = false;
         };
 
+        TextEditor();
+        ~TextEditor();
+        void setPath(std::string path) { m_path = std::move(path); }
+
     private:
 // Rendering
         ImVec2 underWavesAt(ImVec2 pos, i32 nChars, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
@@ -906,10 +893,6 @@ namespace hex::ui {
         float lineIndexToRow(i32 lineNumber);
         void clearErrorMarkers();
         void clearActionables() { m_lines.clearActionables();}
-        void saveCodeFoldStates();
-        void applyCodeFoldStates();
-        void removeHiddenLinesFromPattern() { m_lines.removeHiddenLinesFromPattern(); }
-        void addHiddenLinesToPattern() { m_lines.addHiddenLinesToPattern(); }
         void setDisableCodeFolds(bool disable) { m_lines.m_codeFoldsDisabled = disable; }
 // Highlighting
     private:
@@ -933,7 +916,7 @@ namespace hex::ui {
         i64 drawColoredText(i32 lineIndex, const ImVec2 &textEditorSize);
         void drawBlockIndicators(ImDrawList *drawList);
         void drawMatchedDelimiter();
-        void postRender(float lineNumber, std::string textWindowName);
+        void postRender(float row, std::string textWindowName);
         ImVec2 calculateCharAdvance() const;
         void openCodeFoldAt(Coordinates line);
     public:
@@ -971,7 +954,7 @@ namespace hex::ui {
         void setLanguageDefinition(const LanguageDefinition &aLanguageDef) { m_lines.setLanguageDefinition(aLanguageDef); }
         std::string getLineText(i32 line);
         void setTextChanged(bool value) { m_lines.setTextChanged(value); }
-        std::string getText(bool addHiddenLines = false) { return m_lines.getText(addHiddenLines); }
+        std::string getText() { return m_lines.getText(); }
         void addUndo(UndoRecords value) { m_lines.addUndo(value); }
         bool isTextChanged() { return m_lines.isTextChanged(); }
         void setHandleMouseInputs(bool value) { m_handleMouseInputs = value; }
@@ -1051,6 +1034,7 @@ namespace hex::ui {
         static i32 stringCharacterCount(const std::string &str);
         Coordinates lineCoordsToIndexCoords(const Coordinates &coordinates);
     private:
+        std::string m_path;
         float m_lineSpacing = 1.0F;
         Lines m_lines;
         float m_newTopMargin = 0.0F;

@@ -893,7 +893,7 @@ namespace hex::ui {
         m_lines.refreshSearchResults();
     }
 
-    std::string Lines::getText(bool includeHiddenLines) {
+    std::string Lines::getText() {
         auto start = lineCoordinates(0, 0);
         auto size = m_unfoldedLines.size();
         auto line = m_unfoldedLines[size - 1];
@@ -901,11 +901,6 @@ namespace hex::ui {
         if (start == Invalid || end == Invalid)
             return "";
         std::string result;
-        if (includeHiddenLines) {
-            for (const auto &hiddenLine: m_hiddenLines) {
-                result += hiddenLine.m_line + "\n";
-            }
-        }
         result += getRange(Range(start, end));
         return result;
     }
