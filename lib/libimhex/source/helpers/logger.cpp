@@ -25,7 +25,11 @@ namespace hex::log {
         bool s_colorOutputEnabled = false;
         std::recursive_mutex s_loggerMutex;
         bool s_loggingSuspended = false;
+#if defined(DEBUG)
+        bool s_debugLoggingEnabled = true;
+#else
         bool s_debugLoggingEnabled = false;
+#endif
 
     }
 
@@ -57,11 +61,7 @@ namespace hex::log {
         }
 
         bool isDebugLoggingEnabled() {
-            #if defined(DEBUG)
-                return true;
-            #else
-                return s_debugLoggingEnabled;
-            #endif
+            return s_debugLoggingEnabled;
         }
 
         FILE *getDestination() {
