@@ -1,6 +1,8 @@
 #include "content/popups/hex_editor/popup_hex_editor_base_address.hpp"
 #include "content/views/view_hex_editor.hpp"
 
+#include <hex/api/events/events_interaction.hpp>
+
 #include <fonts/tabler_icons.hpp>
 
 namespace hex::plugin::builtin {
@@ -104,6 +106,8 @@ namespace hex::plugin::builtin {
         }
 
         m_selection.getProvider()->setBaseAddress(newBaseAddress);
+
+        EventHighlightingChanged::post();
     }
 
     UnlocalizedString PopupBaseAddress::getTitle() const {
