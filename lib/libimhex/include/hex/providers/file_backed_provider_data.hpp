@@ -111,7 +111,7 @@ namespace hex {
             std::function<SerializedData(const T &)> encode;
             std::function<std::optional<T>(std::span<const u8>)> decode;
             std::function<T()> createDefault = [] { return T(); };
-            std::chrono::seconds debounce = std::chrono::seconds(10ll);
+            std::chrono::milliseconds debounce = std::chrono::milliseconds(10000ll);
         };
 
         explicit FileBackedProviderData(Descriptor descriptor)
