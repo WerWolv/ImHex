@@ -1,4 +1,5 @@
 #include <ui/text_editor.hpp>
+#include <ui/line_comment.hpp>
 #include <algorithm>
 #include <ranges>
 #include <string>
@@ -850,6 +851,59 @@ namespace hex::ui {
             v.push_back(u);
             m_lines.addUndo(v);
         }
+        m_lines.refreshSearchResults();
+    }
+
+    void TextEditor::toggleLineComment() {
+        if (m_lines.m_readOnly)
+            return;
+
+        const auto &commentToken = m_lines.getLanguageDefinition().m_singleLineComment;
+        if (commentToken.empty())
+            return;
+
+        // Typing moves the cursor but not the selection.
+        const auto &state = m_lines.m_state;
+        const auto selection = m_lines.lineCoordinates(m_lines.hasSelection() ? state.m_selection : Range(state.m_cursorPosition, state.m_cursorPosition));
+        const i32 firstLine = selection.m_start.m_line;
+        i32 lastLine = selection.m_end.m_line;
+
+        // Skip a last line with no selected text, as Tab does.
+        if (lastLine > firstLine && selection.m_end.m_column == 0)
+            lastLine -= 1;
+
+        StringVector oldLines;
+        oldLines.reserve(lastLine - firstLine + 1);
+        for (i32 line = firstLine; line <= lastLine; line += 1)
+            oldLines.emplace_back(this->getLineText(line));
+
+        const auto newLines = ui::toggleLineComments(oldLines, commentToken);
+        if (newLines == oldLines)
+            return;
+
+        const Range wholeLines(Coordinates(firstLine, 0), m_lines.lineCoordinates(lastLine, -1));
+
+        // One undo record, so one Ctrl+Z reverts every line.
+        UndoRecord u;
+        u.m_before = m_lines.m_state;
+
+        this->setSelection(wholeLines);
+        u.m_removed = m_lines.getSelectedText();
+        u.m_removedRange = m_lines.m_state.m_selection;
+        m_lines.deleteSelection();
+
+        u.m_added = wolv::util::combineStrings(newLines, "\n");
+        u.m_addedRange.m_start = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+        m_lines.insertText(u.m_added);
+        u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+
+        // Keep the lines selected so another press reverts them.
+        this->setSelection(u.m_addedRange);
+        u.m_after = m_lines.m_state;
+
+        UndoRecords records;
+        records.push_back(u);
+        m_lines.addUndo(records);
         m_lines.refreshSearchResults();
     }
 

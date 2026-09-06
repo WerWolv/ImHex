@@ -944,6 +944,11 @@ namespace hex::ui {
         void cut();
         void paste();
         void doPaste(const char *clipText);
+
+        /**
+         * @brief Comments or uncomments the selected lines, or the line of the cursor
+         */
+        void toggleLineComment();
         void deleteChar();
         void setReadOnly(bool value) { m_lines.setReadOnly(value); };
         void appendLine(const std::string &value);

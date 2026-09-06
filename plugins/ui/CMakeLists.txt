@@ -11,6 +11,7 @@ add_imhex_plugin(
         source/ui/hex_editor.cpp
         source/ui/pattern_drawer.cpp
         source/ui/visualizer_drawer.cpp
+        source/ui/line_comment.cpp
         source/ui/menu_items.cpp
         source/ui/pattern_value_editor.cpp
         source/ui/widgets.cpp
