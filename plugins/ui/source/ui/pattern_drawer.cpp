@@ -340,6 +340,25 @@ namespace hex::ui {
     void PatternDrawer::resetEditing() {
         m_editingPattern = nullptr;
         m_editingPatternOffset = 0x00;
+        m_justStartedEditing = false;
+    }
+
+    void PatternDrawer::startEditing(const pl::ptrn::Pattern &pattern) {
+        m_editingPattern = &pattern;
+        m_editingPatternOffset = pattern.getOffset();
+        m_justStartedEditing = true;
+    }
+
+    // Focuses the edit field on the frame editing starts, not every frame it
+    // stays open. Calling SetKeyboardFocusHere() every frame re-requests focus
+    // for the field even after a click elsewhere deactivates it, which blocks
+    // that click from ending edit mode.
+    void PatternDrawer::focusIfJustStartedEditing() {
+        if (!m_justStartedEditing)
+            return;
+
+        m_justStartedEditing = false;
+        ImGui::SetKeyboardFocusHere();
     }
 
     bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) {
@@ -566,8 +585,7 @@ namespace hex::ui {
             m_hoverCallback(&pattern);
 
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
-                m_editingPattern = &pattern;
-                m_editingPatternOffset = pattern.getOffset();
+                this->startEditing(pattern);
                 AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.modify_data.name"_unlocalized);
             }
         }
@@ -585,8 +603,7 @@ namespace hex::ui {
             ImGui::Separator();
 
             if (ImGui::MenuItemEx("hex.ui.pattern_drawer.context.edit_value"_lang, ICON_VS_EDIT)) {
-                m_editingPattern = &pattern;
-                m_editingPatternOffset = pattern.getOffset();
+                this->startEditing(pattern);
                 AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.modify_data.name"_unlocalized);
             }
 
@@ -738,7 +755,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -781,7 +798,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -827,7 +844,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -848,7 +865,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::SetKeyboardFocusHere();
+                this->focusIfJustStartedEditing();
 
                 m_valueEditor.visit(pattern);
 
@@ -877,7 +894,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::SetKeyboardFocusHere();
+                this->focusIfJustStartedEditing();
 
                 m_valueEditor.visit(pattern);
 
@@ -922,7 +939,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::SetKeyboardFocusHere();
+                this->focusIfJustStartedEditing();
 
                 m_valueEditor.visit(pattern);
 
@@ -960,7 +977,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
