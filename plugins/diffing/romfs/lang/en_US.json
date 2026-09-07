@@ -19,5 +19,7 @@
     "hex.diffing.view.diff.menu.file.jumping.prev_diff": "Jump to Previous Difference",
     "hex.diffing.view.diff.menu.file.jumping.next_diff": "Jump to Next Difference",
     "hex.diffing.view.diff.jumping.beginning_reached": "No more differences till the beginning of the file",
-    "hex.diffing.view.diff.jumping.end_reached": "No more differences till the end of the file"
+    "hex.diffing.view.diff.jumping.end_reached": "No more differences till the end of the file",
+    "hex.diffing.view.diff.context.copy_start_address": "Copy Start Address",
+    "hex.diffing.view.diff.context.copy_end_address": "Copy End Address"
 }

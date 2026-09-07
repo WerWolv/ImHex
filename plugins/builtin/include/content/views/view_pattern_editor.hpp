@@ -95,6 +95,7 @@ namespace hex::plugin::builtin {
         std::mutex m_possiblePatternFilesMutex;
         PerProvider<std::vector<magic::FoundPattern>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
+        PerProvider<bool> m_showConsole;
         bool m_triggerEvaluation  = false;
         std::atomic<bool> m_triggerAutoEvaluate = false;
 

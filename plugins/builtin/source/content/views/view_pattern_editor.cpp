@@ -527,26 +527,37 @@ namespace hex::plugin::builtin {
             defaultEditorSize.y *= 0.66F;
 
             fonts::CodeEditor().push();
-            ImGui::SetNextWindowSizeConstraints(
-                ImVec2(
-                    defaultEditorSize.x,
-                    ImGui::GetTextLineHeightWithSpacing() * 2
-                ),
-                ImVec2(
-                    defaultEditorSize.x,
-                    std::min(
-                        ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * 4,
-                        ImGui::GetContentRegionAvail().y * 0.8F
+
+            if (m_showConsole) {
+                ImGui::SetNextWindowSizeConstraints(
+                    ImVec2(
+                        defaultEditorSize.x,
+                        ImGui::GetTextLineHeightWithSpacing() * 2
+                    ),
+                    ImVec2(
+                        defaultEditorSize.x,
+                        std::min(
+                            ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() * 4,
+                            ImGui::GetContentRegionAvail().y * 0.8F
+                        )
                     )
-                )
-            );
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0F, 0.0F));
-            if (ImGui::BeginChild("##pattern_editor_resizer", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
-                m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), true);
-                m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
+                );
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0F, 0.0F));
+                if (ImGui::BeginChild("##pattern_editor_frame", defaultEditorSize, ImGuiChildFlags_ResizeY)) {
+                    m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), true);
+                    m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
+                }
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
+            } else {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0F, 0.0F));
+                if (ImGui::BeginChild("##pattern_editor_frame", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().ChildBorderSize))) {
+                    m_textEditor.get(provider).render("##pattern_editor", ImGui::GetContentRegionAvail(), true);
+                    m_textEditorHoverBox = ImGui::GetCurrentWindow()->Rect();
+                }
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
             }
-            ImGui::EndChild();
-            ImGui::PopStyleVar();
             fonts::CodeEditor().pop();
 
             m_consoleHoverBox = ImGui::GetCurrentWindow()->Rect();
@@ -565,29 +576,31 @@ namespace hex::plugin::builtin {
                 setupGotoLine(editor);
             }
 
-            auto settingsSize = ImGui::GetContentRegionAvail();
-            if (m_debuggerActive) {
-                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
+            if (m_showConsole.get(provider)) {
+                auto settingsSize = ImGui::GetContentRegionAvail();
+                if (m_debuggerActive.get(provider)) {
+                    settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
 
-                if (ImGui::BeginTabBar("##settings")) {
-                    const auto startY = ImGui::GetCursorPosY();
+                    if (ImGui::BeginTabBar("##settings")) {
+                        const auto startY = ImGui::GetCursorPosY();
 
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
-                        this->drawConsole(settingsSize);
-                        ImGui::EndTabItem();
+                        if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
+                            this->drawConsole(settingsSize);
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
+                            this->drawDebugger(settingsSize);
+                            ImGui::EndTabItem();
+                        }
+
+                        ImGui::SetCursorPosY(startY + settingsSize.y + ImGui::GetStyle().ItemSpacing.y * 2);
+
+                        ImGui::EndTabBar();
                     }
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
-                        this->drawDebugger(settingsSize);
-                        ImGui::EndTabItem();
-                    }
-
-                    ImGui::SetCursorPosY(startY + settingsSize.y + ImGui::GetStyle().ItemSpacing.y * 2);
-
-                    ImGui::EndTabBar();
+                } else {
+                    settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
+                    this->drawConsole(settingsSize);
                 }
-            } else {
-                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y;
-                this->drawConsole(settingsSize);
             }
 
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
@@ -670,6 +683,13 @@ namespace hex::plugin::builtin {
                             m_hasUnparsedChanges.get(provider) = true;
                     }
                     ImGui::SetItemTooltip("%s", "hex.builtin.view.pattern_editor.auto"_lang.get());
+
+                    ImGui::SameLine(0, 5_scaled);
+
+                    bool showConsole = m_showConsole.get(provider);
+                    if (ImGuiExt::DimmedIconToggle(ICON_VS_TERMINAL, &showConsole)) {
+                        m_showConsole.get(provider) = showConsole;
+                    }
 
                     ImGui::SameLine(0, 5_scaled);
 
@@ -1884,6 +1904,7 @@ namespace hex::plugin::builtin {
                 m_debuggerScopeIndex = 0;
                 m_breakpointHit.get(provider) = true;
                 m_debuggerActive.get(provider) = true;
+                m_showConsole.get(provider) = true;
                 m_resetDebuggerVariables = true;
                 auto optPauseLine = runtime.getInternals().evaluator->getPauseLine();
                 if (optPauseLine.has_value())
@@ -1962,9 +1983,10 @@ namespace hex::plugin::builtin {
 
             m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (m_lastEvaluationResult != 0) {
-                *m_lastEvaluationError = runtime.getEvalError();
-                *m_lastCompileError    = runtime.getCompileErrors();
-                *m_callStack           = &runtime.getInternals().evaluator->getCallStack();
+                m_lastEvaluationError.get(provider) = runtime.getEvalError();
+                m_lastCompileError.get(provider)    = runtime.getCompileErrors();
+                m_callStack.get(provider)           = &runtime.getInternals().evaluator->getCallStack();
+                m_showConsole.get(provider)         = true;
             }
 
             TaskManager::doLater([code] {
