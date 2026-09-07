@@ -894,6 +894,7 @@ namespace hex::ui {
         void clearErrorMarkers();
         void clearActionables() { m_lines.clearActionables();}
         void setDisableCodeFolds(bool disable) { m_lines.m_codeFoldsDisabled = disable; }
+        void pushClipRect(bool clipWidth, bool clipDrawList = false);
 // Highlighting
     private:
         void preRender();

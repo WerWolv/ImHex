@@ -207,7 +207,7 @@ namespace hex::ui {
         result.m_line = lineIndex;
         if (m_lines.m_codeFoldKeyLineMap.contains(lineIndex) || m_lines.m_codeFoldValueLineMap.contains(lineIndex)) {
             if (local.x < (boxSize - 1)/2)
-                return {lineIndex, 0};
+                return Invalid;
 
         } else if (local.x < 0 || m_lines[lineIndex].empty())
             return {lineIndex, 0};

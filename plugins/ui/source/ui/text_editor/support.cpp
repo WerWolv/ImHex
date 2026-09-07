@@ -734,7 +734,7 @@ namespace hex::ui {
             auto rectMax = rectMin + window->Size - ImVec2(m_scrollY ? barSize : 0, m_scrollX ? barSize : 0);
             rectMin.y -= m_lines.m_charAdvance.y;
 
-            if (ImGui::IsMouseHoveringRect(rectMin, rectMax, false)) {
+            if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(rectMin, rectMax, false)) {
 
                 auto coordinates = screenPosCoordinates(ImGui::GetMousePos());
                 if (coordinates == Invalid)
