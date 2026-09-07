@@ -18,6 +18,8 @@ set(AVAILABLE_TESTS
 
     # Utils
         ExtractBits
+        EncodeByteString
+        EncodeByteStringRoundTrip
 )
 
 if (NOT IMHEX_OFFLINE_BUILD)

@@ -431,7 +431,7 @@ namespace hex {
             } else {
                 switch (byte) {
                     case '\\':
-                        result += "\\";
+                        result += "\\\\";
                     break;
                     case '\a':
                         result += "\\a";
