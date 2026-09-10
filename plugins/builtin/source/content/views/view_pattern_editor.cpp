@@ -50,6 +50,7 @@
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/formatting.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
 
 #include <fmt/chrono.h>
@@ -218,11 +219,14 @@ namespace hex::plugin::builtin {
               .displayName = "hex.builtin.view.pattern_editor.name"_unlocalized,
               .displayIcon = ICON_VS_FILE_CODE,
               .extensions = { { "Pattern File", "hexpat" }, { "Pattern Import File", "pat" } },
-              .encode = [](const std::string &source) {
-                  return FileBackedProviderData<std::string>::SerializedData(source.begin(), source.end());
+              .encode = [this](const std::string &source) {
+                  // do this here so it's not called every .get() and .set()
+                  const auto formattedSource = formatPattern(source, m_tabSize);
+                  return FileBackedProviderData<std::string>::SerializedData(formattedSource.begin(), formattedSource.end());
               },
-              .decode = [](std::span<const u8> data) -> std::optional<std::string> {
-                  return wolv::util::preprocessText(std::string(data.begin(), data.end()));
+              .decode = [this](std::span<const u8> data) -> std::optional<std::string> {
+                  // do this here so it's not called every .get() and .set()
+                  return preprocessPattern(std::string(data.begin(), data.end()), m_tabSize);
               }
           }) { }
 
@@ -257,6 +261,10 @@ namespace hex::plugin::builtin {
 
     bool PatternSourceCode::hasProviderSpecificSource(prv::Provider* provider) const {
         return !m_perProviderSource.get(provider).empty();
+    }
+
+    void PatternSourceCode::setTabSize(i32 value) {
+        m_tabSize = std::max(0, std::min(32, value));
     }
 
     static const ui::TextEditor::LanguageDefinition &PatternLanguage() {
@@ -1782,21 +1790,18 @@ namespace hex::plugin::builtin {
         ImGui::PopID();
     }
 
-
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
-        wolv::io::File file(path, wolv::io::File::Mode::Write);
-        if (!file.isValid())
-            return;
-        auto code = wolv::util::preprocessText(file.readString());
-        file.writeString(code);
-        file.flush();
-
+        std::string code;
         if (trackFile) {
             if (!m_sourceCode.bind(provider, path))
                 return;
             code = m_sourceCode.get(provider);
         } else {
-            code = wolv::util::preprocessText(file.readString());
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
+            if (!file.isValid())
+                return;
+
+            code = preprocessPattern(file.readString(), m_textEditor.get(provider).getTabSize());
             m_sourceCode.set(provider, code);
         }
 
@@ -2026,7 +2031,7 @@ namespace hex::plugin::builtin {
             if (provider == nullptr)
                 return;
 
-            m_textEditor.get(provider).setText(wolv::util::preprocessText(code));
+            m_textEditor.get(provider).setText(preprocessPattern(code, m_textEditor.get(provider).getTabSize()));
             m_sourceCode.set(provider, m_textEditor.get(provider).getText());
             if (m_sourceCode.getBinding(provider).has_value()) {
                 auto path = m_sourceCode.getBinding(provider)->string();
@@ -2038,8 +2043,11 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.tab_size"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
-            if (ImHexApi::Provider::isValid())
-                m_textEditor.get(ImHexApi::Provider::get()).setTabSize(value.get<u32>(4));
+            const auto tabSize = value.get<u32>(4);
+            m_sourceCode.setTabSize(tabSize);
+            if (ImHexApi::Provider::isValid()) {
+                m_textEditor.get(ImHexApi::Provider::get()).setTabSize(tabSize);
+            }
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.auto_indent"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -2073,9 +2081,10 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
+            m_sourceCode.setTabSize(m_tabSize);
+            m_textEditor.get(provider).setTabSize(m_tabSize);
             m_textEditor.get(provider).setLanguageDefinition(PatternLanguage());
             m_textEditor.get(provider).setCursorPosition(ui::TextEditor::Coordinates(0, 0),false,false);
-            m_textEditor.get(provider).setTabSize(m_tabSize);
             m_textEditor.get(provider).setEnableHighlighting(m_colorizeSyntax);
             m_textEditor.get(provider).setShowWhitespaces(m_showWhiteSpaces);
             m_textEditor.get(provider).setDisableCodeFolds(m_codeFoldsDisabled);
@@ -2114,10 +2123,11 @@ namespace hex::plugin::builtin {
             }
 
             if (newProvider != nullptr) {
-                m_textEditor.get(newProvider).setText(wolv::util::preprocessText(m_sourceCode.get(newProvider)));
+                m_sourceCode.setTabSize(m_tabSize);
+                m_textEditor.get(newProvider).setTabSize(m_tabSize);
+                m_textEditor.get(newProvider).setText(preprocessPattern(m_sourceCode.get(newProvider), m_tabSize));
                 m_textEditor.get(newProvider).getLines().setScroll(m_scroll.get(newProvider));
                 m_textEditor.get(newProvider).setTextChanged(false);
-                m_textEditor.get(newProvider).setTabSize(m_tabSize);
                 m_textEditor.get(newProvider).setEnableHighlighting(m_colorizeSyntax);
                 m_textEditor.get(newProvider).setShowWhitespaces(m_showWhiteSpaces);
                 m_textEditor.get(newProvider).setDisableCodeFolds(m_codeFoldsDisabled);
@@ -2469,7 +2479,7 @@ namespace hex::plugin::builtin {
                 return false;
 
             if (file.isValid()) {
-                RequestSetPatternLanguageCode::post(wolv::util::preprocessText(file.readString()));
+                RequestSetPatternLanguageCode::post(file.readString());
                 return true;
             } else {
                 return false;

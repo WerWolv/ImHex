@@ -32,6 +32,9 @@ namespace hex {
             }
 
             void erase() {
+                if (m_json->type() == nlohmann::json::value_t::null) {
+                    return;
+                }
                 m_json->erase(getPathKey());
                 save();
             }

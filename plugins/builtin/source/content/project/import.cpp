@@ -298,6 +298,7 @@ namespace hex::plugin::builtin::project {
                         closedFoldData.get(root / file.relativePath) = std::move(states);
                     }
                     patternFile.setSize(0);
+                    patternFile.seek(0);
                     if (!patternFile.writeString(code))
                         continue;
                 }

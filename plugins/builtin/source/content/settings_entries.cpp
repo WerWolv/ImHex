@@ -911,6 +911,14 @@ for (const auto &path : m_paths) {
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.auto_indent"_unlocalized, true);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.disable_folds"_unlocalized, false);
             ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, {}, "hex.builtin.setting.pattern_editor.show_white_spaces"_unlocalized, false);
+            auto saveTabsSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.formatting"_unlocalized, "hex.builtin.setting.pattern_editor.save_tabs"_unlocalized, false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.formatting"_unlocalized, "hex.builtin.setting.pattern_editor.trim_whitespace"_unlocalized, false)
+            .setEnabledCallback([saveTabsSetting] {
+                // todo: add Trim Whitespace support for spaces
+                const auto &checkBox = static_cast<Widgets::Checkbox &>(saveTabsSetting.getWidget());
+                return checkBox.isChecked();
+            });
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.pattern_editor"_unlocalized, "hex.builtin.setting.pattern_editor.formatting"_unlocalized, "hex.builtin.setting.pattern_editor.final_newline"_unlocalized, false);
         }
 
         /* Folders */

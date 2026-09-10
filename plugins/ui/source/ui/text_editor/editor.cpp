@@ -7,6 +7,7 @@
 #include <utility>
 #include <wolv/utils/string.hpp>
 #include <popups/popup_question.hpp>
+#include <hex/helpers/formatting.hpp>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
@@ -87,7 +88,7 @@ namespace hex::ui {
     }
 
     void Lines::appendLine(const std::string &value) {
-        auto text = wolv::util::replaceStrings(wolv::util::preprocessText(value), "\000", ".");
+        auto text = wolv::util::replaceStrings(value, "\000", ".");
         if (text.empty())
             return;
         auto maxColumn = stringCharacterCount(text);
@@ -104,7 +105,7 @@ namespace hex::ui {
     }
 
     void TextEditor::appendLine(const std::string &value) {
-       m_lines.appendLine(value);
+        m_lines.appendLine(value);
         m_lines.setCursorPosition(m_lines.lineCoordinates(m_lines.size() - 1, 0), false);
         m_lines.m_unfoldedLines.back().m_colorized = false;
         m_lines.ensureCursorVisible();
@@ -825,7 +826,7 @@ namespace hex::ui {
     void TextEditor::doPaste(const char *clipText) {
         UndoRecord u;
         if (clipText != nullptr) {
-            auto clipTextStr = wolv::util::preprocessText(clipText);
+            auto clipTextStr = preprocessPattern(clipText, getTabSize());
 
             u.m_before = m_lines.m_state;
 

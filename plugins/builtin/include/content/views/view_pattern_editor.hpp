@@ -31,9 +31,12 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool hasPendingData(prv::Provider *provider) const;
         void setChangedCallback(std::function<void(prv::Provider *)> callback);
         [[nodiscard]] bool hasProviderSpecificSource(prv::Provider *provider) const;
+        void setTabSize(i32 value);
+        i32 getTabSize() const { return m_tabSize; }
 
     private:
         FileBackedProviderData<std::string> m_perProviderSource;
+        u32 m_tabSize = 4;
     };
 
     using IdentifierHighlighter = hex::plugin::builtin::IdentifierHighlighter;
@@ -123,12 +126,12 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.suggest_patterns"> m_suggestSupportedPatterns = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.search_patterns_online"> m_searchPatternsOnline = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.auto_apply_patterns"> m_autoApplyPatterns = false;
-        ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.tab_size"> m_tabSize = 4;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.show_white_spaces"> m_showWhiteSpaces = false;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.disable_folds"> m_codeFoldsDisabled = false;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.syntactic_highlighting"> m_colorizeSyntax = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.semantic_highlighting"> m_colorizeIdentifiers = true;
         ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.auto_indent"> m_autoIndent = true;
+        ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.pattern_editor", "hex.builtin.setting.pattern_editor.tab_size"> m_tabSize = 4;
 
         PerProvider<ui::VisualizerDrawer> m_visualizerDrawer;
         bool m_tooltipJustOpened = false;

@@ -341,7 +341,11 @@ namespace hex::ui {
                 if (currentTokenId < 0) {
                     return result;
                 }
-                line = m_unfoldedLines[m_curr->location.line - 1];
+                const auto unfoldedLineLocation = m_curr->location.line - 1;
+                if (unfoldedLineLocation >= m_unfoldedLines.size()) {
+                    return result;
+                }
+                line = m_unfoldedLines[unfoldedLineLocation];
                 size_t stringIndex = line.columnIndex(m_curr->location.column);
                 std::string currentChar = std::string(1, line[static_cast<u64>(stringIndex - 1)]);
                 location = m_curr->location;

@@ -160,6 +160,10 @@ namespace hex::plugin::builtin::recent {
                         .data           = jsonData
                     };
 
+                    if (entry.displayName.empty()) {
+                        entry.displayName = recentFile.getPath().filename().string();
+                    }
+
                     // Do not add entry twice
                     if (!alreadyAddedProviders.insert(entry).second)
                         continue;
@@ -333,6 +337,11 @@ namespace hex::plugin::builtin::recent {
                 // Copy to avoid changing list while iteration
                 auto recentEntries = s_recentEntries;
                 for (auto &recentEntry : recentEntries) {
+                    if (recentEntry.displayName.empty()) {
+                        // recent entry is invalid, happens when items are removed externally or from the projects view
+                        continue;
+                    }
+
                     if (menu::menuItemEx(recentEntry.displayName.c_str(), getProviderIcon(UntranslatedString(recentEntry.type)))) {
                         loadRecentEntry(recentEntry);
                     }
