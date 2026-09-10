@@ -141,8 +141,9 @@ TEST_SEQUENCE("EscapeCodepoints") {
 };
 
 TEST_SEQUENCE("EncodingFileTable") {
-    // "HEX BYTES=text" per line. An unmapped byte in 0x00-0x7F is standard ASCII.
+    // "HEX BYTES=text" per line. A byte with no line of its own has no value.
     const hex::EncodingFile table(hex::EncodingFile::Type::Thingy, std::string(
+        "41=A\n"
         "80=\xCE\xB1\n"
         "81=\xCE\xB2\n"
         "8140=\xE3\x81\x82\n"));
@@ -156,6 +157,10 @@ TEST_SEQUENCE("EncodingFileTable") {
     TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x81, 0x40 }) == "\xE3\x81\x82");
     TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x41 }) == "A");
     TEST_ASSERT(table.isFullyMapped(std::vector<u8>{ 0x80, 0x41 }));
+
+    // The table gives 0x42 no value, so it does not decode.
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x42 }) == ".");
+    TEST_ASSERT(!table.isFullyMapped(std::vector<u8>{ 0x42 }));
     TEST_ASSERT(!table.isFullyMapped(std::vector<u8>{ 0x90 }));
     TEST_ASSERT(table.canEncode());
     TEST_ASSERT(table.encodeAll("\xCE\xB1\xCE\xB2").value() == (std::vector<u8>{ 0x80, 0x81 }));

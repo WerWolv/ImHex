@@ -411,23 +411,6 @@ namespace hex {
             m_shortestSequence = std::min(m_shortestSequence, keySize);
         }
 
-        // An unmapped byte in 0x00-0x7F is standard ASCII, where it is its own character.
-        auto &byteMapping = (*m_mapping)[1];
-        for (int byte = 0x00; byte <= 0x7F; byte++) {
-            std::vector<u8> key { static_cast<u8>(byte) };
-            if (byteMapping.contains(key))
-                continue;
-
-            std::string text(1, char(byte));
-            byteMapping.emplace(key, text);
-
-            auto &reverseBucket = (*m_reverseMapping)[text.size()];
-            if (!reverseBucket.contains(text))
-                reverseBucket.emplace(text, key);
-        }
-        m_longestSequence = std::max(m_longestSequence, u64(1));
-        m_shortestSequence = std::min(m_shortestSequence, u64(1));
-
         // Prefix-free is sufficient, not necessary; the full test is Sardinas-Patterson.
         if (!m_ambiguousEncoding) {
             std::ranges::sort(encodedValues);
