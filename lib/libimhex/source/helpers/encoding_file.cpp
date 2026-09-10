@@ -18,55 +18,6 @@ namespace hex {
 
     namespace {
 
-        // ImHex names its tables after their purpose, not the encoding. Remove an entry once
-        // its file is renamed to the standard name in ImHex-Patterns.
-        constexpr static auto EncodingNameAliases = std::to_array<std::pair<std::string_view, std::string_view>>({
-            { "us-ascii",     "ascii"                  },
-            { "utf-8",        "utf8"                   },
-
-            { "cp437",        "ascii_oem"              },
-            { "ibm437",       "ascii_oem"              },
-            { "cp1252",       "ascii_ansi"             },
-            { "windows-1252", "ascii_ansi"             },
-
-            { "iso-8859-2",   "eastern_europe_iso"     },
-            { "windows-1250", "eastern_europe_windows" },
-            { "iso-8859-5",   "cyrillic_iso"           },
-            { "windows-1251", "cyrillic_windows"       },
-            { "cp866",        "cyrillic_cp866"         },
-            { "ibm866",       "cyrillic_cp866"         },
-            { "koi8-r",       "cyrillic_koi8_r"        },
-            { "koi8-u",       "cyrillic_koi8_u"        },
-            { "iso-8859-6",   "arabic_iso"             },
-            { "windows-1256", "arabic_windows"         },
-            { "iso-8859-7",   "greek_iso"              },
-            { "windows-1253", "greek_windows"          },
-            { "iso-8859-8",   "hebrew_iso"             },
-            { "windows-1255", "hebrew_windows"         },
-            { "iso-8859-9",   "turkish_iso"            },
-            { "windows-1254", "turkish_windows"        },
-            { "iso-8859-13",  "baltic_iso"             },
-            { "windows-1257", "baltic_windows"         },
-            { "windows-874",  "thai"                   },
-            { "windows-1258", "vietnamese"             },
-            { "iso-6937",     "iso_6937"               },
-
-            { "cp037",        "ebcdic"                 },
-            { "ibm037",       "ebcdic"                 },
-
-            { "mac",          "macintosh"              },
-            { "x-mac-roman",  "macintosh"              },
-
-            { "shift_jis",    "shiftjis"               },
-            { "shift-jis",    "shiftjis"               },
-            { "sjis",         "shiftjis"               },
-            { "cp932",        "ms932"                  },
-            { "windows-31j",  "ms932"                  },
-            { "euc-jp",       "euc_jp"                 },
-            { "euc-kr",       "euc_kr"                 },
-            { "jis_x0201",    "jis_x_0201"             },
-        });
-
         /**
          * @brief Reads the right hand side of a table line
          *
@@ -438,26 +389,8 @@ namespace hex {
 
         auto path = findEncodingFile(name);
 
-        // Rejects a bare file stem when the encoding has a real name in the alias table.
-        if (path.has_value()) {
-            const bool nameIsBareStem = std::ranges::any_of(EncodingNameAliases, [&](const auto &entry) {
-                return entry.second == lowerCaseName;
-            }) && std::ranges::none_of(EncodingNameAliases, [&](const auto &entry) {
-                return entry.first == lowerCaseName;
-            });
-
-            if (nameIsBareStem)
-                path.reset();
-        }
-
         if (!path.has_value()) {
-            for (const auto &[alias, fileStem] : EncodingNameAliases) {
-                if (alias != lowerCaseName)
-                    continue;
-
-                path = findEncodingFile(fileStem);
-                break;
-            }
+            path = findEncodingFile(lowerCaseName);
         }
 
         EncodingFile encoding;
