@@ -234,7 +234,7 @@ namespace hex::ui {
         }();
 
         return {
-            .displayValue = (!isControlByte && isSingleCharacter(decoded)) ? std::string(decoded) : ".",
+            .displayValue = isControlByte ? "." : std::string(decoded),
             .advance = advance,
             .color = color
         };
