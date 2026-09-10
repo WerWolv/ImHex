@@ -37,6 +37,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/patches.cpp
         source/helpers/encoding_file.cpp
         source/helpers/string_codec.cpp
+        source/helpers/unicode.cpp
         source/helpers/logger.cpp
         source/helpers/tar.cpp
         source/helpers/debugging.cpp

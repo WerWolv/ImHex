@@ -732,7 +732,7 @@ namespace hex {
             runtime.reset();
 
             // A string pattern's value is real text everywhere through this codec.
-            static const auto stringCodec = std::make_shared<ImHexStringCodec>();
+            static const auto stringCodec = std::make_shared<PatternLanguageStringCodec>();
             runtime.setStringEncodeDecode(stringCodec);
 
             // #pragma encoding fails when this rejects its value.

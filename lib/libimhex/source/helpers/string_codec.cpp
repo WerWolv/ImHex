@@ -1,5 +1,6 @@
 #include <hex/helpers/string_codec.hpp>
 #include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/unicode.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 
 #include <algorithm>
@@ -67,7 +68,7 @@ namespace hex {
 
     }
 
-    pl::core::DecodeResult ImHexStringCodec::decode(std::span<const u8> bytes, std::string_view encoding, std::optional<size_t> maxCodepoints) const {
+    pl::core::DecodeResult PatternLanguageStringCodec::decode(std::span<const u8> bytes, std::string_view encoding, std::optional<size_t> maxCodepoints) const {
         const auto name = resolveEncodingName(encoding);
 
         if (const auto algorithmic = decodeAlgorithmicTextBounded(name, bytes, maxCodepoints); algorithmic.has_value())
@@ -83,7 +84,7 @@ namespace hex {
         return table->decodeBounded(bytes, maxCodepoints);
     }
 
-    std::optional<std::vector<u8>> ImHexStringCodec::encode(std::string_view text, std::string_view encoding) const {
+    std::optional<std::vector<u8>> PatternLanguageStringCodec::encode(std::string_view text, std::string_view encoding) const {
         const auto name = resolveEncodingName(encoding);
 
         // Its own encoder answers alone. A fallthrough would find a .tbl with the same name.
@@ -97,7 +98,7 @@ namespace hex {
         return table->encodeAll(text);
     }
 
-    std::vector<u8> ImHexStringCodec::encodeLossy(std::string_view text, std::string_view encoding) const {
+    std::vector<u8> PatternLanguageStringCodec::encodeLossy(std::string_view text, std::string_view encoding) const {
         const auto name = resolveEncodingName(encoding);
 
         // Every path below needs well-formed UTF-8, so do this once.

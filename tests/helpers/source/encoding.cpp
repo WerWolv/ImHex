@@ -1,6 +1,7 @@
 #include <hex/test/tests.hpp>
 
 #include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/unicode.hpp>
 
 #include <bit>
 #include <string>

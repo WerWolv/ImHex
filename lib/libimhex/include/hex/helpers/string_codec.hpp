@@ -16,7 +16,7 @@ namespace hex {
      *
      * This is the value a pattern script sees, through ==, std::print, and other operations.
      */
-    class ImHexStringCodec : public pl::core::StringEncodeDecode {
+    class PatternLanguageStringCodec : public pl::core::StringEncodeDecode {
     public:
         [[nodiscard]] pl::core::DecodeResult decode(std::span<const u8> bytes, std::string_view encoding,
             std::optional<size_t> maxCodepoints = std::nullopt) const override;
