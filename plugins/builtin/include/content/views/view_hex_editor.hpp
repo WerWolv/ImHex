@@ -111,11 +111,6 @@ namespace hex::plugin::builtin {
         */
         void applyEncoding(prv::Provider *provider);
 
-        /**
-        * Clears the declared character set if `code` has no `encoding` pragma in it.
-        */
-        void resetEncodingIfNotDeclared(const std::string &code);
-
         ui::HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;

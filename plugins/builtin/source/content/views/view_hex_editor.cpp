@@ -24,8 +24,6 @@
 
 #include <wolv/math_eval/math_evaluator.hpp>
 
-#include <pl/pattern_language.hpp>
-
 #include <content/providers/view_provider.hpp>
 
 #include <fonts/vscode_icons.hpp>
@@ -234,8 +232,7 @@ namespace hex::plugin::builtin {
 
     ViewHexEditor::~ViewHexEditor() {
         RequestChangeEncoding::unsubscribe(this);
-        EventPatternExecuted::unsubscribe(this);
-        EventPatternEditorChanged::unsubscribe(this);
+        EventPatternEvaluating::unsubscribe(this);
         RequestHexEditorSelectionChange::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
@@ -654,49 +651,6 @@ namespace hex::plugin::builtin {
 
     }
 
-    namespace {
-
-        /**
-         * @brief Reads the value of a script's `encoding` pragma, if it has one
-         *
-         * Reads the source text itself, not a flag set inside the pragma's own handler. The
-         * pattern editor's syntax-highlighting pass also fires pragma handlers, on source with
-         * no real run to match.
-         */
-        std::optional<std::string> declaredEncodingPragmaValue(const std::string &code) {
-            // Lexes as a real run does, so an inactive pragma does not read as a live one.
-            static const pl::PatternLanguage runtime;
-            const auto pragmaValues = runtime.getPragmaValues(code);
-
-            // The last pragma in source order wins, and a multimap keeps insertion order.
-            const auto [first, last] = pragmaValues.equal_range("encoding");
-            if (first == last)
-                return std::nullopt;
-
-            return std::prev(last)->second;
-        }
-
-    }
-
-    void ViewHexEditor::resetEncodingIfNotDeclared(const std::string &code) {
-        const auto declaredValue = declaredEncodingPragmaValue(code);
-
-        // A pragma naming an encoding nothing can resolve is exactly as undeclared as no pragma.
-        if (declaredValue.has_value() && getEncodingByName(*declaredValue) != nullptr)
-            return;
-
-        auto *provider = ImHexApi::Provider::get();
-        if (provider == nullptr)
-            return;
-
-        auto &encodingName = m_declaredEncodingNames.get(provider);
-        if (!encodingName.has_value())
-            return;
-
-        encodingName.reset();
-        this->applyEncoding(provider);
-    }
-
     void ViewHexEditor::applyEncoding(prv::Provider *provider) {
         std::optional<std::string> encodingName;
         if (provider != nullptr)
@@ -720,7 +674,6 @@ namespace hex::plugin::builtin {
             if (provider == nullptr || getEncodingByName(name) == nullptr)
                 return;
 
-            // This arrives once per keystroke with the same name in it.
             auto &encodingName = m_declaredEncodingNames.get(provider);
             if (encodingName == name)
                 return;
@@ -729,14 +682,20 @@ namespace hex::plugin::builtin {
             this->applyEncoding(provider);
         });
 
-        // A commented-out pragma fires nothing, so read the code directly.
-        EventPatternExecuted::subscribe(this, [this](const std::string &code) {
-            this->resetEncodingIfNotDeclared(code);
-        });
+        // Clears at the start of a run; the pragma handler sets it again if declared.
+        EventPatternEvaluating::subscribe(this, [this] {
+            TaskManager::doLater([this] {
+                auto *provider = ImHexApi::Provider::get();
+                if (provider == nullptr)
+                    return;
 
-        // The pragma applies on every keystroke, so clearing it must too.
-        EventPatternEditorChanged::subscribe(this, [this](const std::string &code) {
-            this->resetEncodingIfNotDeclared(code);
+                auto &encodingName = m_declaredEncodingNames.get(provider);
+                if (!encodingName.has_value())
+                    return;
+
+                encodingName.reset();
+                this->applyEncoding(provider);
+            });
         });
 
         RequestHexEditorSelectionChange::subscribe(this, [this](ImHexApi::HexEditor::ProviderRegion region) {
