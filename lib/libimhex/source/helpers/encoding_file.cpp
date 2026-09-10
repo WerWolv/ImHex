@@ -16,26 +16,6 @@ namespace hex {
 
     namespace {
 
-        // A control code gets its name, like "NUL". Bytes 0x20-0x7E get their own character.
-        constexpr static std::array<std::string_view, 128> StandardAsciiRange = {
-            "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",
-            "BS",  "TAB", "LF",  "VT",  "FF",  "CR",  "SO",  "SI",
-            "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",
-            "CAN", "EM",  "SUB", "ESC", "FS",  "GS",  "RS",  "US",
-            " ", "!", "\"", "#", "$", "%", "&", "'",
-            "(", ")", "*",  "+", ",", "-", ".", "/",
-            "0", "1", "2",  "3", "4", "5", "6", "7",
-            "8", "9", ":",  ";", "<", "=", ">", "?",
-            "@", "A", "B",  "C", "D", "E", "F", "G",
-            "H", "I", "J",  "K", "L", "M", "N", "O",
-            "P", "Q", "R",  "S", "T", "U", "V", "W",
-            "X", "Y", "Z",  "[", "\\", "]", "^", "_",
-            "`", "a", "b",  "c", "d", "e", "f", "g",
-            "h", "i", "j",  "k", "l", "m", "n", "o",
-            "p", "q", "r",  "s", "t", "u", "v", "w",
-            "x", "y", "z",  "{", "|", "}", "~", "DEL"
-        };
-
         enum class Utf8CodepointStatus {
             Complete,
 
@@ -139,6 +119,58 @@ namespace hex {
         });
 
         /**
+         * @brief Reads the right hand side of a table line
+         *
+         * A `\uXXXX` escape names a code point, so a table can map a byte to a character with no
+         * glyph of its own, such as a control code. `\\` is one literal backslash. Any other
+         * backslash stands for itself, so a table that already holds one keeps working.
+         */
+        std::string decodeTableValue(std::string_view value) {
+            std::string result;
+
+            for (size_t i = 0; i < value.size(); ) {
+                const bool isEscape = value[i] == '\\' && (i + 1) < value.size();
+
+                if (isEscape && value[i + 1] == '\\') {
+                    result += '\\';
+                    i += 2;
+                    continue;
+                }
+
+                std::optional<std::string> encoded;
+                if (isEscape && value[i + 1] == 'u' && (i + 6) <= value.size()) {
+                    u32 codepoint = 0;
+                    bool valid = true;
+                    for (size_t digit = 0; digit < 4; digit += 1) {
+                        const auto hexValue = hexCharToValue(value[i + 2 + digit]);
+                        if (!hexValue.has_value()) {
+                            valid = false;
+                            break;
+                        }
+
+                        codepoint = (codepoint << 4) | *hexValue;
+                    }
+
+                    // A surrogate half is not a scalar value, so it has no encoding.
+                    if (valid && (codepoint < 0xD800 || codepoint > 0xDFFF))
+                        encoded = wolv::util::utf32ToUtf8(std::u32string(1, char32_t(codepoint)));
+                }
+
+                // Anything unreadable stands for itself, so a stray backslash survives.
+                if (!encoded.has_value()) {
+                    result += value[i];
+                    i += 1;
+                    continue;
+                }
+
+                result += *encoded;
+                i += 6;
+            }
+
+            return result;
+        }
+
+        /**
          * @brief Finds the encodings/<stem>.tbl file, if there is one
          */
         std::optional<std::fs::path> findEncodingFile(std::string_view stem) {
@@ -151,28 +183,6 @@ namespace hex {
                     return path;
             }
 
-            return std::nullopt;
-        }
-
-        /**
-         * @brief Gets the real text a standard-ASCII byte decodes to, not a control code name
-         */
-        std::string standardAsciiCharacterFor(u8 byte) {
-            if (isControlCode(byte))
-                return std::string(1, char(byte));
-            return std::string(StandardAsciiRange[byte]);
-        }
-
-        /**
-         * @brief Finds the byte a control code name, such as "ENQ", stands for
-         */
-        std::optional<u8> controlCodeByteForName(std::string_view name) {
-            for (size_t byte = 0; byte < 0x20; byte += 1) {
-                if (StandardAsciiRange[byte] == name)
-                    return u8(byte);
-            }
-            if (name == "DEL")
-                return u8(0x7F);
             return std::nullopt;
         }
 
@@ -454,6 +464,7 @@ namespace hex {
 
             if (to.length() > 1)
                 to = wolv::util::trim(to);
+            to = decodeTableValue(to);
             if (to.empty())
                 to = " ";
 
@@ -461,23 +472,6 @@ namespace hex {
                 m_mapping->insert({ fromBytes.size(), {} });
 
             u64 keySize = fromBytes.size();
-
-            bool isStandardAsciiEntry = keySize == 1 && fromBytes[0] <= 0x7F;
-            if (isStandardAsciiEntry) {
-                // A table that redefines this range, like EBCDIC, gets the normal check.
-                if (to != StandardAsciiRange[fromBytes[0]])
-                    isStandardAsciiEntry = false;
-                else
-                    // Store the real byte; the control code name is not decoded text.
-                    to = standardAsciiCharacterFor(fromBytes[0]);
-            }
-
-            // A redefined byte can still name a different control code.
-            if (!isStandardAsciiEntry) {
-                if (const auto controlByte = controlCodeByteForName(to); controlByte.has_value())
-                    to = standardAsciiCharacterFor(*controlByte);
-            }
-
             u64 valueSize = to.size();
 
             if (!m_reverseMapping->contains(valueSize))
@@ -487,10 +481,8 @@ namespace hex {
             auto existingEntry = reverseBucket.find(to);
             if (existingEntry == reverseBucket.end()) {
                 auto iter = reverseBucket.emplace(to, fromBytes).first;
-
-                if (!isStandardAsciiEntry)
-                    encodedValues.emplace_back(iter->first);
-            } else if (existingEntry->second != fromBytes && !isStandardAsciiEntry) {
+                encodedValues.emplace_back(iter->first);
+            } else if (existingEntry->second != fromBytes) {
                 // Two byte sequences that give one value conflict. An identical repeated line does not.
                 m_ambiguousEncoding = true;
             }
@@ -501,14 +493,14 @@ namespace hex {
             m_shortestSequence = std::min(m_shortestSequence, keySize);
         }
 
-        // An unmapped byte in 0x00-0x7F defaults to standard ASCII.
+        // An unmapped byte in 0x00-0x7F is standard ASCII, where it is its own character.
         auto &byteMapping = (*m_mapping)[1];
         for (int byte = 0x00; byte <= 0x7F; byte++) {
             std::vector<u8> key { static_cast<u8>(byte) };
             if (byteMapping.contains(key))
                 continue;
 
-            std::string text = standardAsciiCharacterFor(u8(byte));
+            std::string text(1, char(byte));
             byteMapping.emplace(key, text);
 
             auto &reverseBucket = (*m_reverseMapping)[text.size()];
@@ -579,11 +571,10 @@ namespace hex {
     const Codepage& Codepage::ascii() {
         static const Codepage asciiCodepage = [] {
             Codepage result;
-            for (size_t byte = 0; byte < StandardAsciiRange.size(); byte += 1) {
-                // A control code's name is not a character, so its entry stays empty.
-                if (const auto text = StandardAsciiRange[byte]; isSingleCharacter(text))
-                    result.m_characters[byte] = text;
-            }
+
+            // A control code has no character to draw, so its entry stays empty.
+            for (size_t byte = 0x20; byte < 0x7F; byte += 1)
+                result.m_characters[byte] = std::string(1, char(byte));
 
             return result;
         }();

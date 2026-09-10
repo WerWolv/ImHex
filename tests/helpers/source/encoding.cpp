@@ -170,6 +170,33 @@ TEST_SEQUENCE("EncodingFileTable") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("EncodingFileCodepointEscapes") {
+    // \uXXXX names a character by code point, so a byte can map to one with no glyph.
+    const hex::EncodingFile table(hex::EncodingFile::Type::Thingy, std::string(
+        "00=\\u0000\n"
+        "80=\\u20AC\n"
+        "81=\\\\\n"
+        "82=\\q\n"
+        "83=\\uZZZZ\n"));
+
+    TEST_ASSERT(table.valid());
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x00 }) == std::string(1, '\0'));
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x80 }) == "\xE2\x82\xAC");
+
+    // A doubled backslash is one literal backslash.
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x81 }) == "\\");
+
+    // An unreadable escape stands for itself, so a stray backslash survives.
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x82 }) == "\\q");
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x83 }) == "\\uZZZZ");
+
+    // A control code name is just text now, not a control code.
+    const hex::EncodingFile named(hex::EncodingFile::Type::Thingy, std::string("80=NUL\n"));
+    TEST_ASSERT(named.decodeAll(std::vector<u8>{ 0x80 }) == "NUL");
+
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("EncodingFileAmbiguity") {
     // Two byte sequences with one decoded value cannot be encoded back.
     const hex::EncodingFile duplicateTarget(hex::EncodingFile::Type::Thingy, std::string(

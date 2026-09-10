@@ -27,6 +27,7 @@ set(AVAILABLE_TESTS
         EscapeCodepoints
         EncodingFileTable
         EncodingFileAmbiguity
+        EncodingFileCodepointEscapes
         SingleCharacterAndControlCodes
         EncodingLookupRejectsPathTraversal
         CodepageFromEncoding
