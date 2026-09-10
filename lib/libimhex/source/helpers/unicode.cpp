@@ -3,7 +3,6 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <array>
 #include <wolv/utils/string.hpp>
 
 namespace hex {

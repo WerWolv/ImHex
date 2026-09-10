@@ -35,6 +35,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/http_requests_emscripten.cpp
         source/helpers/opengl.cpp
         source/helpers/patches.cpp
+        source/helpers/codepage.cpp
         source/helpers/encoding_file.cpp
         source/helpers/string_codec.cpp
         source/helpers/unicode.cpp

@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/content_registry/hex_editor.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/codepage.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
 #include <hex/api/events/events_interaction.hpp>

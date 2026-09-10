@@ -1,5 +1,6 @@
 #include <hex/test/tests.hpp>
 
+#include <hex/helpers/codepage.hpp>
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/unicode.hpp>
 
