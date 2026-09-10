@@ -656,25 +656,19 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        // Returns the value of `code`'s `encoding` pragma, if it has one. `code`
-        // is the exact source a pattern run just executed, or the editor just
-        // settled on between keystrokes.
-        //
-        // Reads the answer from the source text itself, not a flag set inside
-        // the pragma's own handler. The pattern editor's own syntax-highlighting
-        // pass also fires pragma handlers, on source with no real run to match.
+        /**
+         * @brief Reads the value of a script's `encoding` pragma, if it has one
+         *
+         * Reads the source text itself, not a flag set inside the pragma's own handler. The
+         * pattern editor's syntax-highlighting pass also fires pragma handlers, on source with
+         * no real run to match.
+         */
         std::optional<std::string> declaredEncodingPragmaValue(const std::string &code) {
-            // Lexes the source the same way a real run does, so a commented-out
-            // or otherwise inactive pragma is not mistaken for a live one.
-            // Only lexes, so one instance serves every call. Both callers are
-            // main-thread event handlers.
+            // Lexes as a real run does, so an inactive pragma does not read as a live one.
             static const pl::PatternLanguage runtime;
             const auto pragmaValues = runtime.getPragmaValues(code);
 
-            // setDefaultEncoding() (pl::lib::libstd::registerPragmas()) just
-            // overwrites the default on each #pragma encoding it runs, so the
-            // last one in source order wins. A multimap keeps equal keys in
-            // insertion order, so that is the last of the range.
+            // The last pragma in source order wins, and a multimap keeps insertion order.
             const auto [first, last] = pragmaValues.equal_range("encoding");
             if (first == last)
                 return std::nullopt;
@@ -710,12 +704,7 @@ namespace hex::plugin::builtin {
 
         const EncodingFile *encoding = encodingName.has_value() ? getEncodingByName(*encodingName) : nullptr;
 
-        // The text column reads one character per byte. An encoding that spends
-        // more than one byte on a character, such as Shift-JIS, UTF-8, or an
-        // encoding with an emoji, cannot drive it. The column stays on ASCII.
-        //
-        // The custom encoding column shows these correctly. Its cells are not
-        // tied to one byte each.
+        // A multi-byte encoding cannot drive a one byte cell, so the column stays on ASCII.
         std::optional<Codepage> codepage;
         if (encoding != nullptr)
             codepage = Codepage::fromEncoding(*encoding);
@@ -731,8 +720,7 @@ namespace hex::plugin::builtin {
             if (provider == nullptr || getEncodingByName(name) == nullptr)
                 return;
 
-            // Patterns are re-evaluated constantly while one is being edited. This
-            // arrives once per keystroke with the same name in it.
+            // This arrives once per keystroke with the same name in it.
             auto &encodingName = m_declaredEncodingNames.get(provider);
             if (encodingName == name)
                 return;
@@ -741,14 +729,12 @@ namespace hex::plugin::builtin {
             this->applyEncoding(provider);
         });
 
-        // A commented-out pragma fires nothing. Reads the code directly instead
-        // of a flag from the pragma's own handler; see declaredEncodingPragmaValue().
+        // A commented-out pragma fires nothing, so read the code directly.
         EventPatternExecuted::subscribe(this, [this](const std::string &code) {
             this->resetEncodingIfNotDeclared(code);
         });
 
-        // The pragma applies on every keystroke via the editor's syntax
-        // highlighter, without needing Run. Clearing it needs the same immediacy.
+        // The pragma applies on every keystroke, so clearing it must too.
         EventPatternEditorChanged::subscribe(this, [this](const std::string &code) {
             this->resetEncodingIfNotDeclared(code);
         });

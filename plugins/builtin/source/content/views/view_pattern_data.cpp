@@ -48,12 +48,9 @@ namespace hex::plugin::builtin {
                     drawer->reset();
         });
 
-        // A declared string's value depends on the file's encoding, not just its
-        // bytes. Clear every pattern's cached display value so the next draw
-        // recomputes it, instead of waiting for the next run.
+        // A string's value follows the encoding, so drop each cached display value.
         EventFileEncodingChanged::subscribe(this, [this] {
-            // getRuntime() is per-provider; this event can fire with none active,
-            // such as while a provider is closing.
+            // getRuntime() is per-provider, and this can fire with none active.
             if (ImHexApi::Provider::isValid()) {
                 if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock()))
                     ContentRegistry::PatternLanguage::getRuntime().clearFormatCaches();

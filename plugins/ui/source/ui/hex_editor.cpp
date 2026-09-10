@@ -34,9 +34,7 @@ namespace hex::ui {
             if (size == 1) {
                 const auto c = static_cast<unsigned char>(data[0]);
 
-                // A byte with no character of its own falls through to the control
-                // pictures and Extended ASCII table below. This covers a control
-                // code and any byte the codepage does not map.
+                // A byte with no character falls through to the tables below.
                 if (m_codepage != nullptr) {
                     if (const auto text = (*m_codepage)[c]; !text.empty()) {
                         ImGui::TextUnformatted(text.data(), text.data() + text.size());
@@ -44,10 +42,7 @@ namespace hex::ui {
                     }
                 }
 
-                // A control code's picture is correct under any encoding: the byte
-                // value is the control code, whatever a custom codepage maps other
-                // bytes to. Unlike the CP1252 guess below, a declared codepage
-                // doesn't turn this off - only the Extended ASCII toggle does.
+                // A control code's picture is correct under any encoding.
                 if (m_extendedAscii && isControlCode(c)) {
                     constexpr static std::array ControlCharacters = {
                         "\u2400", "\u2401", "\u2402", "\u2403", "\u2404", "\u2405", "\u2406", "\u2407",
@@ -60,9 +55,7 @@ namespace hex::ui {
                     return;
                 }
 
-                // The Extended ASCII toggle fills undefined high bytes with CP1252, only when
-                // no `#pragma encoding` names a real table. A byte an explicit table leaves
-                // undefined shows a gap, not a guess from a different encoding.
+                // CP1252 fills undefined high bytes, but never over a declared table.
                 const bool allowExtendedAscii = m_extendedAscii && !m_codepageDeclared;
 
                 if (std::isprint(c) != 0) {
@@ -221,7 +214,7 @@ namespace hex::ui {
 
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
 
-        // A control code decodes to its real byte now, which has no glyph.
+        // A control code decodes to its real byte, which has no glyph.
         const bool isControlByte = advance == 1 && isControlCode(buffer[0]);
 
         const ImColor color = [&]{
@@ -610,9 +603,7 @@ namespace hex::ui {
 
                 } else {
                     asciiVisualizer.enableExtendedAscii(m_showExtendedAscii);
-                    // A multi-byte encoding, such as Shift-JIS or UTF-8, cannot fit in a
-                    // one-byte-wide ASCII cell. The separate custom encoding column still
-                    // handles those.
+                    // A multi-byte encoding cannot fit a one byte cell, but that column can.
                     asciiVisualizer.setCodepage(&m_codepage, m_codepageDeclared);
                     asciiVisualizer.draw(address, data, size, m_upperCaseHex);
                 }
@@ -914,8 +905,7 @@ namespace hex::ui {
                 ImGui::TableSetupColumn("");
 
                 if (m_showAscii) {
-                    // This names the column after the codepage it reads the data with.
-                    // The column title is the only place that name is visible.
+                    // The column title is the only place the codepage's name is visible.
                     const std::string columnName = m_codepage.getName().empty()
                                                        ? std::string("hex.ui.common.encoding.ascii"_lang.get())
                                                        : m_codepage.getName();

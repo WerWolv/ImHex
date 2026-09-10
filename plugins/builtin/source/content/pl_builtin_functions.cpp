@@ -16,12 +16,13 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        // Finds a bundled table by its file name, for example "shiftjis" for
-        // encodings/shiftjis.tbl; getEncodingByName() caches these for the life of
-        // the process, so returning a reference to one is safe. Otherwise treats
-        // `encoding` as raw table content and parses it into `storage`, which the
-        // caller owns - a script calling decode()/encode() with a varying inline
-        // table in a loop must not grow a process-lifetime cache without bound.
+        /**
+         * @brief Resolves a bundled table's name, or raw table content, to a table
+         *
+         * getEncodingByName() caches a bundled table for the life of the process. Raw content
+         * is parsed into `storage`, which the caller owns, so a script that passes a varying
+         * inline table in a loop cannot grow that cache without bound.
+         */
         const EncodingFile& resolveEncoding(const std::string &encoding, std::optional<EncodingFile> &storage) {
             if (const auto *knownEncoding = getEncodingByName(encoding); knownEncoding != nullptr)
                 return *knownEncoding;
@@ -105,8 +106,7 @@ namespace hex::plugin::builtin {
                 std::optional<EncodingFile> storage;
                 const auto &encodingFile = resolveEncoding(encoding, storage);
 
-                // decodeAll() alone would paper over an unmapped byte with a "."
-                // placeholder instead of reporting it, unlike encode() below.
+                // decodeAll() alone would show "." for an unmapped byte, not report it.
                 if (!encodingFile.isFullyMapped(bytes))
                     err::E0012.throwError("The given bytes contain a sequence that has no representation in this encoding.");
 

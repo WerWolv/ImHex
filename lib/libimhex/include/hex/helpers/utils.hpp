@@ -105,8 +105,11 @@ namespace hex {
     extern "C" void registerFont(const char *fontName, const char *fontPath);
     const std::map<std::fs::path, std::string>& getFonts();
 
-    // Escapes one byte for display. A byte with a C escape spelling gets it, a
-    // printable ASCII byte passes through, and anything else becomes \xNN.
+    /**
+     * @brief Escapes one byte for display
+     * @param byte The byte to escape
+     * @return Its C escape spelling, the byte itself when it is printable ASCII, or \xNN
+     */
     [[nodiscard]] std::string escapeByte(u8 byte);
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);

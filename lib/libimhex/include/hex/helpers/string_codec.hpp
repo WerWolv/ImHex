@@ -11,9 +11,11 @@
 
 namespace hex {
 
-    // Decodes and encodes a PatternString's bytes for the pattern language runtime.
-    // This is the value a pattern script sees, through ==, std::print, and other
-    // operations.
+    /**
+     * @brief Decodes and encodes a PatternString's bytes for the pattern language runtime
+     *
+     * This is the value a pattern script sees, through ==, std::print, and other operations.
+     */
     class ImHexStringCodec : public pl::core::StringEncodeDecode {
     public:
         [[nodiscard]] pl::core::DecodeResult decode(std::span<const u8> bytes, std::string_view encoding,

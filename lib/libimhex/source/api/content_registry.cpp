@@ -731,20 +731,16 @@ namespace hex {
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
             runtime.reset();
 
-            // A string pattern decodes and encodes through this codec. Its value
-            // is real text everywhere: comparisons, std::print, and the tree view.
+            // A string pattern's value is real text everywhere through this codec.
             static const auto stringCodec = std::make_shared<ImHexStringCodec>();
             runtime.setStringEncodeDecode(stringCodec);
 
-            // #pragma encoding fails when this rejects its value; the codec, not
-            // the evaluator, knows which encoding names mean anything.
+            // #pragma encoding fails when this rejects its value.
             runtime.setEncodingValidator([](const std::string &name) {
                 return getEncodingByName(name) != nullptr;
             });
 
-            // Keeps the hex editor's own encoding column in sync with a script's
-            // declared default encoding. A pragma runs on the pattern evaluation
-            // thread; only the main thread may change the hex editor's state.
+            // A pragma runs off the main thread, but only the main thread may change the hex editor.
             runtime.setOnDefaultEncodingChanged([](const std::string &name) {
                 TaskManager::doLater([name] {
                     ImHexApi::HexEditor::setEncoding(name);

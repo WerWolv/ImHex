@@ -16,9 +16,7 @@ namespace hex {
 
     namespace {
 
-        // Bytes 0x00-0x7F always mean standard ASCII. Bytes 0x00-0x1F and 0x7F get
-        // control-code names like "NUL" and "DEL". Bytes 0x20-0x7E get their own
-        // character. A table that redefines this range is rejected.
+        // A control code gets its name, like "NUL". Bytes 0x20-0x7E get their own character.
         constexpr static std::array<std::string_view, 128> StandardAsciiRange = {
             "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",
             "BS",  "TAB", "LF",  "VT",  "FF",  "CR",  "SO",  "SI",
@@ -42,7 +40,6 @@ namespace hex {
             Complete,
 
             // Too few bytes left for the code point the lead byte announces.
-            // More bytes would complete it.
             Incomplete,
 
             // No number of following bytes can make this a code point.
@@ -55,7 +52,9 @@ namespace hex {
             char32_t codepoint;   // status == Complete
         };
 
-        // Reads the one UTF-8 code point that `text` starts with.
+        /**
+         * @brief Reads the one UTF-8 code point that `text` starts with
+         */
         Utf8CodepointInfo readUtf8Codepoint(std::string_view text) {
             if (text.empty())
                 return { Utf8CodepointStatus::Incomplete, 0, 0 };
@@ -79,10 +78,7 @@ namespace hex {
                 codepoint = (codepoint << 6) | (u8(text[i]) & 0x3F);
             }
 
-            // RFC 3629 bars three things here: an overlong encoding, a UTF-16
-            // surrogate code point, and a value past the last code point in the
-            // Unicode codespace. The bit pattern above cannot rule these out by
-            // itself. Only the assembled code point can.
+            // RFC 3629 bars these three, and only the assembled code point can show them.
             if (codepoint < minCodepoint)
                 return { Utf8CodepointStatus::Invalid, 0, 0 };
             if (codepoint >= 0xD800 && codepoint <= 0xDFFF)
@@ -93,9 +89,7 @@ namespace hex {
             return { Utf8CodepointStatus::Complete, length, codepoint };
         }
 
-        // Maps a standard encoding name, an IANA name or a name a pattern author
-        // reaches for, to the ImHex table file that implements it. ImHex names
-        // its tables after their purpose, not the encoding. Remove an entry once
+        // ImHex names its tables after their purpose, not the encoding. Remove an entry once
         // its file is renamed to the standard name in ImHex-Patterns.
         constexpr static auto EncodingNameAliases = std::to_array<std::pair<std::string_view, std::string_view>>({
             { "us-ascii",     "ascii"                  },
@@ -144,11 +138,11 @@ namespace hex {
             { "jis_x0201",    "jis_x_0201"             },
         });
 
-        // Returns the path of the encodings/<stem>.tbl file, if there is one.
+        /**
+         * @brief Finds the encodings/<stem>.tbl file, if there is one
+         */
         std::optional<std::fs::path> findEncodingFile(std::string_view stem) {
-            // Discards any directory part (e.g. "../../../etc/passwd"). A pattern
-            // script can reach this code without the sandbox prompt that
-            // hex::file::open() requires. It must never read an arbitrary file.
+            // Discards any directory part. A script reaches this with no sandbox prompt.
             const auto fileName = std::fs::path(stem).filename().string() + ".tbl";
 
             for (const auto &basePath : paths::Encodings.read()) {
@@ -160,21 +154,18 @@ namespace hex {
             return std::nullopt;
         }
 
-        // The real text a standard-ASCII byte decodes to. A control code's
-        // entry in StandardAsciiRange is its name, like "NUL". Return the
-        // byte itself, not the name.
+        /**
+         * @brief Gets the real text a standard-ASCII byte decodes to, not a control code name
+         */
         std::string standardAsciiCharacterFor(u8 byte) {
             if (isControlCode(byte))
                 return std::string(1, char(byte));
             return std::string(StandardAsciiRange[byte]);
         }
 
-        // A table can name a control code without it being that byte's own
-        // standard-ASCII identity: EBCDIC reassigns control codes throughout,
-        // so one of its bytes might decode to "ENQ" while ASCII's own ENQ is a
-        // different byte. The name always means the same abstract control
-        // code wherever it appears, so look it up by name, not by the byte
-        // that produced it.
+        /**
+         * @brief Finds the byte a control code name, such as "ENQ", stands for
+         */
         std::optional<u8> controlCodeByteForName(std::string_view name) {
             for (size_t byte = 0; byte < 0x20; byte += 1) {
                 if (StandardAsciiRange[byte] == name)
@@ -185,8 +176,9 @@ namespace hex {
             return std::nullopt;
         }
 
-        // Reads a UTF-16 code unit from a little endian pair, byte-swapping it
-        // when `endian` asks for big endian instead.
+        /**
+         * @brief Reads one UTF-16 code unit from a byte pair in the given byte order
+         */
         u16 readUtf16Unit(std::span<const u8> unitBytes, std::endian endian) {
             u16 unit = u16(unitBytes[0]) | (u16(unitBytes[1]) << 8);
             if (endian == std::endian::big)
@@ -439,9 +431,7 @@ namespace hex {
     void EncodingFile::parse(const std::string &content) {
         m_tableContent = content;
 
-        // Every decoded value seen so far. Detects a duplicate target: the same
-        // decoded value produced by more than one byte sequence. A duplicate
-        // target makes the encoding ambiguous.
+        // Every decoded value so far. A repeat makes the encoding ambiguous.
         std::vector<std::string_view> encodedValues;
 
         for (const auto &line : wolv::util::splitString(m_tableContent, "\n")) {
@@ -474,20 +464,15 @@ namespace hex {
 
             bool isStandardAsciiEntry = keySize == 1 && fromBytes[0] <= 0x7F;
             if (isStandardAsciiEntry) {
-                // Some tables, like EBCDIC, redefine the 0x00-0x7F range. Check this
-                // byte like any other in that case.
+                // A table that redefines this range, like EBCDIC, gets the normal check.
                 if (to != StandardAsciiRange[fromBytes[0]])
                     isStandardAsciiEntry = false;
                 else
-                    // The file spelled this line out explicitly, matching the name
-                    // StandardAsciiRange gives a control code. Store the real byte,
-                    // not the name; the name was never meant to be decoded text.
+                    // Store the real byte; the control code name is not decoded text.
                     to = standardAsciiCharacterFor(fromBytes[0]);
             }
 
-            // A byte redefined away from its own ASCII identity can still name a
-            // control code - just a different one (EBCDIC does this throughout).
-            // Same fix as above, keyed by name instead of by this byte's position.
+            // A redefined byte can still name a different control code.
             if (!isStandardAsciiEntry) {
                 if (const auto controlByte = controlCodeByteForName(to); controlByte.has_value())
                     to = standardAsciiCharacterFor(*controlByte);
@@ -506,9 +491,7 @@ namespace hex {
                 if (!isStandardAsciiEntry)
                     encodedValues.emplace_back(iter->first);
             } else if (existingEntry->second != fromBytes && !isStandardAsciiEntry) {
-                // A different byte sequence produced the same decoded value: a real
-                // conflict. An exact duplicate line, with the same "from" and "to"
-                // values, is not a conflict.
+                // Two byte sequences that give one value conflict. An identical repeated line does not.
                 m_ambiguousEncoding = true;
             }
 
@@ -518,9 +501,7 @@ namespace hex {
             m_shortestSequence = std::min(m_shortestSequence, keySize);
         }
 
-        // A byte in 0x00-0x7F the table does not map defaults to standard ASCII.
-        // This skips the ambiguity check above (see isStandardAsciiEntry) and
-        // never replaces a real table entry.
+        // An unmapped byte in 0x00-0x7F defaults to standard ASCII.
         auto &byteMapping = (*m_mapping)[1];
         for (int byte = 0x00; byte <= 0x7F; byte++) {
             std::vector<u8> key { static_cast<u8>(byte) };
@@ -537,10 +518,7 @@ namespace hex {
         m_longestSequence = std::max(m_longestSequence, u64(1));
         m_shortestSequence = std::min(m_shortestSequence, u64(1));
 
-        // A prefix-free code decodes to one unique result: no encoded value is a
-        // prefix of another. This is sufficient but not necessary for uniqueness.
-        // The full test is the Sardinas-Patterson algorithm. This check runs in
-        // O(n log n) time.
+        // Prefix-free is sufficient, not necessary; the full test is Sardinas-Patterson.
         if (!m_ambiguousEncoding) {
             std::ranges::sort(encodedValues);
             for (size_t i = 1; i < encodedValues.size(); i++) {
@@ -562,15 +540,12 @@ namespace hex {
         if (const auto entry = encodings.find(name); entry != encodings.end())
             return entry->second.valid() ? &entry->second : nullptr;
 
-        // An encoding name is conventionally case-insensitive. So "UTF-8" and
-        // "utf-8" find the same table.
+        // An encoding name is conventionally case-insensitive.
         const auto lowerCaseName = toLower(name);
 
         auto path = findEncodingFile(name);
 
-        // Rejects a direct file match when `name` is the internal file stem for an
-        // encoding that already has a real name in EncodingNameAliases. A stem
-        // with no alias entry keeps working under its current name.
+        // Rejects a bare file stem when the encoding has a real name in the alias table.
         if (path.has_value()) {
             const bool nameIsBareStem = std::ranges::any_of(EncodingNameAliases, [&](const auto &entry) {
                 return entry.second == lowerCaseName;
@@ -596,8 +571,7 @@ namespace hex {
         if (path.has_value())
             encoding = EncodingFile(EncodingFile::Type::Thingy, *path);
 
-        // A failed lookup is cached too. So a name that does not exist does
-        // not reach the file system again on every following call.
+        // A failed lookup is cached too, so a bad name hits the file system once.
         const auto &result = encodings.emplace(name, std::move(encoding)).first->second;
         return result.valid() ? &result : nullptr;
     }
@@ -606,9 +580,7 @@ namespace hex {
         static const Codepage asciiCodepage = [] {
             Codepage result;
             for (size_t byte = 0; byte < StandardAsciiRange.size(); byte += 1) {
-                // This leaves the control codes empty. StandardAsciiRange spells a
-                // control code out as a name, like "NUL" or "SOH". A name is not a
-                // character that can be drawn.
+                // A control code's name is not a character, so its entry stays empty.
                 if (const auto text = StandardAsciiRange[byte]; isSingleCharacter(text))
                     result.m_characters[byte] = text;
             }
@@ -838,26 +810,17 @@ namespace hex {
         return std::nullopt;
     }
 
-    // Above ASCII, Unicode has no "printable" property to ask for. What the one
-    // line display needs is a code point the font draws something for, so this
-    // lists the General_Category values that draw nothing: Cc (C1 controls), Cf
-    // (format), and Zl/Zp (line and paragraph separators).
-    //
-    // It is a hand-kept subset of those categories, not a Unicode database. A
-    // code point it misses shows as itself, which is the safe way to be wrong.
-    //
-    // The two joiners, ZWJ and ZWNJ, are Cf but are left out on purpose. They
-    // are not invisible characters standing on their own: they decide how the
-    // characters on either side of them join. Escaping a ZWJ splits one emoji
-    // into its parts, and escaping a ZWNJ changes how Arabic and Indic text
-    // shapes. Hiding either one damages text that is visible.
-    //
-    // The other zero width code points here do not join anything. Escaping
-    // them only reveals something that could not otherwise be seen, which is
-    // the point.
+    /**
+     * @brief Checks whether the font draws something for a code point above ASCII
+     *
+     * Unicode has no "printable" property to ask for, so this lists the General_Category values
+     * that draw nothing: Cc, Cf, Zl and Zp. It is a hand-kept subset, not a Unicode database.
+     * A code point it misses shows as itself, which is the safe way to be wrong.
+     */
     static bool hasGlyphAboveAscii(char32_t codepoint) {
         if (codepoint <= 0x9F) return false;                            // Cc: C1 controls
         if (codepoint == 0xAD) return false;                            // Cf: soft hyphen
+        // ZWJ and ZWNJ are Cf, but they shape the text on each side, so they stay visible.
         if (codepoint == 0x200B) return false;                          // Cf: zero width space
         if (codepoint >= 0x200E && codepoint <= 0x200F) return false;   // Cf: LTR and RTL marks
         if (codepoint == 0x2028 || codepoint == 0x2029) return false;   // Zl, Zp: line/paragraph separator
@@ -893,17 +856,14 @@ namespace hex {
         for (size_t offset = 0; offset < text.size();) {
             const auto [status, length, codepoint] = readUtf8Codepoint(text.substr(offset));
             if (status != Utf8CodepointStatus::Complete) {
-                // A bad byte has no character to escape. \xNN means one raw
-                // byte, not "part of a broken sequence". Let the caller show
-                // "Invalid".
+                // A bad byte has no character to escape; the caller shows "Invalid".
                 return std::nullopt;
             }
 
             const bool isLast = offset + length == text.size();
 
             if (codepoint == 0) {
-                // A lone trailing NUL reads as a normal C-string end. Show
-                // "\0", not the general \x00 escape.
+                // A lone trailing NUL reads as a normal C-string end.
                 result += (!seenNull && isLast) ? "\\0" : "\\x00";
                 seenNull = true;
             } else {

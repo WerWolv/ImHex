@@ -127,8 +127,7 @@ namespace hex::plugin::builtin {
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
         FileBackedProviderData<std::optional<EncodingFile>> m_customEncodings;
 
-        // Distinct from m_customEncodings above. That is a view the user turns on
-        // and off and saves with the project.
+        // Distinct from m_customEncodings, which is a view the user turns on and off.
         PerProvider<std::optional<std::string>> m_declaredEncodingNames;
 
         PerProvider<std::map<u64, color_t>> m_foregroundHighlights, m_backgroundHighlights;

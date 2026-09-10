@@ -527,12 +527,10 @@ namespace hex {
                             offset++;
                         }
 
-                        // A surrogate half is not a Unicode scalar value on its own,
-                        // so it has no UTF-8 encoding. \U names a code point past
-                        // U+FFFF directly, so a surrogate pair is never needed.
+                        // A surrogate half is not a scalar value, so it has no encoding.
                         if (codepoint >= 0xD800 && codepoint <= 0xDFFF) return {};
 
-                        // Rejects a code point past U+10FFFF for us.
+                        // utf32ToUtf8() rejects a code point past U+10FFFF for us.
                         const auto encoded = wolv::util::utf32ToUtf8(std::u32string(1, char32_t(codepoint)));
                         if (!encoded.has_value()) return {};
 

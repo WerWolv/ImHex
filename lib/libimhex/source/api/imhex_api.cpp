@@ -102,11 +102,7 @@ namespace hex {
                 return *s_hoveringFunctions;
             }
 
-            // Holds the encoding for the provider on screen only. A background
-            // provider's own encoding matters only while its own patterns draw.
-            //
-            // Set on the main thread, read from the pattern-evaluation thread on
-            // every hex::encode()/hex::decode() call - guard both with a mutex.
+            // Set on the main thread, read on the pattern evaluation thread, so a mutex guards both.
             static AutoReset<std::optional<std::string>> s_currentEncodingName;
             static std::mutex s_currentEncodingNameMutex;
             void setCurrentEncodingName(std::optional<std::string> name) {
@@ -119,9 +115,7 @@ namespace hex {
                     *s_currentEncodingName = std::move(name);
                 }
 
-                // Posted outside the lock: a subscriber's handler runs inline on this
-                // thread and can itself call getEncodingName(), which takes the same,
-                // non-recursive mutex.
+                // Posted outside the lock, because a handler can call getEncodingName().
                 EventFileEncodingChanged::post();
             }
 

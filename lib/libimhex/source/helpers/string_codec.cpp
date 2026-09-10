@@ -9,7 +9,9 @@ namespace hex {
 
     namespace {
 
-        // Resolves to `encoding` if non-empty, else the document's declared encoding, else UTF-8.
+        /**
+         * @brief Resolves to `encoding`, else the document's declared encoding, else UTF-8
+         */
         std::string resolveEncodingName(std::string_view encoding) {
             if (!encoding.empty())
                 return std::string(encoding);
@@ -20,13 +22,11 @@ namespace hex {
             return "UTF-8";
         }
 
-        // Encodes `text` under the algorithmic encoding `name` names. Returns
-        // std::nullopt for a name isAlgorithmicEncodingName() rejects, and for
-        // a `text` that is not valid UTF-8.
+        /**
+         * @brief Encodes text under the algorithmic Unicode encoding `name` names
+         */
         std::optional<std::vector<u8>> encodeAlgorithmicText(std::string_view name, std::string_view text) {
-            // Checked once here, for every target. encodeUtf8() alone would copy
-            // a malformed sequence straight through: its input is meant to be
-            // valid UTF-8 already, so it has nothing to check against.
+            // Checked once here. encodeUtf8() trusts its input and would copy a bad sequence.
             if (!isValidUtf8(text))
                 return std::nullopt;
 
@@ -44,8 +44,9 @@ namespace hex {
             return std::nullopt;
         }
 
-        // Replaces each malformed or truncated UTF-8 sequence in `text` with U+FFFD,
-        // so the result is always well-formed UTF-8.
+        /**
+         * @brief Replaces each malformed or truncated UTF-8 sequence with U+FFFD
+         */
         std::string sanitizeUtf8(std::string_view text) {
             std::string result;
 
@@ -85,10 +86,7 @@ namespace hex {
     std::optional<std::vector<u8>> ImHexStringCodec::encode(std::string_view text, std::string_view encoding) const {
         const auto name = resolveEncodingName(encoding);
 
-        // An algorithmic name is answered by its own encoder alone. Falling
-        // through on failure would find a .tbl table under the same name -
-        // "UTF-8" resolves to encodings/utf8.tbl - and quietly encode with it
-        // instead of reporting that the text does not fit.
+        // Its own encoder answers alone. A fallthrough would find a .tbl with the same name.
         if (isAlgorithmicEncodingName(name))
             return encodeAlgorithmicText(name, text);
 
@@ -102,12 +100,10 @@ namespace hex {
     std::vector<u8> ImHexStringCodec::encodeLossy(std::string_view text, std::string_view encoding) const {
         const auto name = resolveEncodingName(encoding);
 
-        // Every path below needs well-formed UTF-8, so sanitize once up front
-        // rather than per encoder.
+        // Every path below needs well-formed UTF-8, so do this once.
         const std::string sanitized = sanitizeUtf8(text);
 
-        // Sanitized text is always valid UTF-8, so an algorithmic encoding
-        // always has an answer for it.
+        // Sanitized text is valid UTF-8, so an algorithmic encoding always has an answer.
         if (isAlgorithmicEncodingName(name))
             return encodeAlgorithmicText(name, sanitized).value_or(std::vector<u8>{});
 
@@ -115,14 +111,10 @@ namespace hex {
         if (table == nullptr)
             return {};
 
-        // U+FFFD when this encoding has a byte for it, '?' otherwise. Most single byte
-        // codepages have no byte for U+FFFD at all.
+        // U+FFFD when the encoding has a byte for it. Most single byte codepages do not.
         const auto replacement = table->getBytesFor("\xEF\xBF\xBD").value_or(table->getBytesFor("?").value_or(std::pair<std::vector<u8>, size_t>{}));
 
-        // Builds bytes directly, one matched or replaced code point at a time, instead
-        // of through encodeAll(): encodeAll() refuses an ambiguous table outright (see
-        // canEncode()), but a lossy write already accepts approximation, so ambiguity
-        // should not block it.
+        // Not encodeAll(), which refuses an ambiguous table. A lossy write accepts approximation.
         std::string_view remaining = sanitized;
 
         std::vector<u8> result;

@@ -352,9 +352,15 @@ namespace hex::ui {
             }
         }
 
-        // The codepage the text column reads the data with. Unlike the custom
-        // encoding below, this is not a separate view the user switches on.
-        // ASCII is simply no longer the only possible codepage.
+        /**
+         * @brief Sets the codepage the text column reads the data with
+         *
+         * Unlike the custom encoding below, this is not a separate view the user switches on.
+         * ASCII is simply no longer the only possible codepage.
+         *
+         * @param codepage The codepage to read with
+         * @param declared Whether something declared it, rather than it being the default
+         */
         void setCodepage(const Codepage &codepage, bool declared) {
             m_codepage = codepage;
             m_codepageDeclared = declared;
