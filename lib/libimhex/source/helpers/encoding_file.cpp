@@ -842,7 +842,6 @@ namespace hex {
 
     std::optional<std::string> escapeControlCharacters(std::string_view text) {
         std::string result;
-        bool seenNull = false;
 
         for (size_t offset = 0; offset < text.size();) {
             const auto [status, length, codepoint] = readUtf8Codepoint(text.substr(offset));
@@ -851,16 +850,7 @@ namespace hex {
                 return std::nullopt;
             }
 
-            const bool isLast = offset + length == text.size();
-
-            if (codepoint == 0) {
-                // A lone trailing NUL reads as a normal C-string end.
-                result += (!seenNull && isLast) ? "\\0" : "\\x00";
-                seenNull = true;
-            } else {
-                result += escapeCodepoint(codepoint);
-            }
-
+            result += escapeCodepoint(codepoint);
             offset += length;
         }
 

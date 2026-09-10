@@ -131,8 +131,8 @@ TEST_SEQUENCE("EscapeCodepoints") {
     TEST_ASSERT(hex::escapeCodepoint(char32_t(0xE0001)) == "\\U000E0001");  // language tag
     TEST_ASSERT(hex::escapeControlCharacters("ab\nc").value() == "ab\\nc");
 
-    // A lone trailing NUL reads as a normal C-string end.
-    TEST_ASSERT(hex::escapeControlCharacters("ab\0"s).value() == "ab\\0");
+    // Every NUL escapes the same way, wherever it sits.
+    TEST_ASSERT(hex::escapeControlCharacters("ab\0"s).value() == "ab\\x00");
     TEST_ASSERT(hex::escapeControlCharacters("a\0b"s).value() == "a\\x00b");
     TEST_ASSERT(!hex::escapeControlCharacters("\xFF").has_value());
 
