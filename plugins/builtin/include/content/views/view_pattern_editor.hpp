@@ -146,7 +146,7 @@ namespace hex::plugin::builtin {
         PerProvider<ImVec2> m_consoleScroll;
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
         PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
-        PerProvider<const std::vector<pl::core::Evaluator::StackTrace>*> m_callStack;
+        PerProvider<std::vector<pl::core::Location>> m_callStackLocations;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
 

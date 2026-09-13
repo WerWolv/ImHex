@@ -880,6 +880,7 @@ namespace hex::ui {
         ImVec2 &getCharAdvance() { return m_lines.getCharAdvance(); }
         void addClickableText(const std::string &text) {m_lines.addClickableText(text); }
         void setErrorMarkers(const ErrorMarkers &markers) { m_lines.m_errorMarkers = markers; }
+        void setErrorMarkers(ErrorMarkers &&markers) { m_lines.m_errorMarkers = std::move(markers); }
         Breakpoints &getBreakpoints() { return m_lines.getBreakpoints(); }
         void setBreakpoints(const Breakpoints &markers) { m_lines.m_breakpoints = markers; }
         void setLongestLineLength(u64 line) { m_longestLineLength = line; }

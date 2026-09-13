@@ -1486,9 +1486,8 @@ namespace hex::plugin::builtin {
                 };
 
                 ui::TextEditor::ErrorMarkers errorMarkers;
-                if (*m_callStack != nullptr && !(*m_callStack)->empty()) {
-                    for (const auto &frame : **m_callStack | std::views::reverse) {
-                        auto location = frame.node->getLocation();
+                if (!m_callStackLocations->empty()) {
+                    for (const auto &location : *m_callStackLocations | std::views::reverse) {
                         if (location.source != nullptr && location.source->mainSource) {
                             std::string message;
                             if (m_lastEvaluationError->has_value())
@@ -2000,15 +1999,26 @@ namespace hex::plugin::builtin {
 
             m_lastEvaluationResult = runtime.executeString(code, wolv::util::toUTF8String(path), envVars, inVariables);
             if (m_lastEvaluationResult != 0) {
-                m_lastEvaluationError.get(provider) = runtime.getEvalError();
-                m_lastCompileError.get(provider)    = runtime.getCompileErrors();
-                m_callStack.get(provider)           = &runtime.getInternals().evaluator->getCallStack();
-                m_showConsole.get(provider)         = true;
+                auto evalError = runtime.getEvalError();
+                auto compileErrors = runtime.getCompileErrors();
+                const auto &callStack = runtime.getInternals().evaluator->getCallStack();
+                std::vector<pl::core::Location> callStackLocations;
+                callStackLocations.reserve(callStack.size());
+                std::transform(callStack.begin(), callStack.end(), std::back_inserter(callStackLocations),
+                    [](const auto &frame) { return frame.node->getLocation(); });
+                TaskManager::doLater([this, provider, code, evalError = std::move(evalError), compileErrors = std::move(compileErrors), callStack = std::move(callStackLocations)] {
+                    m_lastEvaluationError.get(provider) = std::move(evalError);
+                    m_lastCompileError.get(provider)    = std::move(compileErrors);
+                    m_callStackLocations.get(provider)           = std::move(callStack);
+                    m_showConsole.get(provider)         = true;
+                    EventPatternExecuted::post(code);
+                });
+            } else {
+                TaskManager::doLater([this, provider, code] {
+                    m_showConsole.get(provider) = true;
+                    EventPatternExecuted::post(code);
+                });
             }
-
-            TaskManager::doLater([code] {
-                EventPatternExecuted::post(code);
-            });
         });
     }
 

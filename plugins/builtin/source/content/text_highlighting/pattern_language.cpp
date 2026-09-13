@@ -1506,11 +1506,14 @@ namespace hex::plugin::builtin {
                 }
             }
         }
-        ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-        if (editor != nullptr)
-            editor->setErrorMarkers(errorMarkers);
-        else
-            log::warn("Text editor not found, provider is null");
+        auto *view = m_viewPatternEditor;
+        TaskManager::doLater([view, markers = std::move(errorMarkers)]() mutable {
+            auto *editor = view->getTextEditor();
+            if (editor != nullptr)
+                editor->setErrorMarkers(std::move(markers));
+            else
+                log::warn("Text editor not found, provider is null");
+        });
     }
 
 // creates a map from variable names to a vector of token indices
@@ -2619,21 +2622,27 @@ namespace hex::plugin::builtin {
                 fixChains();
                 colorRemainingIdentifierTokens();
             }
-            ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-            if (editor != nullptr)
-                editor->clearErrorMarkers();
-            else
-                log::warn("Text editor not found, provider is null");
+            auto *view = m_viewPatternEditor;
+            TaskManager::doLater([view]() {
+                auto *editor = view->getTextEditor();
+                if (editor != nullptr)
+                    editor->clearErrorMarkers();
+                else
+                    log::warn("Text editor not found, provider is null");
+            });
+
             m_requiredInputs.compileErrors = getPatternLanguage()->getCompileErrors();
 
             if (!m_requiredInputs.compileErrors.empty())
                 renderErrors();
             else {
-                editor = m_viewPatternEditor->getTextEditor();
-                if (editor != nullptr)
-                    editor->clearErrorMarkers();
-                else
-                    log::warn("Text editor not found, provider is null");
+                TaskManager::doLater([view]() {
+                    auto *editor = view->getTextEditor();
+                    if (editor != nullptr)
+                        editor->clearErrorMarkers();
+                    else
+                        log::warn("Text editor not found, provider is null");
+                });
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());
