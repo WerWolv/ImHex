@@ -52,6 +52,7 @@
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/formatting.hpp>
+#include <hex/helpers/unicode.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
 
 #include <fmt/chrono.h>
@@ -1712,12 +1713,14 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPos(ImVec2(x, ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y));
                 m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
             } else {
-                const auto value = pattern->getFormattedValue();
+                const auto escapedValue = escapeControlCharacters(pattern->getFormattedValue());
+                const auto value = escapedValue.value_or("hex.builtin.inspector.invalid"_lang.get());
+                const bool valueValid = pattern->hasValidFormattedValue() && escapedValue.has_value();
 
-                if (!pattern->hasValidFormattedValue())
+                if (!valueValid)
                     ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
                 ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(value, 64), shiftHeld ? 40 : 0);
-                if (!pattern->hasValidFormattedValue())
+                if (!valueValid)
                     ImGui::PopStyleColor();
             }
 
