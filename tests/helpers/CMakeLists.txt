@@ -26,9 +26,13 @@ set(AVAILABLE_TESTS
         DecodeUnicodeTextBounded
         EscapeCodepoints
         EncodingFileTable
+        EncodingFileIncludes
+        EncodingFileAliases
+        EncodingFileMetadata
         EncodingFileAmbiguity
         EncodingFileCodepointEscapes
         SingleCharacterAndControlCodes
+        EncodingFileNames
         EncodingLookupRejectsPathTraversal
         CodepageFromEncoding
         DecodeByteStringEscapes

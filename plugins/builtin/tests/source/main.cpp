@@ -13,12 +13,52 @@
 #include <content/legacy_project_importer.hpp>
 #include <content/project.hpp>
 #include <content/recent.hpp>
+#include <content/helpers/encoding_chooser.hpp>
 
 #include <nlohmann/json.hpp>
 #include <wolv/io/file.hpp>
 
 using namespace hex;
 using namespace hex::plugin::builtin;
+
+TEST_SEQUENCE("Encoding/ChooserLabels") {
+    // The description reads first. The name goes below it, with the file after it when they differ.
+    const auto described = getEncodingChoiceLines({ "ASCII", "American Standard Code for Information Interchange", { } }, "ascii");
+    TEST_ASSERT(described.title == "American Standard Code for Information Interchange");
+    TEST_ASSERT(described.subtitle == "ASCII");
+
+    const auto renamed = getEncodingChoiceLines({ "KOI8-R", "Russian Cyrillic", { } }, "cyrillic_koi8_r");
+    TEST_ASSERT(renamed.title == "Russian Cyrillic");
+    TEST_ASSERT(renamed.subtitle == "KOI8-R (cyrillic_koi8_r)");
+
+    // With no description the name reads first, so the first line is never empty.
+    const auto plain = getEncodingChoiceLines({ "Thai", "", { } }, "thai");
+    TEST_ASSERT(plain.title == "Thai");
+    TEST_ASSERT(plain.subtitle.empty());
+
+    const auto noDescription = getEncodingChoiceLines({ "KOI8-R", "", { } }, "cyrillic_koi8_r");
+    TEST_ASSERT(noDescription.title == "KOI8-R");
+    TEST_ASSERT(noDescription.subtitle == "cyrillic_koi8_r");
+
+    // A table with no name of its own falls back to its file's name.
+    const auto unnamed = getEncodingChoiceLines({ "", "", { } }, "thai");
+    TEST_ASSERT(unnamed.title == "thai");
+    TEST_ASSERT(unnamed.subtitle.empty());
+
+    // A table answers to the name of every link that points at it, after its file's name.
+    const auto linked = getEncodingChoiceLines({ "KOI8-R", "Russian Cyrillic", { "koi8-r", "cp878" } }, "cyrillic_koi8_r");
+    TEST_ASSERT(linked.title == "Russian Cyrillic");
+    TEST_ASSERT(linked.subtitle == "KOI8-R (cyrillic_koi8_r, koi8-r, cp878)");
+
+    // With nothing else to say, the links alone fill the parentheses.
+    const auto onlyLinks = getEncodingChoiceLines({ "Macintosh", "Mac OS Roman", { "mac" } }, "macintosh");
+    TEST_ASSERT(onlyLinks.subtitle == "Macintosh (mac)");
+
+    // The file's name drops only its extension.
+    TEST_ASSERT(getEncodingFileName("cyrillic_koi8_r.tbl") == "cyrillic_koi8_r");
+
+    TEST_SUCCESS();
+};
 
 TEST_SEQUENCE("Providers/ReadWrite") {
     INIT_PLUGIN("Built-in");

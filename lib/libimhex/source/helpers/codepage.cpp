@@ -11,9 +11,8 @@ namespace hex {
         static const Codepage asciiCodepage = [] {
             Codepage result;
 
-            // A control code has no character to draw, so its entry stays empty.
-            for (size_t byte = 0x20; byte < 0x7F; byte += 1)
-                result.m_characters[byte] = std::string(1, char(byte));
+            for (size_t byte = 0; byte <= 0x7F; byte += 1)
+                result.m_characters[byte] = Codepoint(byte);
 
             return result;
         }();
@@ -30,15 +29,16 @@ namespace hex {
 
         for (size_t byte = 0; byte <= 0xFF; byte += 1) {
             const auto key = u8(byte);
-            if (isControlCode(key))
-                continue;
-
             const auto entry = encoding.lookup(std::span(&key, 1));
             if (!entry.has_value())
                 continue;
 
-            if (const auto text = entry->first; isSingleCharacter(text))
-                result.m_characters[byte] = text;
+            // A byte that draws as more than one code point does not fit in a cell.
+            const auto codepoint = decodeSingleCodepoint(entry->first);
+            if (!codepoint.has_value())
+                return std::nullopt;
+
+            result.m_characters[byte] = Codepoint(*codepoint);
         }
 
         return result;

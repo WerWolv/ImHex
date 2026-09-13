@@ -360,11 +360,9 @@ namespace hex::ui {
          * ASCII is simply no longer the only possible codepage.
          *
          * @param codepage The codepage to read with
-         * @param declared Whether something declared it, rather than it being the default
          */
-        void setCodepage(const Codepage &codepage, bool declared) {
+        void setCodepage(const Codepage &codepage) {
             m_codepage = codepage;
-            m_codepageDeclared = declared;
         }
 
         [[nodiscard]] const std::optional<EncodingFile>& getCustomEncoding() const {
@@ -517,7 +515,6 @@ namespace hex::ui {
 
         std::optional<EncodingFile> m_currCustomEncoding;
         Codepage m_codepage = Codepage::ascii();
-        bool m_codepageDeclared = false;
         std::vector<u64> m_encodingLineStartAddresses;
         mutable CollapsedStateStorage m_collapsedState;
 

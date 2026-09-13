@@ -21,6 +21,7 @@
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <popups/popup_file_chooser.hpp>
+#include <content/helpers/popup_encoding_chooser.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -741,7 +742,7 @@ namespace hex::plugin::builtin {
                             }
                         }
 
-                        ui::PopupFileChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [&](const auto &path) {
+                        PopupEncodingChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [&](const auto &path) {
                             encodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
                         });
                     }

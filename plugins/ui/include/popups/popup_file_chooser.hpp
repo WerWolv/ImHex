@@ -68,7 +68,7 @@ namespace hex::ui {
                     ImGui::PushID(&*fileIt);
 
                     bool selected = m_selectedFiles.contains(fileIt);
-                    if (ImGui::Selectable(pathNameString.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups)) {
+                    if (drawEntry(path, pathNameString, selected)) {
                         if (!m_multiple) {
                             m_selectedFiles.clear();
                             m_selectedFiles.insert(fileIt);
@@ -123,6 +123,19 @@ namespace hex::ui {
         }
 
         virtual std::string getEntryName(const std::fs::path &path) = 0;
+
+        /**
+         * @brief Draws one row of the list
+         * @param path The file the row stands for
+         * @param name The row's name, which getEntryName() gave
+         * @param selected Whether the row is selected
+         * @return Whether the user clicked the row
+         */
+        virtual bool drawEntry(const std::fs::path &path, const std::string &name, bool selected) {
+            std::ignore = path;
+
+            return ImGui::Selectable(name.c_str(), selected, ImGuiSelectableFlags_NoAutoClosePopups);
+        }
 
     private:
         static bool isSubpath(const std::fs::path &basePath, const std::fs::path &path) {

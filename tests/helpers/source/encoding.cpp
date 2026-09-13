@@ -204,6 +204,125 @@ TEST_SEQUENCE("EncodingFileCodepointEscapes") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("EncodingFileIncludes") {
+    const auto resolve = [](std::string_view name) -> std::optional<std::string> {
+        if (name == "base")
+            return std::string("-name Base\n41=A\n80=\xCE\xB1\n");
+        if (name == "loop")
+            return std::string("-include loop\n42=B\n");
+
+        return std::nullopt;
+    };
+
+    // An include fills only the bytes the table gives no value of its own.
+    const hex::EncodingFile table(hex::EncodingFile::Type::Thingy, std::string(
+        "-include base\n"
+        "-include no_such_table\n"
+        "41=Z\n"), resolve);
+
+    TEST_ASSERT(table.valid());
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x41 }) == "Z");
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x80 }) == "\xCE\xB1");
+
+    // A line the include loses to gives no value to encode back to, either.
+    TEST_ASSERT(!table.encodeAll("A").has_value());
+
+    // An included table's name is its own, so it does not come with it.
+    TEST_ASSERT(table.getName() == "Unknown");
+
+    // The expanded text needs no other table to parse again.
+    const hex::EncodingFile again(hex::EncodingFile::Type::Thingy, table.getTableContent(), resolve);
+    TEST_ASSERT(again.decodeAll(std::vector<u8>{ 0x41, 0x80 }) == "Z\xCE\xB1");
+
+    // A table that includes itself brings nothing a second time.
+    const hex::EncodingFile cycle(hex::EncodingFile::Type::Thingy, std::string("-include loop\n"), resolve);
+    TEST_ASSERT(cycle.decodeAll(std::vector<u8>{ 0x42 }) == "B");
+
+    // Only the header holds a directive, so an include below the entries is not a table.
+    const hex::EncodingFile late(hex::EncodingFile::Type::Thingy, std::string(
+        "42=B\n"
+        "-include base\n"), resolve);
+    TEST_ASSERT(!late.valid());
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("EncodingFileAliases") {
+    const auto resolve = [](std::string_view name) -> std::optional<std::string> {
+        if (name == "macintosh")
+            return std::string("-name Macintosh\n41=A\n");
+        if (name == "roman")
+            return std::string("-alias macintosh\n");
+        if (name == "loop")
+            return std::string("-alias loop\n");
+
+        return std::nullopt;
+    };
+
+    // A table whose only line is -alias is another name for the table it points at.
+    const hex::EncodingFile link(hex::EncodingFile::Type::Thingy, std::string("-alias macintosh\n"), resolve);
+    TEST_ASSERT(link.valid());
+    TEST_ASSERT(link.getName() == "Macintosh");
+    TEST_ASSERT(link.decodeAll(std::vector<u8>{ 0x41 }) == "A");
+
+    // A link to a link reaches the table at the end of the chain.
+    const hex::EncodingFile chain(hex::EncodingFile::Type::Thingy, std::string("-alias roman\n"), resolve);
+    TEST_ASSERT(chain.getName() == "Macintosh");
+
+    // A link with nothing at the end of it, or one that loops, is not an encoding.
+    const hex::EncodingFile broken(hex::EncodingFile::Type::Thingy, std::string("-alias no_such_table\n"), resolve);
+    TEST_ASSERT(!broken.valid());
+
+    const hex::EncodingFile loop(hex::EncodingFile::Type::Thingy, std::string("-alias loop\n"), resolve);
+    TEST_ASSERT(!loop.valid());
+
+    // Only the header holds a directive, so an alias below the entries is not a table.
+    const hex::EncodingFile late(hex::EncodingFile::Type::Thingy, std::string(
+        "42=B\n"
+        "-alias macintosh\n"), resolve);
+    TEST_ASSERT(!late.valid());
+
+    // A line the parser cannot read is a comment, which a link may hold.
+    const hex::EncodingFile commented(hex::EncodingFile::Type::Thingy, std::string(
+        "Mac OS Roman, under the name ImHex knows it by\n"
+        "-alias macintosh\n"), resolve);
+    TEST_ASSERT(commented.valid());
+    TEST_ASSERT(commented.getName() == "Macintosh");
+
+    // A link holds nothing of its own, so none of these is a table.
+    for (const auto &content : { "-alias macintosh\n41=Z\n", "-name Mac\n-alias macintosh\n",
+                                 "-alias macintosh\n-description A link\n", "-alias macintosh\n-alias roman\n" }) {
+        const hex::EncodingFile impure(hex::EncodingFile::Type::Thingy, std::string(content), resolve);
+        TEST_ASSERT(!impure.valid());
+    }
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("EncodingFileMetadata") {
+    // The name keeps the case it is written with.
+    const hex::EncodingFile table(hex::EncodingFile::Type::Thingy, std::string(
+        "-name Windows-1252\n"
+        "-description Latin 1, with the C1 range filled in\n"
+        "41=A\n"));
+
+    TEST_ASSERT(table.getName() == "Windows-1252");
+    TEST_ASSERT(table.getDescription() == "Latin 1, with the C1 range filled in");
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x41 }) == "A");
+
+    // A keyword a line only starts with is not the directive.
+    const hex::EncodingFile notADirective(hex::EncodingFile::Type::Thingy, std::string("-names x\n41=A\n"));
+    TEST_ASSERT(notADirective.getName() == "Unknown");
+
+    // A directive below the first entry is not a table.
+    const hex::EncodingFile late(hex::EncodingFile::Type::Thingy, std::string(
+        "41=A\n"
+        "-name Too Late\n"));
+    TEST_ASSERT(!late.valid());
+
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("EncodingFileAmbiguity") {
     // Two byte sequences with one decoded value cannot be encoded back.
     const hex::EncodingFile duplicateTarget(hex::EncodingFile::Type::Thingy, std::string(
@@ -241,6 +360,26 @@ TEST_SEQUENCE("SingleCharacterAndControlCodes") {
     TEST_ASSERT(!hex::isControlCode(0x41));
     TEST_ASSERT(!hex::isControlCode(0x80));
 
+    // A code point above ASCII is not one, whatever its low byte says.
+    TEST_ASSERT(!hex::isControlCode(U'\u2022'));
+    TEST_ASSERT(!hex::isControlCode(char32_t(0x0100)));
+
+    // C1 has no picture character of its own, so it is not one either.
+    TEST_ASSERT(!hex::isControlCode(char32_t(0x0085)));
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("EncodingFileNames") {
+    TEST_ASSERT(hex::encodingFileName("ascii") == "ascii");
+    TEST_ASSERT(hex::encodingFileName("Windows-1252") == "windows_1252");
+    TEST_ASSERT(hex::encodingFileName("ANSI_X3.4-1968") == "ansi_x3_4_1968");
+    TEST_ASSERT(hex::encodingFileName("Mac OS Roman") == "mac_os_roman");
+    TEST_ASSERT(hex::encodingFileName("urn:x-enc") == "urn_x_enc");
+
+    // A directory part becomes part of the name, so a lookup stays in the encodings directory.
+    TEST_ASSERT(hex::encodingFileName("../../etc/passwd") == "______etc_passwd");
+
     TEST_SUCCESS();
 };
 
@@ -257,24 +396,51 @@ TEST_SEQUENCE("EncodingLookupRejectsPathTraversal") {
 TEST_SEQUENCE("CodepageFromEncoding") {
     const auto &ascii = hex::Codepage::ascii();
     TEST_ASSERT(ascii.getName().empty());
-    TEST_ASSERT(ascii['A'] == "A");
-    TEST_ASSERT(ascii[' '] == " ");
-    TEST_ASSERT(ascii[0x00].empty());
-    TEST_ASSERT(ascii[0x7F].empty());
-    TEST_ASSERT(ascii[0x80].empty());
+    TEST_ASSERT(ascii['A'] == hex::Codepoint(U'A'));
+    TEST_ASSERT(ascii[' '] == hex::Codepoint(U' '));
+    TEST_ASSERT(ascii[0x00] == hex::Codepoint(U'\0'));
+    TEST_ASSERT(ascii[0x7F] == hex::Codepoint(0x7F));
+    TEST_ASSERT(ascii[0x80] == hex::Codepoint::Invalid);
     const hex::EncodingFile singleByte(hex::EncodingFile::Type::Thingy, std::string(
         "80=\xCE\xB1\n"
         "81=\xCE\xB2\n"));
     const auto codepage = hex::Codepage::fromEncoding(singleByte);
     TEST_ASSERT(codepage.has_value());
-    TEST_ASSERT((*codepage)[0x80] == "\xCE\xB1");
-    TEST_ASSERT((*codepage)[0x81] == "\xCE\xB2");
-    TEST_ASSERT((*codepage)[0x82].empty());
+    TEST_ASSERT((*codepage)[0x80] == hex::Codepoint(U'\u03B1'));
+    TEST_ASSERT((*codepage)[0x81] == hex::Codepoint(U'\u03B2'));
+    TEST_ASSERT((*codepage)[0x82] == hex::Codepoint::Invalid);
 
     // A table with a multi byte sequence cannot give every byte its own cell.
     const hex::EncodingFile multiByte(hex::EncodingFile::Type::Thingy, std::string(
         "8140=\xE3\x81\x82\n"));
     TEST_ASSERT(!hex::Codepage::fromEncoding(multiByte).has_value());
+
+    // A byte that draws as more than one code point cannot either.
+    const hex::EncodingFile multiCharacter(hex::EncodingFile::Type::Thingy, std::string(
+        "80=ab\n"));
+    TEST_ASSERT(!hex::Codepage::fromEncoding(multiCharacter).has_value());
+
+    // A control code's name is text, not a character, so this table is not a codepage.
+    const hex::EncodingFile namedControlCode(hex::EncodingFile::Type::Thingy, std::string(
+        "00=NUL\n"
+        "80=\xCE\xB1\n"));
+    TEST_ASSERT(!hex::Codepage::fromEncoding(namedControlCode).has_value());
+
+    // A table names a control code with its escape instead.
+    const hex::EncodingFile escapedControlCode(hex::EncodingFile::Type::Thingy, std::string(
+        "00=\\u0000\n"
+        "07=\\u2022\n"
+        "25=\\u000A\n"
+        "80=\xCE\xB1\n"));
+    const auto withControlCodes = hex::Codepage::fromEncoding(escapedControlCode);
+    TEST_ASSERT(withControlCodes.has_value());
+    TEST_ASSERT((*withControlCodes)[0x00] == hex::Codepoint(U'\0'));
+    TEST_ASSERT((*withControlCodes)[0x80] == hex::Codepoint(U'\u03B1'));
+
+    // The character decides what the byte stands for, not the byte itself.
+    TEST_ASSERT((*withControlCodes)[0x25] == hex::Codepoint(U'\u000A'));
+    TEST_ASSERT((*withControlCodes)[0x07] == hex::Codepoint(U'\u2022'));
+    TEST_ASSERT((*withControlCodes)[0x0A] == hex::Codepoint::Invalid);
 
     TEST_SUCCESS();
 };
