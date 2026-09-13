@@ -1712,7 +1712,13 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPos(ImVec2(x, ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y));
                 m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
             } else {
-                ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(pattern->getFormattedValue(), 64), shiftHeld ? 40 : 0);
+                const auto value = pattern->getFormattedValue();
+
+                if (!pattern->hasValidFormattedValue())
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
+                ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(value, 64), shiftHeld ? 40 : 0);
+                if (!pattern->hasValidFormattedValue())
+                    ImGui::PopStyleColor();
             }
 
             if (shiftHeld) {

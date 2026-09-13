@@ -95,4 +95,15 @@ namespace hex {
      */
     EVENT_DEF(RequestOpenCommandPalette);
 
+    /**
+     * @brief Requests that the current provider's text be read as a given character set
+     *
+     * This is the encoding the data itself is written in. It is not the
+     * custom encoding. The custom encoding is a separate view the user
+     * turns on and off.
+     *
+     * @param name the encoding's name, e.g. "macintosh" or "shift_jis"
+     */
+    EVENT_DEF(RequestChangeEncoding, std::string);
+
 }

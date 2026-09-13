@@ -422,44 +422,29 @@ namespace hex {
             return { };
     }
 
+    std::string escapeByte(u8 byte) {
+        switch (byte) {
+            case '\\': return "\\\\";
+            case '\a': return "\\a";
+            case '\b': return "\\b";
+            case '\f': return "\\f";
+            case '\n': return "\\n";
+            case '\r': return "\\r";
+            case '\t': return "\\t";
+            case '\v': return "\\v";
+            default:
+                if (std::isprint(byte))
+                    return std::string(1, char(byte));
+
+                return fmt::format("\\x{:02X}", byte);
+        }
+    }
+
     std::string encodeByteString(const std::vector<u8> &bytes) {
         std::string result;
 
-        for (u8 byte : bytes) {
-            if (std::isprint(byte) && byte != '\\') {
-                result += char(byte);
-            } else {
-                switch (byte) {
-                    case '\\':
-                        result += "\\\\";
-                    break;
-                    case '\a':
-                        result += "\\a";
-                    break;
-                    case '\b':
-                        result += "\\b";
-                    break;
-                    case '\f':
-                        result += "\\f";
-                    break;
-                    case '\n':
-                        result += "\\n";
-                    break;
-                    case '\r':
-                        result += "\\r";
-                    break;
-                    case '\t':
-                        result += "\\t";
-                    break;
-                    case '\v':
-                        result += "\\v";
-                    break;
-                    default:
-                        result += fmt::format("\\x{:02X}", byte);
-                    break;
-                }
-            }
-        }
+        for (u8 byte : bytes)
+            result += escapeByte(byte);
 
         return result;
     }
@@ -502,6 +487,9 @@ namespace hex {
                     case 'v':
                         result.push_back('\v');
                     break;
+                    case '0':
+                        result.push_back('\0');
+                    break;
                     case '\\':
                         result.push_back('\\');
                     break;
@@ -521,6 +509,32 @@ namespace hex {
                         }
 
                         result.push_back(byte);
+                    }
+                    break;
+                    case 'u':
+                    case 'U':
+                    {
+                        // \u names a code point with 4 hex digits, \U with 8.
+                        const u8 digitCount = escapeChar == 'u' ? 4 : 8;
+                        if ((offset + digitCount) > string.length()) return {};
+
+                        u32 codepoint = 0;
+                        for (u8 i = 0; i < digitCount; i++) {
+                            const auto hexValue = hexCharToValue(c());
+                            if (!hexValue.has_value()) return {};
+
+                            codepoint = (codepoint << 4) | hexValue.value();
+                            offset++;
+                        }
+
+                        // A surrogate half is not a scalar value, so it has no encoding.
+                        if (codepoint >= 0xD800 && codepoint <= 0xDFFF) return {};
+
+                        // utf32ToUtf8() rejects a code point past U+10FFFF for us.
+                        const auto encoded = wolv::util::utf32ToUtf8(std::u32string(1, char32_t(codepoint)));
+                        if (!encoded.has_value()) return {};
+
+                        result.insert(result.end(), encoded->begin(), encoded->end());
                     }
                     break;
                     default:

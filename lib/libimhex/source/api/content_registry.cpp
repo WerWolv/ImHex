@@ -18,6 +18,11 @@
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/tools.hpp>
 #include <hex/api/content_registry/views.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/string_codec.hpp>
+
+#include <pl/core/evaluator.hpp>
 
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/events/requests_provider.hpp>
@@ -725,6 +730,22 @@ namespace hex {
 
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
             runtime.reset();
+
+            // A string pattern's value is real text everywhere through this codec.
+            static const auto stringCodec = std::make_shared<PatternLanguageStringCodec>();
+            runtime.setStringEncodeDecode(stringCodec);
+
+            // #pragma encoding fails when this rejects its value.
+            runtime.setEncodingValidator([](const std::string &name) {
+                return getEncodingByName(name) != nullptr;
+            });
+
+            // A pragma runs off the main thread, but only the main thread may change the hex editor.
+            runtime.setOnDefaultEncodingChanged([](const std::string &name) {
+                TaskManager::doLater([name] {
+                    ImHexApi::HexEditor::setEncoding(name);
+                });
+            });
 
             if (provider != nullptr) {
                 runtime.setDataSource(provider->getBaseAddress(), provider->getActualSize(),

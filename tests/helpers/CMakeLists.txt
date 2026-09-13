@@ -20,6 +20,18 @@ set(AVAILABLE_TESTS
         ExtractBits
         EncodeByteString
         EncodeByteStringRoundTrip
+
+    # Encoding
+        DecodeUnicodeText
+        DecodeUnicodeTextBounded
+        EscapeCodepoints
+        EncodingFileTable
+        EncodingFileAmbiguity
+        EncodingFileCodepointEscapes
+        SingleCharacterAndControlCodes
+        EncodingLookupRejectsPathTraversal
+        CodepageFromEncoding
+        DecodeByteStringEscapes
 )
 
 if (NOT IMHEX_OFFLINE_BUILD)
@@ -34,6 +46,7 @@ endif ()
 
 add_executable(${PROJECT_NAME}
         source/common.cpp
+        source/encoding.cpp
         source/encoding_line_cache.cpp
         source/file.cpp
         source/net.cpp

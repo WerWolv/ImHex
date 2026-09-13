@@ -10,6 +10,7 @@
 #include <content/differing_byte_searcher.hpp>
 
 #include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_interaction.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
 
@@ -18,6 +19,7 @@
 #include <hex/helpers/default_paths.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
+
 #include <toasts/toast_notification.hpp>
 
 #include <wolv/math_eval/math_evaluator.hpp>
@@ -229,6 +231,8 @@ namespace hex::plugin::builtin {
     }
 
     ViewHexEditor::~ViewHexEditor() {
+        RequestChangeEncoding::unsubscribe(this);
+        EventPatternEvaluating::unsubscribe(this);
         RequestHexEditorSelectionChange::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
@@ -647,7 +651,53 @@ namespace hex::plugin::builtin {
 
     }
 
+    void ViewHexEditor::applyEncoding(prv::Provider *provider) {
+        std::optional<std::string> encodingName;
+        if (provider != nullptr)
+            encodingName = m_declaredEncodingNames.get(provider);
+
+        const EncodingFile *encoding = encodingName.has_value() ? getEncodingByName(*encodingName) : nullptr;
+
+        // A multi-byte encoding cannot drive a one byte cell, so the column stays on ASCII.
+        std::optional<Codepage> codepage;
+        if (encoding != nullptr)
+            codepage = Codepage::fromEncoding(*encoding);
+
+        const bool declared = encodingName.has_value();
+        m_hexEditor.setCodepage(codepage.value_or(Codepage::ascii()), declared);
+        ImHexApi::HexEditor::impl::setCurrentEncodingName(std::move(encodingName));
+    }
+
     void ViewHexEditor::registerEvents() {
+        RequestChangeEncoding::subscribe(this, [this](const std::string &name) {
+            auto *provider = ImHexApi::Provider::get();
+            if (provider == nullptr || getEncodingByName(name) == nullptr)
+                return;
+
+            auto &encodingName = m_declaredEncodingNames.get(provider);
+            if (encodingName == name)
+                return;
+
+            encodingName = name;
+            this->applyEncoding(provider);
+        });
+
+        // Clears at the start of a run; the pragma handler sets it again if declared.
+        EventPatternEvaluating::subscribe(this, [this] {
+            TaskManager::doLater([this] {
+                auto *provider = ImHexApi::Provider::get();
+                if (provider == nullptr)
+                    return;
+
+                auto &encodingName = m_declaredEncodingNames.get(provider);
+                if (!encodingName.has_value())
+                    return;
+
+                encodingName.reset();
+                this->applyEncoding(provider);
+            });
+        });
+
         RequestHexEditorSelectionChange::subscribe(this, [this](ImHexApi::HexEditor::ProviderRegion region) {
             auto provider = region.getProvider();
 
@@ -691,6 +741,8 @@ namespace hex::plugin::builtin {
                 m_hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
                 m_hexEditor.clearCustomEncoding();
             }
+
+            this->applyEncoding(newProvider);
 
             if (isSelectionValid()) {
                 EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });

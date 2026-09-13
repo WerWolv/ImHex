@@ -23,6 +23,7 @@
 
 #include <wolv/utils/string.hpp>
 
+#include <mutex>
 #include <utility>
 #include <numeric>
 
@@ -99,6 +100,23 @@ namespace hex {
             static AutoReset<std::map<u32, HoveringFunction>> s_hoveringFunctions;
             const std::map<u32, HoveringFunction>& getHoveringFunctions() {
                 return *s_hoveringFunctions;
+            }
+
+            // Set on the main thread, read on the pattern evaluation thread, so a mutex guards both.
+            static AutoReset<std::optional<std::string>> s_currentEncodingName;
+            static std::mutex s_currentEncodingNameMutex;
+            void setCurrentEncodingName(std::optional<std::string> name) {
+                {
+                    std::scoped_lock lock(s_currentEncodingNameMutex);
+
+                    if (*s_currentEncodingName == name)
+                        return;
+
+                    *s_currentEncodingName = std::move(name);
+                }
+
+                // Posted outside the lock, because a handler can call getEncodingName().
+                EventFileEncodingChanged::post();
             }
 
             static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
@@ -268,6 +286,15 @@ namespace hex {
 
         const std::optional<Region>& getHoveredRegion(const prv::Provider *provider) {
             return impl::s_hoveredRegion.get(provider);
+        }
+
+        std::optional<std::string> getEncodingName() {
+            std::scoped_lock lock(impl::s_currentEncodingNameMutex);
+            return *impl::s_currentEncodingName;
+        }
+
+        void setEncoding(const std::string &name) {
+            RequestChangeEncoding::post(name);
         }
 
     }
