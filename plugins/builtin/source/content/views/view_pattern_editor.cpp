@@ -245,6 +245,10 @@ namespace hex::plugin::builtin {
         return m_perProviderSource.bind(provider, path);
     }
 
+    void PatternSourceCode::unbind(prv::Provider *provider) {
+        m_perProviderSource.unbind(provider);
+    }
+
     std::optional<std::fs::path> PatternSourceCode::getBinding(prv::Provider *provider) const {
         return m_perProviderSource.getBinding(provider);
     }
@@ -1840,18 +1844,19 @@ namespace hex::plugin::builtin {
         ImGui::PopID();
     }
 
-    void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
+    bool ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
         std::string code;
         if (trackFile) {
             if (!m_sourceCode.bind(provider, path))
-                return;
+                return false;
             code = m_sourceCode.get(provider);
         } else {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid())
-                return;
+                return false;
 
             code = preprocessPattern(file.readString(), m_textEditor.get(provider).getTabSize());
+            m_sourceCode.unbind(provider);
             m_sourceCode.set(provider, code);
         }
 
@@ -1877,6 +1882,7 @@ namespace hex::plugin::builtin {
         TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider, path](auto&) {
             this->parsePattern(code, path, provider);
         });
+        return true;
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code, const std::fs::path &path, prv::Provider *provider) {
@@ -2566,18 +2572,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerHandlers() {
-        ContentRegistry::FileTypeHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
-            wolv::io::File file(path, wolv::io::File::Mode::Read);
-
+        ContentRegistry::FileTypeHandler::add({ ".hexpat", ".pat" }, [this](const std::fs::path &path) -> bool {
             if (!ImHexApi::Provider::isValid())
                 return false;
-
-            if (file.isValid()) {
-                RequestSetPatternLanguageCode::post(file.readString());
-                return true;
-            } else {
-                return false;
-            }
+            return this->loadPatternFile(path, ImHexApi::Provider::get(), true);
         }, ICON_VS_FILE_CODE);
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
@@ -3003,7 +3001,7 @@ namespace hex::plugin::builtin {
 
             std::error_code error;
             for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
-                if (entry.is_regular_file() && entry.path().extension() == ".hexpat")
+                if (entry.is_regular_file() && (entry.path().extension() == ".hexpat" || entry.path().extension() == ".pat"))
                     paths.push_back(entry.path());
             }
         }
@@ -3016,7 +3014,7 @@ namespace hex::plugin::builtin {
         };
 
         ui::PopupNamedFileChooser::open(
-            basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+            basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" }, { "Pattern Import File", "pat" } }, false,
             [this, createRuntime](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
                 static std::mutex mutex;
 

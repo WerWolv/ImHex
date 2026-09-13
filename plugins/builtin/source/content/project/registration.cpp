@@ -25,11 +25,40 @@ namespace hex::plugin::builtin {
             return ProjectManager::isFolderProject();
         });
         EventFileBackedProviderDataChanged::subscribe([](prv::Provider *provider, FileBackedProviderDataBase *data) {
-            if (!ProjectManager::isFolderProject())
+            auto &projectState = state();
+            if (!ProjectManager::isFolderProject() || projectState.loadingProject || projectState.storingProject ||
+                provider == nullptr || data == nullptr)
                 return;
 
-            if (provider != nullptr && data != nullptr && data->hasPendingData(provider) && !data->isBound(provider))
+            const auto typeId = data->getType().typeId;
+            if (const auto binding = data->getBinding(provider); binding.has_value()) {
+                std::fs::path associationPath;
+                if (!isPathInProject(*binding, ProjectManager::getProjectRoot(), associationPath)) {
+                    std::error_code error;
+                    associationPath = std::fs::absolute(*binding, error).lexically_normal();
+                    if (error)
+                        return;
+                }
+
+                auto &storedPath = projectState.associations[provider->getID()][typeId];
+                if (storedPath != associationPath) {
+                    storedPath = std::move(associationPath);
+                    scheduleAssociationSave();
+                }
+            } else if (data->hasPendingData(provider)) {
+                if (const auto associations = projectState.associations.find(provider->getID());
+                    associations != projectState.associations.end()) {
+                    associations->second.erase(typeId);
+                    if (associations->second.empty())
+                        projectState.associations.erase(associations);
+                }
                 scheduleAssociationSave();
+            } else if (const auto associations = projectState.associations.find(provider->getID());
+                       associations != projectState.associations.end() && associations->second.erase(typeId) > 0) {
+                if (associations->second.empty())
+                    projectState.associations.erase(associations);
+                scheduleAssociationSave();
+            }
         });
         EventFrameEnd::subscribe([] { processScheduledProjectMetadataSave(); });
         EventProviderOpened::subscribe([](prv::Provider *provider) {
