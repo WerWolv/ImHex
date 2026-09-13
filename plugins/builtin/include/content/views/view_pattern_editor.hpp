@@ -67,6 +67,7 @@ namespace hex::plugin::builtin {
 
             pl::core::Token::ValueType type;
             std::optional<pl::core::Token::Literal> value;
+            std::vector<std::string> cases;
         };
 
         enum class EnvVarType : u8

@@ -20,6 +20,7 @@
 #include <pl/core/lexer.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
+#include <pl/core/ast/ast_node_enum.hpp>
 
 
 #include <hex/helpers/fs.hpp>
@@ -1397,6 +1398,52 @@ namespace hex::plugin::builtin {
                                     variable.value = buffer;
                                 m_hasUnparsedChanges.get(provider) = true;
                             }
+                        } else if (!variable.cases.empty() && variable.type == pl::core::Token::ValueType::CustomType) {
+                            const auto variableValue = variable.value ? hex::get_or<std::string>(*variable.value, "") : "";
+                            const bool isDefaultSelected = variableValue.empty();
+
+                            const char* defaultLabel = "hex.builtin.view.pattern_editor.in_default_value"_lang;
+                            const char* previewText  = isDefaultSelected ? defaultLabel : variableValue.c_str();
+
+                            if (isDefaultSelected) {
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                            }
+
+                            const bool isOpen = ImGui::BeginCombo(label.c_str(), previewText);
+
+                            if (isDefaultSelected) {
+                                ImGui::PopStyleColor();
+                            }
+
+                            if (isOpen) {
+                                ImGui::PushID("##DefaultLabel!!");
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                                if (ImGui::Selectable(defaultLabel, isDefaultSelected)) {
+                                    variable.value = std::nullopt;
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                }
+                                ImGui::PopStyleColor();
+                                ImGui::PopID();
+
+                                if (isDefaultSelected) {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+
+                                for (const auto& enumCase : variable.cases) {
+                                    const bool isSelected = enumCase == variableValue;
+
+                                    if (ImGui::Selectable(enumCase.c_str(), isSelected)) {
+                                        variable.value = enumCase;
+                                        m_hasUnparsedChanges.get(provider) = true;
+                                    }
+
+                                    if (isSelected) {
+                                        ImGui::SetItemDefaultFocus();
+                                    }
+                                }
+
+                                ImGui::EndCombo();
+                            }
                         }
                     }
                     ImGui::PopItemWidth();
@@ -1841,19 +1888,63 @@ namespace hex::plugin::builtin {
         if (ast.has_value()) {
             for (auto &node : *ast) {
                 if (const auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(node.get())) {
-                    const auto type = variableDecl->getType().get();
-                    if (type == nullptr) continue;
-
-                    const auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(type->getType().get());
-                    if (builtinType == nullptr)
+                    auto type = variableDecl->getType();
+                    if (type == nullptr) {
                         continue;
+                    }
 
-                    const PatternVariable variable = {
+                    PatternVariable variable = {
                         .inVariable  = variableDecl->isInVariable(),
                         .outVariable = variableDecl->isOutVariable(),
-                        .type        = builtinType->getType(),
-                        .value       = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : std::nullopt
+                        .type        = pl::core::Token::ValueType::CustomType,
+                        .value       = std::nullopt,
+                        .cases       = {},
                     };
+
+                    i32 declNestLimit = 32; // default evaluation depth
+                    while (type && declNestLimit-- > 0) {
+                        auto checkType = type->getType();
+
+                        if (const auto typeDecl = std::dynamic_pointer_cast<pl::core::ast::ASTNodeTypeDecl>(checkType); typeDecl != nullptr) {
+                            checkType = typeDecl->getType();
+                        }
+
+                        if (const auto usingDecl = std::dynamic_pointer_cast<pl::core::ast::ASTNodeTypeApplication>(checkType); usingDecl != nullptr) {
+                            if (type == usingDecl) [[unlikely]] {
+                                // bad case of forward declarations ending up referencing itself
+                                type = nullptr;
+                                break;
+                            }
+
+                            type = usingDecl;
+                            continue;
+                        }
+
+                        if (const auto enumDecl = dynamic_cast<pl::core::ast::ASTNodeEnum *>(checkType.get()); enumDecl != nullptr) {
+                            if (enumDecl == nullptr) {
+                                type = nullptr;
+                                break;
+                            }
+
+                            variable.cases.append_range(enumDecl->getEntries() | std::views::keys);
+                            break;
+                        }
+
+
+                        if (const auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(checkType.get()); builtinType != nullptr) {
+                            variable.type = builtinType->getType();
+                            break;
+                        }
+
+                        type = nullptr;
+                        break;
+                    }
+
+                    if (type == nullptr || declNestLimit <= 0) {
+                        break;
+                    }
+
+                    variable.value = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : std::nullopt;
 
                     if (variable.inVariable || variable.outVariable) {
                         if (!patternVariables.contains(variableDecl->getName()))
