@@ -1,7 +1,11 @@
 ARG ARCHITECTURE_APPIMAGE_BUILDER=x86_64
-FROM quay.io/pypa/manylinux_2_28_${ARCHITECTURE_APPIMAGE_BUILDER}:latest AS build
+ARG APPIMAGE_BUILDER_IMAGE=condaforge/linux-anvil-x86_64:alma8@sha256:0fab560017f2b4eda27cf0965f4547bac9fdde51508aa355443dd656576a6338
+FROM ${APPIMAGE_BUILDER_IMAGE} AS build
 
 ARG ARCHITECTURE_APPIMAGE_BUILDER
+
+# Use Bash for heredoc scripts, pipefail, and string substitution.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
@@ -11,11 +15,53 @@ RUN --mount=type=cache,target=/var/cache/dnf <<EOF
 # Install build and AppImage dependencies
 set -xe
 
+dnf install -y dnf-plugins-core epel-release
+dnf config-manager --set-enabled powertools
 dnf install -y \
-    autoconf automake autoconf-archive ccache curl dbus-devel desktop-file-utils file fontconfig-devel fuse gettext git glm-devel gtk3-devel kernel-headers libtool \
+    autoconf automake autoconf-archive bison bzip2 ccache curl dbus-devel desktop-file-utils diffutils file fontconfig-devel fuse gettext git glm-devel gtk3-devel gzip kernel-headers libtool make patch patchelf python3 tar xz \
     libX11-devel libXcursor-devel libXext-devel libXi-devel libXinerama-devel libXrandr-devel libxkbcommon-devel lz4-devel \
-    mesa-libGL-devel mesa-libGLU-devel ninja-build perl-IPC-Cmd perl-Time-Piece pkgconf-pkg-config squashfs-tools unzip wayland-devel wget zip
+    mesa-libGL-devel mesa-libGLU-devel perl-IPC-Cmd perl-Time-Piece pkgconf-pkg-config squashfs-tools unzip wayland-devel wget zip
 EOF
+
+ARG GCC_VERSION=16.2.0
+ENV GCC_ROOT=/opt/gcc-16
+RUN --mount=type=cache,target=/opt/micromamba/pkgs <<EOF
+# Install precompiled GCC and its glibc 2.28 sysroot
+set -xe
+
+case "${ARCHITECTURE_APPIMAGE_BUILDER}" in
+    x86_64)
+        conda_arch=64
+        gxx_build=h38dc33c_1
+        sysroot_build=h4ee821c_9
+        target=x86_64-conda-linux-gnu
+        ;;
+    aarch64)
+        conda_arch=aarch64
+        gxx_build=h6eb44ee_1
+        sysroot_build=h585391f_9
+        target=aarch64-conda-linux-gnu
+        ;;
+    *) echo "Unsupported AppImage architecture: ${ARCHITECTURE_APPIMAGE_BUILDER}" >&2; exit 1 ;;
+esac
+
+MAMBA_ROOT_PREFIX=/opt/micromamba /opt/conda/bin/micromamba create -y -p ${GCC_ROOT} -c conda-forge \
+    "gxx_linux-${conda_arch}=${GCC_VERSION}=${gxx_build}" \
+    "sysroot_linux-${conda_arch}=2.28=${sysroot_build}" \
+    cmake=4.4.3 \
+    ninja=1.13.2
+
+for tool in gcc g++ gcc-ar gcc-nm gcc-ranlib readelf; do
+    ln -s "${target}-${tool}" "${GCC_ROOT}/bin/${tool}"
+done
+
+test "$("${GCC_ROOT}/bin/gcc" -dumpfullversion)" = "${GCC_VERSION}"
+test "$(rpm --queryformat '%{VERSION}' -q glibc)" = "2.28"
+EOF
+
+ENV PATH="${GCC_ROOT}/bin:/cache/bin/:/vcpkg:${PATH}"
+ENV CC="${GCC_ROOT}/bin/gcc"
+ENV CXX="${GCC_ROOT}/bin/g++"
 
 ARG VCPKG_BASELINE=9e593bb18ea69cc5095e012465dcd675a822ed0d
 RUN <<EOF
@@ -27,7 +73,6 @@ git -C /vcpkg checkout ${VCPKG_BASELINE}
 /vcpkg/bootstrap-vcpkg.sh -disableMetrics
 EOF
 
-ENV PATH="/cache/bin/:/vcpkg:${PATH}"
 ENV VCPKG_ROOT=/vcpkg
 ENV VCPKG_DEFAULT_BINARY_CACHE=/cache/vcpkg
 
@@ -35,7 +80,7 @@ ARG VCPKG_TARGET_TRIPLET=x64-linux-release
 COPY dist/vcpkg.json /vcpkg-manifest/vcpkg.json
 COPY dist/AppImage/vcpkg-triplets /vcpkg-triplets
 RUN --mount=type=cache,target=/cache <<EOF
-# Build dependencies with the manylinux toolchain
+# Build dependencies with GCC 16 and its glibc 2.28 sysroot
 set -xe
 
 mkdir -p ${VCPKG_DEFAULT_BINARY_CACHE}
@@ -45,6 +90,13 @@ vcpkg install \
     --overlay-triplets=/vcpkg-triplets \
     --triplet=${VCPKG_TARGET_TRIPLET}
 EOF
+
+# Prefer the conda sysroot's patched glibc headers, then use AlmaLinux for
+# desktop-library headers and libraries that are not part of that sysroot.
+ENV CFLAGS="-idirafter /usr/include"
+ENV CXXFLAGS="-idirafter /usr/include"
+ENV LIBRARY_PATH="/usr/lib64:/usr/lib"
+ENV LDFLAGS="-Wl,-rpath-link,/usr/lib64"
 
 # Copy Imhex source
 COPY . /imhex
@@ -56,9 +108,6 @@ ARG GIT_BRANCH
 ARG ARCHITECTURE_FILE_NAME=x86_64
 WORKDIR /build
 
-# Use Bash for heredoc scripts and string substitution
-SHELL ["bash", "-c"]
-
 RUN <<EOF
 # Prepare ImHex build
 set -xe
@@ -67,6 +116,8 @@ set -xe
 cmake -G "Ninja"                                                     \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}                                 \
     -DCMAKE_INSTALL_PREFIX="/usr"                                    \
+    -DCMAKE_C_COMPILER=${CC}                                         \
+    -DCMAKE_CXX_COMPILER=${CXX}                                      \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache                               \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                             \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake   \
@@ -94,6 +145,9 @@ set -xe
 
 ccache -zs
 DESTDIR=AppDir ninja install
+install -Dm755 "$(g++ -print-file-name=libstdc++.so.6)" AppDir/usr/lib/libstdc++.so.6
+install -Dm755 "$(gcc -print-file-name=libgcc_s.so.1)" AppDir/usr/lib/libgcc_s.so.1
+readelf --version-info AppDir/usr/lib/libstdc++.so.6 | grep GLIBCXX_3.4.35 >/dev/null
 ccache -s
 EOF
 
@@ -115,11 +169,22 @@ chmod +x /cache/bin/linuxdeploy
 envsubst '${ARCHITECTURE_APPIMAGE_BUILDER}' < /imhex/dist/AppImage/AppRun.env.in > AppDir/AppRun.env
 
 VERSION=$(< /imhex/VERSION)
-if [[ "${VERSION}" == *.WIP ]]; then
+if [[ "${VERSION}" = *.WIP ]]; then
     release_tag=nightly
 else
     release_tag=latest
 fi
+
+# Remove conda and vcpkg build paths before linuxdeploy preserves the RPATHs.
+shopt -s globstar nullglob
+for file in AppDir/usr/bin/* AppDir/usr/lib/**/*; do
+    case "${file}" in
+        AppDir/usr/lib/libgcc_s.so.1|AppDir/usr/lib/libstdc++.so.6) continue ;;
+    esac
+    if patchelf --print-rpath "${file}" >/dev/null 2>&1; then
+        patchelf --shrink-rpath --allowed-rpath-prefixes '$ORIGIN' "${file}"
+    fi
+done
 
 # Keep host GTK/GIO and libmount from the same system stack.
 ARCH=${ARCHITECTURE_APPIMAGE_BUILDER} \
@@ -134,6 +199,29 @@ LDAI_UPDATE_INFORMATION="gh-releases-zsync|WerWolv|ImHex|${release_tag}|imhex-*-
         --exclude-library 'libmount.so*' \
         --desktop-file AppDir/usr/share/applications/imhex.desktop \
         --custom-apprun /imhex/dist/AppImage/AppRun.sh
+
+readelf --file-header AppDir/usr/lib/libstdc++.so.6 >/dev/null
+readelf --file-header AppDir/usr/lib/libgcc_s.so.1 >/dev/null
+
+max_glibc=$(
+    for file in AppDir/usr/bin/* AppDir/usr/lib/**/*; do
+        if readelf --file-header "${file}" >/dev/null 2>&1; then
+            readelf --version-info "${file}"
+        fi
+    done | grep -oE 'GLIBC_[0-9]+(\.[0-9]+)+' | cut -d_ -f2 | sort -Vu | tail -n 1
+)
+if [[ "$(printf '2.28\n%s\n' "${max_glibc}" | sort -V | tail -n 1)" != 2.28 ]]; then
+    echo "AppImage requires GLIBC_${max_glibc}, newer than GLIBC_2.28" >&2
+    exit 1
+fi
+
+for file in AppDir/usr/bin/* AppDir/usr/lib/**/*; do
+    if rpath=$(patchelf --print-rpath "${file}" 2>/dev/null); then
+        case "${rpath}" in
+            *"${GCC_ROOT}"*|*/vcpkg*|*/build*|*/imhex*) echo "Build path remains in RPATH of ${file}: ${rpath}" >&2; exit 1 ;;
+        esac
+    fi
+done
 EOF
 
 FROM scratch

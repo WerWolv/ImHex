@@ -149,7 +149,14 @@ namespace hex::plugin::builtin {
 
     CommandResult handlePatternCommand(std::span<const std::string> args) {
         if (args.size() == 1) {
-            hex::subcommands::forwardSubCommand("pattern", { args[0] });
+            auto argument = args[0];
+            std::error_code error;
+            if (std::fs::exists(argument, error) && !error) {
+                const auto absolutePath = std::fs::absolute(argument, error);
+                if (!error)
+                    argument = wolv::util::toUTF8String(absolutePath);
+            }
+            hex::subcommands::forwardSubCommand("pattern", { argument });
         } else {
             hex::log::println("Usage: imhex --pattern <pattern source code>");
             hex::log::println("Usage: imhex --pattern <pattern file path>");
