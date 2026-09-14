@@ -300,12 +300,12 @@ namespace hex::ui {
             return m_showAscii;
         }
 
-        void enableShowExtendedAscii(bool showExtendedAscii) {
-            m_showExtendedAscii = showExtendedAscii;
+        void enableShowControlPictures(bool showControlPictures) {
+            m_showControlPictures = showControlPictures;
         }
 
-        bool shouldShowExtendedAscii() const {
-            return m_showExtendedAscii;
+        bool shouldShowControlPictures() const {
+            return m_showControlPictures;
         }
 
         void enableSyncScrolling(bool syncScrolling) {
@@ -504,7 +504,7 @@ namespace hex::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
-        bool m_showExtendedAscii = false;
+        bool m_showControlPictures = false;
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         bool m_showSelectionInFooter = false;

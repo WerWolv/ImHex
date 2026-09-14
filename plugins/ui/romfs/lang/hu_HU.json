@@ -104,7 +104,7 @@
     "hex.ui.pattern_drawer.context.edit_value": "Érték szerkesztése",
     "hex.ui.common.apply": "Alkalmaz",
     "hex.ui.common.segment": "Szelet",
-    "hex.ui.hex_editor.extended_ascii": "Nem nyomtatható karakterek megjelenítése az ASCII oszlopban",
+    "hex.ui.hex_editor.control_pictures": "Nem nyomtatható karakterek megjelenítése az ASCII oszlopban",
     "hex.ui.hex_editor.fit_columns": "Oszlopok méretezése a szélességhez",
     "hex.ui.hex_editor.data_cell_options": "Adat cella opciók",
     "hex.ui.hex_editor.separator_stride": "Szelet méret: 0x{0:02X}",
