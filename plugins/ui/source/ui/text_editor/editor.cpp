@@ -1,4 +1,5 @@
 #include <ui/text_editor.hpp>
+#include <ui/line_comment.hpp>
 #include <algorithm>
 #include <ranges>
 #include <string>
@@ -850,6 +851,59 @@ namespace hex::ui {
             v.push_back(u);
             m_lines.addUndo(v);
         }
+        m_lines.refreshSearchResults();
+    }
+
+    void TextEditor::toggleLineComment() {
+        if (m_lines.m_readOnly)
+            return;
+
+        const auto &commentToken = m_lines.getLanguageDefinition().m_singleLineComment;
+        if (commentToken.empty())
+            return;
+
+        // Whole lines, in line coordinates. Reading and writing a run of whole
+        // lines keeps this clear of the column arithmetic a partial line needs,
+        // and of whether any of those lines is currently folded.
+        const auto selection = m_lines.lineCoordinates(m_lines.m_state.m_selection);
+        const auto selectedLines = Range(selection).getSelectedLines();
+        const i32 firstLine = selectedLines.getLine();
+        const i32 lastLine  = selectedLines.getColumn();
+
+        StringVector oldLines;
+        oldLines.reserve(lastLine - firstLine + 1);
+        for (i32 line = firstLine; line <= lastLine; line += 1)
+            oldLines.emplace_back(this->getLineText(line));
+
+        const auto newLines = ui::toggleLineComments(oldLines, commentToken);
+        if (newLines == oldLines)
+            return;
+
+        const Range wholeLines(Coordinates(firstLine, 0), m_lines.lineCoordinates(lastLine, -1));
+
+        // One undo record for the whole run, the same shape doPaste() builds, so
+        // that a single Ctrl+Z takes the comment back off every line at once.
+        UndoRecord u;
+        u.m_before = m_lines.m_state;
+
+        this->setSelection(wholeLines);
+        u.m_removed = m_lines.getSelectedText();
+        u.m_removedRange = m_lines.m_state.m_selection;
+        m_lines.deleteSelection();
+
+        u.m_added = wolv::util::combineStrings(newLines, "\n");
+        u.m_addedRange.m_start = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+        m_lines.insertText(u.m_added);
+        u.m_addedRange.m_end = m_lines.lineCoordinates(m_lines.m_state.m_cursorPosition);
+
+        // Leaves the run selected, so that pressing the shortcut again undoes
+        // what it just did instead of acting on one line.
+        this->setSelection(u.m_addedRange);
+        u.m_after = m_lines.m_state;
+
+        UndoRecords records;
+        records.push_back(u);
+        m_lines.addUndo(records);
         m_lines.refreshSearchResults();
     }
 

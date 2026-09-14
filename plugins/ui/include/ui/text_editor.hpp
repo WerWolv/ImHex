@@ -944,6 +944,11 @@ namespace hex::ui {
         void cut();
         void paste();
         void doPaste(const char *clipText);
+
+        // Comments or uncomments every line the selection touches, or the
+        // cursor's own line when nothing is selected. Does nothing for a
+        // language with no single line comment token.
+        void toggleLineComment();
         void deleteChar();
         void setReadOnly(bool value) { m_lines.setReadOnly(value); };
         void appendLine(const std::string &value);
