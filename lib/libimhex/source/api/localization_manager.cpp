@@ -189,7 +189,7 @@ namespace hex {
     static std::mutex s_unlocalizedNamesMutex;
 
     Lang::Lang(std::string_view unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)) {
-        std::scoped_lock lock(s_unlocalizedNamesMutex);
+        std::lock_guard lock(s_unlocalizedNamesMutex);
 
         if (!s_unlocalizedNames->contains(m_entryHash)) [[unlikely]] {
             s_unlocalizedNames->emplace(m_entryHash, unlocalizedString);
@@ -198,7 +198,7 @@ namespace hex {
     Lang::Lang(const char *unlocalizedString) : Lang(std::string_view(unlocalizedString)) { }
     Lang::Lang(const std::string &unlocalizedString) : Lang(std::string_view(unlocalizedString)) { }
     Lang::Lang(const LangConst &localizedString) : m_entryHash(localizedString.m_entryHash) {
-        std::scoped_lock lock(s_unlocalizedNamesMutex);
+        std::lock_guard lock(s_unlocalizedNamesMutex);
 
         if (!s_unlocalizedNames->contains(m_entryHash)) [[unlikely]] {
             s_unlocalizedNames->emplace(m_entryHash, localizedString.m_unlocalizedString);
@@ -224,7 +224,7 @@ namespace hex {
         const auto it = lang.find(m_entryHash);
         if (it == lang.end()) {
             // A map keeps each string in place, so the pointer below outlives the lock.
-            std::scoped_lock lock(s_unlocalizedNamesMutex);
+            std::lock_guard lock(s_unlocalizedNamesMutex);
 
             if (auto unlocalizedIt = s_unlocalizedNames->find(m_entryHash); unlocalizedIt != s_unlocalizedNames->end()) {
                 return unlocalizedIt->second.c_str();
