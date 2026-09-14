@@ -80,6 +80,13 @@ namespace hex {
         return info.status == Utf8CodepointStatus::Complete && info.length == text.size();
     }
 
+    std::optional<char32_t> decodeSingleCodepoint(std::string_view text) {
+        if (!isSingleCharacter(text))
+            return std::nullopt;
+
+        return readUtf8Codepoint(text).codepoint;
+    }
+
     bool isValidUtf8(std::string_view text) {
         while (!text.empty()) {
             const auto info = readUtf8Codepoint(text);
@@ -92,8 +99,8 @@ namespace hex {
         return true;
     }
 
-    bool isControlCode(u8 byte) {
-        return byte <= 0x1F || byte == 0x7F;
+    bool isControlCode(char32_t codepoint) {
+        return codepoint <= 0x1F || codepoint == 0x7F;
     }
 
     pl::core::DecodeResult decodeUtf8Bounded(std::span<const u8> bytes, std::optional<size_t> maxCodepoints) {
