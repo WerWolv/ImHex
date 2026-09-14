@@ -60,7 +60,6 @@
     "hex.ui.common.type.u8": "uint8_t",
     "hex.ui.common.value": "Значення",
     "hex.ui.common.yes": "Так",
-    "hex.ui.hex_editor.control_pictures": "Відображення недрукованих символів у стовпці ASCII",
     "hex.ui.hex_editor.columns": "Стовпців",
     "hex.ui.hex_editor.fit_columns": "Підігнати стовпці під ширину",
     "hex.ui.hex_editor.data_size": "Розмір даних",

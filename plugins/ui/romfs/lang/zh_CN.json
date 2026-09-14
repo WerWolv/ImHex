@@ -104,6 +104,5 @@
     "hex.ui.hex_editor.columns": "列数",
     "hex.ui.hex_editor.fit_columns": "自适应列宽",
     "hex.ui.hex_editor.no_separator": "无分段分隔符",
-    "hex.ui.hex_editor.separator_stride": "分段大小：0x{0:02X}",
-    "hex.ui.hex_editor.control_pictures": "在 ASCII 列显示无法打印的字符"
+    "hex.ui.hex_editor.separator_stride": "分段大小：0x{0:02X}"
 }
