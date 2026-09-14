@@ -252,6 +252,8 @@ namespace hex::plugin::builtin::project::impl {
                         continue;
 
                     for (const auto &[typeId, relativePath] : associations->second) {
+                        if (relativePath.is_absolute())
+                            continue;
                         const auto oldBinding = FileBackedProviderDataRegistry::getBinding(provider, typeId);
                         if (!oldBinding.has_value())
                             continue;

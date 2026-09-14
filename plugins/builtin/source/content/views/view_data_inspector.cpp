@@ -13,6 +13,8 @@
 #include <ui/visualizer_drawer.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/unicode.hpp>
 #include <imgui_internal.h>
 
 #include <pl/pattern_language.hpp>
@@ -252,8 +254,17 @@ namespace hex::plugin::builtin {
                     if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
                         drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
                     } else {
-                        ImGui::TextUnformatted(value.c_str());
+                        const auto escapedValue = escapeControlCharacters(value);
+                        const bool displayValid = pattern->hasValidFormattedValue() && escapedValue.has_value();
+
+                        if (!displayValid)
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
+                        ImGui::TextUnformatted(escapedValue.value_or("hex.builtin.inspector.invalid"_lang.get()).c_str());
+                        if (!displayValid)
+                            ImGui::PopStyleColor();
                     }
+
+                    // The copy value stays unescaped. Escaping is only for display.
                     return value;
                 };
 

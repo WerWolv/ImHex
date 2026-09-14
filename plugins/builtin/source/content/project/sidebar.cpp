@@ -176,7 +176,7 @@ namespace hex::plugin::builtin::project::impl {
             for (auto &[providerId, entries] : updatedAssociations) {
                 auto *provider = getProviderById(providerId);
                 for (auto &[typeId, path] : entries) {
-                    if (!isSameOrDescendant(path, source))
+                    if (path.is_absolute() || !isSameOrDescendant(path, source))
                         continue;
 
                     const auto oldPath = path;
@@ -312,7 +312,7 @@ namespace hex::plugin::builtin::project::impl {
                 auto *provider = getProviderById(providerIt->first);
                 auto &entries = providerIt->second;
                 for (auto entry = entries.begin(); entry != entries.end();) {
-                    if (isSameOrDescendant(entry->second, relativePath)) {
+                    if (!entry->second.is_absolute() && isSameOrDescendant(entry->second, relativePath)) {
                         if (provider != nullptr)
                             bindings.emplace_back(provider, entry->first);
                         entry = entries.erase(entry);
@@ -469,11 +469,10 @@ namespace hex::plugin::builtin::project::impl {
             if (association == providerAssociations->second.end())
                 return;
 
-            std::ignore = FileBackedProviderDataRegistry::unbind(provider, handlerPath);
-
             providerAssociations->second.erase(association);
             if (providerAssociations->second.empty())
                 associations.erase(providerAssociations);
+            std::ignore = FileBackedProviderDataRegistry::unbind(provider, handlerPath);
             scheduleAssociationSave();
         }
 
@@ -496,12 +495,7 @@ namespace hex::plugin::builtin::project::impl {
                 return false;
 
             const auto typeId = data->getType().typeId;
-            if (data->bind(provider, ProjectManager::getProjectRoot() / relativePath)) {
-                state().associations[provider->getID()][typeId] = relativePath;
-                scheduleAssociationSave();
-                return true;
-            }
-            return false;
+            return data->bind(provider, ProjectManager::getProjectRoot() / relativePath);
         }
 
         void drawProjectEntryDragSource(const std::fs::path &relativePath, const char *icon) {

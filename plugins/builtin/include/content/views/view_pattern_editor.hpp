@@ -26,6 +26,7 @@ namespace hex::plugin::builtin {
         const std::string& get(prv::Provider *provider) const;
         void set(prv::Provider *provider, std::string source);
         [[nodiscard]] bool bind(prv::Provider *provider, const std::fs::path &path);
+        void unbind(prv::Provider *provider);
         [[nodiscard]] std::optional<std::fs::path> getBinding(prv::Provider *provider) const;
         [[nodiscard]] bool flush(prv::Provider *provider);
         [[nodiscard]] bool hasPendingData(prv::Provider *provider) const;
@@ -67,6 +68,7 @@ namespace hex::plugin::builtin {
 
             pl::core::Token::ValueType type;
             std::optional<pl::core::Token::Literal> value;
+            std::vector<std::string> cases;
         };
 
         enum class EnvVarType : u8
@@ -198,7 +200,7 @@ namespace hex::plugin::builtin {
 
         void historyInsert(std::array<std::string, 256> &history, u32 &size, u32 &index, const std::string &value);
 
-        void loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile = false);
+        bool loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile = false);
         bool isPatternDirty(prv::Provider *provider) const { return m_sourceCode.hasPendingData(provider); }
 
         void parsePattern(const std::string &code, const std::fs::path &path, prv::Provider *provider);

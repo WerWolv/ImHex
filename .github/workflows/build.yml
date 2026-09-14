@@ -681,10 +681,12 @@ jobs:
         include:
           - architecture: "x86_64"
             architecture_appimage_builder: "x86_64"
+            appimage_builder_image: "condaforge/linux-anvil-x86_64:alma8@sha256:0fab560017f2b4eda27cf0965f4547bac9fdde51508aa355443dd656576a6338"
             vcpkg_triplet: "x64-linux-release"
             image: ubuntu-26.04
           - architecture: "arm64"
             architecture_appimage_builder: "aarch64"
+            appimage_builder_image: "condaforge/linux-anvil-aarch64:alma8@sha256:8c86d53b9a047aa5de40f3847134b1c013dc105b1fe112be7ee2fb51359a1550"
             vcpkg_triplet: "arm64-linux-release"
             image: ubuntu-26.04-arm
 
@@ -720,7 +722,8 @@ jobs:
         run: |
           docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
           --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
-          --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" --build-arg "VCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}" \
+          --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" \
+          --build-arg "APPIMAGE_BUILDER_IMAGE=${{ matrix.appimage_builder_image }}" --build-arg "VCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}" \
           --output out
 
       - name: 🗝️ Generate build provenance attestations
