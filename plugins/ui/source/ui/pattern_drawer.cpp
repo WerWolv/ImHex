@@ -26,6 +26,7 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
+#include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/scaling.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 #include <ui/text_editor.hpp>
@@ -34,6 +35,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/vscode_icons.hpp>
 #include <hex/api/tutorial_manager.hpp>
+#include <hex/helpers/unicode.hpp>
 #include <pl/core/ast/ast_node_mathematical_expression.hpp>
 
 #include <wolv/io/file.hpp>
@@ -439,8 +441,9 @@ namespace hex::ui {
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
 
-        const auto value = pattern.getFormattedValue();
-        const bool valueValid = pattern.hasValidFormattedValue();
+        const auto escapedValue = escapeControlCharacters(pattern.getFormattedValue());
+        const auto value = escapedValue.value_or("hex.ui.pattern_drawer.invalid_value"_lang.get());
+        const bool valueValid = pattern.hasValidFormattedValue() && escapedValue.has_value();
         const auto width = ImGui::GetColumnWidth();
 
         if (const auto &visualizeArgs = pattern.getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {

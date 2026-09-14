@@ -18,6 +18,26 @@
 
 namespace hex::plugin::builtin::project::impl {
 
+    namespace {
+
+        std::optional<std::fs::path> parseAssociation(const nlohmann::json &value) {
+            if (value.is_string()) {
+                auto path = std::fs::path(value.get<std::string>());
+                if (!path.empty() && !path.is_absolute() &&
+                    std::ranges::none_of(path, [](const auto &part) { return part == ".."; }) &&
+                    !path.generic_string().starts_with(".imhex/"))
+                    return path;
+            } else if (value.is_object() && value.size() == 2 && value.value("kind", "") == "link" &&
+                       value.contains("path") && value["path"].is_string()) {
+                auto path = std::fs::path(value["path"].get<std::string>());
+                if (!path.empty() && path.is_absolute())
+                    return path.lexically_normal();
+            }
+            return std::nullopt;
+        }
+
+    }
+
     bool isSafeProjectPath(const std::fs::path &path) {
         if (path.empty() || path.is_absolute())
             return false;
@@ -53,12 +73,7 @@ namespace hex::plugin::builtin::project::impl {
                     return false;
                 for (const auto &[typeId, pathValue] : entries.items()) {
                     std::ignore = typeId;
-                    if (!pathValue.is_string())
-                        return false;
-                    const auto path = std::fs::path(pathValue.get<std::string>());
-                    if (path.empty() || path.is_absolute() ||
-                        std::ranges::any_of(path, [](const auto &part) { return part == ".."; }) ||
-                        path.generic_string().starts_with(".imhex/"))
+                    if (!parseAssociation(pathValue).has_value())
                         return false;
                 }
             }
@@ -123,9 +138,9 @@ namespace hex::plugin::builtin::project::impl {
                 if (!state().projectProviderIds.contains(id))
                     continue;
                 for (const auto &[handler, pathValue] : entries.items()) {
-                    auto path = std::fs::path(pathValue.get<std::string>());
-                    if (isSafeProjectPath(path) && !path.generic_string().starts_with(".imhex/"))
-                        associations[id][handler] = std::move(path);
+                    auto path = parseAssociation(pathValue);
+                    if (path.has_value() && (path->is_absolute() || isSafeProjectPath(*path)))
+                        associations[id][handler] = std::move(*path);
                 }
             }
         } catch (const std::exception &error) {
@@ -134,19 +149,31 @@ namespace hex::plugin::builtin::project::impl {
         }
     }
 
-    bool storeAssociations(const std::fs::path &root) {
+    std::string serializeAssociations(const std::set<u32> &providerIds) {
         nlohmann::json associations = nlohmann::json::object();
         for (const auto &[providerId, entries] : state().associations) {
-            if (!state().projectProviderIds.contains(providerId))
+            if (!providerIds.contains(providerId))
                 continue;
-            for (const auto &[handler, path] : entries)
-                associations[std::to_string(providerId)][handler] = path.generic_string();
+            for (const auto &[handler, path] : entries) {
+                if (path.is_absolute()) {
+                    associations[std::to_string(providerId)][handler] = {
+                        { "kind", "link" },
+                        { "path", path.generic_string() }
+                    };
+                } else {
+                    associations[std::to_string(providerId)][handler] = path.generic_string();
+                }
+            }
         }
 
-        return writeProjectFile(root, projectSettingsPath(), nlohmann::json({
+        return nlohmann::json({
             { "version", ProjectFormatVersion },
             { "associations", std::move(associations) }
-        }).dump(4));
+        }).dump(4);
+    }
+
+    bool storeAssociations(const std::fs::path &root) {
+        return writeProjectFile(root, projectSettingsPath(), serializeAssociations(state().projectProviderIds));
     }
 
     std::string rebaseStoredProviderSettings(const std::string &serializedSettings,

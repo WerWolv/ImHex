@@ -12,6 +12,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include "hex/api/content_registry/background_services.hpp"
 #include "hex/api/content_registry/settings.hpp"
 
 namespace hex::subcommands {
@@ -126,6 +127,10 @@ namespace hex::subcommands {
 
         if (pluginsInitialized) {
             TaskManager::exit();
+
+            // A service thread must not reach an AutoReset object that cleanup() already reset.
+            ContentRegistry::BackgroundServices::impl::stopServices();
+
             ImHexApi::System::impl::cleanup();
             EventManager::clear();
             PluginManager::unload();

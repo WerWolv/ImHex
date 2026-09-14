@@ -72,6 +72,7 @@ namespace hex::plugin::builtin::project::impl {
     std::string readProjectFile(const std::fs::path &root, const std::fs::path &path);
     bool writeProjectFile(const std::fs::path &root, const std::fs::path &path, const std::string &content);
     void loadAssociations(const std::fs::path &root);
+    std::string serializeAssociations(const std::set<u32> &providerIds);
     bool storeAssociations(const std::fs::path &root);
     std::string rebaseStoredProviderSettings(const std::string &serializedSettings, const std::fs::path &sourceRoot, const std::fs::path &destinationRoot);
     bool copyTemporaryProjectFiles(const std::fs::path &source, const std::fs::path &destination, std::vector<std::fs::path> &copiedEntries);

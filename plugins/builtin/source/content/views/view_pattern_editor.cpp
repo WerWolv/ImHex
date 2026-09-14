@@ -20,6 +20,7 @@
 #include <pl/core/lexer.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
+#include <pl/core/ast/ast_node_enum.hpp>
 
 
 #include <hex/helpers/fs.hpp>
@@ -51,6 +52,7 @@
 #include <hex/helpers/menu_items.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/formatting.hpp>
+#include <hex/helpers/unicode.hpp>
 #include <content/text_highlighting/pattern_language.hpp>
 
 #include <fmt/chrono.h>
@@ -241,6 +243,10 @@ namespace hex::plugin::builtin {
 
     bool PatternSourceCode::bind(prv::Provider *provider, const std::fs::path &path) {
         return m_perProviderSource.bind(provider, path);
+    }
+
+    void PatternSourceCode::unbind(prv::Provider *provider) {
+        m_perProviderSource.unbind(provider);
     }
 
     std::optional<std::fs::path> PatternSourceCode::getBinding(prv::Provider *provider) const {
@@ -1397,6 +1403,52 @@ namespace hex::plugin::builtin {
                                     variable.value = buffer;
                                 m_hasUnparsedChanges.get(provider) = true;
                             }
+                        } else if (!variable.cases.empty() && variable.type == pl::core::Token::ValueType::CustomType) {
+                            const auto variableValue = variable.value ? hex::get_or<std::string>(*variable.value, "") : "";
+                            const bool isDefaultSelected = variableValue.empty();
+
+                            const char* defaultLabel = "hex.builtin.view.pattern_editor.in_default_value"_lang;
+                            const char* previewText  = isDefaultSelected ? defaultLabel : variableValue.c_str();
+
+                            if (isDefaultSelected) {
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                            }
+
+                            const bool isOpen = ImGui::BeginCombo(label.c_str(), previewText);
+
+                            if (isDefaultSelected) {
+                                ImGui::PopStyleColor();
+                            }
+
+                            if (isOpen) {
+                                ImGui::PushID("##DefaultLabel!!");
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+                                if (ImGui::Selectable(defaultLabel, isDefaultSelected)) {
+                                    variable.value = std::nullopt;
+                                    m_hasUnparsedChanges.get(provider) = true;
+                                }
+                                ImGui::PopStyleColor();
+                                ImGui::PopID();
+
+                                if (isDefaultSelected) {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+
+                                for (const auto& enumCase : variable.cases) {
+                                    const bool isSelected = enumCase == variableValue;
+
+                                    if (ImGui::Selectable(enumCase.c_str(), isSelected)) {
+                                        variable.value = enumCase;
+                                        m_hasUnparsedChanges.get(provider) = true;
+                                    }
+
+                                    if (isSelected) {
+                                        ImGui::SetItemDefaultFocus();
+                                    }
+                                }
+
+                                ImGui::EndCombo();
+                            }
                         }
                     }
                     ImGui::PopItemWidth();
@@ -1665,12 +1717,14 @@ namespace hex::plugin::builtin {
                 ImGui::SetCursorPos(ImVec2(x, ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y));
                 m_visualizerDrawer->drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
             } else {
-                const auto value = pattern->getFormattedValue();
+                const auto escapedValue = escapeControlCharacters(pattern->getFormattedValue());
+                const auto value = escapedValue.value_or("hex.builtin.inspector.invalid"_lang.get());
+                const bool valueValid = pattern->hasValidFormattedValue() && escapedValue.has_value();
 
-                if (!pattern->hasValidFormattedValue())
+                if (!valueValid)
                     ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
                 ImGuiExt::TextFormatted("{: <{}} ", hex::limitStringLength(value, 64), shiftHeld ? 40 : 0);
-                if (!pattern->hasValidFormattedValue())
+                if (!valueValid)
                     ImGui::PopStyleColor();
             }
 
@@ -1790,18 +1844,19 @@ namespace hex::plugin::builtin {
         ImGui::PopID();
     }
 
-    void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
+    bool ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider, bool trackFile) {
         std::string code;
         if (trackFile) {
             if (!m_sourceCode.bind(provider, path))
-                return;
+                return false;
             code = m_sourceCode.get(provider);
         } else {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid())
-                return;
+                return false;
 
             code = preprocessPattern(file.readString(), m_textEditor.get(provider).getTabSize());
+            m_sourceCode.unbind(provider);
             m_sourceCode.set(provider, code);
         }
 
@@ -1827,6 +1882,7 @@ namespace hex::plugin::builtin {
         TaskManager::createBackgroundTask("hex.builtin.task.parsing_pattern", [this, code, provider, path](auto&) {
             this->parsePattern(code, path, provider);
         });
+        return true;
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code, const std::fs::path &path, prv::Provider *provider) {
@@ -1841,19 +1897,63 @@ namespace hex::plugin::builtin {
         if (ast.has_value()) {
             for (auto &node : *ast) {
                 if (const auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(node.get())) {
-                    const auto type = variableDecl->getType().get();
-                    if (type == nullptr) continue;
-
-                    const auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(type->getType().get());
-                    if (builtinType == nullptr)
+                    auto type = variableDecl->getType();
+                    if (type == nullptr) {
                         continue;
+                    }
 
-                    const PatternVariable variable = {
+                    PatternVariable variable = {
                         .inVariable  = variableDecl->isInVariable(),
                         .outVariable = variableDecl->isOutVariable(),
-                        .type        = builtinType->getType(),
-                        .value       = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : std::nullopt
+                        .type        = pl::core::Token::ValueType::CustomType,
+                        .value       = std::nullopt,
+                        .cases       = {},
                     };
+
+                    i32 declNestLimit = 32; // default evaluation depth
+                    while (type && declNestLimit-- > 0) {
+                        auto checkType = type->getType();
+
+                        if (const auto typeDecl = std::dynamic_pointer_cast<pl::core::ast::ASTNodeTypeDecl>(checkType); typeDecl != nullptr) {
+                            checkType = typeDecl->getType();
+                        }
+
+                        if (const auto usingDecl = std::dynamic_pointer_cast<pl::core::ast::ASTNodeTypeApplication>(checkType); usingDecl != nullptr) {
+                            if (type == usingDecl) [[unlikely]] {
+                                // bad case of forward declarations ending up referencing itself
+                                type = nullptr;
+                                break;
+                            }
+
+                            type = usingDecl;
+                            continue;
+                        }
+
+                        if (const auto enumDecl = dynamic_cast<pl::core::ast::ASTNodeEnum *>(checkType.get()); enumDecl != nullptr) {
+                            if (enumDecl == nullptr) {
+                                type = nullptr;
+                                break;
+                            }
+
+                            variable.cases.append_range(enumDecl->getEntries() | std::views::keys);
+                            break;
+                        }
+
+
+                        if (const auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(checkType.get()); builtinType != nullptr) {
+                            variable.type = builtinType->getType();
+                            break;
+                        }
+
+                        type = nullptr;
+                        break;
+                    }
+
+                    if (type == nullptr || declNestLimit <= 0) {
+                        break;
+                    }
+
+                    variable.value = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : std::nullopt;
 
                     if (variable.inVariable || variable.outVariable) {
                         if (!patternVariables.contains(variableDecl->getName()))
@@ -2472,18 +2572,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerHandlers() {
-        ContentRegistry::FileTypeHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
-            wolv::io::File file(path, wolv::io::File::Mode::Read);
-
+        ContentRegistry::FileTypeHandler::add({ ".hexpat", ".pat" }, [this](const std::fs::path &path) -> bool {
             if (!ImHexApi::Provider::isValid())
                 return false;
-
-            if (file.isValid()) {
-                RequestSetPatternLanguageCode::post(file.readString());
-                return true;
-            } else {
-                return false;
-            }
+            return this->loadPatternFile(path, ImHexApi::Provider::get(), true);
         }, ICON_VS_FILE_CODE);
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
@@ -2909,7 +3001,7 @@ namespace hex::plugin::builtin {
 
             std::error_code error;
             for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
-                if (entry.is_regular_file() && entry.path().extension() == ".hexpat")
+                if (entry.is_regular_file() && (entry.path().extension() == ".hexpat" || entry.path().extension() == ".pat"))
                     paths.push_back(entry.path());
             }
         }
@@ -2922,7 +3014,7 @@ namespace hex::plugin::builtin {
         };
 
         ui::PopupNamedFileChooser::open(
-            basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+            basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" }, { "Pattern Import File", "pat" } }, false,
             [this, createRuntime](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
                 static std::mutex mutex;
 
