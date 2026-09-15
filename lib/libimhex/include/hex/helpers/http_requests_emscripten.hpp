@@ -49,7 +49,8 @@
 
         template<typename T>
         HttpRequest::Result<T> HttpRequest::executeImpl(std::vector<u8> &data) {
-            strcpy(m_attr.requestMethod, m_method.c_str());
+            strncpy(m_attr.requestMethod, m_method.c_str(), sizeof(m_attr.requestMethod) - 1);
+            m_attr.requestMethod[sizeof(m_attr.requestMethod) - 1] = '\0';
             m_attr.attributes = EMSCRIPTEN_FETCH_SYNCHRONOUS | EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
 
             if (!m_body.empty()) {
