@@ -16,6 +16,14 @@
 
 namespace hex::plugin::builtin {
 
+    struct FindOccurrence {
+        Region region;
+        std::endian endian = std::endian::native;
+        enum class DecodeType : u8 { ASCII, UTF8, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+        bool selected;
+        std::string string;
+    };
+
     class ViewFind : public View::Window {
     public:
         ViewFind();
@@ -30,9 +38,6 @@ namespace hex::plugin::builtin {
         void drawHelpText() override;
 
     private:
-
-        using Occurrence = hex::ContentRegistry::DataFormatter::impl::FindOccurrence;
-
         struct BinaryPattern {
             u8 mask, value;
         };
@@ -107,10 +112,10 @@ namespace hex::plugin::builtin {
 
         } m_searchSettings, m_decodeSettings;
 
-        using OccurrenceTree = wolv::container::IntervalTree<Occurrence>;
+        using OccurrenceTree = wolv::container::IntervalTree<FindOccurrence>;
 
-        PerProvider<std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
-        PerProvider<Occurrence*> m_lastSelectedOccurrence;
+        PerProvider<std::vector<FindOccurrence>> m_foundOccurrences, m_sortedOccurrences;
+        PerProvider<FindOccurrence*> m_lastSelectedOccurrence;
         PerProvider<OccurrenceTree> m_occurrenceTree;
         PerProvider<std::string> m_currFilter;
         PerProvider<bool> m_settingsCollapsed;
@@ -120,20 +125,20 @@ namespace hex::plugin::builtin {
         std::string m_replaceBuffer;
 
     private:
-        static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);
-        static std::vector<Occurrence> searchSequence(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Sequence &settings);
-        static std::vector<Occurrence> searchRegex(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Regex &settings);
-        static std::vector<Occurrence> searchBinaryPattern(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::BinaryPattern &settings);
-        static std::vector<Occurrence> searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings);
-        static std::vector<Occurrence> searchConstants(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Constants &settings);
+        static std::vector<FindOccurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);
+        static std::vector<FindOccurrence> searchSequence(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Sequence &settings);
+        static std::vector<FindOccurrence> searchRegex(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Regex &settings);
+        static std::vector<FindOccurrence> searchBinaryPattern(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::BinaryPattern &settings);
+        static std::vector<FindOccurrence> searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings);
+        static std::vector<FindOccurrence> searchConstants(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Constants &settings);
 
-        void drawContextMenu(Occurrence &target, const std::string &value);
+        void drawContextMenu(FindOccurrence& target, const std::string &value);
 
         static std::vector<BinaryPattern> parseBinaryPatternString(std::string string);
         static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
 
         void runSearch();
-        std::string decodeValue(prv::Provider *provider, const Occurrence &occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
+        std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
     };
 
 }
