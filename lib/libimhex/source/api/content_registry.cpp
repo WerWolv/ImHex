@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <jthread.hpp>
+#include <stdexcept>
 #include <hex/api/events/requests_interaction.hpp>
 
 #if defined(OS_WEB)
@@ -1203,6 +1204,19 @@ namespace hex {
     
 
     namespace ContentRegistry::DataFormatter {
+        ExportTable::ExportTable(std::vector<std::string> headers) {
+            if (!isUnique(headers)) {
+                throw std::invalid_argument("All table headers must be unique");
+            }
+            m_headers = std::move(headers);
+        }
+
+        void ExportTable::addRow(std::vector<Cell> row) {
+            if (m_headers.size() != row.size()) {
+                throw std::invalid_argument("Table row and header item count mismatch");
+            }
+            m_rows.push_back(std::move(row));
+        }
 
         namespace impl {
 
@@ -1211,23 +1225,23 @@ namespace hex {
                 return *s_exportMenuEntries;
             }
 
-            static AutoReset<std::vector<FindExporterEntry>> s_findExportEntries;
-            const std::vector<FindExporterEntry>& getFindExporterEntries() {
-                return *s_findExportEntries;
+            static AutoReset<std::vector<ExportFormatterEntry>> s_exportFormatterEntries;
+            const std::vector<ExportFormatterEntry>& getExportFormatterEntries() {
+                return *s_exportFormatterEntries;
             }
 
         }
 
-        void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
+        void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::ExportMenuCallback &callback) {
             log::debug("Registered new data formatter: {}", unlocalizedName.get());
 
             impl::s_exportMenuEntries->push_back({ unlocalizedName, callback });
         }
 
-        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::FindExporterCallback &callback) {
+        void addExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::ExportFormatterCallback &callback) {
             log::debug("Registered new export formatter: {}", unlocalizedName.get());
 
-            impl::s_findExportEntries->push_back({ unlocalizedName, fileExtension, callback });
+            impl::s_exportFormatterEntries->push_back({ unlocalizedName, fileExtension, callback });
         }
 
     }
