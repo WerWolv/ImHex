@@ -955,13 +955,13 @@ namespace hex {
         void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
-            impl::s_entries->push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+            impl::s_entries->push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction), std::nullopt });
         }
 
-        void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
+        void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction, std::optional<impl::SizeFunction> sizeFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
-            impl::s_entries->push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+            impl::s_entries->push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction), std::move(sizeFunction) });
         }
 
         void drawMenuItems(const std::function<void()> &function) {
