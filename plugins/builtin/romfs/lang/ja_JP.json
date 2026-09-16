@@ -88,8 +88,6 @@
     "hex.builtin.inspector.rgb565": "RGB565 Color",
     "hex.builtin.inspector.rgba8": "RGBA8 Color",
     "hex.builtin.inspector.sleb128": "",
-    "hex.builtin.inspector.string": "String",
-    "hex.builtin.inspector.wstring": "Wide String",
     "hex.builtin.inspector.time32": "time32_t",
     "hex.builtin.inspector.time64": "time64_t",
     "hex.builtin.inspector.u16": "uint16_t",

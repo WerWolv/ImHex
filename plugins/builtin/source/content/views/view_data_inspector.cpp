@@ -266,7 +266,8 @@ namespace hex::plugin::builtin {
                     if (const auto &inlineVisualizeArgs = pattern->getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
                         drawer.drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, *pattern, true);
                     } else {
-                        const auto escapedValue = escapeControlCharacters(value);
+                        // Read fresh every frame; an encoding change clears the pattern's cached value.
+                        const auto escapedValue = escapeControlCharacters(pattern->getFormattedValue());
                         const bool displayValid = pattern->hasValidFormattedValue() && escapedValue.has_value();
 
                         if (!displayValid)
@@ -276,7 +277,7 @@ namespace hex::plugin::builtin {
                             ImGui::PopStyleColor();
                     }
 
-                    // The copy value stays unescaped. Escaping is only for display.
+                    // Copying and editing use the pattern's own value, not the display value above.
                     return value;
                 };
 

@@ -47,6 +47,8 @@ set(AVAILABLE_TESTS
         ExtendToWholeCodePoints
         FormatDecodedStringMarksTruncation
         NulPictureRoundTrip
+        FormatCodePoint
+        CodePointSize
 )
 
 if (NOT IMHEX_OFFLINE_BUILD)

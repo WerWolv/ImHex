@@ -7,6 +7,7 @@
 #include <pl/core/string_encode_decode.hpp>
 
 #include <functional>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -54,6 +55,23 @@ namespace hex::plugin::builtin {
      */
     pl::core::DecodeResult decodeThroughSelection(const std::vector<u8> &buffer, size_t targetSize, size_t codepointLimit,
         const std::function<pl::core::DecodeResult(std::span<const u8>)> &decodeOne);
+
+    /**
+     * @brief Formats the one code point at a buffer's start under a named algorithmic encoding
+     * @param encodingName The algorithmic encoding to decode under
+     * @param buffer The bytes to decode from
+     * @return The character and its U+ notation, or nullopt if those bytes are not one whole, valid code point
+     */
+    std::optional<std::string> formatCodePoint(std::string_view encodingName, std::span<const u8> buffer);
+
+    /**
+     * @brief The byte size of the code point at a buffer's start
+     * @param encodingName The algorithmic encoding to decode under
+     * @param buffer The bytes to decode from
+     * @param codeUnitSize The size to fall back to when decoding fails
+     * @return The code point's byte size, or `codeUnitSize` so a malformed row still selects one whole unit
+     */
+    size_t codePointSize(std::string_view encodingName, std::span<const u8> buffer, size_t codeUnitSize);
 
     /**
      * @brief Formats a decoded string row like PatternString::formatDisplayValue()

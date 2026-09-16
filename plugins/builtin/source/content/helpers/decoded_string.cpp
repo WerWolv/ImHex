@@ -4,6 +4,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/unicode.hpp>
 
+#include <wolv/utils/string.hpp>
+
 namespace hex::plugin::builtin {
 
     size_t extendToWholeCodePoints(const std::vector<u8> &buffer, size_t targetSize,
@@ -40,6 +42,27 @@ namespace hex::plugin::builtin {
         }
 
         return total;
+    }
+
+    std::optional<std::string> formatCodePoint(std::string_view encodingName, std::span<const u8> buffer) {
+        const auto decoded = decodeAlgorithmicTextBounded(encodingName, buffer, 1);
+        if (!decoded.has_value() || decoded->codepointCount == 0)
+            return std::nullopt;
+
+        const auto codepoints = wolv::util::utf8ToUtf32(decoded->text);
+        if (!codepoints.has_value() || codepoints->empty())
+            return std::nullopt;
+
+        const char32_t codepoint = codepoints->front();
+        return fmt::format("'{0}' (U+{1:04X})", escapeCodepoint(codepoint), u32(codepoint));
+    }
+
+    size_t codePointSize(std::string_view encodingName, std::span<const u8> buffer, size_t codeUnitSize) {
+        const auto decoded = decodeAlgorithmicTextBounded(encodingName, buffer, 1);
+        if (!decoded.has_value() || decoded->bytesConsumed == 0)
+            return codeUnitSize;
+
+        return decoded->bytesConsumed;
     }
 
     std::string formatDecodedString(std::string_view literalPrefix, const pl::core::DecodeResult &decoded, size_t selectionSize) {
