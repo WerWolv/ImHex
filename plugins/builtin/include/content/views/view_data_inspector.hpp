@@ -46,6 +46,14 @@ namespace hex::plugin::builtin {
             std::string filterValue;
 
             /**
+             * @brief Shown in the name column instead of translating unlocalizedName
+             *
+             * Set for a row whose name is not known until it is built, such as
+             * the document encoding row naming the encoding in effect.
+             */
+            std::optional<std::string> displayName;
+
+            /**
              * @brief Whether this row's display error is already logged
              *
              * Stops a failing row from logging on every frame.
@@ -57,6 +65,7 @@ namespace hex::plugin::builtin {
         void invalidateData();
         void updateInspectorRows();
         void updateInspectorRowsTask();
+        void addDocumentEncodingRow();
 
         void executeInspectors();
         void executeInspector(const std::string& code, const std::fs::path& path, const std::map<std::string, pl::core::Token::Literal>& inVariables);
