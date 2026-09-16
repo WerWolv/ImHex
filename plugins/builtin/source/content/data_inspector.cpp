@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
 
     template<std::unsigned_integral T, size_t Size = sizeof(T)>
     static ContentRegistry::DataInspector::impl::EditingFunction stringToUnsigned() requires(sizeof(T) <= sizeof(u64)) {
-        return ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+        return ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
             const auto result = wolv::util::from_chars<u64>(value).value_or(0);
              if (result > std::numeric_limits<T>::max()) return {};
 
@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
 
     template<std::signed_integral T, size_t Size = sizeof(T)>
     static ContentRegistry::DataInspector::impl::EditingFunction stringToSigned() requires(sizeof(T) <= sizeof(u64)) {
-        return ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+        return ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
             const auto result = wolv::util::from_chars<i64>(value).value_or(0);
             if (result > std::numeric_limits<T>::max() || result < std::numeric_limits<T>::min()) return {};
 
@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
 
     template<std::floating_point T>
     static ContentRegistry::DataInspector::impl::EditingFunction stringToFloat() requires(sizeof(T) <= sizeof(long double)) {
-        return ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+        return ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
             const T result = wolv::util::from_chars<double>(value).value_or(0);
 
             std::vector<u8> bytes(sizeof(T), 0x00);
@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
                     return binary;
                 };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::ignore = endian;
 
                 std::string binary = value;
@@ -172,7 +172,7 @@ namespace hex::plugin::builtin {
                 if (binary.size() > 8) return { };
 
                 if (auto result = hex::parseBinaryString(binary); result.has_value())
-                    return { result.value() };
+                    return std::vector<u8>{ result.value() };
                 else
                     return { };
             })
@@ -367,7 +367,7 @@ namespace hex::plugin::builtin {
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::ignore = endian;
 
                 return hex::crypt::encodeSleb128(wolv::util::from_chars<i64>(value).value_or(0));
@@ -384,7 +384,7 @@ namespace hex::plugin::builtin {
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::ignore = endian;
 
                 return hex::crypt::encodeUleb128(wolv::util::from_chars<u64>(value).value_or(0));
@@ -419,12 +419,12 @@ namespace hex::plugin::builtin {
                 auto value = makePrintable(*reinterpret_cast<char8_t *>(buffer.data()));
                 return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::ignore = endian;
 
                 if (value.length() > 1) return { };
 
-                return { u8(value[0]) };
+                return std::vector<u8>{ u8(value[0]) };
             })
         );
 
@@ -440,7 +440,7 @@ namespace hex::plugin::builtin {
                 auto value = fmt::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::wstringToUtf8(std::wstring(&c, 1)).value_or("???"));
                 return [value] { ImGuiExt::TextFormatted("L'{0}'", value.c_str()); return value; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::vector<u8> bytes;
                 auto wideString = wolv::util::utf8ToWstring(value);
 				if (!wideString.has_value())
@@ -468,7 +468,7 @@ namespace hex::plugin::builtin {
                 auto value = fmt::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::utf16ToUtf8(std::u16string(&c, 1)).value_or("???"));
                 return [value] { ImGuiExt::TextFormatted("u'{0}'", value.c_str()); return value; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::vector<u8> bytes;
                 auto wideString = wolv::util::utf8ToUtf16(value);
                 if (!wideString.has_value())
@@ -496,7 +496,7 @@ namespace hex::plugin::builtin {
                 auto value = fmt::format("{0}", c <= 255 ? makePrintable(c) : wolv::util::utf32ToUtf8(std::u32string(&c, 1)).value_or("???"));
                 return [value] { ImGuiExt::TextFormatted("U'{0}'", value.c_str()); return value; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::vector<u8> bytes;
                 auto wideString = wolv::util::utf8ToUtf32(value);
                 if (!wideString.has_value())
@@ -562,7 +562,7 @@ namespace hex::plugin::builtin {
 
                 return [value, copyValue] { ImGuiExt::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
                 std::ignore = endian;
 
                 return hex::decodeByteString(value);
@@ -599,9 +599,12 @@ namespace hex::plugin::builtin {
 
                 return [value, copyValue] { ImGuiExt::TextFormatted("L\"{0}\"", value.c_str()); return copyValue; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
-                auto utf8 =  hex::decodeByteString(value);
-                auto wstring = wolv::util::utf8ToWstring({ utf8.begin(), utf8.end() });
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
+                auto utf8 = hex::decodeByteString(value);
+                if (!utf8.has_value())
+                    return std::nullopt;
+
+                auto wstring = wolv::util::utf8ToWstring({ utf8->begin(), utf8->end() });
                 if (!wstring.has_value())
                     return {};
 
@@ -645,9 +648,12 @@ namespace hex::plugin::builtin {
 
                 return [value, copyValue] { ImGuiExt::TextFormatted("u\"{0}\"", value.c_str()); return copyValue; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
-                auto utf8 =  hex::decodeByteString(value);
-                auto utf16 = wolv::util::utf8ToUtf16({ utf8.begin(), utf8.end() });
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
+                auto utf8 = hex::decodeByteString(value);
+                if (!utf8.has_value())
+                    return std::nullopt;
+
+                auto utf16 = wolv::util::utf8ToUtf16({ utf8->begin(), utf8->end() });
                 if (!utf16.has_value())
                     return {};
 
@@ -691,9 +697,12 @@ namespace hex::plugin::builtin {
 
                 return [value, copyValue] { ImGuiExt::TextFormatted("U\"{0}\"", value.c_str()); return copyValue; };
             },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::vector<u8> {
-                auto utf8 =  hex::decodeByteString(value);
-                auto utf32 = wolv::util::utf8ToUtf32({ utf8.begin(), utf8.end() });
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
+                auto utf8 = hex::decodeByteString(value);
+                if (!utf8.has_value())
+                    return std::nullopt;
+
+                auto utf32 = wolv::util::utf8ToUtf32({ utf8->begin(), utf8->end() });
                 if (!utf32.has_value())
                     return {};
 
