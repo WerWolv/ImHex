@@ -1423,6 +1423,11 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
 #endif
     GLFWwindow* share_window = (bd->ClientApi == GlfwClientApi_OpenGL) ? bd->Window : nullptr;
     vd->Window = glfwCreateWindow((int)viewport->Size.x, (int)viewport->Size.y, "No Title Yet", nullptr, share_window);
+    // IMHEX PATCH BEGIN
+#if (defined(_WIN32) || defined(__linux__)) && !defined(__EMSCRIPTEN__)
+    glfwSetInputMode(vd->Window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+#endif
+    // IMHEX PATCH END
     vd->WindowOwned = true;
     ImGui_ImplGlfw_ContextMap_Add(vd->Window, bd->Context);
     viewport->PlatformHandle = (void*)vd->Window;

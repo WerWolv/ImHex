@@ -555,6 +555,11 @@ namespace hex {
 
         namespace impl {
 
+            static NumLockState s_numLockState = NumLockState::Unknown;
+            void setNumLockState(NumLockState state) {
+                s_numLockState = state;
+            }
+
             // Default to true means we forward to ourselves by default
             static bool s_isMainInstance = true;
             void setMainInstanceStatus(bool status) {
@@ -760,6 +765,10 @@ namespace hex {
 
         GLFWwindow* getMainWindowHandle() {
             return impl::s_mainWindowHandle;
+        }
+
+        NumLockState getNumLockState() {
+            return impl::s_numLockState;
         }
 
         bool isMainWindowFocused() {

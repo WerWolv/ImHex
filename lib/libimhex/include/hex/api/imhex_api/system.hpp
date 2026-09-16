@@ -54,7 +54,21 @@ EXPORT_MODULE namespace hex {
             Error
         };
 
+        enum class NumLockState {
+            Unknown,
+            On,
+            Off
+        };
+
+        /**
+         * @brief Gets the NumLock state reported by the latest key press, not a live OS query.
+         * @return Unknown before a supported key press or on unsupported platforms.
+         */
+        NumLockState getNumLockState();
+
         namespace impl {
+
+            void setNumLockState(NumLockState state);
 
             void setMainInstanceStatus(bool status);
 

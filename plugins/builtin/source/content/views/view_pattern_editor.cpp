@@ -4,6 +4,7 @@
 #include <fonts/tabler_icons.hpp>
 
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/http/store_api.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/file_type_handler.hpp>
@@ -782,9 +783,12 @@ namespace hex::plugin::builtin {
                 updateCount = true;
                 canReplace = m_focusedSubWindowName.contains(TextEditorView);
             }
+            const bool numLockOff = ImHexApi::System::getNumLockState() == ImHexApi::System::NumLockState::Off;
             bool enter     = ImGui::IsKeyPressed(ImGuiKey_Enter, false)         || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false);
-            bool upArrow   = ImGui::IsKeyPressed(ImGuiKey_UpArrow, false)       || ImGui::IsKeyPressed(ImGuiKey_Keypad8, false);
-            bool downArrow = ImGui::IsKeyPressed(ImGuiKey_DownArrow, false)     || ImGui::IsKeyPressed(ImGuiKey_Keypad2, false);
+            bool upArrow   = ImGui::IsKeyPressed(ImGuiKey_UpArrow, false)       ||
+                             (numLockOff && ImGui::IsKeyPressed(ImGuiKey_Keypad8, false));
+            bool downArrow = ImGui::IsKeyPressed(ImGuiKey_DownArrow, false)     ||
+                             (numLockOff && ImGui::IsKeyPressed(ImGuiKey_Keypad2, false));
             bool shift     = ImGui::IsKeyDown(ImGuiKey_LeftShift)               || ImGui::IsKeyDown(ImGuiKey_RightShift);
             bool alt       = ImGui::IsKeyDown(ImGuiKey_LeftAlt)                 || ImGui::IsKeyDown(ImGuiKey_RightAlt);
             std::string childName;

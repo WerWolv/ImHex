@@ -1025,6 +1025,7 @@ namespace hex {
     }
 
     void Window::initGLFW() {
+        ImHexApi::System::impl::setNumLockState(ImHexApi::System::NumLockState::Unknown);
         auto initialWindowProperties = ImHexApi::System::getInitialWindowProperties();
         glfwSetErrorCallback([](int error, const char *desc) {
             bool isWaylandError = error == GLFW_PLATFORM_ERROR;
@@ -1244,6 +1245,19 @@ namespace hex {
         glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
             std::ignore = mods;
 
+            // Releases may be synthesized without modifier flags when a window closes.
+            if (action == GLFW_PRESS) {
+                auto numLockState = ImHexApi::System::NumLockState::Unknown;
+                #if (defined(OS_WINDOWS) || defined(OS_LINUX)) && !defined(OS_WEB)
+                    if (glfwGetInputMode(window, GLFW_LOCK_KEY_MODS) == GLFW_TRUE) {
+                        numLockState = (mods & GLFW_MOD_NUM_LOCK) != 0
+                            ? ImHexApi::System::NumLockState::On
+                            : ImHexApi::System::NumLockState::Off;
+                    }
+                #endif
+                ImHexApi::System::impl::setNumLockState(numLockState);
+            }
+
             #if !defined(OS_WEB)
                 // Handle A-Z keys using their ASCII value instead of the keycode
                 if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
@@ -1431,6 +1445,7 @@ namespace hex {
     }
 
     void Window::exitGLFW() {
+        ImHexApi::System::impl::setNumLockState(ImHexApi::System::NumLockState::Unknown);
         glfwDestroyWindow(m_window);
 
         m_window = nullptr;
