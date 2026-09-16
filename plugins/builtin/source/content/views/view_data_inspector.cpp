@@ -130,6 +130,13 @@ namespace hex::plugin::builtin {
 
             preprocessBytes(buffer);
 
+            // A variable size row selects only what sizeFunction reports it used.
+            std::optional<u64> clickSelectSize;
+            if (entry.sizeFunction)
+                clickSelectSize = (*entry.sizeFunction)(buffer, m_endian);
+            else if (entry.requiredSize > 0 && entry.requiredSize == entry.maxSize)
+                clickSelectSize = entry.requiredSize;
+
             // Insert processed data into the inspector list
             m_workData.emplace_back(
                 entry.unlocalizedName,
@@ -137,6 +144,8 @@ namespace hex::plugin::builtin {
                 entry.editingFunction,
                 false,
                 entry.requiredSize,
+                entry.maxSize,
+                clickSelectSize,
                 entry.unlocalizedName.get()
             );
         }
@@ -211,6 +220,8 @@ namespace hex::plugin::builtin {
                 std::nullopt,
                 false,
                 0,
+                0,
+                std::nullopt,
                 wolv::util::toUTF8String(path)
             );
 
@@ -276,6 +287,8 @@ namespace hex::plugin::builtin {
                     editingFunction,
                     false,
                     pattern->getSize(),
+                    pattern->getSize(),
+                    pattern->getSize() > 0 ? std::optional<u64>(pattern->getSize()) : std::nullopt,
                     wolv::util::toUTF8String(path) + ":" + pattern->getVariableName()
                 );
 
@@ -291,6 +304,8 @@ namespace hex::plugin::builtin {
                     std::nullopt,
                     false,
                     0,
+                    0,
+                    std::nullopt,
                     wolv::util::toUTF8String(path)
                 );
             }
@@ -507,8 +522,9 @@ namespace hex::plugin::builtin {
             // Handle copying the value to the clipboard when clicking the row
             if (ImGui::Selectable("##InspectorLine", m_selectedEntryName == entry.unlocalizedName, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
                 m_selectedEntryName = entry.unlocalizedName;
-                if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && entry.requiredSize > 0) {
-                    ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress(), .size=entry.requiredSize });
+
+                if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && entry.clickSelectSize.has_value()) {
+                    ImHexApi::HexEditor::setSelection(Region { .address=selection->getStartAddress(), .size=*entry.clickSelectSize });
                 }
             }
 
