@@ -32,6 +32,11 @@ set(AVAILABLE_TESTS
         FormatCodePoint
         CodePointSize
 
+    # String codec
+        EncodeStrictRefusesWhatItCannotRepresent
+        EncodeLossySubstitutesRatherThanFailing
+        DecodeReportsMalformedBytes
+
     # Encoding
         DecodeUnicodeText
         DecodeUnicodeTextBounded
@@ -60,6 +65,7 @@ add_executable(${PROJECT_NAME}
         source/decoded_string.cpp
         source/encoding.cpp
         source/encoding_line_cache.cpp
+        source/string_codec.cpp
         source/file.cpp
         source/net.cpp
         source/utils.cpp
