@@ -49,6 +49,11 @@ set(AVAILABLE_TESTS
         NulPictureRoundTrip
         FormatCodePoint
         CodePointSize
+
+    # String codec
+        EncodeStrictRefusesWhatItCannotRepresent
+        EncodeLossySubstitutesRatherThanFailing
+        DecodeReportsMalformedBytes
 )
 
 if (NOT IMHEX_OFFLINE_BUILD)
@@ -68,6 +73,7 @@ add_executable(${PROJECT_NAME}
         source/encoding_line_cache.cpp
         source/file.cpp
         source/net.cpp
+        source/string_codec.cpp
         source/utils.cpp
 
         # A test for plugin code needs the plugin's own implementation compiled in too.
