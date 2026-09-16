@@ -34,7 +34,8 @@ EXPORT_MODULE namespace hex {
              *
              * Applies to a row whose requiredSize and maxSize differ, for example
              * a string row that reads up to a display budget but a shorter
-             * selection ends the string sooner.
+             * selection ends the string sooner, or a UTF-16 code point that
+             * reads 2 or 4 bytes depending on whether it read a surrogate pair.
              */
             using SizeFunction = std::function<size_t(const std::vector<u8> &, std::endian)>;
 

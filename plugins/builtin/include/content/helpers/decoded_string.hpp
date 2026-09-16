@@ -10,7 +10,10 @@
 
 #include <pl/core/string_encode_decode.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <functional>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -87,6 +90,40 @@ namespace hex::plugin::builtin {
         }
 
         return total;
+    }
+
+    /**
+     * @brief Formats the one code point at a buffer's start under a named algorithmic encoding
+     * @param encodingName The algorithmic encoding to decode under
+     * @param buffer The bytes to decode from
+     * @return The character and its U+ notation, or nullopt if those bytes are not one whole, valid code point
+     */
+    inline std::optional<std::string> formatCodePoint(std::string_view encodingName, std::span<const u8> buffer) {
+        const auto decoded = decodeAlgorithmicTextBounded(encodingName, buffer, 1);
+        if (!decoded.has_value() || decoded->codepointCount == 0)
+            return std::nullopt;
+
+        const auto codepoints = wolv::util::utf8ToUtf32(decoded->text);
+        if (!codepoints.has_value() || codepoints->empty())
+            return std::nullopt;
+
+        const char32_t codepoint = codepoints->front();
+        return fmt::format("'{0}' (U+{1:04X})", escapeCodepoint(codepoint), u32(codepoint));
+    }
+
+    /**
+     * @brief The byte size of the code point at a buffer's start
+     * @param encodingName The algorithmic encoding to decode under
+     * @param buffer The bytes to decode from
+     * @param codeUnitSize The size to fall back to when decoding fails
+     * @return The code point's byte size, or `codeUnitSize` so a malformed row still selects one whole unit
+     */
+    inline size_t codePointSize(std::string_view encodingName, std::span<const u8> buffer, size_t codeUnitSize) {
+        const auto decoded = decodeAlgorithmicTextBounded(encodingName, buffer, 1);
+        if (!decoded.has_value() || decoded->bytesConsumed == 0)
+            return codeUnitSize;
+
+        return decoded->bytesConsumed;
     }
 
     /**
