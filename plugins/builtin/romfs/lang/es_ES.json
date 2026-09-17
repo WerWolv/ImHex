@@ -88,8 +88,6 @@
     "hex.builtin.inspector.rgb565": "Color RGB565",
     "hex.builtin.inspector.rgba8": "Color RGBA8",
     "hex.builtin.inspector.sleb128": "sLEB128",
-    "hex.builtin.inspector.string": "Cadena ",
-    "hex.builtin.inspector.wstring": "Cadena (wide)",
     "hex.builtin.inspector.time32": "time32_t",
     "hex.builtin.inspector.time64": "time64_t",
     "hex.builtin.inspector.u16": "",

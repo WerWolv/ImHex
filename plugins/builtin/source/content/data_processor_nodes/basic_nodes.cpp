@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            this->setBufferOnOutput(0, hex::decodeByteString(m_value));
+            this->setBufferOnOutput(0, hex::decodeByteString(m_value).value_or(std::vector<u8>{}));
         }
 
         void store(nlohmann::json &j) const override {

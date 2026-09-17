@@ -29,12 +29,23 @@ EXPORT_MODULE namespace hex {
             using EditingFunction   = std::function<std::optional<std::vector<u8>>(std::string&, std::endian, DoNotUseThisByItselfTag)>;
             using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8> &, std::endian, NumberDisplayStyle)>;
 
+            /**
+             * @brief Reports how many of the generator function's bytes a row actually used
+             *
+             * Applies to a row whose requiredSize and maxSize differ, for example
+             * a string row that reads up to a display budget but a shorter
+             * selection ends the string sooner, or a UTF-16 code point that
+             * reads 2 or 4 bytes depending on whether it read a surrogate pair.
+             */
+            using SizeFunction = std::function<size_t(const std::vector<u8> &, std::endian)>;
+
             struct Entry {
                 UnlocalizedString unlocalizedName;
                 size_t requiredSize;
                 size_t maxSize;
                 GeneratorFunction generatorFunction;
                 std::optional<EditingFunction> editingFunction;
+                std::optional<SizeFunction> sizeFunction;
             };
 
             const std::vector<Entry>& getEntries();
@@ -45,7 +56,11 @@ EXPORT_MODULE namespace hex {
 
             class Widget {
             public:
-                using Function = std::function<std::vector<u8>(const std::string&, std::endian)>;
+                /**
+                 * @brief Encodes a row's typed text into raw bytes
+                 * @return The bytes, or nullopt if the text is not a valid edit
+                 */
+                using Function = std::function<std::optional<std::vector<u8>>(const std::string&, std::endian)>;
 
                 explicit Widget(const Function &function) : m_function(function) {}
 
@@ -55,7 +70,7 @@ EXPORT_MODULE namespace hex {
                     return draw(value, endian);
                 }
 
-                std::vector<u8> getBytes(const std::string &value, std::endian endian) const {
+                std::optional<std::vector<u8>> getBytes(const std::string &value, std::endian endian) const {
                     return m_function(value, endian);
                 }
 
@@ -66,6 +81,9 @@ EXPORT_MODULE namespace hex {
             struct TextInput : Widget {
                 explicit TextInput(const Function &function) : Widget(function) {}
                 std::optional<std::vector<u8>> draw(std::string &value, std::endian endian) override;
+
+            private:
+                bool m_hasInvalidValue = false;
             };
 
         }
@@ -91,13 +109,16 @@ EXPORT_MODULE namespace hex {
          * @param maxSize The maximum number of bytes to read from the data
          * @param displayGeneratorFunction The function that will be called to generate the display function
          * @param editingFunction The function that will be called to edit the data
+         * @param sizeFunction For an entry whose requiredSize and maxSize differ, reports how many of
+         * the read bytes it actually used. Clicking the row then selects that many bytes.
          */
         void add(
             const UnlocalizedString &unlocalizedName,
             size_t requiredSize,
             size_t maxSize,
             impl::GeneratorFunction displayGeneratorFunction,
-            std::optional<impl::EditingFunction> editingFunction = std::nullopt
+            std::optional<impl::EditingFunction> editingFunction = std::nullopt,
+            std::optional<impl::SizeFunction> sizeFunction = std::nullopt
         );
 
         /**

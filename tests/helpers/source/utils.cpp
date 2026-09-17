@@ -54,11 +54,11 @@ TEST_SEQUENCE("EncodeByteString") {
 TEST_SEQUENCE("EncodeByteStringRoundTrip") {
     const std::vector<u8> backslashThenN = { 0x5C, 0x6E };
     TEST_ASSERT(hex::encodeByteString(backslashThenN) == "\\\\n");
-    TEST_ASSERT(hex::decodeByteString(hex::encodeByteString(backslashThenN)) == backslashThenN);
+    TEST_ASSERT(hex::decodeByteString(hex::encodeByteString(backslashThenN)).value() == backslashThenN);
 
     const std::vector<u8> bytes = { 0x00, 0x41, 0x0A, 0x5C, 0x5C, 0x6E, 0xFF };
     TEST_ASSERT(hex::encodeByteString(bytes) == "\\x00A\\n\\\\\\\\n\\xFF");
-    TEST_ASSERT(hex::decodeByteString(hex::encodeByteString(bytes)) == bytes);
+    TEST_ASSERT(hex::decodeByteString(hex::encodeByteString(bytes)).value() == bytes);
 
     TEST_SUCCESS();
 };
@@ -66,33 +66,33 @@ TEST_SEQUENCE("EncodeByteStringRoundTrip") {
 TEST_SEQUENCE("DecodeByteStringEscapes") {
     const auto decode = [](const std::string &string) { return hex::decodeByteString(string); };
 
-    TEST_ASSERT(decode("") == std::vector<u8>{});
-    TEST_ASSERT(decode("abc") == bytesOf("abc"));
-    TEST_ASSERT(decode("\\n") == std::vector<u8>{ 0x0A });
-    TEST_ASSERT(decode("\\x41") == std::vector<u8>{ 0x41 });
-    TEST_ASSERT(decode("\\0") == std::vector<u8>{ 0x00 });
+    TEST_ASSERT(decode("").value() == std::vector<u8>{});
+    TEST_ASSERT(decode("abc").value() == bytesOf("abc"));
+    TEST_ASSERT(decode("\\n").value() == std::vector<u8>{ 0x0A });
+    TEST_ASSERT(decode("\\x41").value() == std::vector<u8>{ 0x41 });
+    TEST_ASSERT(decode("\\0").value() == std::vector<u8>{ 0x00 });
 
     // \u and \U both name a Unicode scalar value and encode it as UTF-8.
-    TEST_ASSERT(decode("\\u0041") == std::vector<u8>{ 0x41 });
-    TEST_ASSERT(decode("\\u00E9") == (std::vector<u8>{ 0xC3, 0xA9 }));
-    TEST_ASSERT(decode("\\u20AC") == (std::vector<u8>{ 0xE2, 0x82, 0xAC }));
-    TEST_ASSERT(decode("\\U00000041") == std::vector<u8>{ 0x41 });
-    TEST_ASSERT(decode("\\U0001F600") == (std::vector<u8>{ 0xF0, 0x9F, 0x98, 0x80 }));
+    TEST_ASSERT(decode("\\u0041").value() == std::vector<u8>{ 0x41 });
+    TEST_ASSERT(decode("\\u00E9").value() == (std::vector<u8>{ 0xC3, 0xA9 }));
+    TEST_ASSERT(decode("\\u20AC").value() == (std::vector<u8>{ 0xE2, 0x82, 0xAC }));
+    TEST_ASSERT(decode("\\U00000041").value() == std::vector<u8>{ 0x41 });
+    TEST_ASSERT(decode("\\U0001F600").value() == (std::vector<u8>{ 0xF0, 0x9F, 0x98, 0x80 }));
 
     // A surrogate half is not a scalar value, so it has no UTF-8 encoding.
-    TEST_ASSERT(decode("\\uD800").empty());
-    TEST_ASSERT(decode("\\uDFFF").empty());
-    TEST_ASSERT(decode("\\U0000D800").empty());
+    TEST_ASSERT(!decode("\\uD800").has_value());
+    TEST_ASSERT(!decode("\\uDFFF").has_value());
+    TEST_ASSERT(!decode("\\U0000D800").has_value());
 
     // Past the last code point in the Unicode codespace.
-    TEST_ASSERT(decode("\\U00110000").empty());
+    TEST_ASSERT(!decode("\\U00110000").has_value());
 
     // Malformed escapes.
-    TEST_ASSERT(decode("\\q").empty());
-    TEST_ASSERT(decode("\\u12").empty());
-    TEST_ASSERT(decode("\\u12ZZ").empty());
-    TEST_ASSERT(decode("\\U0001F60").empty());
-    TEST_ASSERT(decode("\\x4").empty());
+    TEST_ASSERT(!decode("\\q").has_value());
+    TEST_ASSERT(!decode("\\u12").has_value());
+    TEST_ASSERT(!decode("\\u12ZZ").has_value());
+    TEST_ASSERT(!decode("\\U0001F60").has_value());
+    TEST_ASSERT(!decode("\\x4").has_value());
 
     TEST_SUCCESS();
 };

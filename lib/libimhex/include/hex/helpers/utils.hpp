@@ -113,7 +113,13 @@ namespace hex {
     [[nodiscard]] std::string escapeByte(u8 byte);
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
-    [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
+
+    /**
+     * @brief Parses hex::encodeByteString()'s escape syntax back into bytes
+     * @param string The escaped text to parse
+     * @return The decoded bytes, or nullopt on a malformed escape
+     */
+    [[nodiscard]] std::optional<std::vector<u8>> decodeByteString(const std::string &string);
 
     [[nodiscard]] std::wstring utf8ToUtf16(const std::string& utf8);
     [[nodiscard]] std::string utf16ToUtf8(const std::wstring& utf16);

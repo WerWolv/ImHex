@@ -907,26 +907,58 @@ namespace hex {
 
         namespace EditWidget {
             std::optional<std::vector<u8>> TextInput::draw(std::string &value, std::endian endian) {
-                if (ImGui::InputText("##InspectorLineEditing", value,
-                                 ImGuiInputTextFlags_EnterReturnsTrue |
-                                 ImGuiInputTextFlags_AutoSelectAll)) {
-                    return getBytes(value, endian);
+                // Sized generously; one typed character can take several UTF-8 bytes.
+                const auto bufferSize = std::max<size_t>(value.size() * 4, 256) + 1;
+                value.resize(bufferSize - 1, '\0');
+
+                struct CallbackData {
+                    TextInput *self;
+                    std::endian endian;
+                } callbackData { this, endian };
+
+                const bool borderPushed = m_hasInvalidValue;
+                if (borderPushed) {
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
                 }
 
-                return std::nullopt;
+                const bool submitted = ImGui::InputText("##InspectorLineEditing", value.data(), bufferSize,
+                    ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackEdit,
+                    [](ImGuiInputTextCallbackData *data) -> int {
+                        auto &callbackData = *static_cast<CallbackData*>(data->UserData);
+                        std::string liveText(data->Buf, size_t(data->BufTextLen));
+                        auto bytes = callbackData.self->getBytes(liveText, callbackData.endian);
+                        callbackData.self->m_hasInvalidValue = !bytes.has_value();
+                        return 0;
+                    }, &callbackData);
+
+                if (borderPushed) {
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
+                }
+
+                // Trim to the typed length each frame, so the buffer cannot grow unbounded.
+                value = value.c_str();
+
+                if (!submitted)
+                    return std::nullopt;
+
+                auto bytes = getBytes(value, endian);
+                m_hasInvalidValue = !bytes.has_value();
+                return bytes;
             }
         }
 
         void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
-            impl::s_entries->push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+            impl::s_entries->push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction), std::nullopt });
         }
 
-        void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
+        void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction, std::optional<impl::SizeFunction> sizeFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
-            impl::s_entries->push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+            impl::s_entries->push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction), std::move(sizeFunction) });
         }
 
         void drawMenuItems(const std::function<void()> &function) {
