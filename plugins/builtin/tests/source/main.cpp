@@ -429,6 +429,14 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
     TEST_ASSERT(!ProjectManager::load(root));
 
+    projectSettings = validProjectSettings;
+    projectSettings["associations"]["41"]["hex.builtin.pattern-source"] = {
+        { "kind", "link" },
+        { "path", "relative.hexpat" }
+    };
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+
     wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(validProjectSettings.dump());
     TEST_ASSERT(ProjectManager::load(root));
     providers = ImHexApi::Provider::getProviders();
@@ -469,7 +477,15 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     EventFileBackedProviderDataChanged::unsubscribe(&patternSourceListener);
     TEST_ASSERT(patternSourceChanges == std::set<u32>({ localProvider->getID() }));
 
+    const auto linkedPatternPath = backupRoot / "linked-pattern.hexpat";
+    wolv::io::File(linkedPatternPath, wolv::io::File::Mode::Create).writeString("u8 linked @ 0x00;");
+    TEST_ASSERT(FileBackedProviderDataRegistry::bind(localProvider.get(), "hex.builtin.pattern-source", linkedPatternPath));
     TEST_ASSERT(ProjectManager::store());
+    const auto linkedProjectSettings = nlohmann::json::parse(
+        wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Read).readString());
+    const auto &linkedPattern = linkedProjectSettings["associations"][std::to_string(localProvider->getID())]["hex.builtin.pattern-source"];
+    TEST_ASSERT(linkedPattern["kind"] == "link");
+    TEST_ASSERT(std::filesystem::path(linkedPattern["path"].get<std::string>()) == linkedPatternPath);
     const auto manifestWithLocalFile = nlohmann::json::parse(
         wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(manifestWithLocalFile["providers"].get<std::set<u32>>().contains(localProvider->getID()));
@@ -486,6 +502,39 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto renamedProviderSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / fmt::format("{}.json", localProvider->getID()), wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(renamedProviderSettings["settings"]["path"] == "renamed-project-local.bin");
+
+    const auto linkedProviderId = localProvider->getID();
+    localProvider.reset();
+    TEST_ASSERT(ProjectManager::load(root));
+    const auto reloadedProviders = ImHexApi::Provider::getProviders();
+    const auto linkedProvider = std::ranges::find_if(reloadedProviders, [linkedProviderId](const auto *provider) {
+        return provider->getID() == linkedProviderId;
+    });
+    TEST_ASSERT(linkedProvider != reloadedProviders.end());
+    const auto restoredPatternBinding = FileBackedProviderDataRegistry::getBinding(*linkedProvider, "hex.builtin.pattern-source");
+    TEST_ASSERT(restoredPatternBinding.has_value());
+    TEST_ASSERT(*restoredPatternBinding == linkedPatternPath);
+
+    std::error_code removeError;
+    std::filesystem::remove(linkedPatternPath, removeError);
+    TEST_ASSERT(!removeError);
+    TEST_ASSERT(ProjectManager::load(root));
+    const auto providersWithMissingLink = ImHexApi::Provider::getProviders();
+    const auto providerWithMissingLink = std::ranges::find_if(providersWithMissingLink, [linkedProviderId](const auto *provider) {
+        return provider->getID() == linkedProviderId;
+    });
+    TEST_ASSERT(providerWithMissingLink != providersWithMissingLink.end());
+    TEST_ASSERT(!FileBackedProviderDataRegistry::getBinding(*providerWithMissingLink, "hex.builtin.pattern-source").has_value());
+
+    ImHexApi::Provider::setCurrentProvider(*providerWithMissingLink);
+    RequestSetPatternLanguageCode::post("u8 detached @ 0x00;");
+    TEST_ASSERT(ProjectManager::store());
+    const auto detachedProjectSettings = nlohmann::json::parse(
+        wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Read).readString());
+    const auto &detachedPattern = detachedProjectSettings["associations"][std::to_string(linkedProviderId)]["hex.builtin.pattern-source"];
+    TEST_ASSERT(detachedPattern.is_string());
+    const auto detachedPatternPath = root / detachedPattern.get<std::string>();
+    TEST_ASSERT(wolv::io::File(detachedPatternPath, wolv::io::File::Mode::Read).readString() == "u8 detached @ 0x00;");
 
     TEST_SUCCESS();
 };

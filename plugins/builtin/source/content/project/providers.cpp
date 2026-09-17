@@ -185,17 +185,7 @@ namespace hex::plugin::builtin::project::impl {
                     }).dump(4);
                 }
                 if (projectState.associationsDirty || !snapshot.removedProviderIds.empty()) {
-                    nlohmann::json associations = nlohmann::json::object();
-                    for (const auto &[providerId, entries] : projectState.associations) {
-                        if (!providerIds.contains(providerId))
-                            continue;
-                        for (const auto &[handler, path] : entries)
-                            associations[std::to_string(providerId)][handler] = path.generic_string();
-                    }
-                    snapshot.associations = nlohmann::json({
-                        { "version", ProjectFormatVersion },
-                        { "associations", std::move(associations) }
-                    }).dump(4);
+                    snapshot.associations = serializeAssociations(providerIds);
                 }
             } catch (const std::exception &error) {
                 log::error("Failed to prepare project autosave: {}", error.what());
@@ -237,8 +227,10 @@ namespace hex::plugin::builtin::project::impl {
                 continue;
 
             for (const auto &[typeId, relativePath] : providerAssociations->second) {
-                if (FileBackedProviderDataRegistry::get(typeId) != nullptr)
-                    std::ignore = FileBackedProviderDataRegistry::bind(provider, typeId, root / relativePath);
+                const auto path = relativePath.is_absolute() ? relativePath : root / relativePath;
+                std::error_code error;
+                if (FileBackedProviderDataRegistry::get(typeId) != nullptr && std::fs::is_regular_file(path, error) && !error)
+                    std::ignore = FileBackedProviderDataRegistry::bind(provider, typeId, path);
             }
         }
     }
@@ -250,11 +242,19 @@ namespace hex::plugin::builtin::project::impl {
         for (auto *provider : ImHexApi::Provider::getProviders()) {
             for (auto *data : FileBackedProviderDataRegistry::getTypes()) {
                 const auto &type = data->getType();
-                if (data->isBound(provider) || !data->hasPendingData(provider) || type.extensions.empty())
+                const auto associations = projectState.associations.find(provider->getID());
+                if (data->isBound(provider) || !data->hasPendingData(provider) || type.extensions.empty() ||
+                    (associations != projectState.associations.end() && associations->second.contains(type.typeId)))
                     continue;
 
                 const auto extension = type.extensions.front().spec;
-                const auto relativePath = std::fs::path(fmt::format("{}.{}", getProviderFileStem(provider), extension));
+                const auto stem = getProviderFileStem(provider);
+                auto relativePath = std::fs::path(fmt::format("{}.{}", stem, extension));
+                std::error_code error;
+                for (u32 index = 2; std::fs::exists(root / relativePath, error) && !error; ++index)
+                    relativePath = std::fs::path(fmt::format("{}-{}.{}", stem, index, extension));
+                if (error)
+                    continue;
                 if (data->bind(provider, root / relativePath)) {
                     projectState.associations[provider->getID()][type.typeId] = relativePath;
                     associationsChanged = true;

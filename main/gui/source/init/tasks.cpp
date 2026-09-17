@@ -9,6 +9,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
+#include <hex/api/content_registry/background_services.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
@@ -110,6 +111,9 @@ namespace hex::init {
             log::fatal("Please report this issue on the ImHex GitHub page!");
             log::fatal("To the person fixing this, read the comment above this message for more information.");
         });
+
+        // A service thread must not reach an AutoReset object that cleanup() already reset.
+        ContentRegistry::BackgroundServices::impl::stopServices();
 
         ImHexApi::System::impl::cleanup();
 
