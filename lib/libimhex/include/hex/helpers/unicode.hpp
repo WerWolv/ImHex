@@ -21,11 +21,19 @@ namespace hex {
     bool isSingleCharacter(std::string_view text);
 
     /**
-     * @brief Checks whether `byte` is a standard-ASCII control code
-     * @param byte The byte to check
-     * @return Whether the byte is a control code, which has no glyph
+     * @brief Reads `text` as exactly one whole, valid UTF-8 code point
+     * @param text The text to read
+     * @return Its code point, or std::nullopt when isSingleCharacter() is false for it
      */
-    bool isControlCode(u8 byte);
+    std::optional<char32_t> decodeSingleCodepoint(std::string_view text);
+
+    /**
+     * @brief Checks whether `codepoint` is a C0 control or DELETE
+     * @param codepoint The code point to check
+     * @return Whether it is a control code, which has no glyph. C1, U+0080 to U+009F, is not
+     * one, since Unicode has a picture character for only C0 and DELETE.
+     */
+    bool isControlCode(char32_t codepoint);
 
     /**
      * @brief Escapes one decoded code point for display

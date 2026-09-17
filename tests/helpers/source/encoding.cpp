@@ -241,6 +241,13 @@ TEST_SEQUENCE("SingleCharacterAndControlCodes") {
     TEST_ASSERT(!hex::isControlCode(0x41));
     TEST_ASSERT(!hex::isControlCode(0x80));
 
+    // A code point above ASCII is not one, whatever its low byte says.
+    TEST_ASSERT(!hex::isControlCode(U'\u2022'));
+    TEST_ASSERT(!hex::isControlCode(char32_t(0x0100)));
+
+    // C1 has no picture character of its own, so it is not one either.
+    TEST_ASSERT(!hex::isControlCode(char32_t(0x0085)));
+
     TEST_SUCCESS();
 };
 
@@ -257,24 +264,51 @@ TEST_SEQUENCE("EncodingLookupRejectsPathTraversal") {
 TEST_SEQUENCE("CodepageFromEncoding") {
     const auto &ascii = hex::Codepage::ascii();
     TEST_ASSERT(ascii.getName().empty());
-    TEST_ASSERT(ascii['A'] == "A");
-    TEST_ASSERT(ascii[' '] == " ");
-    TEST_ASSERT(ascii[0x00].empty());
-    TEST_ASSERT(ascii[0x7F].empty());
-    TEST_ASSERT(ascii[0x80].empty());
+    TEST_ASSERT(ascii['A'] == hex::Codepoint(U'A'));
+    TEST_ASSERT(ascii[' '] == hex::Codepoint(U' '));
+    TEST_ASSERT(ascii[0x00] == hex::Codepoint(U'\0'));
+    TEST_ASSERT(ascii[0x7F] == hex::Codepoint(0x7F));
+    TEST_ASSERT(ascii[0x80] == hex::Codepoint::Invalid);
     const hex::EncodingFile singleByte(hex::EncodingFile::Type::Thingy, std::string(
         "80=\xCE\xB1\n"
         "81=\xCE\xB2\n"));
     const auto codepage = hex::Codepage::fromEncoding(singleByte);
     TEST_ASSERT(codepage.has_value());
-    TEST_ASSERT((*codepage)[0x80] == "\xCE\xB1");
-    TEST_ASSERT((*codepage)[0x81] == "\xCE\xB2");
-    TEST_ASSERT((*codepage)[0x82].empty());
+    TEST_ASSERT((*codepage)[0x80] == hex::Codepoint(U'\u03B1'));
+    TEST_ASSERT((*codepage)[0x81] == hex::Codepoint(U'\u03B2'));
+    TEST_ASSERT((*codepage)[0x82] == hex::Codepoint::Invalid);
 
     // A table with a multi byte sequence cannot give every byte its own cell.
     const hex::EncodingFile multiByte(hex::EncodingFile::Type::Thingy, std::string(
         "8140=\xE3\x81\x82\n"));
     TEST_ASSERT(!hex::Codepage::fromEncoding(multiByte).has_value());
+
+    // A byte that draws as more than one code point cannot either.
+    const hex::EncodingFile multiCharacter(hex::EncodingFile::Type::Thingy, std::string(
+        "80=ab\n"));
+    TEST_ASSERT(!hex::Codepage::fromEncoding(multiCharacter).has_value());
+
+    // A control code's name is text, not a character, so this table is not a codepage.
+    const hex::EncodingFile namedControlCode(hex::EncodingFile::Type::Thingy, std::string(
+        "00=NUL\n"
+        "80=\xCE\xB1\n"));
+    TEST_ASSERT(!hex::Codepage::fromEncoding(namedControlCode).has_value());
+
+    // A table names a control code with its escape instead.
+    const hex::EncodingFile escapedControlCode(hex::EncodingFile::Type::Thingy, std::string(
+        "00=\\u0000\n"
+        "07=\\u2022\n"
+        "25=\\u000A\n"
+        "80=\xCE\xB1\n"));
+    const auto withControlCodes = hex::Codepage::fromEncoding(escapedControlCode);
+    TEST_ASSERT(withControlCodes.has_value());
+    TEST_ASSERT((*withControlCodes)[0x00] == hex::Codepoint(U'\0'));
+    TEST_ASSERT((*withControlCodes)[0x80] == hex::Codepoint(U'\u03B1'));
+
+    // The character decides what the byte stands for, not the byte itself.
+    TEST_ASSERT((*withControlCodes)[0x25] == hex::Codepoint(U'\u000A'));
+    TEST_ASSERT((*withControlCodes)[0x07] == hex::Codepoint(U'\u2022'));
+    TEST_ASSERT((*withControlCodes)[0x0A] == hex::Codepoint::Invalid);
 
     TEST_SUCCESS();
 };
