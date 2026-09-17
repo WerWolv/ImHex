@@ -5,11 +5,19 @@
 #include <array>
 #include <optional>
 #include <string>
-#include <string_view>
 
 namespace hex {
 
     class EncodingFile;
+
+    /**
+     * @brief A Unicode code point
+     *
+     * Invalid stands for no code point. Unicode stops at U+10FFFF, so -1 is never a character.
+     */
+    enum class Codepoint : char32_t {
+        Invalid = char32_t(-1)
+    };
 
     /**
      * @brief A single-byte character set
@@ -30,17 +38,17 @@ namespace hex {
          * @brief Builds a codepage from a single-byte encoding
          * @param encoding The encoding to convert
          * @return The codepage, or std::nullopt when `encoding` is not one: at least one of its
-         * characters takes more than one byte
+         * characters takes more than one byte, or is more than one code point
          */
         static std::optional<Codepage> fromEncoding(const EncodingFile &encoding);
 
         /**
-         * @brief Looks up the character a byte draws as
+         * @brief Looks up the character a byte stands for
          * @param byte The byte to look up
-         * @return Its character, or an empty view when the codepage gives it none of its own.
-         * That covers both a control code and an unmapped byte.
+         * @return Its code point, which can be a control code, or Codepoint::Invalid when the
+         * codepage maps the byte to no character at all
          */
-        [[nodiscard]] std::string_view operator[](u8 byte) const { return m_characters[byte]; }
+        [[nodiscard]] Codepoint operator[](u8 byte) const { return m_characters[byte]; }
 
         /**
          * @brief Gets the codepage's name
@@ -49,9 +57,9 @@ namespace hex {
         [[nodiscard]] const std::string& getName() const { return m_name; }
 
     private:
-        Codepage() = default;
+        Codepage() { m_characters.fill(Codepoint::Invalid); }
 
-        std::array<std::string, 256> m_characters;
+        std::array<Codepoint, 256> m_characters;
         std::string m_name;
     };
 
