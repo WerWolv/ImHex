@@ -36,16 +36,20 @@ namespace hex::ui {
             if (size == 1) {
                 const auto c = static_cast<unsigned char>(data[0]);
 
-                // A byte with no character falls through to the tables below.
-                if (m_codepage != nullptr) {
-                    if (const auto text = (*m_codepage)[c]; !text.empty()) {
-                        ImGui::TextUnformatted(text.data(), text.data() + text.size());
-                        return;
-                    }
+                // The codepage decides the cell. It gives an unmapped byte no character at all.
+                const auto codepoint = m_codepage != nullptr ? (*m_codepage)[c] : Codepage::ascii()[c];
+                const auto character = char32_t(codepoint);
+                const bool hasCharacter = codepoint != Codepoint::Invalid;
+
+                if (hasCharacter && !isControlCode(character)) {
+                    std::array<char, 5> text = {};
+                    const auto length = ImTextCharToUtf8(text.data(), character);
+                    ImGui::TextUnformatted(text.data(), text.data() + length);
+                    return;
                 }
 
                 // A control code's picture is correct under any encoding.
-                if (m_extendedAscii && isControlCode(c)) {
+                if (hasCharacter && m_extendedAscii) {
                     constexpr static std::array ControlCharacters = {
                         "\u2400", "\u2401", "\u2402", "\u2403", "\u2404", "\u2405", "\u2406", "\u2407",
                         "\u2408", "\u2409", "\u240A", "\u240B", "\u240C", "\u240D", "\u240E", "\u240F",
@@ -53,17 +57,12 @@ namespace hex::ui {
                         "\u2418", "\u2419", "\u241A", "\u241B", "\u241C", "\u241D", "\u241E", "\u241F",
                     };
 
-                    ImGuiExt::TextFormattedDisabled(c == 0x7F ? "\u2421" : ControlCharacters[c]);
+                    ImGuiExt::TextFormattedDisabled(character == 0x7F ? "\u2421" : ControlCharacters[character]);
                     return;
                 }
 
                 // CP1252 fills undefined high bytes, but never over a declared table.
-                const bool allowExtendedAscii = m_extendedAscii && !m_codepageDeclared;
-
-                if (std::isprint(c) != 0) {
-                    const std::array<char, 2> string = { char(c), 0x00 };
-                    ImGui::TextUnformatted(string.data());
-                } else if (allowExtendedAscii) {
+                if (!hasCharacter && m_extendedAscii && !m_codepageDeclared) {
                     constexpr static std::array ExtendedAsciiCharacters = {
                         "\u20AC", "\u0081", "\u201A", "\u0192", "\u201E", "\u2026", "\u2020", "\u2021",
                         "\u02C6", "\u2030", "\u0160", "\u2039", "\u0152", "\u008D", "\u017D", "\u008F",
@@ -84,9 +83,10 @@ namespace hex::ui {
                     };
 
                     ImGui::TextUnformatted(ExtendedAsciiCharacters[c - 0x80]);
-                } else {
-                    ImGuiExt::TextFormattedDisabled(".");
+                    return;
                 }
+
+                ImGuiExt::TextFormattedDisabled(".");
             } else {
                 ImGuiExt::TextFormattedDisabled(".");
             }
