@@ -21,6 +21,17 @@ set(AVAILABLE_TESTS
         EncodeByteString
         EncodeByteStringRoundTrip
 
+    # Data Inspector string decoding
+        DecodeThroughSelectionStopsAtTheSelection
+        DecodeThroughSelectionFinishesAStraddlingCodePoint
+        DecodeThroughSelectionReportsMalformedBytes
+        DecodeThroughSelectionHonoursTheDisplayBudget
+        ExtendToWholeCodePoints
+        FormatDecodedStringMarksTruncation
+        NulPictureRoundTrip
+        FormatCodePoint
+        CodePointSize
+
     # Encoding
         DecodeUnicodeText
         DecodeUnicodeTextBounded
@@ -46,6 +57,7 @@ endif ()
 
 add_executable(${PROJECT_NAME}
         source/common.cpp
+        source/decoded_string.cpp
         source/encoding.cpp
         source/encoding_line_cache.cpp
         source/file.cpp
@@ -56,7 +68,10 @@ add_executable(${PROJECT_NAME}
 
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 
-target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_include_directories(${PROJECT_NAME} PRIVATE
+        include
+        ${CMAKE_SOURCE_DIR}/plugins/builtin/include
+        ${CMAKE_SOURCE_DIR}/plugins/ui/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex tests_common ${FMT_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY})

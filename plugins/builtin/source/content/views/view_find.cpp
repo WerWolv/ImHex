@@ -346,7 +346,7 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        auto input = hex::decodeByteString(settings.sequence);
+        auto input = hex::decodeByteString(settings.sequence).value_or(std::vector<u8>{});
         if (input.empty())
             return { };
 
@@ -838,7 +838,7 @@ namespace hex::plugin::builtin {
                         ImGui::BeginDisabled(m_replaceBuffer.empty());
                         if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
                             auto provider = ImHexApi::Provider::get();
-                            auto bytes = decodeByteString(m_replaceBuffer);
+                            auto bytes = decodeByteString(m_replaceBuffer).value_or(std::vector<u8>{});
 
                             for (const auto &occurrence : *m_sortedOccurrences) {
                                 if (occurrence.selected) {
@@ -952,7 +952,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::Checkbox("hex.builtin.view.find.sequences.ignore_case"_lang, &settings.ignoreCase);
 
-                        m_settingsValid = !settings.sequence.empty() && !hex::decodeByteString(settings.sequence).empty();
+                        m_settingsValid = !settings.sequence.empty() && !hex::decodeByteString(settings.sequence).value_or(std::vector<u8>{}).empty();
 
                         ImGui::EndTabItem();
                     }
