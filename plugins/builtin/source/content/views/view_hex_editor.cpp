@@ -1178,8 +1178,8 @@ namespace hex::plugin::builtin {
         /* Resize */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.resize"_unlocalized }, ICON_VS_ARROW_BOTH, 1700, Shortcut::None,
             [this] {
-                auto provider = ImHexApi::Provider::get();
-                this->openPopup<PopupResize>(provider->getActualSize());
+                auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get()));
+                this->openPopup<PopupResize>(selection);
             },
             [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isResizable(); },
             this
@@ -1188,7 +1188,7 @@ namespace hex::plugin::builtin {
         /* Insert */
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.insert"_unlocalized }, ICON_VS_INSERT, 1750, Shortcut::None,
             [this] {
-                auto selection      = ImHexApi::HexEditor::getSelection();
+                auto selection = ImHexApi::HexEditor::getSelection();
 
                 this->openPopup<PopupInsert>(selection->getStartAddress(), 0x00);
             },
