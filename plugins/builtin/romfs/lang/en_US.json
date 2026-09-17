@@ -970,6 +970,7 @@
     "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.button.selectable.insert_after": "Insert After",
     "hex.builtin.view.hex_editor.menu.edit.remove": "Remove...",
     "hex.builtin.view.hex_editor.menu.edit.resize": "Resize...",
+    "hex.builtin.view.hex_editor.menu.edit.resize_selection": "Resize selected region",
     "hex.builtin.view.hex_editor.menu.edit.select": "Select...",
     "hex.builtin.view.hex_editor.menu.edit.select_all": "Select all",
     "hex.builtin.view.hex_editor.menu.edit.set_base": "Set Base Address...",
