@@ -20,7 +20,6 @@
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <popups/popup_file_chooser.hpp>
 #include <content/helpers/popup_encoding_chooser.hpp>
 
 namespace hex::plugin::builtin {
