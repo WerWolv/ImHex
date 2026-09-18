@@ -355,6 +355,19 @@ namespace hex {
         return iter != a.end();
     }
 
+    // can be generalized further to std::ranges::range if needed
+    template<class T>
+    [[nodiscard]] bool isUnique(const std::vector<T>& vec) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            for (size_t j = i + 1; j < vec.size(); ++j) {
+                if (vec[i] == vec[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     template<typename T, typename... VariantTypes>
     [[nodiscard]] T get_or(const std::variant<VariantTypes...> &variant, T alt) {
         const T *value = std::get_if<T>(&variant);
