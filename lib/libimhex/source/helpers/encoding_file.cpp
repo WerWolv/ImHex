@@ -72,11 +72,39 @@ namespace hex {
         }
 
         /**
-         * @brief Finds the table file `name` names, if there is one
+         * @brief Finds the table file `name` names, if there is one, however its case or
+         * punctuation is written
+         *
+         * For getEncodingByName(), which looks a table up by the name a person typed, such as
+         * through `#pragma encoding`. A `-alias` line uses findEncodingFileByStem() instead,
+         * since it names a file, not a name a person typed.
          */
         std::optional<std::fs::path> findEncodingFile(std::string_view name) {
             // A directory part becomes "_". A script reaches this with no sandbox prompt.
             const auto fileName = encodingFileName(name) + ".tbl";
+
+            for (const auto &basePath : paths::Encodings.read()) {
+                auto path = basePath / fileName;
+                if (std::fs::is_regular_file(path))
+                    return path;
+            }
+
+            return std::nullopt;
+        }
+
+        /**
+         * @brief Finds the table file whose stem is exactly `stem`, if there is one
+         *
+         * A `-alias` line names the file it links to directly, the way a symbolic link names a
+         * file, so it takes the stem as written: no case-folding, no substituted characters, the
+         * way encodingFileName() gives findEncodingFile().
+         */
+        std::optional<std::fs::path> findEncodingFileByStem(std::string_view stem) {
+            // A directory part reaches no file, since a stem holds none.
+            if (stem.find_first_of("/\\") != std::string_view::npos)
+                return std::nullopt;
+
+            const auto fileName = std::string(stem) + ".tbl";
 
             for (const auto &basePath : paths::Encodings.read()) {
                 auto path = basePath / fileName;
@@ -138,13 +166,13 @@ namespace hex {
          * A -include line names a relative path with its own extension, such as
          * "includes/box_drawing.tbl", read relative to `context`. Empty `context` instead tries
          * every encodings search path in turn, for a table with no file of its own to be relative
-         * to. A -alias line still names a bare encoding name, such as "iso8859_1", the way
-         * #pragma encoding does, and is looked up the same way regardless of `context`. The two
-         * never look alike: only a path has a "." in it.
+         * to. A -alias line names the stem of the file it links to, such as "iso8859_1", and is
+         * looked up the same way regardless of `context`. The two never look alike: only a path
+         * has a "." in it.
          */
         std::optional<ResolvedTable> readEncodingFile(const std::fs::path &context, std::string_view name) {
             if (!std::fs::path(std::string(name)).has_extension()) {
-                const auto path = findEncodingFile(name);
+                const auto path = findEncodingFileByStem(name);
                 if (!path.has_value())
                     return std::nullopt;
 
@@ -782,7 +810,7 @@ namespace hex {
             if (!visited.emplace(*alias).second)
                 return broken;
 
-            const auto next = findEncodingFile(*alias);
+            const auto next = findEncodingFileByStem(*alias);
             if (!next.has_value())
                 return broken;
 

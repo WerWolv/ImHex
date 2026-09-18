@@ -29,6 +29,7 @@ set(AVAILABLE_TESTS
         EncodingFileIncludes
         EncodingFileIncludeContext
         EncodingFileAliases
+        EncodingFileAliasRejectsPathTraversal
         EncodingFileMetadata
         EncodingFileAmbiguity
         EncodingFileCodepointEscapes

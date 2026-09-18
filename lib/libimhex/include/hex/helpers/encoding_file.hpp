@@ -36,8 +36,9 @@ namespace hex {
      * @param context Where the table naming it lives, from the last call's ResolvedTable, or
      * empty for the first call
      * @param name For `-include`, a relative path with its own extension, such as
-     * "includes/box_drawing.tbl", read next to `context`. For `-alias`, a bare encoding name,
-     * such as "iso8859_1".
+     * "includes/box_drawing.tbl", read next to `context`. For `-alias`, the stem of the file it
+     * links to, such as "iso8859_1", taken as written: no case-folding, unlike
+     * getEncodingByName().
      * @return The table, or std::nullopt when there is no such table
      */
     using IncludeResolver = std::function<std::optional<ResolvedTable>(const std::fs::path &context, std::string_view name)>;
@@ -54,9 +55,10 @@ namespace hex {
      *   own file and with its own extension, such as "includes/box_drawing.tbl". It fills only
      *   the bytes this table gives no value of its own, whatever order the lines are in.
      * - `-description text` says what the table is for. It takes the rest of the line.
-     * - `-alias name` makes this table another name for encodings/name.tbl, the way a symbolic
-     *   link is another name for a file. Such a table holds nothing else but comments, which
-     *   are the lines the parser cannot read.
+     * - `-alias name` makes this table another name for the file whose stem is exactly `name`,
+     *   the way a symbolic link is another name for a file. `name` is taken as written, with
+     *   none of the case-folding `#pragma encoding` gets. Such a table holds nothing else but
+     *   comments, which are the lines the parser cannot read.
      *
      * An include carries only entries. A table's name and description are its own.
      */
@@ -191,9 +193,11 @@ namespace hex {
      * @brief Looks an encoding up by its name
      *
      * `name` reaches a file through encodingFileName(), which keeps the lookup in the encodings
-     * directory. A table names itself with a `-name` line, so `#pragma encoding` finds it by
-     * that name. A table whose only line is `-alias` is another name for the table it points
-     * at. Each table is parsed once and cached for the life of the process.
+     * directory and tolerates however its case or punctuation is written. A table names itself
+     * with a `-name` line, so `#pragma encoding` finds it by that name. A table whose only line
+     * is `-alias` is another name for the table it points at, though a `-alias` line itself
+     * takes the stem it names literally, unlike this lookup. Each table is parsed once and
+     * cached for the life of the process.
      *
      * @param name The encoding's name
      * @return The encoding, or nullptr when no such table exists

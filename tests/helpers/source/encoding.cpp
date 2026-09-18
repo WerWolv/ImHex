@@ -318,6 +318,15 @@ TEST_SEQUENCE("EncodingFileAliases") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("EncodingFileAliasRejectsPathTraversal") {
+    // A -alias line names a file's stem, not a path, so a directory part reaches no file,
+    // whatever the real encodings directory holds.
+    const hex::EncodingFile traversal(hex::EncodingFile::Type::Thingy, std::string("-alias ../../../etc/passwd\n"));
+    TEST_ASSERT(!traversal.valid());
+
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("EncodingFileMetadata") {
     // The name keeps the case it is written with.
     const hex::EncodingFile table(hex::EncodingFile::Type::Thingy, std::string(
