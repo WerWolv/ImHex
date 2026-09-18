@@ -8,6 +8,7 @@ set(AVAILABLE_TESTS
     Project/ImportLegacy
     Project/MigrateLegacy
     Project/ProviderOpenState
+    Encoding/ChooserLabels
 )
 
 add_library(${PROJECT_NAME} OBJECT
