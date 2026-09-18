@@ -205,11 +205,11 @@ TEST_SEQUENCE("EncodingFileCodepointEscapes") {
 };
 
 TEST_SEQUENCE("EncodingFileIncludes") {
-    const auto resolve = [](std::string_view name) -> std::optional<std::string> {
+    const auto resolve = [](const std::fs::path &, std::string_view name) -> std::optional<hex::ResolvedTable> {
         if (name == "base")
-            return std::string("-name Base\n41=A\n80=\xCE\xB1\n");
+            return hex::ResolvedTable{ "-name Base\n41=A\n80=\xCE\xB1\n", {} };
         if (name == "loop")
-            return std::string("-include loop\n42=B\n");
+            return hex::ResolvedTable{ "-include loop\n42=B\n", {} };
 
         return std::nullopt;
     };
@@ -247,14 +247,33 @@ TEST_SEQUENCE("EncodingFileIncludes") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("EncodingFileIncludeContext") {
+    // A nested include resolves next to the table that names it, not the top-level table.
+    const auto resolve = [](const std::fs::path &context, std::string_view name) -> std::optional<hex::ResolvedTable> {
+        if (context.empty() && name == "sub/child")
+            return hex::ResolvedTable{ "-include grandchild\n42=B\n", "sub" };
+        if (context == std::fs::path("sub") && name == "grandchild")
+            return hex::ResolvedTable{ "41=A\n", "sub" };
+
+        return std::nullopt;
+    };
+
+    const hex::EncodingFile table(hex::EncodingFile::Type::Thingy, std::string("-include sub/child\n"), resolve);
+    TEST_ASSERT(table.valid());
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x41 }) == "A");
+    TEST_ASSERT(table.decodeAll(std::vector<u8>{ 0x42 }) == "B");
+
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("EncodingFileAliases") {
-    const auto resolve = [](std::string_view name) -> std::optional<std::string> {
+    const auto resolve = [](const std::fs::path &, std::string_view name) -> std::optional<hex::ResolvedTable> {
         if (name == "macintosh")
-            return std::string("-name Macintosh\n41=A\n");
+            return hex::ResolvedTable{ "-name Macintosh\n41=A\n", {} };
         if (name == "roman")
-            return std::string("-alias macintosh\n");
+            return hex::ResolvedTable{ "-alias macintosh\n", {} };
         if (name == "loop")
-            return std::string("-alias loop\n");
+            return hex::ResolvedTable{ "-alias loop\n", {} };
 
         return std::nullopt;
     };

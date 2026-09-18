@@ -21,11 +21,26 @@ namespace hex {
     }
 
     /**
-     * @brief Reads the table a `-include` line names
-     * @param name The included table's name, without the extension
-     * @return The table's content, or std::nullopt when there is no such table
+     * @brief A table a `-include` or `-alias` line resolved to
      */
-    using IncludeResolver = std::function<std::optional<std::string>(std::string_view name)>;
+    struct ResolvedTable {
+        std::string content;
+
+        // Where this table itself lives. Feeds back into the next call, so a `-include` inside
+        // this table's own content resolves next to it, not next to whatever named this one.
+        std::fs::path context;
+    };
+
+    /**
+     * @brief Reads the table a `-include` or `-alias` line names
+     * @param context Where the table naming it lives, from the last call's ResolvedTable, or
+     * empty for the first call
+     * @param name For `-include`, a relative path with its own extension, such as
+     * "includes/box_drawing.tbl", read next to `context`. For `-alias`, a bare encoding name,
+     * such as "iso8859_1".
+     * @return The table, or std::nullopt when there is no such table
+     */
+    using IncludeResolver = std::function<std::optional<ResolvedTable>(const std::fs::path &context, std::string_view name)>;
 
     /**
      * @brief A byte sequence to text table
@@ -35,7 +50,8 @@ namespace hex {
      *
      * - `-name text` gives the encoding its name, with the case it is written with. Name the
      *   file encodingFileName() of it, since a name reaches a table through its file's name.
-     * - `-include name` brings in the entries of the encodings/name.tbl table. It fills only
+     * - `-include path` brings in the entries of the table at `path`, relative to this table's
+     *   own file and with its own extension, such as "includes/box_drawing.tbl". It fills only
      *   the bytes this table gives no value of its own, whatever order the lines are in.
      * - `-description text` says what the table is for. It takes the rest of the line.
      * - `-alias name` makes this table another name for encodings/name.tbl, the way a symbolic
@@ -60,8 +76,9 @@ namespace hex {
          * @brief Parses a table from text
          * @param type The table's format
          * @param content The table's text
-         * @param resolveInclude Reads a table that a `-include` line names. Empty reads from the
-         * encodings directory, which is what a table file on disk needs.
+         * @param resolveInclude Reads a table that a `-include` or `-alias` line names. Empty
+         * reads from the encodings directory, trying every search path in turn, since this
+         * content has no file of its own to be relative to.
          */
         EncodingFile(Type type, const std::string &content, IncludeResolver resolveInclude = {});
 
@@ -154,7 +171,7 @@ namespace hex {
          * @return False when a directive comes below the first entry, or a `-alias` line sits in
          * a table with contents of its own, or links to a table that is missing, or loops
          */
-        bool parse(const std::string &content, const IncludeResolver &resolveInclude);
+        bool parse(const std::string &content, const std::fs::path &context, const IncludeResolver &resolveInclude);
 
         bool m_valid = false;
 

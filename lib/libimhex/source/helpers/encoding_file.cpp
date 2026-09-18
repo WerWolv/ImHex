@@ -88,14 +88,88 @@ namespace hex {
         }
 
         /**
-         * @brief Reads the table file a -include line names
+         * @brief Checks whether `path` is still under one of the encodings search paths
+         *
+         * A "-include ../foo.tbl" line can leave its own folder, but must not leave every
+         * encodings folder. A table file can name this path with no sandbox prompt, so this stays
+         * as strict as the by-name lookup findEncodingFile() already does.
          */
-        std::optional<std::string> readEncodingFile(std::string_view name) {
-            const auto path = findEncodingFile(name);
+        bool isWithinEncodingsPaths(const std::fs::path &path) {
+            std::error_code error;
+            const auto resolved = std::fs::weakly_canonical(path, error);
+            if (error)
+                return false;
+
+            for (const auto &basePath : paths::Encodings.read()) {
+                const auto resolvedBase = std::fs::weakly_canonical(basePath, error);
+                if (error)
+                    continue;
+
+                const auto relative = resolved.lexically_relative(resolvedBase);
+                if (!relative.empty() && !relative.is_absolute() &&
+                    std::ranges::none_of(relative, [](const auto &part) { return part == ".."; }))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * @brief Finds the table file a -include line's relative path names, next to `fromDir`
+         *
+         * Unlike findEncodingFile(), `relativePath` is used as-is: it names its own extension,
+         * instead of always getting ".tbl" appended, and is read relative to the table that
+         * includes it, the way one source file includes another.
+         */
+        std::optional<std::fs::path> findIncludedFile(const std::fs::path &fromDir, std::string_view relativePath) {
+            const auto path = (fromDir / std::fs::path(std::string(relativePath))).lexically_normal();
+            if (!isWithinEncodingsPaths(path))
+                return std::nullopt;
+
+            if (!std::fs::is_regular_file(path))
+                return std::nullopt;
+
+            return path;
+        }
+
+        /**
+         * @brief Reads the table file a -include or -alias line names, from disk
+         *
+         * A -include line names a relative path with its own extension, such as
+         * "includes/box_drawing.tbl", read relative to `context`. Empty `context` instead tries
+         * every encodings search path in turn, for a table with no file of its own to be relative
+         * to. A -alias line still names a bare encoding name, such as "iso8859_1", the way
+         * #pragma encoding does, and is looked up the same way regardless of `context`. The two
+         * never look alike: only a path has a "." in it.
+         */
+        std::optional<ResolvedTable> readEncodingFile(const std::fs::path &context, std::string_view name) {
+            if (!std::fs::path(std::string(name)).has_extension()) {
+                const auto path = findEncodingFile(name);
+                if (!path.has_value())
+                    return std::nullopt;
+
+                return ResolvedTable{
+                    wolv::io::File(*path, wolv::io::File::Mode::Read).readString(),
+                    path->parent_path()
+                };
+            }
+
+            std::optional<std::fs::path> path;
+            if (!context.empty()) {
+                path = findIncludedFile(context, name);
+            } else {
+                for (const auto &basePath : paths::Encodings.read()) {
+                    if (path = findIncludedFile(basePath, name); path.has_value())
+                        break;
+                }
+            }
             if (!path.has_value())
                 return std::nullopt;
 
-            return wolv::io::File(*path, wolv::io::File::Mode::Read).readString();
+            return ResolvedTable{
+                wolv::io::File(*path, wolv::io::File::Mode::Read).readString(),
+                path->parent_path()
+            };
         }
 
         /**
@@ -225,7 +299,7 @@ namespace hex {
          * it names, the way a symbolic link is another name for a file. A link that breaks or
          * loops, or that a table with contents of its own holds, gives nothing back.
          */
-        std::optional<std::string> followAliases(std::string content, const IncludeResolver &resolveInclude) {
+        std::optional<ResolvedTable> followAliases(std::string content, std::fs::path context, const IncludeResolver &resolveInclude) {
             std::set<std::string, std::less<>> visited;
 
             while (true) {
@@ -243,7 +317,7 @@ namespace hex {
                 }
 
                 if (!target.has_value())
-                    return content;
+                    return ResolvedTable{ std::move(content), std::move(context) };
 
                 if (!holdsOnlyAlias(lines))
                     return std::nullopt;
@@ -251,11 +325,12 @@ namespace hex {
                 if (!visited.emplace(*target).second)
                     return std::nullopt;
 
-                auto linked = resolveInclude(*target);
+                auto linked = resolveInclude(context, *target);
                 if (!linked.has_value())
                     return std::nullopt;
 
-                content = std::move(*linked);
+                content = std::move(linked->content);
+                context = std::move(linked->context);
             }
         }
 
@@ -268,7 +343,7 @@ namespace hex {
          * Keeps the other directives of `content` and drops those of an included table, since
          * a table's name and description are its own.
          */
-        std::string expandIncludes(std::string_view content, const IncludeResolver &resolveInclude, std::set<std::string, std::less<>> &included, bool topLevel) {
+        std::string expandIncludes(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude, std::set<std::string, std::less<>> &included, bool topLevel) {
             std::string header, body, includedEntries;
             bool inHeader = true;
 
@@ -279,8 +354,8 @@ namespace hex {
                 if (inHeader) {
                     if (const auto name = directiveArgument(line, "-include"); name.has_value()) {
                         if (included.emplace(*name).second) {
-                            if (const auto includedContent = resolveInclude(*name); includedContent.has_value())
-                                includedEntries += expandIncludes(*includedContent, resolveInclude, included, false);
+                            if (const auto includedTable = resolveInclude(context, *name); includedTable.has_value())
+                                includedEntries += expandIncludes(includedTable->content, includedTable->context, resolveInclude, included, false);
                         }
 
                         continue;
@@ -346,7 +421,7 @@ namespace hex {
         auto file = wolv::io::File(path, wolv::io::File::Mode::Read);
         switch (type) {
             case Type::Thingy:
-                if (!parse(file.readString(), readEncodingFile))
+                if (!parse(file.readString(), path.parent_path(), readEncodingFile))
                     return;
                 break;
             default:
@@ -366,7 +441,7 @@ namespace hex {
 
         switch (type) {
             case Type::Thingy:
-                if (!parse(content, resolveInclude))
+                if (!parse(content, {}, resolveInclude))
                     return;
                 break;
             default:
@@ -528,14 +603,14 @@ namespace hex {
     }
 
 
-    bool EncodingFile::parse(const std::string &content, const IncludeResolver &resolveInclude) {
-        const auto linked = followAliases(content, resolveInclude);
+    bool EncodingFile::parse(const std::string &content, const std::fs::path &context, const IncludeResolver &resolveInclude) {
+        const auto linked = followAliases(content, context, resolveInclude);
         if (!linked.has_value())
             return false;
 
         // The expanded text needs no other table, so a project can hold it on its own.
         std::set<std::string, std::less<>> included;
-        m_tableContent = expandIncludes(*linked, resolveInclude, included, true);
+        m_tableContent = expandIncludes(linked->content, linked->context, resolveInclude, included, true);
 
         // Every decoded value so far. A repeat makes the encoding ambiguous.
         std::vector<std::string_view> encodedValues;
