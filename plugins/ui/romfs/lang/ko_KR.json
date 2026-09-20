@@ -99,7 +99,6 @@
     "hex.ui.hex_editor.no_separator": "세그먼트 없음",
     "hex.ui.hex_editor.data_cell_options": "데이터 표시 옵션",
     "hex.ui.hex_editor.minimap.value_brightness": "표시된 값에 따라 음영을 조절합니다",
-    "hex.ui.hex_editor.extended_ascii": "ASCII 칼럼에 컨트롤 문자도 포함하여 표시합니다",
     "hex.ui.common.apply": "적용",
     "hex.ui.hex_editor.minimap.width": "너비",
     "hex.ui.hex_editor.fit_columns": "열을 너비에 맞춤",

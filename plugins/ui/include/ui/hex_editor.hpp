@@ -300,12 +300,12 @@ namespace hex::ui {
             return m_showAscii;
         }
 
-        void enableShowExtendedAscii(bool showExtendedAscii) {
-            m_showExtendedAscii = showExtendedAscii;
+        void enableShowControlPictures(bool showControlPictures) {
+            m_showControlPictures = showControlPictures;
         }
 
-        bool shouldShowExtendedAscii() const {
-            return m_showExtendedAscii;
+        bool shouldShowControlPictures() const {
+            return m_showControlPictures;
         }
 
         void enableSyncScrolling(bool syncScrolling) {
@@ -360,11 +360,9 @@ namespace hex::ui {
          * ASCII is simply no longer the only possible codepage.
          *
          * @param codepage The codepage to read with
-         * @param declared Whether something declared it, rather than it being the default
          */
-        void setCodepage(const Codepage &codepage, bool declared) {
+        void setCodepage(const Codepage &codepage) {
             m_codepage = codepage;
-            m_codepageDeclared = declared;
         }
 
         [[nodiscard]] const std::optional<EncodingFile>& getCustomEncoding() const {
@@ -506,7 +504,7 @@ namespace hex::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
-        bool m_showExtendedAscii = false;
+        bool m_showControlPictures = false;
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         bool m_showSelectionInFooter = false;
@@ -517,7 +515,6 @@ namespace hex::ui {
 
         std::optional<EncodingFile> m_currCustomEncoding;
         Codepage m_codepage = Codepage::ascii();
-        bool m_codepageDeclared = false;
         std::vector<u64> m_encodingLineStartAddresses;
         mutable CollapsedStateStorage m_collapsedState;
 
