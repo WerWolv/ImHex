@@ -375,48 +375,6 @@ namespace hex {
             }
         }
 
-        /**
-         * @brief Replaces every -include line with the entries of the table it names
-         *
-         * An included table's entries go last, so the table keeps every byte it gives a value
-         * of its own. A table a cycle reaches again brings nothing a second time.
-         *
-         * Keeps the other directives of `content` and drops those of an included table, since
-         * a table's name and description are its own.
-         */
-        std::string expandIncludes(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude, std::set<std::string> &included, bool topLevel) {
-            std::string header, body, includedEntries;
-            bool inHeader = true;
-
-            for (const auto &line : wolv::util::splitString(std::string(content), "\n")) {
-                if (inHeader && isEntryLine(line))
-                    inHeader = false;
-
-                if (inHeader) {
-                    if (const auto name = directiveArgument(line, "include"); name.has_value()) {
-                        if (included.emplace(*name).second) {
-                            if (const auto includedTable = resolveInclude(context, *name); includedTable.has_value())
-                                includedEntries += expandIncludes(includedTable->content, includedTable->context, resolveInclude, included, false);
-                        }
-
-                        continue;
-                    }
-
-                    if (!topLevel)
-                        continue;
-
-                    header += line;
-                    header += '\n';
-                    continue;
-                }
-
-                body += line;
-                body += '\n';
-            }
-
-            return header + body + includedEntries;
-        }
-
     }
 
     namespace impl {
@@ -437,7 +395,6 @@ namespace hex {
     EncodingFile::EncodingFile(const hex::EncodingFile &other) {
         m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
         m_reverseMapping = std::make_unique<std::map<size_t, std::map<std::string, std::vector<u8>, std::less<>>>>(*other.m_reverseMapping);
-        m_tableContent = other.m_tableContent;
         m_longestSequence = other.m_longestSequence;
         m_shortestSequence = other.m_shortestSequence;
         m_ambiguousEncoding = other.m_ambiguousEncoding;
@@ -449,7 +406,6 @@ namespace hex {
     EncodingFile::EncodingFile(EncodingFile &&other) noexcept {
         m_mapping = std::move(other.m_mapping);
         m_reverseMapping = std::move(other.m_reverseMapping);
-        m_tableContent = std::move(other.m_tableContent);
         m_longestSequence = other.m_longestSequence;
         m_shortestSequence = other.m_shortestSequence;
         m_ambiguousEncoding = other.m_ambiguousEncoding;
@@ -501,7 +457,6 @@ namespace hex {
         }
         m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
         m_reverseMapping = std::make_unique<std::map<size_t, std::map<std::string, std::vector<u8>, std::less<>>>>(*other.m_reverseMapping);
-        m_tableContent = other.m_tableContent;
         m_longestSequence = other.m_longestSequence;
         m_shortestSequence = other.m_shortestSequence;
         m_ambiguousEncoding = other.m_ambiguousEncoding;
@@ -515,7 +470,6 @@ namespace hex {
     EncodingFile &EncodingFile::operator=(EncodingFile &&other) noexcept {
         m_mapping = std::move(other.m_mapping);
         m_reverseMapping = std::move(other.m_reverseMapping);
-        m_tableContent = std::move(other.m_tableContent);
         m_longestSequence = other.m_longestSequence;
         m_shortestSequence = other.m_shortestSequence;
         m_ambiguousEncoding = other.m_ambiguousEncoding;
@@ -649,25 +603,50 @@ namespace hex {
         if (!linked.has_value())
             return false;
 
-        // The expanded text needs no other table, so a project can hold it on its own.
-        std::set<std::string> included;
-        m_tableContent = expandIncludes(linked->content, linked->context, resolveInclude, included, true);
+        std::set<std::string> includedNames;
 
         // Every decoded value so far. A repeat makes the encoding ambiguous.
         std::vector<std::string_view> encodedValues;
 
+        if (!parseTable(linked->content, linked->context, resolveInclude, includedNames, encodedValues, true))
+            return false;
+
+        // Prefix-free is sufficient, not necessary; the full test is Sardinas-Patterson.
+        if (!m_ambiguousEncoding) {
+            std::ranges::sort(encodedValues);
+            for (size_t i = 1; i < encodedValues.size(); i++) {
+                if (encodedValues[i].starts_with(encodedValues[i - 1])) {
+                    m_ambiguousEncoding = true;
+                    break;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    bool EncodingFile::parseTable(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude,
+        std::set<std::string> &includedNames, std::vector<std::string_view> &encodedValues, bool topLevel) {
+        std::vector<std::string> includeDirectives;
         bool inHeader = true;
 
-        for (const auto &line : wolv::util::splitString(m_tableContent, "\n")) {
+        for (const auto &line : wolv::util::splitString(std::string(content), "\n")) {
             if (inHeader && isEntryLine(line))
                 inHeader = false;
 
             if (inHeader) {
-                if (const auto name = directiveArgument(line, "name"); name.has_value() && m_name.empty())
-                    m_name = *name;
+                if (const auto name = directiveArgument(line, "include"); name.has_value()) {
+                    includeDirectives.emplace_back(*name);
+                    continue;
+                }
 
-                if (const auto description = directiveArgument(line, "description"); description.has_value() && m_description.empty())
-                    m_description = *description;
+                if (topLevel) {
+                    if (const auto name = directiveArgument(line, "name"); name.has_value() && m_name.empty())
+                        m_name = *name;
+
+                    if (const auto description = directiveArgument(line, "description"); description.has_value() && m_description.empty())
+                        m_description = *description;
+                }
 
                 continue;
             }
@@ -727,15 +706,17 @@ namespace hex {
             m_shortestSequence = std::min(m_shortestSequence, keySize);
         }
 
-        // Prefix-free is sufficient, not necessary; the full test is Sardinas-Patterson.
-        if (!m_ambiguousEncoding) {
-            std::ranges::sort(encodedValues);
-            for (size_t i = 1; i < encodedValues.size(); i++) {
-                if (encodedValues[i].starts_with(encodedValues[i - 1])) {
-                    m_ambiguousEncoding = true;
-                    break;
-                }
-            }
+        // This table's own entries go in first, so an include cannot replace one of its own.
+        for (const auto &name : includeDirectives) {
+            if (!includedNames.emplace(name).second)
+                continue;
+
+            const auto includedTable = resolveInclude(context, name);
+            if (!includedTable.has_value())
+                continue;
+
+            if (!parseTable(includedTable->content, includedTable->context, resolveInclude, includedNames, encodedValues, false))
+                return false;
         }
 
         return true;

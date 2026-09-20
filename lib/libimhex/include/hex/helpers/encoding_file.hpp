@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -150,12 +151,6 @@ namespace hex {
         [[nodiscard]] bool valid() const { return m_valid; }
 
         /**
-         * @brief Gets the table's text, with every `-include` line already replaced
-         * @return The text, which needs no other table to parse again
-         */
-        [[nodiscard]] const std::string& getTableContent() const { return m_tableContent; }
-
-        /**
          * @brief Gets the encoding's name
          * @return Its `-name` line, or a name made from the file's own name when it has none
          */
@@ -175,11 +170,23 @@ namespace hex {
          */
         bool parse(const std::string &content, const std::fs::path &context, const IncludeResolver &resolveInclude);
 
+        /**
+         * @brief Reads one table's own entries into this encoding, then its `-include` tables
+         *
+         * Only this table's own entries take priority over its includes. `topLevel` gates the
+         * `-name`/`-description` lines too, since an included table's are not this table's own.
+         * `includedNames` is shared with every recursive call, so a table a cycle reaches again
+         * brings nothing a second time.
+         *
+         * @return False when a directive comes below the first entry, anywhere in the tree
+         */
+        bool parseTable(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude,
+            std::set<std::string> &includedNames, std::vector<std::string_view> &encodedValues, bool topLevel);
+
         bool m_valid = false;
 
         std::string m_name;
         std::string m_description;
-        std::string m_tableContent;
         std::unique_ptr<std::map<size_t, std::map<std::vector<u8>, std::string>>> m_mapping;
         std::unique_ptr<std::map<size_t, std::map<std::string, std::vector<u8>, std::less<>>>> m_reverseMapping;
 

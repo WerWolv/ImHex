@@ -230,10 +230,6 @@ TEST_SEQUENCE("EncodingFileIncludes") {
     // An included table's name is its own, so it does not come with it.
     TEST_ASSERT(table.getName() == "Unknown");
 
-    // The expanded text needs no other table to parse again.
-    const hex::EncodingFile again(hex::EncodingFile::Type::Thingy, table.getTableContent(), resolve);
-    TEST_ASSERT(again.decodeAll(std::vector<u8>{ 0x41, 0x80 }) == "Z\xCE\xB1");
-
     // A table that includes itself brings nothing a second time.
     const hex::EncodingFile cycle(hex::EncodingFile::Type::Thingy, std::string("-include loop\n"), resolve);
     TEST_ASSERT(cycle.decodeAll(std::vector<u8>{ 0x42 }) == "B");
