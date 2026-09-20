@@ -236,9 +236,14 @@ namespace hex {
 
         /**
          * @brief Reads what follows a directive, when `line` is that directive
+         * @param directive The directive's name, without its leading "-"
          */
         std::optional<std::string_view> directiveArgument(std::string_view line, std::string_view directive) {
             line = wolv::util::trim(line);
+            if (!line.starts_with('-'))
+                return std::nullopt;
+            line.remove_prefix(1);
+
             if (!line.starts_with(directive))
                 return std::nullopt;
 
@@ -316,7 +321,7 @@ namespace hex {
             size_t aliasCount = 0;
 
             for (const auto &line : lines) {
-                if (directiveArgument(line, "-alias").has_value()) {
+                if (directiveArgument(line, "alias").has_value()) {
                     aliasCount += 1;
                     continue;
                 }
@@ -346,7 +351,7 @@ namespace hex {
                     if (isEntryLine(line))
                         break;
 
-                    if (const auto name = directiveArgument(line, "-alias"); name.has_value()) {
+                    if (const auto name = directiveArgument(line, "alias"); name.has_value()) {
                         target = std::string(*name);
                         break;
                     }
@@ -388,7 +393,7 @@ namespace hex {
                     inHeader = false;
 
                 if (inHeader) {
-                    if (const auto name = directiveArgument(line, "-include"); name.has_value()) {
+                    if (const auto name = directiveArgument(line, "include"); name.has_value()) {
                         if (included.emplace(*name).second) {
                             if (const auto includedTable = resolveInclude(context, *name); includedTable.has_value())
                                 includedEntries += expandIncludes(includedTable->content, includedTable->context, resolveInclude, included, false);
@@ -658,10 +663,10 @@ namespace hex {
                 inHeader = false;
 
             if (inHeader) {
-                if (const auto name = directiveArgument(line, "-name"); name.has_value() && m_name.empty())
+                if (const auto name = directiveArgument(line, "name"); name.has_value() && m_name.empty())
                     m_name = *name;
 
-                if (const auto description = directiveArgument(line, "-description"); description.has_value() && m_description.empty())
+                if (const auto description = directiveArgument(line, "description"); description.has_value() && m_description.empty())
                     m_description = *description;
 
                 continue;
@@ -788,13 +793,13 @@ namespace hex {
             std::optional<std::string> alias;
 
             for (const auto &line : readHeaderLines(current)) {
-                if (const auto target = directiveArgument(line, "-alias"); target.has_value() && !alias.has_value())
+                if (const auto target = directiveArgument(line, "alias"); target.has_value() && !alias.has_value())
                     alias = std::string(*target);
 
-                if (const auto name = directiveArgument(line, "-name"); name.has_value() && header.name.empty())
+                if (const auto name = directiveArgument(line, "name"); name.has_value() && header.name.empty())
                     header.name = *name;
 
-                if (const auto description = directiveArgument(line, "-description"); description.has_value() && header.description.empty())
+                if (const auto description = directiveArgument(line, "description"); description.has_value() && header.description.empty())
                     header.description = *description;
             }
 
