@@ -214,9 +214,9 @@ namespace hex {
          * file system that tells case apart. A base path earlier in the list wins, the same way
          * findEncodingFile() takes the first it finds.
          */
-        const std::map<std::string, std::fs::path, std::less<>>& encodingFilesByName() {
+        const std::map<std::string, std::fs::path>& encodingFilesByName() {
             static const auto files = [] {
-                std::map<std::string, std::fs::path, std::less<>> result;
+                std::map<std::string, std::fs::path> result;
 
                 for (const auto &basePath : paths::Encodings.read()) {
                     std::error_code error;
@@ -341,7 +341,7 @@ namespace hex {
          * loops, or that a table with contents of its own holds, gives nothing back.
          */
         std::optional<ResolvedTable> followAliases(std::string content, std::fs::path context, const IncludeResolver &resolveInclude) {
-            std::set<std::string, std::less<>> visited;
+            std::set<std::string> visited;
 
             while (true) {
                 const auto lines = wolv::util::splitString(content, "\n");
@@ -384,7 +384,7 @@ namespace hex {
          * Keeps the other directives of `content` and drops those of an included table, since
          * a table's name and description are its own.
          */
-        std::string expandIncludes(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude, std::set<std::string, std::less<>> &included, bool topLevel) {
+        std::string expandIncludes(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude, std::set<std::string> &included, bool topLevel) {
             std::string header, body, includedEntries;
             bool inHeader = true;
 
@@ -650,7 +650,7 @@ namespace hex {
             return false;
 
         // The expanded text needs no other table, so a project can hold it on its own.
-        std::set<std::string, std::less<>> included;
+        std::set<std::string> included;
         m_tableContent = expandIncludes(linked->content, linked->context, resolveInclude, included, true);
 
         // Every decoded value so far. A repeat makes the encoding ambiguous.
@@ -746,7 +746,7 @@ namespace hex {
         std::string result(name);
 
         for (auto &character : result)
-            character = char(std::tolower(static_cast<unsigned char>(character)));
+            character = char(std::tolower(u8(character)));
 
         return result;
     }
@@ -782,7 +782,7 @@ namespace hex {
     }
 
     EncodingHeader readEncodingHeader(const std::fs::path &path) {
-        std::set<std::string, std::less<>> visited;
+        std::set<std::string> visited;
         auto current = path;
         bool isAlias = false;
 
