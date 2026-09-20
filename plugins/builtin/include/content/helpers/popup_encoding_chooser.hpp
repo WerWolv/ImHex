@@ -53,9 +53,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SetCursorPos(startPos);
 
-            fonts::Default().pushBold();
             ImGui::TextUnformatted(title.c_str());
-            fonts::Default().pop();
 
             if (!subtitle.empty()) {
                 fonts::Default().push(SubtitleScale);
