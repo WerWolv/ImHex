@@ -487,7 +487,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndPopup();
             }
 
-            // A custom inspector's display function runs pattern language code, which can throw.
+            // A backstop for a registry display function; a pattern-backed row handles its own errors.
             std::string copyValue;
             try {
                 copyValue = entry.displayFunction();
