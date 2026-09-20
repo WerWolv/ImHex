@@ -1,9 +1,6 @@
 #pragma once
 
 #include <hex/helpers/encoding_file.hpp>
-#include <hex/helpers/utils.hpp>
-
-#include <wolv/utils/string.hpp>
 
 #include <filesystem>
 #include <map>
@@ -41,49 +38,7 @@ namespace hex::plugin::builtin {
      * @param paths The files the chooser could list
      * @return The files to list, and what to show for each table among them
      */
-    inline EncodingChoices readEncodingChoices(const std::vector<std::fs::path> &paths) {
-        std::map<std::fs::path, EncodingHeader> headers;
-        std::map<std::fs::path, std::vector<std::string>> aliases;
-
-        for (const auto &path : paths) {
-            if (path.extension() != ".tbl")
-                continue;
-
-            auto header = readEncodingHeader(path);
-            if (!header.isAlias) {
-                headers[path] = std::move(header);
-                continue;
-            }
-
-            // A link that breaks or loops reaches no table, so it has nothing to give a name to.
-            if (!header.path.empty())
-                aliases[header.path].push_back(path.stem().string());
-        }
-
-        EncodingChoices result;
-
-        for (const auto &path : paths) {
-            if (path.extension() != ".tbl") {
-                result.files.push_back(path);
-                continue;
-            }
-
-            const auto header = headers.find(path);
-            if (header == headers.end())
-                continue;
-
-            result.files.push_back(path);
-
-            auto &entry = result.entries[path];
-            entry.name = header->second.name;
-            entry.description = header->second.description;
-
-            if (const auto alias = aliases.find(path); alias != aliases.end())
-                entry.aliases = alias->second;
-        }
-
-        return result;
-    }
+    EncodingChoices readEncodingChoices(const std::vector<std::fs::path> &paths);
 
     /**
      * @brief The two lines the chooser draws for one table
@@ -105,28 +60,11 @@ namespace hex::plugin::builtin {
      * @param fileName The table's file, without its extension
      * @return The two lines, where an empty subtitle means one line is enough
      */
-    inline EncodingChoiceLines getEncodingChoiceLines(const EncodingChoice &choice, const std::string &fileName) {
-        const auto &name = choice.name.empty() ? fileName : choice.name;
-
-        // The file's name only says something the encoding's name does not already say.
-        std::vector<std::string> otherNames;
-        if (toLower(name) != toLower(fileName))
-            otherNames.push_back(fileName);
-
-        otherNames.insert(otherNames.end(), choice.aliases.begin(), choice.aliases.end());
-        const auto joined = wolv::util::combineStrings(otherNames, ", ");
-
-        if (choice.description.empty())
-            return { name, joined };
-
-        return { choice.description, otherNames.empty() ? name : name + " (" + joined + ")" };
-    }
+    EncodingChoiceLines getEncodingChoiceLines(const EncodingChoice &choice, const std::string &fileName);
 
     /**
      * @brief Gets a table's file name, without its extension
      */
-    inline std::string getEncodingFileName(const std::fs::path &adjustedPath) {
-        return wolv::util::toUTF8String(std::fs::path(adjustedPath).replace_extension(""));
-    }
+    std::string getEncodingFileName(const std::fs::path &adjustedPath);
 
 }

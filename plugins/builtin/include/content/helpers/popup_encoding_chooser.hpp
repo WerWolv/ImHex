@@ -7,6 +7,8 @@
 #include <popups/popup_file_chooser.hpp>
 #include <fonts/fonts.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <filesystem>
 #include <map>
 #include <string>
