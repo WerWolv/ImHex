@@ -400,13 +400,13 @@ TEST_SEQUENCE("SingleCharacterAndControlCodes") {
 
 TEST_SEQUENCE("EncodingFileNames") {
     TEST_ASSERT(hex::encodingFileName("ascii") == "ascii");
-    TEST_ASSERT(hex::encodingFileName("Windows-1252") == "windows_1252");
-    TEST_ASSERT(hex::encodingFileName("ANSI_X3.4-1968") == "ansi_x3_4_1968");
-    TEST_ASSERT(hex::encodingFileName("Mac OS Roman") == "mac_os_roman");
-    TEST_ASSERT(hex::encodingFileName("urn:x-enc") == "urn_x_enc");
+    TEST_ASSERT(hex::encodingFileName("ASCII") == "ascii");
 
-    // A directory part becomes part of the name, so a lookup stays in the encodings directory.
-    TEST_ASSERT(hex::encodingFileName("../../etc/passwd") == "______etc_passwd");
+    // Only the case changes, so a name a person picks reaches the file of that name.
+    TEST_ASSERT(hex::encodingFileName("Windows-1252") == "windows-1252");
+    TEST_ASSERT(hex::encodingFileName("ANSI_X3.4-1968") == "ansi_x3.4-1968");
+    TEST_ASSERT(hex::encodingFileName("Mac OS Roman") == "mac os roman");
+    TEST_ASSERT(hex::encodingFileName("some-encoding") == "some-encoding");
 
     TEST_SUCCESS();
 };
@@ -415,6 +415,7 @@ TEST_SEQUENCE("EncodingLookupRejectsPathTraversal") {
     // A script can name an encoding without the sandbox prompt, so only this directory is in reach.
     TEST_ASSERT(hex::getEncodingByName("../../../etc/passwd") == nullptr);
     TEST_ASSERT(hex::getEncodingByName("/etc/passwd") == nullptr);
+    TEST_ASSERT(hex::getEncodingByName("..\\..\\windows\\win.ini") == nullptr);
     TEST_ASSERT(hex::getEncodingByName("") == nullptr);
     TEST_ASSERT(hex::getEncodingByName("no_such_encoding_exists") == nullptr);
 

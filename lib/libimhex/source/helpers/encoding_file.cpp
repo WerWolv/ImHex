@@ -72,15 +72,21 @@ namespace hex {
         }
 
         /**
-         * @brief Finds the table file `name` names, if there is one, however its case or
-         * punctuation is written
+         * @brief Finds the table file `name` names, if there is one, whatever case it is
+         * written in
          *
          * For getEncodingByName(), which looks a table up by the name a person typed, such as
          * through `#pragma encoding`. A `-alias` line uses findEncodingFileByStem() instead,
          * since it names a file, not a name a person typed.
+         *
+         * Takes `name` as the person wrote it. It rejects a directory part itself, so the
+         * lookup stays in the encodings directory whatever encodingFileName() does.
          */
         std::optional<std::fs::path> findEncodingFile(std::string_view name) {
-            // A directory part becomes "_". A script reaches this with no sandbox prompt.
+            // A script reaches this with no sandbox prompt, so a directory part reaches no file.
+            if (name.find_first_of("/\\") != std::string_view::npos)
+                return std::nullopt;
+
             const auto fileName = encodingFileName(name) + ".tbl";
 
             for (const auto &basePath : paths::Encodings.read()) {
@@ -96,8 +102,8 @@ namespace hex {
          * @brief Finds the table file whose stem is exactly `stem`, if there is one
          *
          * A `-alias` line names the file it links to directly, the way a symbolic link names a
-         * file, so it takes the stem as written: no case-folding, no substituted characters, the
-         * way encodingFileName() gives findEncodingFile().
+         * file, so it takes the stem as written. findEncodingFile() folds case first, since it
+         * takes a name a person typed.
          */
         std::optional<std::fs::path> findEncodingFileByStem(std::string_view stem) {
             // A directory part reaches no file, since a stem holds none.
@@ -203,8 +209,10 @@ namespace hex {
         /**
          * @brief Maps the encodingFileName() of every table file's name to that file
          *
-         * Read once, on the first name that no file answers to by its own spelling. A base path
-         * earlier in the list wins, the same way findEncodingFile() takes the first it finds.
+         * Read once, on the first name that no file answers to by its own spelling. This finds a
+         * table file whose own name is not in lower case, which findEncodingFile() misses on a
+         * file system that tells case apart. A base path earlier in the list wins, the same way
+         * findEncodingFile() takes the first it finds.
          */
         const std::map<std::string, std::fs::path, std::less<>>& encodingFilesByName() {
             static const auto files = [] {
@@ -732,10 +740,8 @@ namespace hex {
     std::string encodingFileName(std::string_view name) {
         std::string result(name);
 
-        for (auto &character : result) {
-            const auto byte = static_cast<unsigned char>(character);
-            character = std::isalnum(byte) != 0 ? char(std::tolower(byte)) : '_';
-        }
+        for (auto &character : result)
+            character = char(std::tolower(static_cast<unsigned char>(character)));
 
         return result;
     }
@@ -752,7 +758,7 @@ namespace hex {
         if (const auto entry = encodings.find(fileName); entry != encodings.end())
             return entry->second.valid() ? &entry->second : nullptr;
 
-        auto path = findEncodingFile(fileName);
+        auto path = findEncodingFile(name);
 
         // A file named in any other way answers too, which costs one read of the directory.
         if (!path.has_value()) {

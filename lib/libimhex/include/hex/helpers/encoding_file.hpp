@@ -50,7 +50,7 @@ namespace hex {
      * first entry. A line that starts with "-" below it makes the table invalid:
      *
      * - `-name text` gives the encoding its name, with the case it is written with. Name the
-     *   file encodingFileName() of it, since a name reaches a table through its file's name.
+     *   file the same, in lower case, since a name reaches a table through its file's name.
      * - `-include path` brings in the entries of the table at `path`, relative to this table's
      *   own file and with its own extension, such as "includes/box_drawing.tbl". It fills only
      *   the bytes this table gives no value of its own, whatever order the lines are in.
@@ -192,12 +192,15 @@ namespace hex {
     /**
      * @brief Looks an encoding up by its name
      *
-     * `name` reaches a file through encodingFileName(), which keeps the lookup in the encodings
-     * directory and tolerates however its case or punctuation is written. A table names itself
-     * with a `-name` line, so `#pragma encoding` finds it by that name. A table whose only line
-     * is `-alias` is another name for the table it points at, though a `-alias` line itself
-     * takes the stem it names literally, unlike this lookup. Each table is parsed once and
-     * cached for the life of the process.
+     * `name` reaches encodings/`name`.tbl, in lower case, so `#pragma encoding ASCII` reads
+     * encodings/ascii.tbl. The lookup stays in the encodings directory: a name with a directory
+     * part in it reaches no table. A table whose only line is `-alias` is another name for the
+     * table it points at, though a `-alias` line itself takes the stem it names literally, in
+     * the case it is written. Each table is parsed once and cached for the life of the process.
+     *
+     * A table file whose own name is not in lower case answers too. Every table ImHex gives is
+     * in lower case, but a person can drop a file in with any case, and a file system that tells
+     * case apart finds no other way to it.
      *
      * @param name The encoding's name
      * @return The encoding, or nullptr when no such table exists
@@ -207,11 +210,11 @@ namespace hex {
     /**
      * @brief Makes the name of the file a table with this name lives in
      *
-     * A file system does not carry every character a name has, and does not always tell case
-     * apart. So "Windows-1252" lives in windows_1252.tbl.
+     * A file system does not always tell case apart, so two names that differ only by case
+     * cannot each have a file. So "Windows-1252" lives in windows-1252.tbl.
      *
      * @param name The encoding's name
-     * @return The name in lower case, with "_" for every character that is not a letter or a digit
+     * @return The name in lower case
      */
     std::string encodingFileName(std::string_view name);
 
