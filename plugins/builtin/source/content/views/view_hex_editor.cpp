@@ -62,14 +62,8 @@ namespace hex::plugin::builtin {
               .typeId = "hex.builtin.custom-encoding",
               .displayName = "hex.builtin.menu.file.import.custom_encoding"_unlocalized,
               .displayIcon = "あ",
-              .extensions = { { "Thingy Table File", "tbl" } },
-              .encode = [](const std::optional<EncodingFile> &encoding) {
-                  if (!encoding.has_value())
-                      return std::vector<u8>();
-
-                  const auto &content = encoding->getTableContent();
-                  return std::vector<u8>(content.begin(), content.end());
-              },
+              .extensions = { },
+              .encode = [](const std::optional<EncodingFile> &) { return std::vector<u8>(); },
               .decode = [](std::span<const u8> bytes) -> std::optional<std::optional<EncodingFile>> {
                   if (bytes.empty())
                       return std::optional<std::optional<EncodingFile>>(std::in_place);
