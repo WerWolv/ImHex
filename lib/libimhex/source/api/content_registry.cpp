@@ -907,14 +907,11 @@ namespace hex {
 
         namespace EditWidget {
             std::optional<std::vector<u8>> TextInput::draw(std::string &value, std::endian endian) {
-                // Sized generously; one typed character can take several UTF-8 bytes.
-                const auto bufferSize = std::max<size_t>(value.size() * 4, 256) + 1;
-                value.resize(bufferSize - 1, '\0');
-
                 struct CallbackData {
                     TextInput *self;
+                    std::string *value;
                     std::endian endian;
-                } callbackData { this, endian };
+                } callbackData { this, &value, endian };
 
                 const bool borderPushed = m_hasInvalidValue;
                 if (borderPushed) {
@@ -922,10 +919,19 @@ namespace hex {
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
                 }
 
-                const bool submitted = ImGui::InputText("##InspectorLineEditing", value.data(), bufferSize,
-                    ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackEdit,
+                const bool submitted = ImGui::InputText("##InspectorLineEditing", value.data(), value.size() + 1,
+                    ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackResize,
                     [](ImGuiInputTextCallbackData *data) -> int {
                         auto &callbackData = *static_cast<CallbackData*>(data->UserData);
+
+                        // Grows the buffer only when ImGui needs more room for what was typed.
+                        if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+                            callbackData.value->resize(data->BufTextLen);
+                            data->Buf = callbackData.value->data();
+                            return 0;
+                        }
+
                         std::string liveText(data->Buf, size_t(data->BufTextLen));
                         auto bytes = callbackData.self->getBytes(liveText, callbackData.endian);
                         callbackData.self->m_hasInvalidValue = !bytes.has_value();
@@ -936,9 +942,6 @@ namespace hex {
                     ImGui::PopStyleVar();
                     ImGui::PopStyleColor();
                 }
-
-                // Trim to the typed length each frame, so the buffer cannot grow unbounded.
-                value = value.c_str();
 
                 if (!submitted)
                     return std::nullopt;
