@@ -49,7 +49,7 @@ namespace hex::ui {
                 }
 
                 // A control code's picture is correct under any encoding.
-                if (hasCharacter && m_extendedAscii) {
+                if (hasCharacter && m_showControlPictures) {
                     constexpr static std::array ControlCharacters = {
                         "\u2400", "\u2401", "\u2402", "\u2403", "\u2404", "\u2405", "\u2406", "\u2407",
                         "\u2408", "\u2409", "\u240A", "\u240B", "\u240C", "\u240D", "\u240E", "\u240F",
@@ -107,8 +107,8 @@ namespace hex::ui {
             }
         }
 
-        void enableExtendedAscii(bool enable) {
-            m_extendedAscii = enable;
+        void enableShowControlPictures(bool enable) {
+            m_showControlPictures = enable;
         }
 
         void setCodepage(const Codepage *codepage) {
@@ -116,7 +116,7 @@ namespace hex::ui {
         }
 
     private:
-        bool m_extendedAscii = false;
+        bool m_showControlPictures = false;
         const Codepage *m_codepage = nullptr;
     };
 
@@ -577,7 +577,7 @@ namespace hex::ui {
                     m_currDataVisualizer->draw(address, buffer.data(), size, m_upperCaseHex);
 
                 } else {
-                    asciiVisualizer.enableExtendedAscii(m_showExtendedAscii);
+                    asciiVisualizer.enableShowControlPictures(m_showControlPictures);
                     // A multi-byte encoding cannot fit a one byte cell, but that column can.
                     asciiVisualizer.setCodepage(&m_codepage);
                     asciiVisualizer.draw(address, data, size, m_upperCaseHex);
@@ -1445,10 +1445,10 @@ namespace hex::ui {
 
                         ImGui::SameLine(0, 1_scaled);
 
-                        // Extended ASCII
+                        // Control pictures
                         ImGui::BeginDisabled(!m_showAscii);
-                        ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showExtendedAscii);
-                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.extended_ascii"_lang);
+                        ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showControlPictures);
+                        ImGuiExt::InfoTooltip("hex.ui.hex_editor.control_pictures"_lang);
                         ImGui::EndDisabled();
 
                         ImGui::SameLine(0, 1_scaled);

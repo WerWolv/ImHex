@@ -185,7 +185,12 @@ namespace hex {
 
     static AutoReset<std::map<std::size_t, std::string>> s_unlocalizedNames;
 
+    // Any thread can name itself, so any thread can reach the map below.
+    static std::mutex s_unlocalizedNamesMutex;
+
     Lang::Lang(std::string_view unlocalizedString) : m_entryHash(LangConst::hash(unlocalizedString)) {
+        std::lock_guard lock(s_unlocalizedNamesMutex);
+
         if (!s_unlocalizedNames->contains(m_entryHash)) [[unlikely]] {
             s_unlocalizedNames->emplace(m_entryHash, unlocalizedString);
         }
@@ -193,6 +198,8 @@ namespace hex {
     Lang::Lang(const char *unlocalizedString) : Lang(std::string_view(unlocalizedString)) { }
     Lang::Lang(const std::string &unlocalizedString) : Lang(std::string_view(unlocalizedString)) { }
     Lang::Lang(const LangConst &localizedString) : m_entryHash(localizedString.m_entryHash) {
+        std::lock_guard lock(s_unlocalizedNamesMutex);
+
         if (!s_unlocalizedNames->contains(m_entryHash)) [[unlikely]] {
             s_unlocalizedNames->emplace(m_entryHash, localizedString.m_unlocalizedString);
         }
@@ -216,6 +223,9 @@ namespace hex {
 
         const auto it = lang.find(m_entryHash);
         if (it == lang.end()) {
+            // A map keeps each string in place, so the pointer below outlives the lock.
+            std::lock_guard lock(s_unlocalizedNamesMutex);
+
             if (auto unlocalizedIt = s_unlocalizedNames->find(m_entryHash); unlocalizedIt != s_unlocalizedNames->end()) {
                 return unlocalizedIt->second.c_str();
             } else {

@@ -128,8 +128,8 @@ namespace hex::plugin::builtin {
             m_hexEditor.enableShowAscii(value.get<bool>(true));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_extended_ascii"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_hexEditor.enableShowExtendedAscii(value.get<bool>(false));
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_control_pictures"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableShowControlPictures(value.get<bool>(false));
         });
 
         ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
@@ -145,7 +145,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.gray_out_zeros"_untranslated, m_hexEditor.shouldGrayOutZeros());
             ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.upper_case_hex"_untranslated, m_hexEditor.shouldUpperCaseHex());
             ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_ascii"_untranslated, m_hexEditor.shouldShowAscii());
-            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_extended_ascii"_untranslated, m_hexEditor.shouldShowExtendedAscii());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_control_pictures"_untranslated, m_hexEditor.shouldShowControlPictures());
             ContentRegistry::Settings::write<std::string>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap"_untranslated, m_hexEditor.getMiniMapVisualizer().value_or(""));
             ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap_width"_untranslated, m_hexEditor.getMiniMapWidth());
         });
