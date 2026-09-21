@@ -23,10 +23,8 @@ namespace hex::plugin::builtin {
              m_savedOperations.get(to)   = 0;
         });
 
-        ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 offset, const u8* buffer, size_t size, bool) -> std::optional<color_t> {
             std::lock_guard lock(prv::undo::Stack::getMutex());
-
-            std::ignore = buffer;
 
             if (!ImHexApi::Provider::isValid())
                 return std::nullopt;
@@ -37,19 +35,32 @@ namespace hex::plugin::builtin {
 
             offset -= provider->getBaseAddress();
 
-            if (m_modifiedAddresses->contains(offset))
-                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+            const auto &insertedAddresses = m_insertedAddresses.get(provider);
+            const auto &originalByteValues = m_originalByteValues.get(provider);
+
+            // Highlight the cell if any byte in it is inserted, or its live value
+            // differs from the value it had when it was first touched.
+            for (u64 i = 0; i < size; i++) {
+                const auto address = offset + i;
+
+                if (insertedAddresses.contains(address))
+                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+
+                if (auto it = originalByteValues.find(address); it != originalByteValues.end() && it->second != buffer[i])
+                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+            }
 
             return std::nullopt;
         });
 
         EventProviderSaved::subscribe([this](prv::Provider *provider) {
             m_savedOperations.get(provider) = provider->getUndoStack().getAppliedOperations().size();
-            m_modifiedAddresses.get(provider).clear();
+            m_insertedAddresses.get(provider).clear();
+            m_originalByteValues.get(provider).clear();
             EventHighlightingChanged::post();
         });
 
-        EventProviderDataModified::subscribe(this, [](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
+        EventProviderDataModified::subscribe(this, [this](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
             if (size == 0)
                 return;
 
@@ -57,6 +68,22 @@ namespace hex::plugin::builtin {
 
             std::vector<u8> oldData(size, 0x00);
             provider->read(offset, oldData.data(), size);
+
+            // Record the true original value the first time a byte is touched, and
+            // only for bytes that actually change. A later edit that restores that
+            // value will then correctly stop being highlighted.
+            auto &originalByteValues = m_originalByteValues.get(provider);
+            bool anyByteChanged = false;
+            for (u64 i = 0; i < size; i++) {
+                if (oldData[i] != data[i]) {
+                    originalByteValues.try_emplace(offset + i, oldData[i]);
+                    anyByteChanged = true;
+                }
+            }
+
+            if (!anyByteChanged)
+                return;
+
             provider->getUndoStack().add<undo::OperationWrite>(offset, size, oldData.data(), data);
         });
 
@@ -77,27 +104,30 @@ namespace hex::plugin::builtin {
             const auto stackSize = undoStack.getAppliedOperations().size();
             const auto savedStackSize = m_savedOperations.get(provider);
 
-            m_modifiedAddresses.get(provider).clear();
+            // Inserted bytes are new; there's no "original" value to diff against, so
+            // track which addresses are currently inserted from the undo stack instead.
+            auto &insertedAddresses = m_insertedAddresses.get(provider);
+            insertedAddresses.clear();
             if (stackSize == savedStackSize) {
                 // Do nothing
             } else if (stackSize > savedStackSize) {
                 for (const auto &operation : undoStack.getAppliedOperations() | std::views::drop(savedStackSize)) {
-                    if (!operation->shouldHighlight())
+                    if (dynamic_cast<const undo::OperationInsert *>(operation.get()) == nullptr)
                         continue;
 
                     auto region = operation->getRegion();
                     for (u64 addr = region.getStartAddress(); addr <= region.getEndAddress(); addr++) {
-                        m_modifiedAddresses.get(provider).insert(addr);
+                        insertedAddresses.insert(addr);
                     }
                 }
             } else {
                 for (const auto &operation : undoStack.getUndoneOperations() | std::views::reverse | std::views::take(savedStackSize - stackSize)) {
-                    if (!operation->shouldHighlight())
+                    if (dynamic_cast<const undo::OperationInsert *>(operation.get()) == nullptr)
                         continue;
 
                     auto region = operation->getRegion();
                     for (u64 addr = region.getStartAddress(); addr <= region.getEndAddress(); addr++) {
-                        m_modifiedAddresses.get(provider).insert(addr);
+                        insertedAddresses.insert(addr);
                     }
                 }
             }
