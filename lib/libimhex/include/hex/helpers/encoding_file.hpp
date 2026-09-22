@@ -2,8 +2,10 @@
 
 #include <hex.hpp>
 
+#include <functional>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -19,6 +21,48 @@ namespace hex {
         void appendEncodingLineStartAddress(std::vector<u64> &lineStartAddresses, size_t line, u64 nextLineStartAddress);
     }
 
+    /**
+     * @brief A table a `-include` or `-alias` line resolved to
+     */
+    struct ResolvedTable {
+        std::string content;
+
+        // Where this table itself lives. Feeds back into the next call, so a `-include` inside
+        // this table's own content resolves next to it, not next to whatever named this one.
+        std::fs::path context;
+    };
+
+    /**
+     * @brief Reads the table a `-include` or `-alias` line names
+     * @param context Where the table naming it lives, from the last call's ResolvedTable, or
+     * empty for the first call
+     * @param name For `-include`, a relative path with its own extension, such as
+     * "includes/box_drawing.tbl", read next to `context`. For `-alias`, the stem of the file it
+     * links to, such as "iso8859_1", taken as written: no case-folding, unlike
+     * getEncodingByName().
+     * @return The table, or std::nullopt when there is no such table
+     */
+    using IncludeResolver = std::function<std::optional<ResolvedTable>(const std::fs::path &context, std::string_view name)>;
+
+    /**
+     * @brief A byte sequence to text table
+     *
+     * One line gives one entry, as "HEX BYTES=text". A header of directives comes above the
+     * first entry. A line that starts with "-" below it makes the table invalid:
+     *
+     * - `-name text` gives the encoding its name, with the case it is written with. Name the
+     *   file the same, in lower case, since a name reaches a table through its file's name.
+     * - `-include path` brings in the entries of the table at `path`, relative to this table's
+     *   own file and with its own extension, such as "includes/box_drawing.tbl". It fills only
+     *   the bytes this table gives no value of its own, whatever order the lines are in.
+     * - `-description text` says what the table is for. It takes the rest of the line.
+     * - `-alias name` makes this table another name for the file whose stem is exactly `name`,
+     *   the way a symbolic link is another name for a file. `name` is taken as written, with
+     *   none of the case-folding `#pragma encoding` gets. Such a table holds nothing else but
+     *   comments, which are the lines the parser cannot read.
+     *
+     * An include carries only entries. A table's name and description are its own.
+     */
     class EncodingFile {
     public:
         enum class Type
@@ -30,7 +74,16 @@ namespace hex {
         EncodingFile(const EncodingFile &other);
         EncodingFile(EncodingFile &&other) noexcept;
         EncodingFile(Type type, const std::fs::path &path);
-        EncodingFile(Type type, const std::string &content);
+
+        /**
+         * @brief Parses a table from text
+         * @param type The table's format
+         * @param content The table's text
+         * @param resolveInclude Reads a table that a `-include` or `-alias` line names. Empty
+         * reads from the encodings directory, trying every search path in turn, since this
+         * content has no file of its own to be relative to.
+         */
+        EncodingFile(Type type, const std::string &content, IncludeResolver resolveInclude = {});
 
         EncodingFile& operator=(const EncodingFile &other);
         EncodingFile& operator=(EncodingFile &&other) noexcept;
@@ -97,17 +150,43 @@ namespace hex {
 
         [[nodiscard]] bool valid() const { return m_valid; }
 
-        [[nodiscard]] const std::string& getTableContent() const { return m_tableContent; }
-
+        /**
+         * @brief Gets the encoding's name
+         * @return Its `-name` line, or a name made from the file's own name when it has none
+         */
         [[nodiscard]] const std::string& getName() const { return m_name; }
 
+        /**
+         * @brief Gets what the table says it is for
+         * @return Its `-description` line, or an empty string when it has none
+         */
+        [[nodiscard]] const std::string& getDescription() const { return m_description; }
+
     private:
-        void parse(const std::string &content);
+        /**
+         * @brief Reads the table's text into this encoding
+         * @return False when a directive comes below the first entry, or a `-alias` line sits in
+         * a table with contents of its own, or links to a table that is missing, or loops
+         */
+        bool parse(const std::string &content, const std::fs::path &context, const IncludeResolver &resolveInclude);
+
+        /**
+         * @brief Reads one table's own entries into this encoding, then its `-include` tables
+         *
+         * Only this table's own entries take priority over its includes. `topLevel` gates the
+         * `-name`/`-description` lines too, since an included table's are not this table's own.
+         * `includedNames` is shared with every recursive call, so a table a cycle reaches again
+         * brings nothing a second time.
+         *
+         * @return False when a directive comes below the first entry, anywhere in the tree
+         */
+        bool parseTable(std::string_view content, const std::fs::path &context, const IncludeResolver &resolveInclude,
+            std::set<std::string> &includedNames, std::vector<std::string_view> &encodedValues, bool topLevel);
 
         bool m_valid = false;
 
         std::string m_name;
-        std::string m_tableContent;
+        std::string m_description;
         std::unique_ptr<std::map<size_t, std::map<std::vector<u8>, std::string>>> m_mapping;
         std::unique_ptr<std::map<size_t, std::map<std::string, std::vector<u8>, std::less<>>>> m_reverseMapping;
 
@@ -118,15 +197,59 @@ namespace hex {
     };
 
     /**
-     * @brief Looks an encoding up by its table file's name, without the extension
+     * @brief Looks an encoding up by its name
      *
-     * For example, "macintosh" finds encodings/macintosh.tbl. Looks only in the configured
-     * encodings directory and discards any directory part in `name`. Each table is parsed once
-     * and cached for the life of the process.
+     * `name` reaches encodings/`name`.tbl, in lower case, so `#pragma encoding ASCII` reads
+     * encodings/ascii.tbl. The lookup stays in the encodings directory: a name with a directory
+     * part in it reaches no table. A table whose only line is `-alias` is another name for the
+     * table it points at, though a `-alias` line itself takes the stem it names literally, in
+     * the case it is written. Each table is parsed once and cached for the life of the process.
      *
-     * @param name The table file's name
+     * A table file whose own name is not in lower case answers too. Every table ImHex gives is
+     * in lower case, but a person can drop a file in with any case, and a file system that tells
+     * case apart finds no other way to it.
+     *
+     * @param name The encoding's name
      * @return The encoding, or nullptr when no such table exists
      */
     const EncodingFile* getEncodingByName(const std::string &name);
+
+    /**
+     * @brief Makes the name of the file a table with this name lives in
+     *
+     * A file system does not always tell case apart, so two names that differ only by case
+     * cannot each have a file. So "Windows-1252" lives in windows-1252.tbl.
+     *
+     * @param name The encoding's name
+     * @return The name in lower case
+     */
+    std::string encodingFileName(std::string_view name);
+
+    /**
+     * @brief What a table's header says about the encoding
+     */
+    struct EncodingHeader {
+        std::string name;
+        std::string description;
+
+        // True when a `-alias` line led here, so this file is only another name for the table.
+        bool isAlias = false;
+
+        // The table the header came from, which a `-alias` line makes a different file. Empty
+        // when a link breaks or loops, and so reaches no table at all.
+        std::fs::path path;
+    };
+
+    /**
+     * @brief Reads the header of a table file, and no more of it
+     *
+     * Every directive comes above the first entry, so this reads only the start of the file. A
+     * table with many thousands of entries costs no more than a small one. Follows a `-alias`
+     * line to the table it links to.
+     *
+     * @param path The table file to read
+     * @return What its header says, with a name made from the file's name when it gives none
+     */
+    EncodingHeader readEncodingHeader(const std::fs::path &path);
 
 }

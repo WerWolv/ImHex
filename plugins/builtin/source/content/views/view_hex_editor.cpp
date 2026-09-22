@@ -8,6 +8,7 @@
 #include <hex/api/achievement_manager.hpp>
 
 #include <content/differing_byte_searcher.hpp>
+#include <content/helpers/popup_encoding_chooser.hpp>
 
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/events/events_interaction.hpp>
@@ -61,14 +62,8 @@ namespace hex::plugin::builtin {
               .typeId = "hex.builtin.custom-encoding",
               .displayName = "hex.builtin.menu.file.import.custom_encoding"_unlocalized,
               .displayIcon = "あ",
-              .extensions = { { "Thingy Table File", "tbl" } },
-              .encode = [](const std::optional<EncodingFile> &encoding) {
-                  if (!encoding.has_value())
-                      return std::vector<u8>();
-
-                  const auto &content = encoding->getTableContent();
-                  return std::vector<u8>(content.begin(), content.end());
-              },
+              .extensions = { },
+              .encode = [](const std::optional<EncodingFile> &) { return std::vector<u8>(); },
               .decode = [](std::span<const u8> bytes) -> std::optional<std::optional<EncodingFile>> {
                   if (bytes.empty())
                       return std::optional<std::optional<EncodingFile>>(std::in_place);
@@ -855,7 +850,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
+                PopupEncodingChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                 [this](const auto &path) {
                     auto *provider = ImHexApi::Provider::get();
                     TaskManager::createTask("hex.builtin.task.loading_encoding_file"_unlocalized, ProgressValue::None(), [this, path, provider](auto&) {
