@@ -3,10 +3,17 @@
 #include <hex/api/plugin_manager.hpp>
 #include <content/views/view_patches.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/requests_interaction.hpp>
+#include <hex/api/imhex_api/bookmarks.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/project_manager.hpp>
 #include <hex/helpers/tar.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
 #include <content/legacy_project_importer.hpp>
+#include <content/project.hpp>
+#include <content/recent.hpp>
+#include <content/helpers/encoding_chooser.hpp>
 
 #include <nlohmann/json.hpp>
 #include <wolv/io/file.hpp>
@@ -14,10 +21,49 @@
 using namespace hex;
 using namespace hex::plugin::builtin;
 
+TEST_SEQUENCE("Encoding/ChooserLabels") {
+    // The description reads first. The name goes below it, with the file after it when they differ.
+    const auto described = getEncodingChoiceLines({ "ASCII", "American Standard Code for Information Interchange", { } }, "ascii");
+    TEST_ASSERT(described.title == "American Standard Code for Information Interchange");
+    TEST_ASSERT(described.subtitle == "ASCII");
+
+    const auto renamed = getEncodingChoiceLines({ "KOI8-R", "Russian Cyrillic", { } }, "cyrillic_koi8_r");
+    TEST_ASSERT(renamed.title == "Russian Cyrillic");
+    TEST_ASSERT(renamed.subtitle == "KOI8-R (cyrillic_koi8_r)");
+
+    // With no description the name reads first, so the first line is never empty.
+    const auto plain = getEncodingChoiceLines({ "Thai", "", { } }, "thai");
+    TEST_ASSERT(plain.title == "Thai");
+    TEST_ASSERT(plain.subtitle.empty());
+
+    const auto noDescription = getEncodingChoiceLines({ "KOI8-R", "", { } }, "cyrillic_koi8_r");
+    TEST_ASSERT(noDescription.title == "KOI8-R");
+    TEST_ASSERT(noDescription.subtitle == "cyrillic_koi8_r");
+
+    // A table with no name of its own falls back to its file's name.
+    const auto unnamed = getEncodingChoiceLines({ "", "", { } }, "thai");
+    TEST_ASSERT(unnamed.title == "thai");
+    TEST_ASSERT(unnamed.subtitle.empty());
+
+    // A table answers to the name of every link that points at it, after its file's name.
+    const auto linked = getEncodingChoiceLines({ "KOI8-R", "Russian Cyrillic", { "koi8-r", "cp878" } }, "cyrillic_koi8_r");
+    TEST_ASSERT(linked.title == "Russian Cyrillic");
+    TEST_ASSERT(linked.subtitle == "KOI8-R (cyrillic_koi8_r, koi8-r, cp878)");
+
+    // With nothing else to say, the links alone fill the parentheses.
+    const auto onlyLinks = getEncodingChoiceLines({ "Macintosh", "Mac OS Roman", { "mac" } }, "macintosh");
+    TEST_ASSERT(onlyLinks.subtitle == "Macintosh (mac)");
+
+    // The file's name drops only its extension.
+    TEST_ASSERT(getEncodingFileName("cyrillic_koi8_r.tbl") == "cyrillic_koi8_r");
+
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("Providers/ReadWrite") {
     INIT_PLUGIN("Built-in");
 
-    auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
 
     TEST_ASSERT(provider.getSize() == 0);
     TEST_ASSERT(!provider.isDataDirty());
@@ -43,7 +89,7 @@ TEST_SEQUENCE("Providers/ReadWrite") {
 TEST_SEQUENCE("Providers/InvalidResize") {
     INIT_PLUGIN("Built-in");
 
-    auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
 
     
     TEST_ASSERT(!pr.resize(-1));
@@ -106,50 +152,78 @@ TEST_SEQUENCE("Project/ImportLegacy") {
 
     const auto root = std::filesystem::current_path() / "legacy_project_import";
     const auto projectPath = std::filesystem::current_path() / "legacy_project_import.hexproj";
+    const auto sourcePath = std::filesystem::current_path() / "legacy_project_import.bin";
     std::filesystem::remove_all(root);
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     std::filesystem::create_directory(root);
+    wolv::io::File(sourcePath, wolv::io::File::Mode::Create).writeVector({ 0x01, 0x02, 0x03 });
 
     nlohmann::json descriptor = {
+        { "type", "hex.builtin.provider.file" },
+        { "settings", {
+            { "baseAddress", 0 },
+            { "currPage", 0 },
+            { "path", sourcePath.string() }
+        } }
+    };
+    const nlohmann::json excludedDescriptor = {
         { "type", "hex.builtin.provider.mem_file" },
         { "settings", {
             { "baseAddress", 0 },
             { "currPage", 0 },
-            { "data", std::vector<u8> { 0x01, 0x02, 0x03 } },
-            { "name", "Imported" },
-            { "readOnly", false }
+            { "data", std::vector<u8> { 0x04 } },
+            { "name", "Excluded" },
+            { "readOnly", true }
         } }
     };
     {
         Tar tar(projectPath, Tar::Mode::Create);
         nlohmann::json manifest;
-        manifest["providers"] = std::vector<u32> { 11 };
+        manifest["providers"] = std::vector<u32> { 11, 12 };
         tar.writeString("IMHEX_METADATA", "HEX\n1.39.0");
         tar.writeString("providers/providers.json", manifest.dump());
         tar.writeString("providers/11.json", descriptor.dump());
+        tar.writeString("providers/12.json", excludedDescriptor.dump());
         tar.writeString("11/bookmarks.json", R"({"bookmarks":[]})");
+        tar.writeString("12/bookmarks.json", R"({"bookmarks":["excluded"]})");
     }
 
     TEST_ASSERT(ProjectManager::load(root));
     const auto imported = importLegacyProject(projectPath);
     TEST_ASSERT(imported.success, "{}", imported.error);
-    TEST_ASSERT(imported.importedProviderCount == 1);
-    TEST_ASSERT(imported.importedFileCount == 1);
+    TEST_ASSERT(imported.importedProviderCount == 2);
+    TEST_ASSERT(imported.importedFileCount == 3);
     TEST_ASSERT(imported.failedProviderIds.empty());
 
     const auto providers = ImHexApi::Provider::getProviders();
-    TEST_ASSERT(providers.size() == 1);
-    TEST_ASSERT(providers.front()->getActualSize() == 3);
+    TEST_ASSERT(providers.size() == 2);
+    const auto importedFile = std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 11; });
+    const auto importedMemoryFile = std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 12; });
+    TEST_ASSERT(importedFile != providers.end());
+    TEST_ASSERT(importedMemoryFile != providers.end());
+    TEST_ASSERT((*importedFile)->getActualSize() == 3);
+    const auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(*importedMemoryFile);
+    TEST_ASSERT(filePicker != nullptr);
+    TEST_ASSERT(!(*importedMemoryFile)->isWritable());
+    TEST_ASSERT(filePicker->getPickedPath() == root / "Excluded-12.bin");
+    TEST_ASSERT(wolv::io::File(filePicker->getPickedPath(), wolv::io::File::Mode::Read).readVector() == std::vector<u8>({ 0x04 }));
 
     const auto projectSettings = nlohmann::json::parse(
         wolv::io::File(root / ".imhex/project.json", wolv::io::File::Mode::Read).readString());
-    const auto providerId = std::to_string(providers.front()->getID());
+    const auto providerId = std::to_string((*importedFile)->getID());
     const auto relativePath = std::filesystem::path(
         projectSettings["associations"][providerId]["hex.builtin.bookmarks"].get<std::string>());
     TEST_ASSERT(std::filesystem::is_regular_file(root / relativePath));
     TEST_ASSERT(wolv::io::File(root / relativePath, wolv::io::File::Mode::Read).readString() == R"({"bookmarks":[]})");
+    TEST_ASSERT(std::filesystem::is_regular_file(root / "Excluded-12.hexbm"));
+    TEST_ASSERT(wolv::io::File(root / "Excluded-12.hexbm", wolv::io::File::Mode::Read).readString() == R"({"bookmarks":["excluded"]})");
+    TEST_ASSERT(project::moveProjectEntry("Excluded-12.bin", "Renamed-Excluded-12.bin"));
+    TEST_ASSERT(filePicker->getPickedPath() == root / "Renamed-Excluded-12.bin");
+    TEST_ASSERT(!(*importedMemoryFile)->isWritable());
 
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     TEST_SUCCESS();
 };
 
@@ -158,18 +232,19 @@ TEST_SEQUENCE("Project/MigrateLegacy") {
 
     const auto root = std::filesystem::current_path() / "legacy_project_migrated";
     const auto projectPath = std::filesystem::current_path() / "legacy_project_migration.hexproj";
+    const auto sourcePath = std::filesystem::current_path() / "legacy_project_migration.bin";
     std::filesystem::remove_all(root);
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     std::filesystem::create_directory(root);
+    wolv::io::File(sourcePath, wolv::io::File::Mode::Create).writeVector({ 0xCA, 0xFE });
 
     const nlohmann::json descriptor = {
-        { "type", "hex.builtin.provider.mem_file" },
+        { "type", "hex.builtin.provider.file" },
         { "settings", {
             { "baseAddress", 0 },
             { "currPage", 0 },
-            { "data", std::vector<u8> { 0xCA, 0xFE } },
-            { "name", "Migrated" },
-            { "readOnly", false }
+            { "path", sourcePath.string() }
         } }
     };
     {
@@ -199,6 +274,7 @@ TEST_SEQUENCE("Project/MigrateLegacy") {
     TEST_ASSERT(project::createEmptyProject(root) == std::string("hex.builtin.popup.error.project.create.metadata_exists"_lang));
 
     std::filesystem::remove(projectPath);
+    std::filesystem::remove(sourcePath);
     TEST_SUCCESS();
 };
 
@@ -213,15 +289,14 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     std::filesystem::remove_all(backupRoot);
     std::filesystem::create_directories(providersRoot);
 
-    const auto makeDescriptor = [](const std::string &name) {
+    const auto makeDescriptor = [](const std::string &name, const std::string &path) {
         return nlohmann::json {
-            { "type", "hex.builtin.provider.mem_file" },
+            { "type", "hex.builtin.provider.file" },
             { "settings", {
                 { "baseAddress", 0 },
                 { "currPage", 0 },
-                { "data", std::vector<u8> { 0x01 } },
-                { "name", name },
-                { "readOnly", false }
+                { "displayName", name },
+                { "path", path }
             } }
         };
     };
@@ -229,11 +304,23 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create)
         .writeString(R"({"version":1,"associations":{}})");
     wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Create)
-        .writeString(R"({"providers":[41,42,100],"closedProviders":[100]})");
+        .writeString(R"({"providers":[41,42,43,100],"closedProviders":[100]})");
     for (const auto id : { 41, 42 }) {
+        const auto fileName = fmt::format("open-{}.bin", id);
+        wolv::io::File(root / fileName, wolv::io::File::Mode::Create).writeVector({ 0x01 });
         wolv::io::File(providersRoot / fmt::format("{}.json", id), wolv::io::File::Mode::Create)
-            .writeString(makeDescriptor(fmt::format("Provider {}", id)).dump());
+            .writeString(makeDescriptor(fmt::format("Provider {}", id), fileName).dump());
     }
+    wolv::io::File(providersRoot / "43.json", wolv::io::File::Mode::Create).writeString(nlohmann::json {
+        { "type", "hex.builtin.provider.mem_file" },
+        { "settings", {
+            { "baseAddress", 0 },
+            { "currPage", 0 },
+            { "data", std::vector<u8> { 0x01 } },
+            { "name", "Excluded Provider" },
+            { "readOnly", false }
+        } }
+    }.dump());
     wolv::io::File(root / "closed.bin", wolv::io::File::Mode::Create).writeVector({ 0xAA });
     wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Create).writeString(nlohmann::json {
         { "type", "hex.builtin.provider.file" },
@@ -248,19 +335,60 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     auto providers = ImHexApi::Provider::getProviders();
     TEST_ASSERT(providers.size() == 2);
     TEST_ASSERT(std::ranges::none_of(providers, [](const auto *provider) { return provider->getID() == 100; }));
+    TEST_ASSERT(std::ranges::none_of(providers, [](const auto *provider) { return provider->getID() == 43; }));
 
-    auto temporaryProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto temporaryProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(temporaryProvider->getID() > 100);
+    EventProviderOpened::post(temporaryProvider.get());
+    TEST_ASSERT(ImHexApi::Bookmarks::add(0, 1, "Excluded provider bookmark", "", 0) != 0);
+    TEST_ASSERT(ProjectManager::store());
+    const auto bookmarkPath = FileBackedProviderDataRegistry::getBinding(temporaryProvider.get(), "hex.builtin.bookmarks");
+    TEST_ASSERT(bookmarkPath.has_value());
+    TEST_ASSERT(std::filesystem::is_regular_file(*bookmarkPath));
+    TEST_ASSERT(!wolv::io::File(*bookmarkPath, wolv::io::File::Mode::Read).readString().empty());
+    const auto manifestAfterBookmark = nlohmann::json::parse(
+        wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(!manifestAfterBookmark["providers"].get<std::set<u32>>().contains(temporaryProvider->getID()));
     ImHexApi::Provider::remove(temporaryProvider.get(), true);
 
     TEST_ASSERT(ProjectManager::store(backupRoot, false));
+    const auto backupManifest = nlohmann::json::parse(
+        wolv::io::File(backupRoot / ".imhex/providers/providers.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(backupManifest["providers"].get<std::set<u32>>() == std::set<u32>({ 41, 42, 100 }));
+    TEST_ASSERT(!std::filesystem::exists(backupRoot / ".imhex/providers/43.json"));
     const auto backupClosedSettings = nlohmann::json::parse(
         wolv::io::File(backupRoot / ".imhex/providers/100.json", wolv::io::File::Mode::Read).readString());
     const auto expectedBackupPath = std::filesystem::proximate(root / "closed.bin", backupRoot);
-    TEST_ASSERT(std::filesystem::path(backupClosedSettings["settings"]["path"].get<std::string>()) == expectedBackupPath);
+    const auto actualBackupPath = std::filesystem::path(backupClosedSettings["settings"]["path"].get<std::string>());
+    TEST_ASSERT(actualBackupPath == expectedBackupPath, "{} != {}", actualBackupPath.string(), expectedBackupPath.string());
     const auto canonicalClosedSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Read).readString());
     TEST_ASSERT(canonicalClosedSettings["settings"]["path"] == "closed.bin");
+    TEST_ASSERT(project::moveProjectEntry("closed.bin", "renamed-closed.bin"));
+    const auto renamedClosedSettings = nlohmann::json::parse(
+        wolv::io::File(providersRoot / "100.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(renamedClosedSettings["settings"]["path"] == "renamed-closed.bin");
+
+    const recent::RecentEntry closedRecentEntry {
+        .displayName = "renamed-closed.bin",
+        .type = "hex.builtin.provider.file",
+        .entryFilePath = {},
+        .data = {
+            { "baseAddress", 0 },
+            { "currPage", 0 },
+            { "path", (root / "renamed-closed.bin").string() }
+        }
+    };
+    recent::loadRecentEntry(closedRecentEntry);
+    providers = ImHexApi::Provider::getProviders();
+    const auto reopenedProvider = std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 100; });
+    TEST_ASSERT(reopenedProvider != providers.end());
+    TEST_ASSERT(providers.size() == 3);
+    recent::loadRecentEntry(closedRecentEntry);
+    TEST_ASSERT(ImHexApi::Provider::get()->getID() == 100);
+    TEST_ASSERT(ImHexApi::Provider::getProviders().size() == 3);
+    ImHexApi::Provider::remove(*reopenedProvider, true);
+    providers = ImHexApi::Provider::getProviders();
 
     const auto providerToClose = *std::ranges::find_if(providers, [](const auto *provider) { return provider->getID() == 42; });
     providerToClose->resize(3);
@@ -274,18 +402,45 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     TEST_ASSERT(manifest["closedProviders"].get<std::set<u32>>() == std::set<u32>({ 42, 100 }));
     const auto closedProviderSettings = nlohmann::json::parse(
         wolv::io::File(providersRoot / "42.json", wolv::io::File::Mode::Read).readString());
-    TEST_ASSERT(closedProviderSettings["settings"]["data"].size() == 3);
+    TEST_ASSERT(closedProviderSettings["settings"]["path"] == "open-42.bin");
 
     TEST_ASSERT(ProjectManager::load(root));
     providers = ImHexApi::Provider::getProviders();
     TEST_ASSERT(providers.size() == 1);
     TEST_ASSERT(providers.front()->getID() == 41);
 
+    const auto validManifest = manifest;
     manifest.erase("closedProviders");
     wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Create).writeString(manifest.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+    providers = ImHexApi::Provider::getProviders();
+    TEST_ASSERT(providers.size() == 1);
+
+    wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Create).writeString(validManifest.dump());
+    auto projectSettings = nlohmann::json::parse(
+        wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Read).readString());
+    const auto validProjectSettings = projectSettings;
+    projectSettings["version"] = 2;
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+
+    projectSettings = validProjectSettings;
+    projectSettings.erase("associations");
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+
+    projectSettings = validProjectSettings;
+    projectSettings["associations"]["41"]["hex.builtin.pattern-source"] = {
+        { "kind", "link" },
+        { "path", "relative.hexpat" }
+    };
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(projectSettings.dump());
+    TEST_ASSERT(!ProjectManager::load(root));
+
+    wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Create).writeString(validProjectSettings.dump());
     TEST_ASSERT(ProjectManager::load(root));
     providers = ImHexApi::Provider::getProviders();
-    TEST_ASSERT(providers.size() == 3);
+    TEST_ASSERT(providers.size() == 1);
 
     project::ImportedProvider unavailableProvider {
         .id = 200,
@@ -299,8 +454,87 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto importResult = project::importProviders({ std::move(unavailableProvider) });
     TEST_ASSERT(importResult.success);
     TEST_ASSERT(importResult.failedProviderIds == std::vector<u32>({ 200 }));
-    auto postImportProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+    auto postImportProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
     TEST_ASSERT(postImportProvider->getID() > 200);
+
+    const auto localPath = root / "project-local.bin";
+    wolv::io::File(localPath, wolv::io::File::Mode::Create).writeVector({ 0x01 });
+    auto localProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.file"_unlocalized, true);
+    auto *localFilePicker = dynamic_cast<prv::IProviderFilePicker *>(localProvider.get());
+    TEST_ASSERT(localFilePicker != nullptr);
+    localFilePicker->setPickedPath(localPath);
+    TEST_ASSERT(localProvider->open().isSuccess());
+    EventProviderOpened::post(localProvider.get());
+
+    std::set<u32> patternSourceChanges;
+    u8 patternSourceListener = 0;
+    EventFileBackedProviderDataChanged::subscribe(&patternSourceListener, [&](prv::Provider *provider, FileBackedProviderDataBase *data) {
+        if (data->getType().typeId == "hex.builtin.pattern-source")
+            patternSourceChanges.insert(provider->getID());
+    });
+    ImHexApi::Provider::setCurrentProvider(localProvider.get());
+    RequestSetPatternLanguageCode::post("u8 cli_test @ 0x00;");
+    EventFileBackedProviderDataChanged::unsubscribe(&patternSourceListener);
+    TEST_ASSERT(patternSourceChanges == std::set<u32>({ localProvider->getID() }));
+
+    const auto linkedPatternPath = backupRoot / "linked-pattern.hexpat";
+    wolv::io::File(linkedPatternPath, wolv::io::File::Mode::Create).writeString("u8 linked @ 0x00;");
+    TEST_ASSERT(FileBackedProviderDataRegistry::bind(localProvider.get(), "hex.builtin.pattern-source", linkedPatternPath));
+    TEST_ASSERT(ProjectManager::store());
+    const auto linkedProjectSettings = nlohmann::json::parse(
+        wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Read).readString());
+    const auto &linkedPattern = linkedProjectSettings["associations"][std::to_string(localProvider->getID())]["hex.builtin.pattern-source"];
+    TEST_ASSERT(linkedPattern["kind"] == "link");
+    TEST_ASSERT(std::filesystem::path(linkedPattern["path"].get<std::string>()) == linkedPatternPath);
+    const auto manifestWithLocalFile = nlohmann::json::parse(
+        wolv::io::File(providersRoot / "providers.json", wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(manifestWithLocalFile["providers"].get<std::set<u32>>().contains(localProvider->getID()));
+
+    TEST_ASSERT(project::moveProjectEntry("project-local.bin", "renamed-project-local.bin"));
+    const auto renamedLocalPath = root / "renamed-project-local.bin";
+    TEST_ASSERT(!std::filesystem::exists(localPath));
+    TEST_ASSERT(std::filesystem::is_regular_file(renamedLocalPath));
+    TEST_ASSERT(localFilePicker->getPickedPath() == renamedLocalPath);
+    const u8 renamedValue = 0xA5;
+    localProvider->write(0, &renamedValue, sizeof(renamedValue));
+    TEST_ASSERT(localFilePicker->flushFile());
+    TEST_ASSERT(wolv::io::File(renamedLocalPath, wolv::io::File::Mode::Read).readVector() == std::vector<u8>({ renamedValue }));
+    const auto renamedProviderSettings = nlohmann::json::parse(
+        wolv::io::File(providersRoot / fmt::format("{}.json", localProvider->getID()), wolv::io::File::Mode::Read).readString());
+    TEST_ASSERT(renamedProviderSettings["settings"]["path"] == "renamed-project-local.bin");
+
+    const auto linkedProviderId = localProvider->getID();
+    localProvider.reset();
+    TEST_ASSERT(ProjectManager::load(root));
+    const auto reloadedProviders = ImHexApi::Provider::getProviders();
+    const auto linkedProvider = std::ranges::find_if(reloadedProviders, [linkedProviderId](const auto *provider) {
+        return provider->getID() == linkedProviderId;
+    });
+    TEST_ASSERT(linkedProvider != reloadedProviders.end());
+    const auto restoredPatternBinding = FileBackedProviderDataRegistry::getBinding(*linkedProvider, "hex.builtin.pattern-source");
+    TEST_ASSERT(restoredPatternBinding.has_value());
+    TEST_ASSERT(*restoredPatternBinding == linkedPatternPath);
+
+    std::error_code removeError;
+    std::filesystem::remove(linkedPatternPath, removeError);
+    TEST_ASSERT(!removeError);
+    TEST_ASSERT(ProjectManager::load(root));
+    const auto providersWithMissingLink = ImHexApi::Provider::getProviders();
+    const auto providerWithMissingLink = std::ranges::find_if(providersWithMissingLink, [linkedProviderId](const auto *provider) {
+        return provider->getID() == linkedProviderId;
+    });
+    TEST_ASSERT(providerWithMissingLink != providersWithMissingLink.end());
+    TEST_ASSERT(!FileBackedProviderDataRegistry::getBinding(*providerWithMissingLink, "hex.builtin.pattern-source").has_value());
+
+    ImHexApi::Provider::setCurrentProvider(*providerWithMissingLink);
+    RequestSetPatternLanguageCode::post("u8 detached @ 0x00;");
+    TEST_ASSERT(ProjectManager::store());
+    const auto detachedProjectSettings = nlohmann::json::parse(
+        wolv::io::File(metadataRoot / "project.json", wolv::io::File::Mode::Read).readString());
+    const auto &detachedPattern = detachedProjectSettings["associations"][std::to_string(linkedProviderId)]["hex.builtin.pattern-source"];
+    TEST_ASSERT(detachedPattern.is_string());
+    const auto detachedPatternPath = root / detachedPattern.get<std::string>();
+    TEST_ASSERT(wolv::io::File(detachedPatternPath, wolv::io::File::Mode::Read).readString() == "u8 detached @ 0x00;");
 
     TEST_SUCCESS();
 };

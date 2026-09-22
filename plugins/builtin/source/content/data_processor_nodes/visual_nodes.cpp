@@ -11,7 +11,11 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayInteger : public dp::Node {
     public:
-        NodeDisplayInteger() : Node("hex.builtin.nodes.display.int.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input") }) { }
+        NodeDisplayInteger() : Node(
+            "hex.builtin.nodes.display.int.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input"_unlocalized)
+            }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
@@ -40,7 +44,11 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayFloat : public dp::Node {
     public:
-        NodeDisplayFloat() : Node("hex.builtin.nodes.display.float.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input") }) { }
+        NodeDisplayFloat() : Node(
+            "hex.builtin.nodes.display.float.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"_unlocalized)
+            }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
@@ -64,7 +72,11 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayBuffer : public dp::Node {
     public:
-        NodeDisplayBuffer() : Node("hex.builtin.nodes.display.buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeDisplayBuffer() : Node(
+            "hex.builtin.nodes.display.buffer.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }) { }
 
         void drawNode() override {
             static const std::string Header = " Address    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F                       ";
@@ -119,7 +131,11 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayString : public dp::Node {
     public:
-        NodeDisplayString() : Node("hex.builtin.nodes.display.string.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeDisplayString() : Node(
+            "hex.builtin.nodes.display.string.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }) { }
 
         void drawNode() override {
             constexpr static auto LineLength = 50;
@@ -155,7 +171,11 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayBits : public dp::Node {
     public:
-        NodeDisplayBits() : Node("hex.builtin.nodes.display.bits.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+        NodeDisplayBits() : Node(
+            "hex.builtin.nodes.display.bits.header"_unlocalized,
+            {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized)
+            }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
@@ -184,11 +204,11 @@ namespace hex::plugin::builtin {
     };
 
     void registerVisualDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeDisplayInteger>("hex.builtin.nodes.display", "hex.builtin.nodes.display.int");
-        ContentRegistry::DataProcessor::add<NodeDisplayFloat>("hex.builtin.nodes.display", "hex.builtin.nodes.display.float");
-        ContentRegistry::DataProcessor::add<NodeDisplayBuffer>("hex.builtin.nodes.display", "hex.builtin.nodes.display.buffer");
-        ContentRegistry::DataProcessor::add<NodeDisplayString>("hex.builtin.nodes.display", "hex.builtin.nodes.display.string");
-        ContentRegistry::DataProcessor::add<NodeDisplayBits>("hex.builtin.nodes.display", "hex.builtin.nodes.display.bits");
+        ContentRegistry::DataProcessor::add<NodeDisplayInteger>("hex.builtin.nodes.display"_untranslated, "hex.builtin.nodes.display.int"_untranslated);
+        ContentRegistry::DataProcessor::add<NodeDisplayFloat>("hex.builtin.nodes.display"_untranslated, "hex.builtin.nodes.display.float"_untranslated);
+        ContentRegistry::DataProcessor::add<NodeDisplayBuffer>("hex.builtin.nodes.display"_untranslated, "hex.builtin.nodes.display.buffer"_untranslated);
+        ContentRegistry::DataProcessor::add<NodeDisplayString>("hex.builtin.nodes.display"_untranslated, "hex.builtin.nodes.display.string"_untranslated);
+        ContentRegistry::DataProcessor::add<NodeDisplayBits>("hex.builtin.nodes.display"_untranslated, "hex.builtin.nodes.display.bits"_untranslated);
     }
 
 }

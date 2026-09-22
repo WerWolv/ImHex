@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::SameLine();
             if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                ui::PopupQuestion::open("hex.builtin.view.fullscreen.save_editor.should_close"_lang, [this] {
+                ui::PopupQuestion::open("hex.builtin.view.fullscreen.save_editor.should_close"_unlocalized, [this] {
                     this->m_provider.close();
                 }, []{});
             }

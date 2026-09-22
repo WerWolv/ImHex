@@ -178,7 +178,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] UnlocalizedString ViewProvider::getTypeName() const {
-        return "hex.builtin.provider.view";
+        return "hex.builtin.provider.view"_unlocalized;
     }
 
     void ViewProvider::setProvider(u64 startAddress, size_t size, hex::prv::Provider *provider) {
@@ -203,12 +203,16 @@ namespace hex::plugin::builtin {
 
     std::vector<prv::IProviderMenuItems::MenuEntry> ViewProvider::getMenuEntries() {
         return {
-            MenuEntry { .name=Lang("hex.builtin.provider.rename"), .icon=ICON_VS_TAG, .callback=[this] { this->renameFile(); } }
+            MenuEntry {
+                .name = "hex.builtin.provider.rename"_unlocalized,
+                .icon = ICON_VS_TAG,
+                .callback = [this] { this->renameFile(); }
+            }
         };
     }
 
     void ViewProvider::renameFile() {
-        ui::PopupTextInput::open("hex.builtin.provider.rename", "hex.builtin.provider.rename.desc", [this](const std::string &name) {
+        ui::PopupTextInput::open("hex.builtin.provider.rename"_unlocalized, "hex.builtin.provider.rename.desc"_unlocalized, [this](const std::string &name) {
             m_name = name;
             RequestUpdateWindowTitle::post();
         });

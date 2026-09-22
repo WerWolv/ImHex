@@ -7,12 +7,15 @@ namespace hex::plugin::builtin {
 
     class PopupResize : public ViewHexEditor::Popup {
     public:
-        explicit PopupResize(u64 currSize);
+        explicit PopupResize(const ImHexApi::HexEditor::ProviderRegion &selection);
         void draw(ViewHexEditor *editor) override;
         [[nodiscard]] UnlocalizedString getTitle() const override;
+        void resizeProvider(ViewHexEditor *editor);
 
     private:
-        void resize(size_t newSize);
-        u64 m_size;
+        ImHexApi::HexEditor::ProviderRegion m_selection;
+        u64 m_actualSize;
+        u64 m_selectionSize;
+        bool m_isSelection;
     };
 }

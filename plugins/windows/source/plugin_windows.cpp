@@ -26,7 +26,7 @@ namespace hex::plugin::windows {
 static void detectSystemTheme() {
     // Setup system theme change detector
     EventOSThemeChanged::subscribe([] {
-        bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
+        bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.color"_unlocalized, ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
         if (!themeFollowSystem)
             return;
 
@@ -43,7 +43,7 @@ static void detectSystemTheme() {
     });
 
     EventImHexStartupFinished::subscribe([=] {
-        bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
+        bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.color"_unlocalized, ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
 
         if (themeFollowSystem)
             EventOSThemeChanged::post();

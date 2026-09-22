@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewTools::ViewTools() : View::Scrolling("hex.builtin.view.tools.name", ICON_VS_TOOLS) {
+    ViewTools::ViewTools() : View::Scrolling("hex.builtin.view.tools.name"_unlocalized, ICON_VS_TOOLS) {
         m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
 
         LayoutManager::registerLoadCallback([this](std::string_view line) {
@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
             if (parts.size() != 2)
                 return;
 
-            m_detachedTools[parts[0]] = parts[1] == "1";
+            m_detachedTools[UnlocalizedString(parts[0])] = parts[1] == "1";
         });
 
         LayoutManager::registerStoreCallback([this](ImGuiTextBuffer *buffer) {

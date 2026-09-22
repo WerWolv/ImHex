@@ -176,6 +176,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            // Get the disk's sector size
             {
                 DISK_GEOMETRY_EX diskGeometry = { };
                 DWORD bytesRead               = 0;
@@ -198,9 +199,34 @@ namespace hex::plugin::builtin {
                     ::CloseHandle(operation.hEvent);
 
                 if (success) {
-                    m_diskSize   = diskGeometry.DiskSize.QuadPart;
                     m_sectorSize = diskGeometry.Geometry.BytesPerSector;
                 }
+            }
+
+            // Read the actual disk / partition size
+            {
+                GET_LENGTH_INFORMATION lengthInformation = { };
+                DWORD bytesRead                           = 0;
+                OVERLAPPED operation                      = { };
+                operation.hEvent                          = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+                auto success = operation.hEvent != nullptr && DeviceIoControl(
+                        m_diskHandle,
+                        IOCTL_DISK_GET_LENGTH_INFO,
+                        nullptr,
+                        0,
+                        &lengthInformation,
+                        sizeof(GET_LENGTH_INFORMATION),
+                        &bytesRead,
+                        &operation);
+                if (!success && operation.hEvent != nullptr && ::GetLastError() == ERROR_IO_PENDING)
+                    success = ::GetOverlappedResult(m_diskHandle, &operation, &bytesRead, TRUE);
+
+                if (operation.hEvent != nullptr)
+                    ::CloseHandle(operation.hEvent);
+
+                if (success)
+                    m_diskSize = lengthInformation.Length.QuadPart;
             }
 
             if (m_diskHandle == nullptr || m_diskHandle == INVALID_HANDLE_VALUE) {

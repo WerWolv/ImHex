@@ -105,8 +105,21 @@ namespace hex {
     extern "C" void registerFont(const char *fontName, const char *fontPath);
     const std::map<std::fs::path, std::string>& getFonts();
 
+    /**
+     * @brief Escapes one byte for display
+     * @param byte The byte to escape
+     * @return Its C escape spelling, the byte itself when it is printable ASCII, or \xNN
+     */
+    [[nodiscard]] std::string escapeByte(u8 byte);
+
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
-    [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
+
+    /**
+     * @brief Parses hex::encodeByteString()'s escape syntax back into bytes
+     * @param string The escaped text to parse
+     * @return The decoded bytes, or nullopt on a malformed escape
+     */
+    [[nodiscard]] std::optional<std::vector<u8>> decodeByteString(const std::string &string);
 
     [[nodiscard]] std::wstring utf8ToUtf16(const std::string& utf8);
     [[nodiscard]] std::string utf16ToUtf8(const std::wstring& utf16);
@@ -346,6 +359,19 @@ namespace hex {
         });
 
         return iter != a.end();
+    }
+
+    // can be generalized further to std::ranges::range if needed
+    template<class T>
+    [[nodiscard]] bool isUnique(const std::vector<T>& vec) {
+        for (size_t i = 0; i < vec.size(); ++i) {
+            for (size_t j = i + 1; j < vec.size(); ++j) {
+                if (vec[i] == vec[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     template<typename T, typename... VariantTypes>

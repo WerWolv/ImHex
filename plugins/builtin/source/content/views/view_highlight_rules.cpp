@@ -113,19 +113,19 @@ namespace hex::plugin::builtin {
 
 
     ViewHighlightRules::ViewHighlightRules()
-        : View::Floating("hex.builtin.view.highlight_rules.name", ICON_VS_TAG),
+        : View::Floating("hex.builtin.view.highlight_rules.name"_unlocalized, ICON_VS_TAG),
           m_rules({
               .typeId = "hex.builtin.highlight-rules",
-              .displayName = "hex.builtin.view.highlight_rules.name",
+              .displayName = "hex.builtin.view.highlight_rules.name"_unlocalized,
               .displayIcon = ICON_VS_TAG,
               .extensions = { { "Highlight Rules File", "hexhl" } },
               .encode = &ViewHighlightRules::encodeRules,
               .decode = &ViewHighlightRules::decodeRules
           }) {
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.highlight_rules.menu.edit.rules" }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.highlight_rules.menu.edit.rules"_unlocalized }, ICON_VS_TAG, 1950, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         }, ImHexApi::Provider::isValid,
-        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"));
+        ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized));
 
         m_rules.setChangedCallback([this](prv::Provider *provider) {
             auto &selectedRule = m_selectedRule.get(provider);

@@ -19,7 +19,7 @@ namespace hex::plugin::diffing {
 
     class AlgorithmSimple : public Algorithm {
     public:
-        AlgorithmSimple() : Algorithm("hex.diffing.algorithm.simple.name", "hex.diffing.algorithm.simple.description") {}
+        AlgorithmSimple() : Algorithm("hex.diffing.algorithm.simple.name"_unlocalized, "hex.diffing.algorithm.simple.description"_unlocalized) {}
 
         [[nodiscard]] std::vector<DiffTree> analyze(prv::Provider *providerA, prv::Provider *providerB) const override {
             wolv::container::IntervalTree<DifferenceType> differences;
@@ -78,7 +78,7 @@ namespace hex::plugin::diffing {
 
     class AlgorithmMyers : public Algorithm {
     public:
-        AlgorithmMyers() : Algorithm("hex.diffing.algorithm.myers.name", "hex.diffing.algorithm.myers.description") {}
+        AlgorithmMyers() : Algorithm("hex.diffing.algorithm.myers.name"_unlocalized, "hex.diffing.algorithm.myers.description"_unlocalized) {}
 
         [[nodiscard]] std::vector<DiffTree> analyze(prv::Provider *providerA, prv::Provider *providerB) const override {
             DiffTree differencesA, differencesB;

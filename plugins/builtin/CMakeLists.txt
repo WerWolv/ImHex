@@ -39,7 +39,13 @@ add_imhex_plugin(
         source/content/themes.cpp
         source/content/recent.cpp
         source/content/file_handlers.cpp
-        source/content/project.cpp
+        source/content/project/state.cpp
+        source/content/project/storage.cpp
+        source/content/project/providers.cpp
+        source/content/project/sidebar.cpp
+        source/content/project/lifecycle.cpp
+        source/content/project/import.cpp
+        source/content/project/registration.cpp
         source/content/legacy_project_importer.cpp
         source/content/achievements.cpp
         source/content/file_extraction.cpp
@@ -140,6 +146,7 @@ add_imhex_plugin(
         source/content/text_highlighting/pattern_language.cpp
 
         source/content/helpers/constants.cpp
+        source/content/helpers/encoding_chooser.cpp
     INCLUDES
         include
 
@@ -154,3 +161,7 @@ add_imhex_plugin(
 if (WIN32)
     target_link_libraries(builtin PRIVATE setupapi)
 endif ()
+
+include(CheckTypeSize)
+check_type_size(time_t TIME_T_SIZE)
+target_compile_definitions(builtin PRIVATE TIME_T_SIZE=${TIME_T_SIZE})

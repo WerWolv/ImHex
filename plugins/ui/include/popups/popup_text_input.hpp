@@ -15,7 +15,7 @@ namespace hex::ui {
     class PopupTextInput : public Popup<PopupTextInput> {
     public:
         PopupTextInput(UnlocalizedString unlocalizedName, UnlocalizedString message, std::function<void(std::string)> function)
-            : hex::Popup<PopupTextInput>(std::move(unlocalizedName), false),
+            : hex::Popup<PopupTextInput>(std::move(unlocalizedName), ICON_VS_QUOTE, false),
               m_message(std::move(message)), m_function(std::move(function)) { }
 
         void drawContent() override {

@@ -4,11 +4,16 @@
 
 #include "hex/subcommands/subcommands.hpp"
 
+#include <hex/api/task_manager.hpp>
 #include <hex/api/events/requests_lifecycle.hpp>
-#include <hex/api/plugin_manager.hpp>
 #include <hex/api/imhex_api/messaging.hpp>
-#include <hex/helpers/logger.hpp>
+#include <hex/api/plugin_manager.hpp>
+
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/logger.hpp>
+
+#include "hex/api/content_registry/background_services.hpp"
+#include "hex/api/content_registry/settings.hpp"
 
 namespace hex::subcommands {
 
@@ -105,21 +110,27 @@ namespace hex::subcommands {
         for (const auto &[subcommand, _] : subCommands) {
             if (bool(subcommand.flags & SubCommand::Flags::InitPlugins)) {
                 pluginsInitialized = true;
+                ContentRegistry::Settings::impl::load();
                 PluginManager::initializeNewPlugins();
                 break;
             }
         }
 
         // Run the subcommands
-        int exitCode = 0;
+        CommandResult exitCode;
         for (const auto &[subcommand, subCommandArgs] : subCommands) {
             exitCode = subcommand.callback(subCommandArgs);
-            if (exitCode != EXIT_CONTINUE) {
+            if (exitCode.getType() != CommandResult::Type::Continue) {
                 break;
             }
         }
 
         if (pluginsInitialized) {
+            TaskManager::exit();
+
+            // A service thread must not reach an AutoReset object that cleanup() already reset.
+            ContentRegistry::BackgroundServices::impl::stopServices();
+
             ImHexApi::System::impl::cleanup();
             EventManager::clear();
             PluginManager::unload();
@@ -130,8 +141,8 @@ namespace hex::subcommands {
             std::exit(0);
         }
 
-        if (exitCode != EXIT_CONTINUE) {
-            std::exit(exitCode);
+        if (exitCode.getType() != CommandResult::Type::Continue) {
+            std::exit(exitCode.getExitCode());
         }
     }
 

@@ -64,6 +64,10 @@ namespace hex::plugin::builtin {
             }
         }
 
+        std::string toString() override {
+            return m_encodedString;
+        }
+
     protected:
         [[nodiscard]] std::string formatDisplayValue() override {
             auto size = std::min<size_t>(this->getSize(), 0x7F);
@@ -71,8 +75,7 @@ namespace hex::plugin::builtin {
             if (size == 0)
                 return "\"\"";
 
-            std::string buffer(size, 0x00);
-            this->getEvaluator()->readData(this->getOffset(), buffer.data(), size, this->getSection());
+            auto buffer = m_encodedString.substr(0, size);
 
             return Pattern::callUserFormatFunc(buffer).value_or(fmt::format("\"{0}\" {1}", buffer, size > this->getSize() ? "(truncated)" : ""));
         }
@@ -99,7 +102,7 @@ namespace hex::plugin::builtin {
         }
 
         void jsonToPattern(pl::core::Evaluator *evaluator, const nlohmann::json &json, std::vector<std::shared_ptr<pl::ptrn::Pattern>> &entries) {
-            u64 index = 0;
+            u32 index = 0;
             for (auto it = json.begin(); it != json.end(); ++it, ++index) {
                 using ValueType = nlohmann::json::value_t;
                 switch (it->type()) {

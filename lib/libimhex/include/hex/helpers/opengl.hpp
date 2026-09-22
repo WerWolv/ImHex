@@ -773,12 +773,12 @@ namespace hex::gl {
         return result;
     }
 
-    Matrix<float,4,4> GetPerspectiveMatrix(	float viewWidth, float viewHeight, float nearVal, float farVal, bool actionType = false);
-    Matrix<float,4,4> GetOrthographicMatrix( float viewWidth, float viewHeight, float nearVal, float farVal, bool actionType = false);
+    Matrix<float,4,4> GetPerspectiveMatrix(float viewWidth, float viewHeight, float nearVal, float farVal, bool actionType = false);
+    Matrix<float,4,4> GetOrthographicMatrix(float viewWidth, float viewHeight, float nearVal, float farVal, bool actionType = false);
 
 
     template<typename T>
-    static Matrix<T,4,4> GetObliqueMatrix(	T width, T height,T nearVal,T farVal, bool actionType = false) {
+    static Matrix<T,4,4> GetObliqueMatrix(T width, T height,T nearVal,T farVal, bool actionType = false) {
         int sign =1;
         if (actionType)
             sign=-1;

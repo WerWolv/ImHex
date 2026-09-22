@@ -23,19 +23,18 @@
 
 #include <wolv/utils/string.hpp>
 
+#include <mutex>
 #include <utility>
 #include <numeric>
 
+#include <hex/api/http/github_api.hpp>
+#include <GLFW/glfw3.h>
+#include <algorithm>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <set>
-#include <algorithm>
-#include <GLFW/glfw3.h>
-#include <hex/api_urls.hpp>
-#include <hex/helpers/http_requests.hpp>
 
 #include <hex/helpers/utils_macos.hpp>
-#include <nlohmann/json.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -101,6 +100,23 @@ namespace hex {
             static AutoReset<std::map<u32, HoveringFunction>> s_hoveringFunctions;
             const std::map<u32, HoveringFunction>& getHoveringFunctions() {
                 return *s_hoveringFunctions;
+            }
+
+            // Set on the main thread, read on the pattern evaluation thread, so a mutex guards both.
+            static AutoReset<std::optional<std::string>> s_currentEncodingName;
+            static std::mutex s_currentEncodingNameMutex;
+            void setCurrentEncodingName(std::optional<std::string> name) {
+                {
+                    std::scoped_lock lock(s_currentEncodingNameMutex);
+
+                    if (*s_currentEncodingName == name)
+                        return;
+
+                    *s_currentEncodingName = std::move(name);
+                }
+
+                // Posted outside the lock, because a handler can call getEncodingName().
+                EventFileEncodingChanged::post();
             }
 
             static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
@@ -270,6 +286,15 @@ namespace hex {
 
         const std::optional<Region>& getHoveredRegion(const prv::Provider *provider) {
             return impl::s_hoveredRegion.get(provider);
+        }
+
+        std::optional<std::string> getEncodingName() {
+            std::scoped_lock lock(impl::s_currentEncodingNameMutex);
+            return *impl::s_currentEncodingName;
+        }
+
+        void setEncoding(const std::string &name) {
+            RequestChangeEncoding::post(name);
         }
 
     }
@@ -998,30 +1023,16 @@ namespace hex {
                 return std::nullopt;
             #else
                 if (ImHexApi::System::isNightlyBuild()) {
-                    HttpRequest request("GET", GitHubApiURL + std::string("/releases/tags/nightly"));
-                    request.setTimeout(10000);
-
                     // Query the GitHub API for the latest release version
-                    auto response = request.execute().get();
+                    const auto &response = GitHubApi::getRelease("nightly").get();
                     if (!response.isSuccess())
                         return std::nullopt;
 
-                    nlohmann::json releases;
-                    try {
-                        releases = nlohmann::json::parse(response.getData());
-                    } catch (const std::exception &) {
-                        return std::nullopt;
-                    }
-
-                    // Check if the response is valid
-                    if (!releases.contains("assets") || !releases["assets"].is_array())
+                    const auto &release = response.getData();
+                    if (release.assets.empty())
                         return std::nullopt;
 
-                    const auto firstAsset = releases["assets"].front();
-                    if (!firstAsset.is_object() || !firstAsset.contains("updated_at"))
-                        return std::nullopt;
-
-                    const auto nightlyUpdateTime = hex::parseTime("%Y-%m-%dT%H:%M:%SZ", firstAsset["updated_at"].get<std::string>());
+                    const auto nightlyUpdateTime = hex::parseTime("%Y-%m-%dT%H:%M:%SZ", release.assets.front().updatedAt);
                     const auto imhexBuildTime = ImHexApi::System::getBuildTime();
 
                     // Give a bit of time leniency for the update time check
@@ -1033,29 +1044,16 @@ namespace hex {
                         return "Nightly";
                     }
                 } else {
-                    HttpRequest request("GET", GitHubApiURL + std::string("/releases/latest"));
-
                     // Query the GitHub API for the latest release version
-                    auto response = request.execute().get();
+                    const auto &response = GitHubApi::getLatestRelease().get();
                     if (!response.isSuccess())
-                        return std::nullopt;
-
-                    nlohmann::json releases;
-                    try {
-                        releases = nlohmann::json::parse(response.getData());
-                    } catch (const std::exception &) {
-                        return std::nullopt;
-                    }
-
-                    // Check if the response is valid
-                    if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
                         return std::nullopt;
 
                     // Convert the current version string to a format that can be compared to the latest release
                     auto currVersion   = "v" + ImHexApi::System::getImHexVersion().get(false);
 
                     // Get the latest release version string
-                    auto latestVersion = releases["tag_name"].get<std::string>();
+                    const auto &latestVersion = response.getData().tagName;
 
                     // Check if the latest release is different from the current version
                     if (latestVersion != currVersion)
@@ -1281,7 +1279,7 @@ namespace hex {
 
         const Font& getDefaultFont() {
             if (*impl::s_defaultFont == nullptr) {
-                static Font emptyFont("");
+                static Font emptyFont({});
                 return emptyFont;
             }
             return **impl::s_defaultFont;

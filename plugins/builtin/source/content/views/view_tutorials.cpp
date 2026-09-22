@@ -11,8 +11,8 @@
 
 namespace hex::plugin::builtin {
 
-    ViewTutorials::ViewTutorials() : View::Floating("hex.builtin.view.tutorials.name", ICON_VS_BOOK) {
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.tutorials.name" }, ICON_VS_COMPASS, 4000, Shortcut::None, [&, this] {
+    ViewTutorials::ViewTutorials() : View::Floating("hex.builtin.view.tutorials.name"_unlocalized, ICON_VS_BOOK) {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.help"_unlocalized, "hex.builtin.view.tutorials.name"_unlocalized }, ICON_VS_COMPASS, 4000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
 

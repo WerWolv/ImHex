@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
         View* getMenuItemInheritView() const override {
-            return ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name");
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.hex_editor.name"_unlocalized);
         }
 
         void drawHelpText() override;
@@ -35,6 +35,13 @@ namespace hex::plugin::builtin {
             u64 requiredSize;
 
             std::string filterValue;
+
+            /**
+             * @brief Whether this row's display error is already logged
+             *
+             * Stops a failing row from logging on every frame.
+             */
+            bool displayErrorLogged = false;
         };
 
     private:

@@ -21,6 +21,7 @@ EXPORT_MODULE namespace hex {
 
     class ProjectManager {
     public:
+        constexpr static auto ProjectDirectory = ".imhex";
 
         /**
          * @brief Set implementations for loading and restoring a project
@@ -42,6 +43,21 @@ EXPORT_MODULE namespace hex {
          * @return false if the project file was not loaded successfully
          */
         static bool load(const std::filesystem::path &filePath);
+
+        /**
+         * @brief Load the persistent project used when no explicit project is open.
+         */
+        static bool loadTemporaryProject();
+
+        /**
+         * @brief Check whether the current project is ImHex's implicit temporary project.
+         */
+        static bool isTemporaryProject();
+
+        /**
+         * @brief Get the storage location of ImHex's implicit temporary project.
+         */
+        static std::filesystem::path getTemporaryProjectPath();
 
         /**
          * @brief Store a project file

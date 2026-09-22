@@ -16,6 +16,42 @@
 
 EXPORT_MODULE namespace hex {
 
+    class CommandResult {
+    public:
+        CommandResult() = default;
+
+        static CommandResult Exit(int exitCode = 0) {
+            return CommandResult { Type::Exit, exitCode };
+        }
+
+        static CommandResult Success() {
+            return Exit(EXIT_SUCCESS);
+        }
+
+        static CommandResult Failure() {
+            return Exit(EXIT_FAILURE);
+        }
+
+        static CommandResult Continue() {
+            return CommandResult { Type::Continue, 0 };
+        }
+
+        enum class Type : u8 {
+            Exit,
+            Continue
+        };
+
+        [[nodiscard]] Type getType() const { return type; }
+        [[nodiscard]] int getExitCode() const { return exitCode; }
+
+    private:
+
+        CommandResult(Type type, int exitCode) : type(type), exitCode(exitCode) {}
+
+        Type type = Type::Exit;
+        int exitCode = 0;
+    };
+
     struct SubCommand {
         enum class Flags : u8 {
             Option      = 1U << 0U,
@@ -27,7 +63,7 @@ EXPORT_MODULE namespace hex {
         std::string commandShort;
 
         std::string commandDescription;
-        std::function<int(std::span<const std::string>)> callback;
+        std::function<CommandResult(std::span<const std::string>)> callback;
         Flags flags = Flags::Option;
     };
 

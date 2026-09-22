@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <ui/pattern_drawer.hpp>
 
+#include <hex/helpers/logger.hpp>
+
 #include <pl/core/lexer.hpp>
 
 #include <pl/patterns/pattern_array_dynamic.hpp>
@@ -26,6 +28,7 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/localization_manager.hpp>
 
+#include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/scaling.hpp>
 #include <wolv/math_eval/math_evaluator.hpp>
 #include <ui/text_editor.hpp>
@@ -34,6 +37,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/vscode_icons.hpp>
 #include <hex/api/tutorial_manager.hpp>
+#include <hex/helpers/unicode.hpp>
 #include <pl/core/ast/ast_node_mathematical_expression.hpp>
 
 #include <wolv/io/file.hpp>
@@ -129,7 +133,7 @@ namespace hex::ui {
 
             ImGui::TableNextColumn();
 
-            if (pattern.isPatternLocal()) {
+            if (pattern.isLocal() || pattern.isPatternLocal()) {
                 ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
                 ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset());
@@ -340,6 +344,25 @@ namespace hex::ui {
     void PatternDrawer::resetEditing() {
         m_editingPattern = nullptr;
         m_editingPatternOffset = 0x00;
+        m_justStartedEditing = false;
+    }
+
+    void PatternDrawer::startEditing(const pl::ptrn::Pattern &pattern) {
+        m_editingPattern = &pattern;
+        m_editingPatternOffset = pattern.getOffset();
+        m_justStartedEditing = true;
+    }
+
+    // Focuses the edit field on the frame editing starts, not every frame it
+    // stays open. Calling SetKeyboardFocusHere() every frame re-requests focus
+    // for the field even after a click elsewhere deactivates it, which blocks
+    // that click from ending edit mode.
+    void PatternDrawer::focusIfJustStartedEditing() {
+        if (!m_justStartedEditing)
+            return;
+
+        m_justStartedEditing = false;
+        ImGui::SetKeyboardFocusHere();
     }
 
     bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) {
@@ -420,8 +443,9 @@ namespace hex::ui {
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
 
-        const auto value = pattern.getFormattedValue();
-        const bool valueValid = pattern.hasValidFormattedValue();
+        const auto escapedValue = escapeControlCharacters(pattern.getFormattedValue());
+        const auto value = escapedValue.value_or("hex.ui.pattern_drawer.invalid_value"_lang.get());
+        const bool valueValid = pattern.hasValidFormattedValue() && escapedValue.has_value();
         const auto width = ImGui::GetColumnWidth();
 
         if (const auto &visualizeArgs = pattern.getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
@@ -566,9 +590,8 @@ namespace hex::ui {
             m_hoverCallback(&pattern);
 
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editingEnabled) {
-                m_editingPattern = &pattern;
-                m_editingPatternOffset = pattern.getOffset();
-                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+                this->startEditing(pattern);
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.modify_data.name"_unlocalized);
             }
         }
 
@@ -577,17 +600,22 @@ namespace hex::ui {
                 ImGui::SetClipboardText(pattern.getDisplayName().c_str());
             if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_address"_lang, nullptr, false, true))
                 ImGui::SetClipboardText(fmt::format("0x{:02X}", pattern.getOffset()).c_str());
-            if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_value"_lang, nullptr, false, true))
-                ImGui::SetClipboardText(pattern.toString().c_str());
+            if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_value"_lang, nullptr, false, true)) {
+                // toString() can throw on bytes not valid under the string's encoding.
+                try {
+                    ImGui::SetClipboardText(pattern.toString().c_str());
+                } catch (const std::exception &e) {
+                    log::error("Failed to decode pattern value: {}", e.what());
+                }
+            }
             if (ImGui::MenuItem("hex.ui.pattern_drawer.context.copy_comment"_lang, nullptr, false, !pattern.getComment().empty()))
                 ImGui::SetClipboardText(pattern.getComment().c_str());
 
             ImGui::Separator();
 
             if (ImGui::MenuItemEx("hex.ui.pattern_drawer.context.edit_value"_lang, ICON_VS_EDIT)) {
-                m_editingPattern = &pattern;
-                m_editingPatternOffset = pattern.getOffset();
-                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
+                this->startEditing(pattern);
+                AchievementManager::unlockAchievement("hex.builtin.achievement.patterns"_unlocalized, "hex.builtin.achievement.patterns.modify_data.name"_unlocalized);
             }
 
             ImGui::EndPopup();
@@ -738,7 +766,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -781,7 +809,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -827,7 +855,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -848,7 +876,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::SetKeyboardFocusHere();
+                this->focusIfJustStartedEditing();
 
                 m_valueEditor.visit(pattern);
 
@@ -877,7 +905,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::SetKeyboardFocusHere();
+                this->focusIfJustStartedEditing();
 
                 m_valueEditor.visit(pattern);
 
@@ -922,7 +950,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::SetKeyboardFocusHere();
+                this->focusIfJustStartedEditing();
 
                 m_valueEditor.visit(pattern);
 
@@ -960,7 +988,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SetKeyboardFocusHere();
+            this->focusIfJustStartedEditing();
 
             m_valueEditor.visit(pattern);
 
@@ -1473,7 +1501,7 @@ namespace hex::ui {
             m_filtersUpdated = true;
 
             if (!m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating", TaskManager::NoProgress, [this, patterns, runtime](auto &task) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_unlocalized, ProgressValue::None(), [this, patterns, runtime](auto &task) {
                     size_t updatedFavorites = 0;
 
                     {

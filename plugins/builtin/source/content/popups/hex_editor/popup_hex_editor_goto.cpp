@@ -112,7 +112,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupGoto::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.file.goto";
+        return "hex.builtin.view.hex_editor.menu.file.goto"_unlocalized;
     }
 
     bool PopupGoto::canBePinned() const {

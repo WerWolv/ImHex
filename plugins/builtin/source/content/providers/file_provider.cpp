@@ -70,19 +70,25 @@ namespace hex::plugin::builtin {
             std::memcpy(m_data.data() + offset, buffer, size);
         } else {
             this->createBackupIfNeeded(m_file.getPath());
-            m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
+            if (m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size) != static_cast<i64>(size))
+                m_writeFailed = true;
         }
     }
 
     void FileProvider::save() {
+        bool result = true;
         if (m_loadedIntoMemory) {
             m_ignoreNextChangeEvent = true;
             this->createBackupIfNeeded(m_file.getPath());
             m_file.open();
-            m_file.writeVectorAtomic(0x00, m_data);
-            m_file.setSize(m_data.size());
+            result = m_file.isValid() &&
+                m_file.writeVectorAtomic(0x00, m_data) == static_cast<i64>(m_data.size());
+            if (result)
+                result = m_file.setSize(m_data.size());
+            if (result)
+                result = m_file.flush();
         } else {
-            m_file.flush();
+            result = !m_writeFailed && m_file.flush();
         }
 
         #if defined(OS_WINDOWS)
@@ -101,7 +107,10 @@ namespace hex::plugin::builtin {
         if (m_loadedIntoMemory)
             m_file.close();
 
-        Provider::save();
+        if (result) {
+            m_writeFailed = false;
+            Provider::save();
+        }
     }
 
     void FileProvider::saveAs(const std::fs::path &path) {
@@ -116,7 +125,8 @@ namespace hex::plugin::builtin {
             m_data.resize(newSize);
         } else {
             this->createBackupIfNeeded(m_file.getPath());
-            m_file.setSize(newSize);
+            if (!m_file.setSize(newSize))
+                m_writeFailed = true;
         }
 
         m_fileSize = newSize;
@@ -214,7 +224,7 @@ namespace hex::plugin::builtin {
 
         if (m_loadedIntoMemory) {
             loadMenuItem = {
-                .name = "hex.builtin.provider.file.menu.direct_access"_lang,
+                .name = "hex.builtin.provider.file.menu.direct_access"_unlocalized,
                 .icon = ICON_VS_ARROW_SWAP,
                 .callback = [this] {
                     this->convertToDirectAccess();
@@ -222,7 +232,7 @@ namespace hex::plugin::builtin {
             };
         } else {
             loadMenuItem = {
-                .name = "hex.builtin.provider.file.menu.into_memory"_lang,
+                .name = "hex.builtin.provider.file.menu.into_memory"_unlocalized,
                 .icon = ICON_VS_ARROW_SWAP,
                 .callback = [this] {
                     this->convertToMemoryFile();
@@ -232,14 +242,14 @@ namespace hex::plugin::builtin {
 
         return {
             {
-                .name = "hex.builtin.provider.file.menu.open_folder"_lang,
+                .name = "hex.builtin.provider.file.menu.open_folder"_unlocalized,
                 .icon = ICON_VS_FOLDER_OPENED,
                 .callback = [this] {
                     fs::openFolderWithSelectionExternal(getPickedPath());
                 },
             },
             {
-                .name = "hex.builtin.provider.file.menu.open_file"_lang,
+                .name = "hex.builtin.provider.file.menu.open_file"_unlocalized,
                 .icon = ICON_VS_FILE,
                 .callback = [this] {
                     fs::openFileExternal(getPickedPath());
@@ -250,7 +260,7 @@ namespace hex::plugin::builtin {
     }
 
     prv::Provider::OpenResult FileProvider::open() {
-        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
+        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.max_mem_file_size"_unlocalized, 128_MiB);
 
         const auto &path = getPickedPath();
 
@@ -273,7 +283,7 @@ namespace hex::plugin::builtin {
             if (directAccess) {
                 m_writable = false;
 
-                ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large", ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write", [this]{
+                ui::BannerButtonProviderSpecific::open(this, ICON_VS_WARNING, "hex.builtin.provider.file.too_large"_unlocalized, ImColor(135, 116, 66), "hex.builtin.provider.file.too_large.allow_write"_unlocalized, [this]{
                     m_writable = true;
                     RequestUpdateWindowTitle::post();
                 });
@@ -349,6 +359,8 @@ namespace hex::plugin::builtin {
             m_file.close();
 
         m_changeEventAcknowledgementPending = false;
+        m_writeFailed = false;
+        m_ignoreNextChangeEvent = false;
 
         return {};
     }
@@ -360,6 +372,59 @@ namespace hex::plugin::builtin {
         m_changeTracker.stopTracking();
         m_readable = false;
         m_writable = false;
+    }
+
+    bool FileProvider::relocateFile(const std::fs::path &path) {
+        if (path == getPickedPath())
+            return true;
+
+        if (auto *provider = isFileLocked(path); provider != nullptr && provider != this)
+            return false;
+
+        const bool wasWritable = m_writable;
+        bool writable = true;
+        wolv::io::File file(path, wolv::io::File::Mode::Write);
+        if (!file.isValid()) {
+            writable = false;
+            file = wolv::io::File(path, wolv::io::File::Mode::Read);
+            if (!file.isValid())
+                return false;
+        }
+
+        m_changeTracker.stopTracking();
+        m_file.close();
+        this->setPickedPath(path);
+        m_file = std::move(file);
+        m_fileStats = m_file.getFileInfo();
+        m_readable = true;
+        m_writable = writable && wasWritable;
+        this->lockFile(path);
+
+        if (m_loadedIntoMemory) {
+            m_changeTracker = wolv::io::ChangeTracker(m_file);
+            m_changeTracker.startTracking([this]{ this->handleFileChange(); });
+            m_file.close();
+        } else {
+            m_fileSize = m_file.getSize();
+        }
+
+        return true;
+    }
+
+    bool FileProvider::flushFile() {
+        if (!m_loadedIntoMemory)
+            return !m_writeFailed && m_file.flush();
+
+        m_ignoreNextChangeEvent = true;
+        m_file.open();
+        bool result = m_file.isValid() &&
+            m_file.writeVectorAtomic(0x00, m_data) == static_cast<i64>(m_data.size());
+        if (result)
+            result = m_file.setSize(m_data.size());
+        if (result)
+            result = m_file.flush();
+        m_file.close();
+        return result;
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
@@ -414,11 +479,13 @@ namespace hex::plugin::builtin {
 
     void FileProvider::convertToMemoryFile() {
         this->close();
+        this->unlockFile(getPickedPath());
         this->open(false);
     }
 
     void FileProvider::convertToDirectAccess() {
         this->close();
+        this->unlockFile(getPickedPath());
         this->open(true);
     }
 
@@ -433,7 +500,7 @@ namespace hex::plugin::builtin {
         }
 
         m_changeEventAcknowledgementPending = true;
-        ui::BannerButtonProviderSpecific::open(this, ICON_VS_INFO, "hex.builtin.provider.file.reload_changes", ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload", [this] {
+        ui::BannerButtonProviderSpecific::open(this, ICON_VS_INFO, "hex.builtin.provider.file.reload_changes"_unlocalized, ImColor(66, 104, 135), "hex.builtin.provider.file.reload_changes.reload"_unlocalized, [this] {
             this->close();
             (void)this->open(!m_loadedIntoMemory);
 

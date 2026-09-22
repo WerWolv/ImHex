@@ -15,9 +15,13 @@
 #include <string>
 
 #include <magic.h>
-#include <hex/api/task_manager.hpp>
+
+#include "hex/api/http/store_api.hpp"
+
 #include <hex/api/content_registry/pattern_language.hpp>
-#include <hex/helpers/binary_pattern.hpp>
+#include <hex/api/task_manager.hpp>
+
+#include <hex/providers/matchers/base_matcher.hpp>
 
 #if defined(_MSC_VER)
     #include <direct.h>
@@ -233,130 +237,97 @@ namespace hex::magic {
         return true;
     }
 
+    static std::optional<FoundPattern> findViablePattern(const std::fs::path &path, prv::Provider *provider, const std::multimap<std::string, std::string> &pragmaValues, Task *task) {
+        std::string author, description;
+        for (auto [start, end] = pragmaValues.equal_range("author"); start != end; ++start) {
+            author = start->second;
+        }
+        for (auto [start, end] = pragmaValues.equal_range("description"); start != end; ++start) {
+            description = start->second;
+        }
 
-    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, Task* task) {
-        std::vector<FoundPattern> result;
+        if (auto matcherStrategies = dynamic_cast<prv::ProviderMatchStrategiesBase*>(provider)) {
+            const auto strategies = matcherStrategies->createMatchers(provider);
 
-        pl::PatternLanguage runtime;
-        ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+            for (const auto &strategy : strategies) {
+                for (auto [it, itEnd] = pragmaValues.equal_range(std::string(strategy->getPragma())); it != itEnd; ++it) {
+                    if (task != nullptr)
+                        task->update();
 
-        bool foundCorrectType = false;
-
-        auto mimeType = getMIMEType(provider, 0, 4_KiB, true);
-
-        std::error_code errorCode;
-        for (const auto &dir : paths::Patterns.read()) {
-            for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
-                if (task != nullptr)
-                    task->update();
-
-                foundCorrectType = false;
-                if (!entry.is_regular_file())
-                    continue;
-
-                wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
-                if (!file.isValid())
-                    continue;
-
-                std::string author, description;
-                bool matchedMimeType = false;
-                std::optional<u64> magicOffset;
-
-
-                const auto pragmaValues = runtime.getPragmaValues(file.readString());
-                if (auto it = pragmaValues.find("author"); it != pragmaValues.end())
-                    author = it->second;
-                if (auto it = pragmaValues.find("description"); it != pragmaValues.end())
-                    description = it->second;
-
-                // Format: #pragma MIME type/subtype
-                for (auto [it, itEnd] = pragmaValues.equal_range("MIME"); it != itEnd; ++it) {
-                    if (isValidMIMEType(it->second) && it->second == mimeType) {
-                        foundCorrectType = true;
-                        matchedMimeType = true;
+                    if (strategy->match(it->second)) {
+                        return FoundPattern {
+                            .patternFilePath = path,
+                            .author = std::move(author),
+                            .description = std::move(description),
+                            .matcher = strategy,
+                            .downloadUrl = { },
+                            .remote = false
+                        };
                     }
                 }
-                // Format: #pragma magic [ AA BB CC DD ] @ 0x12345678
-                for (auto [it, itEnd] = pragmaValues.equal_range("magic"); it != itEnd; ++it) {
-                    const auto pattern = [value = it->second]() mutable -> std::optional<BinaryPattern> {
-                        value = wolv::util::trim(value);
-
-                        if (value.empty())
-                            return std::nullopt;
-
-                        if (!value.starts_with('['))
-                            return std::nullopt;
-
-                        value = value.substr(1);
-
-                        const auto end = value.find(']');
-                        if (end == std::string::npos)
-                            return std::nullopt;
-                        value.resize(end);
-
-                        value = wolv::util::trim(value);
-
-                        return BinaryPattern(value);
-                    }();
-
-                    const auto address = [provider, value = it->second]() mutable -> std::optional<u64> {
-                        value = wolv::util::trim(value);
-
-                        if (value.empty())
-                            return std::nullopt;
-
-                        const auto start = value.find('@');
-                        if (start == std::string::npos)
-                            return std::nullopt;
-
-                        value = value.substr(start + 1);
-                        value = wolv::util::trim(value);
-
-                        size_t end = 0;
-                        auto result = std::stoll(value, &end, 0);
-                        if (end != value.length())
-                            return std::nullopt;
-
-                        if (result < 0) {
-                            const auto size = provider->getActualSize();
-                            if (u64(-result) > size) {
-                                return std::nullopt;
-                            }
-
-                            return size + result;
-                        } else {
-                            return result;
-                        }
-                    }();
-
-                    if (address && pattern) {
-                        std::vector<u8> bytes(pattern->getSize());
-                        if (!bytes.empty()) {
-                            provider->read(*address, bytes.data(), bytes.size());
-
-                            if (pattern->matches(bytes)) {
-                                foundCorrectType = true;
-                                magicOffset = address;
-                            }
-                        }
-                    }
-                }
-
-                if (foundCorrectType) {
-                    result.emplace_back(
-                        entry.path(),
-                        std::move(author),
-                        std::move(description),
-                        matchedMimeType ? std::make_optional(mimeType) : std::nullopt,
-                        magicOffset
-                    );
-                }
-
-                runtime.reset();
             }
         }
 
-        return result;
+        return std::nullopt;
+    }
+
+    std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, bool searchOnline, Task *task) {
+        std::set<FoundPattern> patterns;
+
+        // Search local patterns
+        {
+            pl::PatternLanguage runtime;
+            ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+
+            std::error_code errorCode;
+            for (const auto &dir : paths::Patterns.read()) {
+                for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                    if (task != nullptr)
+                        task->update();
+
+                    if (!entry.is_regular_file())
+                        continue;
+
+                    wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
+                    if (!file.isValid())
+                        continue;
+
+                    const auto pragmaValues = runtime.getPragmaValues(file.readString());
+
+                    if (auto foundPattern = findViablePattern(entry.path(), provider, pragmaValues, task); foundPattern.has_value()) {
+                        patterns.insert(std::move(*foundPattern));
+                    }
+
+                    runtime.reset();
+                }
+            }
+        }
+
+        // Search remote patterns if allowed
+        if (searchOnline) {
+            const auto request = StoreApi::get();
+            const auto &response = request.get();
+            if (!response.isSuccess())
+                return { patterns.begin(), patterns.end() };
+
+            for (auto [start, end] = response.getData().categories.equal_range("patterns"); start != end; ++start) {
+                if (task != nullptr)
+                    task->update();
+
+                for (const auto &patternEntry : start->second) {
+                    if (auto foundPattern = findViablePattern(patternEntry.fileName, provider, patternEntry.pragmas, task); foundPattern.has_value()) {
+                        foundPattern->downloadUrl = patternEntry.link;
+                        foundPattern->remote = true;
+
+
+                        patterns.insert(std::move(*foundPattern));
+                    }
+                }
+
+            }
+        }
+
+        return { patterns.begin(), patterns.end() };
     }
 
 }

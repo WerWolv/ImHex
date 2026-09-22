@@ -142,6 +142,8 @@ namespace hex {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
                     openEmergencyPopup("No Plugins");
+                } else if (argument == "bad-plugin") {
+                    openEmergencyPopup("Bad Plugin");
                 } else if (argument == "duplicate-plugins") {
                     openEmergencyPopup("Duplicate Plugins loaded");
                 }
@@ -513,6 +515,25 @@ namespace hex {
 
                 ImGui::EndPopup();
             }
+
+            // Bad Plugin Popup
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("Bad Plugin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)) {
+                ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
+                ImGui::TextUnformatted("ImHex tried to load a Plugin but failed to do so!");
+                ImGui::TextUnformatted("This is usually caused by a badly built plugin or missing dependencies.");
+                ImGui::TextUnformatted("Check logs for more information.");
+
+                ImGui::NewLine();
+
+                drawPluginFolderTable();
+
+                ImGui::NewLine();
+                if (ImGuiExt::DimmedButton("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                    ImHexApi::System::closeImHex(true);
+
+                ImGui::EndPopup();
+            }
         }
 
         // Draw popup stack
@@ -524,7 +545,7 @@ namespace hex {
             static bool popupClosed = true;
 
             static AutoReset<std::unique_ptr<impl::PopupBase>> currPopupStorage;
-            static Lang name("");
+            static std::string popupName;
 
             auto &currPopup = *currPopupStorage;
 
@@ -534,13 +555,13 @@ namespace hex {
                         popupDelay = 0.2;
                     } else {
                         popupDelay -= io.DeltaTime;
-                        if (popupDelay < 0 || popups.size() == 1) {
+                        if (currPopup == nullptr && (popupDelay < 0 || popups.size() == 1)) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
-                            name = Lang(currPopup->getUnlocalizedName());
+                            popupName = fmt::format("{} {}", currPopup->getIcon(), Lang(currPopup->getUnlocalizedName()));
                             displayFrameCount = 0;
 
-                            ImGui::OpenPopup(name);
+                            ImGui::OpenPopup(popupName.c_str());
                             popupClosed = false;
 
                             popups.pop_back();
@@ -598,18 +619,17 @@ namespace hex {
                     }
                 };
 
-                std::string localizedName = name.get();
                 if (currPopup->isModal())
-                    createPopup(ImGui::BeginPopupModal(localizedName.c_str(), closeButton, flags));
+                    createPopup(ImGui::BeginPopupModal(popupName.c_str(), closeButton, flags));
                 else
-                    createPopup(ImGui::BeginPopup(localizedName.c_str(), flags));
+                    createPopup(ImGui::BeginPopup(popupName.c_str(), flags));
 
-                if (!ImGui::IsPopupOpen(localizedName.c_str()) && displayFrameCount < 5) {
-                    ImGui::OpenPopup(localizedName.c_str());
+                if (!ImGui::IsPopupOpen(popupName.c_str()) && displayFrameCount < 5) {
+                    ImGui::OpenPopup(popupName.c_str());
                 }
 
                 if (currPopup->shouldClose() || !open) {
-                    log::debug("Closing popup '{}'", localizedName);
+                    log::debug("Closing popup '{}'", popupName);
                     positionSet = sizeSet = false;
 
                     currPopup = nullptr;

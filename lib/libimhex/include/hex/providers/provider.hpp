@@ -15,6 +15,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include <hex/providers/undo_redo/stack.hpp>
+#include <hex/providers/matchers/base_matcher.hpp>
 
 namespace hex::prv {
     /**
@@ -65,6 +66,16 @@ namespace hex::prv {
             m_path = path;
             m_path.make_preferred();
         }
+        virtual bool relocateFile(const std::fs::path &path) {
+            std::error_code error;
+            const auto oldPath = std::fs::weakly_canonical(m_path, error);
+            const bool wasLocked = !error && getBackedFiles().contains(oldPath);
+            this->setPickedPath(path);
+            if (wasLocked)
+                this->lockFile(path);
+            return true;
+        }
+        virtual bool flushFile() { return true; }
         [[nodiscard]] std::fs::path getPickedPath() const { return m_path; }
 
     private:
@@ -77,7 +88,7 @@ namespace hex::prv {
     class IProviderMenuItems {
     public:
         struct MenuEntry {
-            std::string name;
+            UnlocalizedString name;
             const char *icon;
             std::function<void()> callback;
         };

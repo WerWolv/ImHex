@@ -2,12 +2,20 @@
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 namespace hex::plugin::builtin {
 
     class ViewProvider : public prv::Provider,
                          public prv::IProviderDataDescription,
-                         public prv::IProviderMenuItems {
+                         public prv::IProviderMenuItems,
+                         public prv::ProviderMatchStrategies<
+                             prv::PatternMatcherMIME,
+                             prv::PatternMatcherMagic,
+                             prv::PatternMatcherProviderType
+                         > {
     public:
         ViewProvider() = default;
         ~ViewProvider() override = default;

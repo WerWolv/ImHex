@@ -219,7 +219,7 @@ namespace hex::ui {
             return;
         } else {
             m_setTopRow = false;
-            ImGui::SetScrollY(m_topRow * m_charAdvance.y);
+            ImGui::SetScrollY(m_topRowToSet * m_charAdvance.y);
         }
     }
 
@@ -331,8 +331,8 @@ namespace hex::ui {
         ImVec2 textEditorSize = size;
         textEditorSize.x -= m_lines.m_lineNumberFieldWidth;
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(m_palette[(i32) PaletteIndex::Background]));
-        m_scrollX = m_longestDrawnLineLength * m_lines.m_charAdvance.x >= textEditorSize.x;
         m_scrollY = m_lines.size() > 1;
+        m_scrollX = m_longestDrawnLineLength * m_lines.m_charAdvance.x >= textEditorSize.x - (m_scrollY ? ImGui::GetStyle().ScrollbarSize : 0.0f);
         m_lines.m_hasHorizScroll = m_scrollX;
         m_lines.m_hasVertScroll = m_scrollY;
         ImGui::SetCursorScreenPos(ImVec2(m_lines.m_lineNumbersStartPos.x + m_lines.m_lineNumberFieldWidth, m_lines.m_lineNumbersStartPos.y));
@@ -386,16 +386,20 @@ namespace hex::ui {
         auto foldedSelectionEnd = unfoldedToFoldedCoords(selectionEnd);
         for (auto &foldedLine: m_foldedLines) {
             auto keyCount = foldedLine.second.m_keys.size();
+            Keys toOpen;
             for (u32 i = 0; i < keyCount; i++) {
                 auto ellipsisIndex = foldedLine.second.m_ellipsisIndices[i];
                 Range ellipsisRange = Range(
                     Coordinates(rowToLineIndex(foldedLine.first), ellipsisIndex),
                     Coordinates(rowToLineIndex(foldedLine.first), ellipsisIndex + 3)
                 );
-                if (Range(foldedSelectionStart,foldedSelectionEnd).overlaps(ellipsisRange)) {
-                    openCodeFold(foldedLine.second.m_keys[i]);
-                }
+                if (Range(foldedSelectionStart,foldedSelectionEnd).overlaps(ellipsisRange))
+                    toOpen.push_back(foldedLine.second.m_keys[i]);
+
             }
+            for (auto &key: toOpen)
+                openCodeFold(key);
+
         }
     }
 
@@ -425,15 +429,25 @@ namespace hex::ui {
         float scrollX = ImGui::GetScrollX();
         float scrollY = ImGui::GetScrollY();
 
+        ImGuiContext &g = *GImGui;
+        if ( g.CurrentWindow->ScrollTarget.y != FLT_MAX && g.CurrentWindow->ScrollTarget.y != scrollY) {
+            ImGui::SetScrollY(g.CurrentWindow->ScrollTarget.y);
+            m_scrollToCursor = true;
+            return;
+        }
+
         float height = ImGui::GetWindowHeight() - m_topMargin  - (m_hasHorizScroll ? ImGui::GetStyle().ScrollbarSize : 0.0f);
-        float width = ImGui::GetWindowWidth()   - m_leftMargin - (m_hasVertScroll ? ImGui::GetStyle().ScrollbarSize : 0.0f);
+        float width  = ImGui::GetWindowWidth() - m_leftMargin - (m_hasVertScroll ? ImGui::GetStyle().ScrollbarSize : 0.0f);
 
         float top = m_topMargin > scrollY ? m_topMargin - scrollY : scrollY;
+        float bottom = top + height - m_charAdvance.y;
         float topRow = top / m_charAdvance.y;
-        float bottomRow = ((top + height) / m_charAdvance.y) - 1;
+        float bottomRow = bottom / m_charAdvance.y;
 
-        float leftColumnIndex = scrollX / m_charAdvance.x;
-        float rightColumnIndex = ((scrollX + width) / m_charAdvance.x) - 1;
+        float left = scrollX;
+        float right = left + width - m_charAdvance.x;
+        float leftColumnIndex = left / m_charAdvance.x;
+        float rightColumnIndex = right / m_charAdvance.x;
 
         pos = lineCoordinates(unfoldedToFoldedCoords(m_state.m_cursorPosition));
 
@@ -442,11 +456,11 @@ namespace hex::ui {
         bool scrollToCursorX = true;
         bool scrollToCursorY = true;
 
-        if ((posRow > topRow && posRow <= bottomRow) ||
-            (posRow == topRow && topRow == getGlobalRowMax()  && scrollY == ImGui::GetScrollMaxY()))
+        if ((bottomRow - topRow >= 2 && posRow >= topRow + 1 && posRow <= bottomRow - 1) || (bottomRow-topRow < 2 && posRow == topRow) ||
+            (posRow == topRow && (topRow == 0 || (topRow == getGlobalRowMax()  && scrollY == ImGui::GetScrollMaxY()))))
             scrollToCursorY = false;
 
-        if ((posColumnIndex >= leftColumnIndex) && (posColumnIndex < rightColumnIndex))
+        if ((posColumnIndex == 0 && leftColumnIndex == 0) || ((posColumnIndex >= leftColumnIndex + 1) && (posColumnIndex <= rightColumnIndex - 1)))
             scrollToCursorX = false;
 
         if ((!scrollToCursorX && !scrollToCursorY && m_oldTopMargin == m_topMargin) || pos.m_line < 0) {
@@ -454,31 +468,42 @@ namespace hex::ui {
             return;
         }
 
+        bool scrollToCursor = false;
+
         if (scrollToCursorY) {
-            if (posRow <= topRow) {
-                if (posRow <= 0) {
-                    ImGui::SetScrollY(0.0f);
-                    m_scrollToCursor = false;
-                    return;
-                }
+            if (bottomRow - topRow < 2) {
                 ImGui::SetScrollY(posRow * m_charAdvance.y);
-                m_scrollToCursor = true;
-            }
-            if (posRow >= bottomRow) {
-                ImGui::SetScrollY((posRow + 1) * m_charAdvance.y - height);
-                m_scrollToCursor = true;
+                scrollToCursor = true;
+            } else {
+                if (posRow < topRow + 1) {
+                    ImGui::SetScrollY((posRow - 1) * m_charAdvance.y);
+                    scrollToCursor = true;
+                }
+
+                if (posRow > bottomRow - 1 && posRow <= bottomRow) {
+                    ImGui::SetScrollY(scrollY + m_charAdvance.y - ((i64) bottom % (i64) m_charAdvance.y));
+                    scrollToCursor = true;
+                } else if (posRow > bottomRow - 1) {
+                    ImGui::SetScrollY(std::max(0.0f, posRow * m_charAdvance.y));
+                    scrollToCursor = true;
+                }
             }
         }
         if (scrollToCursorX) {
-            if (posColumnIndex < leftColumnIndex) {
-                ImGui::SetScrollX(std::max(0.0f, posColumnIndex * m_charAdvance.x));
-                m_scrollToCursor = true;
+            if (posColumnIndex < leftColumnIndex + 1) {
+                ImGui::SetScrollX(std::max(0.0f, (posColumnIndex - 1) * m_charAdvance.x));
+                scrollToCursor = true;
             }
-            if (posColumnIndex > rightColumnIndex) {
-                ImGui::SetScrollX(std::max(0.0f, posColumnIndex * m_charAdvance.x - width));
-                m_scrollToCursor = true;
+
+            if (posColumnIndex > rightColumnIndex - 1 && posColumnIndex <= rightColumnIndex) {
+                ImGui::SetScrollX(scrollX + (m_charAdvance.x - ((i64) right % (i64) m_charAdvance.x)));
+                scrollToCursor = true;
+            } else if (posColumnIndex > rightColumnIndex - 1) {
+                ImGui::SetScrollX(std::max(0.0f, posColumnIndex * m_charAdvance.x));
+                scrollToCursor = true;
             }
         }
+        m_scrollToCursor = scrollToCursor;
         m_oldTopMargin = m_topMargin;
     }
 
@@ -517,27 +542,27 @@ namespace hex::ui {
     }
 
     bool TextEditor::CodeFold::trigger() {
-        lines->m_codeFoldHighlighted = NoCodeFoldSelected;
+        m_lines->m_codeFoldHighlighted = NoCodeFoldSelected;
        if (!isOpen() && startHovered()) {
-            lines->m_codeFoldHighlighted = key;
-            codeFoldStartCursorBox.callback();
+           m_lines->m_codeFoldHighlighted = m_key;
+           m_codeFoldStartCursorBox.callback();
        } else {
-           auto &rowFoldSymbols = lines->m_rowToFoldSymbol;
-           auto row = lines->lineIndexToRow(key.m_end.m_line);
+           auto &rowFoldSymbols = m_lines->m_rowToFoldSymbol;
+           auto row = m_lines->lineIndexToRow(m_key.m_end.m_line);
            if (isOpen() && endHovered()  && rowFoldSymbols.contains(row) && rowFoldSymbols[row] != FoldSymbol::Square) {
-               lines->m_codeFoldHighlighted = key;
-               codeFoldEndCursorBox.callback();
+               m_lines->m_codeFoldHighlighted = m_key;
+               m_codeFoldEndCursorBox.callback();
            }
-           row = lines->lineIndexToRow(key.m_start.m_line);
+           row = m_lines->lineIndexToRow(m_key.m_start.m_line);
            if (startHovered() && rowFoldSymbols.contains(row) && rowFoldSymbols[row] != FoldSymbol::Square) {
-               lines->m_codeFoldHighlighted = key;
-               codeFoldStartCursorBox.callback();
+               m_lines->m_codeFoldHighlighted = m_key;
+               m_codeFoldStartCursorBox.callback();
            }
        }
 
         bool result = TextEditor::ActionableBox::trigger();
         if (isOpen())
-            result = result || codeFoldEndActionBox.trigger();
+            result = result || m_codeFoldEndActionBox.trigger();
         bool clicked = ImGui::IsMouseClicked(0);
         result = result && clicked;
         return result;
@@ -564,12 +589,9 @@ namespace hex::ui {
         }
     }
 
-    void TextEditor::Lines::initializeCodeFolds() {
+    void TextEditor::Lines::initializeCodeFolds(std::string path) {
 
-        m_codeFoldKeyMap.clear();
-        m_codeFoldKeyLineMap.clear();
-        m_codeFoldValueMap.clear();
-        m_codeFoldValueLineMap.clear();
+
         m_codeFolds.clear();
         m_rowToFoldSymbol.clear();
 
@@ -598,15 +620,9 @@ namespace hex::ui {
             auto index = m_codeFoldKeys.find(key);
             if (index->m_start != key.m_start || index->m_end != key.m_end)
                 m_codeFoldState[key] = true;
-
-            if (!m_codeFoldKeyMap.contains(key.m_start))
-                m_codeFoldKeyMap[key.m_start] = key.m_end;
-
-            if (!m_codeFoldValueMap.contains(key.m_end))
-                m_codeFoldValueMap[key.m_end] = key.m_start;
-            m_codeFoldKeyLineMap.insert(std::make_pair(key.m_start.m_line, key.m_start));
-            m_codeFoldValueLineMap.insert(std::make_pair(key.m_end.m_line, key.m_end));
         }
+
+        setCdeFoldMaps();
 
         for (auto &[row, foldedLine]: m_foldedLines) {
             for (auto key = foldedLine.m_keys.begin(); key != foldedLine.m_keys.end(); key++) {
@@ -618,12 +634,14 @@ namespace hex::ui {
 
         updateLinesSize();
 
-        if (m_useSavedFoldStatesRequested) {
-            applyCodeFoldStates();
-            m_useSavedFoldStatesRequested = false;
-        } else if (m_saveCodeFoldStateRequested) {
-            saveCodeFoldStates();
-            m_saveCodeFoldStateRequested = false;
+        if (!m_codeFoldKeys.empty()) {
+            if (m_useSavedFoldStatesRequested) {
+                m_useSavedFoldStatesRequested = false;
+                applyCodeFoldStates(path);
+            } else if (m_saveCodeFoldStateRequested) {
+                m_saveCodeFoldStateRequested = false;
+                saveCodeFoldStates(path);
+            }
         }
 
         m_foldedLines.clear();
@@ -1163,28 +1181,25 @@ namespace hex::ui {
         m_lines.m_cursorScreenPosition = ImGui::GetCursorScreenPos();
 
         m_topLineNumber = getTopLineNumber();
-        float lineIndex = m_topLineNumber;
+        float lineIndex;
 
-        float scrollX;
-        if (m_lines.m_setScrollX)
-            m_lines.setScrollX();
-        else
-            scrollX = ImGui::GetScrollX();
-
-        float scrollY;
-        if (m_lines.m_setScrollY)
-            m_lines.setScrollY();
-        else
-            scrollY = ImGui::GetScrollY();
-
+        float scrollY = 0.0F;
         if (m_lines.m_setScroll) {
             m_lines.setScroll(m_lines.m_scroll);
             scrollY = m_lines.m_scroll.y;
-            scrollX = m_lines.m_scroll.x;
         } else {
-            scrollY = ImGui::GetScrollY();
-            scrollX = ImGui::GetScrollX();
-            m_lines.m_scroll = ImVec2(scrollX, scrollY);
+
+            if (m_lines.m_setScrollX)
+                m_lines.setScrollX();
+            else
+                m_lines.m_scroll.x = ImGui::GetScrollX();
+
+            if (m_lines.m_setScrollY)
+                m_lines.setScrollY();
+            else
+                m_lines.m_scroll.y = ImGui::GetScrollY();
+
+            scrollY = m_lines.m_scroll.y;
         }
 
         if (m_lines.m_setTopRow)
@@ -1193,12 +1208,10 @@ namespace hex::ui {
             m_lines.m_topRow = std::max<float>(0.0F, (scrollY - m_lines.m_topMargin) / m_lines.m_charAdvance.y);
 
         float row = m_lines.m_topRow;
-        float maxDisplayedRow = m_lines.getMaxDisplayedRow();
-
         m_longestDrawnLineLength = m_longestLineLength;
         if (!m_lines.isEmpty()) {
             if (!m_lines.m_codeFoldsDisabled) {
-                m_lines.initializeCodeFolds();
+                m_lines.initializeCodeFolds(m_path);
                 if (m_lines.updateCodeFolds()) {
                     m_lines.setFocusAtCoords(m_lines.m_state.m_cursorPosition, false);
                 }
@@ -1207,7 +1220,7 @@ namespace hex::ui {
             }
 
             bool focused = ImGui::IsWindowFocused();
-            while (std::floor(row) <= std::floor(maxDisplayedRow)) {
+            for (u32 i=0; i <= std::floor(m_lines.m_numberOfLinesDisplayed); i++) {
                 if (!focused && m_lines.m_updateFocus) {
                     m_lines.m_state.m_cursorPosition = m_lines.m_focusAtCoords;
                     m_lines.resetCursorBlinkTime();
@@ -1272,7 +1285,7 @@ namespace hex::ui {
             ImGui::Dummy(m_lines.m_charAdvance);
         }
 
-        postRender(lineIndex, "##lineNumbers");
+        postRender(row, "##lineNumbers");
         if (m_lines.m_scrollToCursor)
             m_lines.ensureCursorVisible();
         m_lines.m_withinRender = false;
@@ -1356,15 +1369,16 @@ namespace hex::ui {
             color.w *= ImGui::GetStyle().Alpha;
             m_palette[i] = ImGui::ColorConvertFloat4ToU32(color);
         }
-        auto windowHeight = ImGui::GetWindowHeight();
+        auto windowHeight = ImGui::GetWindowHeight() - m_lines.m_topMargin;
         if (m_scrollX)
             windowHeight -= ImGui::GetStyle().ScrollbarSize;
         m_lines.m_numberOfLinesDisplayed = windowHeight / m_lines.m_charAdvance.y;
     }
 
     void TextEditor::drawSelection(float lineIndex, ImDrawList *drawList) {
+        pushClipRect(true, true);
         auto row = m_lines.lineIndexToRow(lineIndex);
-        auto lineStartScreenPos = m_lines.getLineStartScreenPos(0,row);
+        auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
         Range lineCoords;
         if (m_lines.isMultiLineRow(row)) {
             lineCoords.m_start = m_lines.lineCoordinates(m_lines.m_foldedLines.at(row).m_full.m_start.m_line, 0);
@@ -1385,36 +1399,42 @@ namespace hex::ui {
                 drawList->AddRectFilled(rectStart, rectEnd, m_palette[(i32) PaletteIndex::Selection]);
             }
         }
+        ImGui::GetWindowDrawList()->PopClipRect();
     }
 
     ImVec2 TextEditor::Lines::getLineStartScreenPos(float leftMargin, float row) {
         return m_cursorScreenPosition + ImVec2(m_leftMargin + leftMargin, m_topMargin + std::floor(row) * m_charAdvance.y);
     }
 
-    void TextEditor::drawBreakpoints(float lineIndex, const ImVec2 &contentSize, ImDrawList *drawList, std::string title) {
+    void TextEditor::drawBreakpoints(float lineIndex, const ImVec2 &contentSize, ImDrawList *editorDrawList, std::string title) {
         if (!m_lines.m_ignoreImGuiChild)
             ImGui::BeginChild(title.c_str());
+        auto lineNumberDrawList = ImGui::GetWindowDrawList();
         auto row = m_lines.lineIndexToRow(lineIndex);
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
-        ImVec2 lineNumberStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x, lineStartScreenPos.y);
+        ImVec2 lineNumberStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x + 2, lineStartScreenPos.y);
         auto start = lineStartScreenPos;
-        ImVec2 end = lineStartScreenPos + ImVec2(m_lines.m_lineNumberFieldWidth + contentSize.x, m_lines.m_charAdvance.y);
+        auto windowWidth = m_lines.m_lineNumberFieldWidth + contentSize.x - (m_scrollY ? ImGuiStyle().ScrollbarSize : 0) - 3;
+        ImVec2 end = lineStartScreenPos + ImVec2(windowWidth, m_lines.m_charAdvance.y);
         auto center = lineNumberStartScreenPos + ImVec2(m_lines.m_lineNumberFieldWidth - 2 * m_lines.m_charAdvance.x + 1_scaled, 0);
+        auto firstLineStartScreenPos = m_lines.getLineStartScreenPos(0, 0);
+        editorDrawList->PushClipRect(firstLineStartScreenPos, firstLineStartScreenPos + contentSize - ImVec2(m_scrollY ? ImGuiStyle().ScrollbarSize : 0, m_scrollX ? ImGuiStyle().ScrollbarSize : 0), true);
+        lineNumberDrawList->PushClipRect(m_lines.m_lineNumbersStartPos, m_lines.m_lineNumbersStartPos + ImVec2(m_lines.m_lineNumberFieldWidth, contentSize.y - (m_scrollX ? ImGuiStyle().ScrollbarSize : 0)), true);
         if (m_lines.m_rowToFoldSegments.contains(row)) {
             bool circlesDrawn = false;
-            for (auto segments : m_lines.m_rowToFoldSegments[row]) {
+            for (auto segments: m_lines.m_rowToFoldSegments[row]) {
                 if (segments.m_foldEnd.m_line != lineIndex && m_lines.m_breakpoints.contains(segments.m_foldEnd.m_line + 1))
                     start.x = segments.m_segment.m_start;
                 if (m_lines.m_breakpoints.contains(segments.m_foldEnd.m_line + 1)) {
                     if (segments == m_lines.m_rowToFoldSegments[row].back())
-                        end.x = lineNumberStartScreenPos.x + contentSize.x + m_lines.m_lineNumberFieldWidth;
+                        end.x = lineNumberStartScreenPos.x + windowWidth;
                     else
                         end.x = segments.m_segment.m_end;
-                    drawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
+                    editorDrawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
                     if (!circlesDrawn) {
                         circlesDrawn = true;
-                        drawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
-                        drawList->AddCircle(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
+                        lineNumberDrawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
+                        lineNumberDrawList->AddCircle(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
                     }
                 }
                 Coordinates segmentStart = segments.m_foldEnd;
@@ -1426,11 +1446,11 @@ namespace hex::ui {
                             if (m_lines.m_breakpoints.contains(i + 1)) {
                                 start.x = segments.m_segment.m_end;
                                 end.x = start.x + Ellipsis.lineTextSize();
-                                drawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
+                                editorDrawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
                                 if (!circlesDrawn) {
                                     circlesDrawn = true;
-                                    drawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
-                                    drawList->AddCircle(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
+                                    lineNumberDrawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
+                                    lineNumberDrawList->AddCircle(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
                                 }
                             }
                         }
@@ -1438,18 +1458,19 @@ namespace hex::ui {
                 }
             }
         } else if (m_lines.m_breakpoints.contains(lineIndex + 1)) {
-            end = ImVec2(lineNumberStartScreenPos.x + contentSize.x + m_lines.m_lineNumberFieldWidth, lineStartScreenPos.y + m_lines.m_charAdvance.y);
-            drawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
-            drawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
-            drawList->AddCircle(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
+            end = ImVec2(lineNumberStartScreenPos.x + windowWidth, lineStartScreenPos.y + m_lines.m_charAdvance.y);
+            editorDrawList->AddRectFilled(start, end, m_palette[(i32) PaletteIndex::Breakpoint]);
+            lineNumberDrawList->AddCircleFilled(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Breakpoint]);
+            lineNumberDrawList->AddCircle(center + ImVec2(0, m_lines.m_charAdvance.y) / 2, m_lines.m_charAdvance.y / 3, m_palette[(i32) PaletteIndex::Default]);
         }
-
+        lineNumberDrawList->PopClipRect();
+        editorDrawList->PopClipRect();
         ImGui::SetCursorScreenPos(lineNumberStartScreenPos);
         ImGui::PushID((i32) (lineIndex + lineNumberStartScreenPos.y));
         float buttonWidth = m_lines.m_lineNumberFieldWidth;
         auto boxSize = m_lines.m_charAdvance.x + (((u32) m_lines.m_charAdvance.x % 2) ? 2.0f : 1.0f);
         if (m_lines.m_codeFoldKeyLineMap.contains(lineIndex) || m_lines.m_codeFoldValueLineMap.contains(lineIndex)) {
-            buttonWidth -= (boxSize - 1) / 2;
+            buttonWidth -= (boxSize - 1) / 2 + 1;
         }
 
         if (buttonWidth > 0 && m_lines.m_charAdvance.y > 0) {
@@ -1463,10 +1484,10 @@ namespace hex::ui {
             }
         }
 
-        if (ImGui::IsItemHovered() && (ImGui::IsKeyDown(ImGuiKey_RightShift) || ImGui::IsKeyDown(ImGuiKey_LeftShift)) && m_lines.m_state.m_cursorPosition.isValid(m_lines)) {
+        if (ImGui::IsItemHovered() && (ImGui::IsKeyDown(ImGuiKey_RightShift) || ImGui::IsKeyDown(ImGuiKey_LeftShift))) {
             if (ImGui::BeginTooltip()) {
                 auto lineCursor = m_lines.m_state.m_cursorPosition.m_line + 1;
-                auto columnCursor = m_lines.m_state.m_cursorPosition.m_column + 1;
+                auto columnCursor = std::min(m_lines.m_state.m_cursorPosition.m_column + 1, m_lines.lineMaxColumn(m_lines.m_state.m_cursorPosition.m_line) + 1);
                 ImGui::Text("(%d/%d)", lineCursor, columnCursor);
             }
             ImGui::EndTooltip();
@@ -1475,10 +1496,25 @@ namespace hex::ui {
 
     }
 
+    void TextEditor::pushClipRect(bool clipWidth, bool clipDrawList) {
+        auto window = ImGui::GetCurrentWindow();
+        auto barSize = ImGui::GetStyle().ScrollbarSize;
+        auto rectMin = window->Pos;
+        auto clipScrollBars = ImVec2(0, m_scrollX ? barSize : 0);
+        if (clipWidth)
+            clipScrollBars.x = m_scrollY ? barSize : 0;
+        auto rectMax = rectMin + window->Size - clipScrollBars;
+        if (clipDrawList)
+            ImGui::GetWindowDrawList()->PushClipRect(rectMin, rectMax, true);
+        else
+            ImGui::PushClipRect(rectMin, rectMax, true);
+    }
+
     void TextEditor::drawLineNumbers(float lineIndex) {
+        pushClipRect(false);
         auto row = m_lines.lineIndexToRow(lineIndex);
-        auto lineStartScreenPos = m_lines.getLineStartScreenPos(0,row);
-        ImVec2 lineNumberStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x, lineStartScreenPos.y);
+        auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
+        ImVec2 lineNumberStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x + 3, lineStartScreenPos.y);
         auto lineNumber = lineIndex + 1;
         if (lineNumber <= 0)
             return;
@@ -1495,11 +1531,12 @@ namespace hex::ui {
         i32 padding = std::floor(std::log10(m_lines.size())) - std::floor(std::log10((float)lineNumberToDraw));
         std::string lineNumberStr = std::string(padding, ' ') + std::to_string(lineNumberToDraw);
 
-        TextUnformattedColoredAt(ImVec2(lineNumberStartScreenPos.x, lineStartScreenPos.y), color, lineNumberStr.c_str());
+        TextUnformattedColoredAt(lineNumberStartScreenPos, color, lineNumberStr.c_str());
+        ImGui::PopClipRect();
     }
 
     void TextEditor::drawCursor(float lineIndex, const ImVec2 &contentSize, bool focused, ImDrawList *drawList) {
-
+        pushClipRect(true);
         auto row = m_lines.lineIndexToRow(lineIndex);
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
         ImVec2 lineNumberStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x, lineStartScreenPos.y);
@@ -1546,11 +1583,12 @@ namespace hex::ui {
                 drawList->AddRect(lineStartScreenPos, end, m_palette[(i32) PaletteIndex::CurrentLineEdge], 1.0f);
             }
         }
+        ImGui::PopClipRect();
     }
 
     void TextEditor::drawButtons(float lineIndex) {
         auto row = m_lines.lineIndexToRow(lineIndex);
-         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0,row);
+         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
         auto lineText = m_lines.m_unfoldedLines[lineIndex].m_chars;
         Coordinates gotoKey = lineCoordinates( lineIndex + 1, 1);
         if (gotoKey != Invalid) {
@@ -1610,8 +1648,9 @@ namespace hex::ui {
     }
 
     void TextEditor::drawText(Coordinates &lineStart, u32 tokenLength, unsigned char color) {
+        pushClipRect(true);
         auto row = m_lines.lineIndexToRow(lineStart.m_line);
-        auto begin = m_lines.getLineStartScreenPos(0,row);
+        auto begin = m_lines.getLineStartScreenPos(0, row);
         i32 renderColor = color;
         Line line = m_lines[lineStart.m_line];
         auto i = line.columnIndex(lineStart.m_column);
@@ -1642,8 +1681,10 @@ namespace hex::ui {
            fonts::CodeEditor().pop();
 
         ErrorMarkers::iterator errorIt;
-        auto errorHoverBoxKey = lineStart + lineCoordinates( 1, 1);
-        if (errorIt = m_lines.m_errorMarkers.find(errorHoverBoxKey); errorIt != m_lines.m_errorMarkers.end()) {
+        auto errorHoverBoxKey = lineStart + Coordinates(1, 1);
+        if (errorIt = std::find_if(m_lines.m_errorMarkers.begin(), m_lines.m_errorMarkers.end(), [&](const auto &item) {
+                return item.first >= errorHoverBoxKey && item.first <= errorHoverBoxKey + Coordinates(0, tokenLength);
+            }); errorIt != m_lines.m_errorMarkers.end()) {
             auto errorMessage = errorIt->second.second;
             auto errorLength = errorIt->second.first;
             if (errorLength == 0 && line.size() > (u32) i + 1)
@@ -1662,32 +1703,29 @@ namespace hex::ui {
         }
 
         lineStart = lineStart + lineCoordinates( 0, tokenLength);
+        ImGui::PopClipRect();
     }
 
     TextEditor::CodeFold::CodeFold(Lines *lines,  TextEditor::Range key, const ImRect &startBox, const ImRect &endBox) :
-            ActionableBox(startBox), lines(lines), key(key), codeFoldStartCursorBox(startBox), codeFoldEndActionBox(endBox), codeFoldEndCursorBox(endBox)
-            {
-    if (lines->m_codeFolds.empty())
-        return;
-    if (!lines->m_codeFolds.contains(key))
-        lines->m_codeFolds[key] = *this;
-    if (!lines->m_codeFoldKeys.contains(key))
-        lines->m_codeFoldKeys.insert(key);
-    lines->m_codeFoldKeyMap[key.m_start] = key.m_end;
-    lines->m_codeFoldValueMap[key.m_end] = key.m_start;
-    if (!lines->m_codeFoldState.contains(key))
-        lines->m_codeFoldState[key] = true;
-}
+            ActionableBox(startBox), m_lines(lines), m_key(key), m_codeFoldStartCursorBox(startBox), m_codeFoldEndActionBox(endBox), m_codeFoldEndCursorBox(endBox) {
+        if (lines->m_codeFolds.empty())
+            return;
+        if (!lines->m_codeFolds.contains(key))
+            lines->m_codeFolds[key] = *this;
+        if (!lines->m_codeFoldKeys.contains(key))
+            lines->m_codeFoldKeys.insert(key);
+        lines->m_codeFoldKeyMap[key.m_start] = key.m_end;
+        lines->m_codeFoldValueMap[key.m_end] = key.m_start;
+        if (!lines->m_codeFoldState.contains(key))
+            lines->m_codeFoldState[key] = true;
+    }
 
-    void TextEditor::postRender(float lineIndex, std::string title) {
-        lineIndex--;
-        float row = m_lines.lineIndexToRow(lineIndex);
+    void TextEditor::postRender(float row, std::string title) {
+        row--;
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
 
         float globalRowMax = m_lines.getGlobalRowMax();
-        auto rowMax = 0;
-        if (globalRowMax > 0)
-            rowMax = std::clamp(row + m_lines.m_numberOfLinesDisplayed, 0.0F, globalRowMax - 1.0F);
+        auto rowMax = m_lines.getMaxDisplayedRow();
         float xPadding = (m_longestDrawnLineLength + 1) * m_lines.m_charAdvance.x;
         float yPadding = (globalRowMax - rowMax) * m_lines.m_charAdvance.y + ImGui::GetWindowHeight();
         if (!m_lines.m_ignoreImGuiChild) {
@@ -1709,20 +1747,9 @@ namespace hex::ui {
             auto window = ImGui::GetCurrentWindow();
             auto maxScroll = window->ScrollMax.y;
             if (maxScroll > 0) {
-                float pixelCount;
-                if (m_newTopMargin > m_lines.m_topMargin) {
-                    pixelCount = m_newTopMargin - m_lines.m_topMargin;
-                } else if (m_newTopMargin > 0) {
-                    pixelCount = m_lines.m_topMargin - m_newTopMargin;
-                } else {
-                    pixelCount = m_lines.m_topMargin;
-                }
                 auto oldScrollY = ImGui::GetScrollY();
+                m_shiftedScrollY = oldScrollY + m_newTopMargin - m_lines.m_topMargin;
 
-                if (m_newTopMargin > m_lines.m_topMargin)
-                    m_shiftedScrollY = oldScrollY + pixelCount;
-                else
-                    m_shiftedScrollY = oldScrollY - pixelCount;
                 ImGui::SetScrollY(m_shiftedScrollY);
                 m_lines.m_topMargin = m_newTopMargin;
 
@@ -1815,7 +1842,10 @@ namespace hex::ui {
     }
 
     void TextEditor::drawBlockIndicators(ImDrawList *drawList) {
+        pushClipRect(false);
         for (auto &range: m_lines.m_indentBlocks) {
+            if (range.m_start == Coordinates(0,0) && range.m_end == lineCoordinates(-1,-1))
+                continue;
             if (range.contains(m_lines.m_state.m_cursorPosition)) {
                 auto blockStartScreenPos = m_lines.getLineStartScreenPos(0, lineIndexToRow(range.m_start.m_line));
                 auto maxRow = std::min(m_lines.getMaxDisplayedRow(), lineIndexToRow(range.m_end.m_line));
@@ -1830,6 +1860,7 @@ namespace hex::ui {
                 break;
             }
         }
+        ImGui::PopClipRect();
     }
 
     void TextEditor::drawMatchedDelimiter() {
@@ -1844,6 +1875,9 @@ namespace hex::ui {
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(horizontalMargin, row);
         auto numberLineStartScreenPos = ImVec2(m_lines.m_lineNumbersStartPos.x + m_lines.m_lineNumberFieldWidth, lineStartScreenPos.y);
 
+        auto contentSize = ImVec2(m_lines.m_lineNumberFieldWidth + boxSize, m_lines.m_numberOfLinesDisplayed * m_lines.m_charAdvance.y);
+        drawList->PushClipRect(m_lines.m_lineNumbersStartPos, m_lines.m_lineNumbersStartPos + contentSize, true);
+
         if (state == FoldSymbol::Square) {
             renderSquare(numberLineStartScreenPos, drawList, boxSize - 1, verticalMargin, color);
             renderPlus(numberLineStartScreenPos, drawList, boxSize, std::floor(verticalMargin / 2), color);
@@ -1857,6 +1891,7 @@ namespace hex::ui {
             auto startPos = numberLineStartScreenPos;
             drawList->AddLine(startPos, startPos + ImVec2(0, m_lines.m_charAdvance.y), color, 1.0f);
         }
+        drawList->PopClipRect();
     }
 
     void TextEditor::renderVerticals(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color) {

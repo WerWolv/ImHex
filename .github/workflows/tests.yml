@@ -20,14 +20,14 @@ jobs:
       ${{
         !(github.event_name == 'pull_request' && github.event.pull_request.user.login == 'WerWolvTranslationBot')
       }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - run: echo "Running CI"
 
   tests:
     needs: ci-gate
     name: 🧪 Unit Tests (${{ matrix.crypto_backend }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -63,7 +63,7 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=gcc-14 CXX=g++-14 cmake                                                                                 \
+        CC=gcc-16 CXX=g++-16 cmake                                                                                 \
           -DCMAKE_BUILD_TYPE=Debug                                                                                 \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                             \
           -DIMHEX_ENABLE_PLUGIN_TESTS=ON                                                                           \

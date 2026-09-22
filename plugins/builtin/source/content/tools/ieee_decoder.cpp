@@ -99,14 +99,14 @@ namespace hex::plugin::builtin {
         ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.tools.ieee754.description"_lang);
         ImGui::NewLine();
 
-        static i64 displayMode = ContentRegistry::Settings::read<int>("hex.builtin.tools.ieee754.settings", "display_mode", 0);
+        static i64 displayMode = ContentRegistry::Settings::read<int>("hex.builtin.tools.ieee754.settings"_untranslated, "display_mode"_untranslated, 0);
         i64 displayModeTemp = displayMode;
         ImGui::RadioButton("hex.builtin.tools.ieee754.settings.display_mode.detailed"_lang, reinterpret_cast<int *>(&displayMode), 0);
         ImGui::SameLine();
 
         ImGui::RadioButton("hex.builtin.tools.ieee754.settings.display_mode.simplified"_lang, reinterpret_cast<int *>(&displayMode), 1);
         if (displayModeTemp != displayMode) {
-            ContentRegistry::Settings::write<int>("hex.builtin.tools.ieee754.settings", "display_mode", displayMode);
+            ContentRegistry::Settings::write<int>("hex.builtin.tools.ieee754.settings"_untranslated, "display_mode"_untranslated, displayMode);
             displayModeTemp = displayMode;
         }
 

@@ -1,0 +1,139 @@
+#include "internal.hpp"
+
+#include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/events/events_gui.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
+#include <hex/api/events/events_provider.hpp>
+#include <hex/api/project_manager.hpp>
+#include <hex/helpers/logger.hpp>
+#include <hex/providers/file_backed_provider_data.hpp>
+#include <hex/providers/provider.hpp>
+
+#include <fonts/vscode_icons.hpp>
+
+namespace hex::plugin::builtin {
+
+    void registerProjectHandlers() {
+        using namespace project::impl;
+
+        hex::ProjectManager::setProjectFunctions(load, store);
+        EventImHexStartupFinished::subscribe([] {
+            if (!ProjectManager::hasPath() && !ProjectManager::loadTemporaryProject())
+                log::error("Failed to open the temporary project");
+        });
+        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.sidebar.project.name"_unlocalized, ICON_VS_NOTEBOOK, drawProjectSidebar, [] {
+            return ProjectManager::isFolderProject();
+        });
+        EventFileBackedProviderDataChanged::subscribe([](prv::Provider *provider, FileBackedProviderDataBase *data) {
+            auto &projectState = state();
+            if (!ProjectManager::isFolderProject() || projectState.loadingProject || projectState.storingProject ||
+                provider == nullptr || data == nullptr)
+                return;
+
+            const auto typeId = data->getType().typeId;
+            if (const auto binding = data->getBinding(provider); binding.has_value()) {
+                std::fs::path associationPath;
+                if (!isPathInProject(*binding, ProjectManager::getProjectRoot(), associationPath)) {
+                    std::error_code error;
+                    associationPath = std::fs::absolute(*binding, error).lexically_normal();
+                    if (error)
+                        return;
+                }
+
+                auto &storedPath = projectState.associations[provider->getID()][typeId];
+                if (storedPath != associationPath) {
+                    storedPath = std::move(associationPath);
+                    scheduleAssociationSave();
+                }
+            } else if (data->hasPendingData(provider)) {
+                if (const auto associations = projectState.associations.find(provider->getID());
+                    associations != projectState.associations.end()) {
+                    associations->second.erase(typeId);
+                    if (associations->second.empty())
+                        projectState.associations.erase(associations);
+                }
+                scheduleAssociationSave();
+            } else if (const auto associations = projectState.associations.find(provider->getID());
+                       associations != projectState.associations.end() && associations->second.erase(typeId) > 0) {
+                if (associations->second.empty())
+                    projectState.associations.erase(associations);
+                scheduleAssociationSave();
+            }
+        });
+        EventFrameEnd::subscribe([] { processScheduledProjectMetadataSave(); });
+        EventProviderOpened::subscribe([](prv::Provider *provider) {
+            auto &projectState = state();
+            const auto replacement = projectState.providerReplacements.find(provider);
+            const bool isReplacement = replacement != projectState.providerReplacements.end();
+            if (!canPersistProvider(provider)) {
+                if (isReplacement)
+                    projectState.providerReplacements.erase(replacement);
+                if (projectState.projectProviderIds.contains(provider->getID()))
+                    removeProviderFromProject(provider->getID());
+                return;
+            }
+            if (isReplacement) {
+                provider->setID(replacement->second);
+                projectState.providerReplacements.erase(replacement);
+            }
+            if (ProjectManager::isFolderProject() && !projectState.loadingProject) {
+                std::fs::path relativePath;
+                const auto *filePicker = dynamic_cast<prv::IProviderFilePicker *>(provider);
+                if (ProjectManager::isTemporaryProject() ||
+                    (filePicker != nullptr && isPathInProject(filePicker->getPickedPath(), ProjectManager::getProjectRoot(), relativePath)))
+                    projectState.projectProviderIds.insert(provider->getID());
+                projectState.closedProjectProviderIds.erase(provider->getID());
+                if (isReplacement)
+                    bindRegisteredData();
+                scheduleProviderMetadataSave(provider->getID(), true);
+            }
+        });
+        EventProviderRemoving::subscribe([](prv::Provider *provider) {
+            const auto &projectState = state();
+            if (projectState.loadingProject || !ProjectManager::isFolderProject() ||
+                !projectState.projectProviderIds.contains(provider->getID()) || projectState.providerOpenAttempts.contains(provider->getID()) ||
+                isProviderReplacement(provider))
+                return;
+
+            snapshotProviderSettings(provider);
+        });
+        EventProviderClosed::subscribe([](prv::Provider *provider) {
+            auto &projectState = state();
+            if (isProviderReplacement(provider)) {
+                projectState.providerReplacements.erase(provider);
+                return;
+            }
+            if (projectState.loadingProject || !ProjectManager::isFolderProject() ||
+                !projectState.projectProviderIds.contains(provider->getID()) || projectState.providerOpenAttempts.contains(provider->getID()))
+                return;
+
+            projectState.closedProjectProviderIds.insert(provider->getID());
+            scheduleProviderMetadataSave(provider->getID(), true);
+        });
+        EventProjectClosed::subscribe([] {
+            cancelScheduledProjectMetadataSave();
+            std::scoped_lock storageLock(projectStorageMutex());
+            auto &projectState = state();
+            projectState.associations.clear();
+            projectState.projectProviderIds.clear();
+            projectState.closedProjectProviderIds.clear();
+            projectState.providerOpenAttempts.clear();
+            projectState.providerReplacements.clear();
+            projectState.projectProviderSettings.clear();
+            projectState.dirtyProviderSettings.clear();
+            projectState.removedProviderSettings.clear();
+            projectState.providerManifestDirty = false;
+            projectState.associationsDirty = false;
+            resetSidebarState();
+        });
+        EventProviderDirtied::subscribe([](prv::Provider *provider) {
+            if (provider != nullptr)
+                scheduleProviderMetadataSave(provider->getID());
+        });
+        EventWindowDeinitializing::subscribe([](GLFWwindow *) {
+            if (ProjectManager::isFolderProject() && !state().skipShutdownStore)
+                std::ignore = ProjectManager::store();
+        });
+    }
+
+}

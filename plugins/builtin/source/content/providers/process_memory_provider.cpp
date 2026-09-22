@@ -38,6 +38,12 @@ namespace hex::plugin::builtin {
 
     using namespace wolv::literals;
 
+    PatternMatcherProcessName::PatternMatcherProcessName(prv::Provider* provider) : PatternMatcher(provider) {
+        if (auto processMemoryProvider = dynamic_cast<ProcessMemoryProvider*>(provider); processMemoryProvider != nullptr) {
+            m_processName = processMemoryProvider->getProcessName();
+        }
+    }
+
 #if defined(OS_WINDOWS)
 
     using NtQueryInformationProcessFunc = NTSTATUS (NTAPI*)(
@@ -186,21 +192,23 @@ namespace hex::plugin::builtin {
     }
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
+        u64 invalidStart = this->getBaseAddress();
         for (const auto &memoryRegion : m_memoryRegions) {
+            if (address < memoryRegion.region.getStartAddress())
+                return { Region { .address=invalidStart, .size=memoryRegion.region.getStartAddress() - invalidStart }, false };
+
             if (memoryRegion.region.overlaps({ .address=address, .size=1LLU }))
                 return { memoryRegion.region, true };
+
+            invalidStart = memoryRegion.region.getEndAddress() == std::numeric_limits<u64>::max()
+                ? std::numeric_limits<u64>::max()
+                : std::max(invalidStart, memoryRegion.region.getEndAddress() + 1);
         }
 
-        Region lastRegion = Region::Invalid();
-        for (const auto &memoryRegion : m_memoryRegions) {
-
-            if (address < memoryRegion.region.getStartAddress())
-                return { Region { .address=lastRegion.getEndAddress(), .size=memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
-
-            lastRegion = memoryRegion.region;
-        }
-
-        return { Region::Invalid(), false };
+        const u64 providerEnd = this->getActualSize() > std::numeric_limits<u64>::max() - this->getBaseAddress()
+            ? std::numeric_limits<u64>::max()
+            : this->getBaseAddress() + this->getActualSize();
+        return { Region { .address=invalidStart, .size=providerEnd > invalidStart ? providerEnd - invalidStart : 1 }, false };
     }
 
     bool ProcessMemoryProvider::drawLoadInterface() {
@@ -490,17 +498,24 @@ namespace hex::plugin::builtin {
                 if (GetModuleInformation(m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
                     continue;
 
-                char moduleName[MAX_PATH];
-                if (GetModuleFileNameExA(m_processHandle, module, moduleName, MAX_PATH) == FALSE)
+                wchar_t moduleName[4096];
+                if (GetModuleFileNameExW(m_processHandle, module, moduleName, std::size(moduleName)) == 0)
                     continue;
 
                 m_memoryRegions.insert({ { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, std::fs::path(moduleName).filename().string() });
             }
 
+            SYSTEM_INFO sysInfo;
+            GetSystemInfo(&sysInfo);
+            const u64 minAddress = reinterpret_cast<u64>(sysInfo.lpMinimumApplicationAddress);
+            const u64 maxAddress = reinterpret_cast<u64>(sysInfo.lpMaximumApplicationAddress);
+        
             MEMORY_BASIC_INFORMATION memoryInfo;
-            for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
+            for (u64 address = minAddress; address < maxAddress; address = (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize) {
                 if (VirtualQueryEx(m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
                     break;
+                // Invalid region
+                if (!memoryInfo.RegionSize) break;
 
                 std::string name;
                 if (memoryInfo.State & MEM_IMAGE)   continue;
@@ -510,7 +525,7 @@ namespace hex::plugin::builtin {
                 if (memoryInfo.State & MEM_PRIVATE) name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
                 if (memoryInfo.State & MEM_MAPPED)  name += fmt::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
 
-                m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
+                m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), memoryInfo.RegionSize }, name });
             }
 
         #elif defined(OS_MACOS)

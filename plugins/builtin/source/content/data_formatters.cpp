@@ -8,105 +8,183 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <content/export_formatters/export_formatter_csv.hpp>
-#include <content/export_formatters/export_formatter_tsv.hpp>
-#include <content/export_formatters/export_formatter_json.hpp>
+#include <nlohmann/json.hpp>
+
+#include <wolv/utils/core.hpp>
 
 namespace hex::plugin::builtin {
+    using ContentRegistry::DataFormatter::ExportTable;
 
-    static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end, bool removeFinalDelimiter = false, bool newLines = true) {
-        constexpr static auto NewLineIndent = "\n    ";
-        constexpr static auto LineLength = 16;
+    namespace {
 
-        std::string result;
-        result.reserve(start.size() + fmt::format(fmt::runtime(byteFormat), 0x00).size() * size + std::string(NewLineIndent).size() / LineLength + end.size());
+        std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end, bool removeFinalDelimiter = false, bool newLines = true) {
+            constexpr static auto NewLineIndent = "\n    ";
+            constexpr static auto LineLength = 16;
 
-        result += start;
+            std::string result;
+            result.reserve(start.size() + fmt::format(fmt::runtime(byteFormat), 0x00).size() * size + std::string(NewLineIndent).size() / LineLength + end.size());
 
-        auto reader = prv::ProviderReader(provider);
-        reader.seek(offset);
-        reader.setEndAddress(offset + size - 1);
+            result += start;
 
-        u64 index = 0x00;
-        for (u8 byte : reader) {
+            auto reader = prv::ProviderReader(provider);
+            reader.seek(offset);
+            reader.setEndAddress(offset + size - 1);
 
-            if (newLines) {
-                if ((index % LineLength) == 0x00)
-                    result += NewLineIndent;
+            u64 index = 0x00;
+            for (u8 byte : reader) {
+
+                if (newLines) {
+                    if ((index % LineLength) == 0x00)
+                        result += NewLineIndent;
+                }
+
+                result += fmt::format(fmt::runtime(byteFormat), byte);
+
+                index++;
             }
 
-            result += fmt::format(fmt::runtime(byteFormat), byte);
+            // Remove trailing delimiter if required
+            if (removeFinalDelimiter && size > 0) {
+                result.pop_back();
+                result.pop_back();
+            }
 
-            index++;
+            if (newLines) result += "\n";
+            result += end;
+
+            return result;
         }
 
-        // Remove trailing delimiter if required
-        if (removeFinalDelimiter && size > 0) {
-            result.pop_back();
-            result.pop_back();
+        std::string escapeCsvField(const std::string &field) {
+            // from spec RFC 4180 Section 2, Item 6: "Fields containing line breaks (CRLF), double quotes, and commas should be enclosed in double-quotes."
+            if (field.find_first_of(",\"\n\r") == std::string::npos) {
+                return field; // no quoting needed
+            }
+            std::string escaped;
+            escaped.reserve(field.size() + 3 /* first \", last \" + at least single char that needs to be escaped*/);
+
+            escaped.push_back('"');
+            for (const char c : field) {
+                if (c == '"') {
+                    escaped.push_back('"');
+                }
+                escaped.push_back(c);
+            }
+            escaped.push_back('"');
+            return escaped;
         }
 
-        if (newLines) result += "\n";
-        result += end;
+        std::string escapeTsvField(const std::string &field) {
+            std::string escaped;
+            escaped.reserve(field.size());
+            for (const char c : field) {
+                if (c == '\t') { escaped += "\\t"; }
+                else if (c == '\n') { escaped += "\\n"; }
+                else if (c == '\r') { escaped += "\\r"; }
+                else { escaped.push_back(c); }
+            }
+            return escaped;
+        }
 
-        return result;
+        std::vector<u8> formatTableDelimited(const ExportTable& table, const char delimiter, const auto& escapeFn) {
+            std::string output;
+
+            const auto &headers = table.getHeaders();
+            const auto &rows = table.getRows();
+
+            for (size_t i = 0; i < headers.size(); ++i) {
+                if (i != 0) {
+                    output.push_back(delimiter);
+                }
+                output += escapeFn(headers[i]);
+            }
+            output += "\r\n";
+            for (const auto& row : rows) {
+                for (size_t colIdx = 0; colIdx < row.size(); ++colIdx) {
+                    if (colIdx != 0) {
+                        output.push_back(delimiter);
+                    }
+                    output += escapeFn(std::visit([](const auto& x) { return fmt::format("{}", x); }, row[colIdx]));
+                }
+                output += "\r\n";
+            }
+            return { output.begin(), output.end() };
+        }
+
+        std::vector<u8> formatTableJson(const ExportTable &table) {
+            const auto &headers = table.getHeaders();
+            const auto &rows = table.getRows();
+
+            nlohmann::json array = nlohmann::json::array();
+
+            for (const auto &row : rows) {
+                nlohmann::json object = nlohmann::json::object();
+                for (size_t colIdx = 0; colIdx < headers.size(); ++colIdx) {
+                    std::visit([&](const auto& x) { object[headers[colIdx]] = x; }, row[colIdx]);
+                }
+                array.push_back(std::move(object));
+            }
+            std::string dump = array.dump(4);
+            dump.push_back('\n');
+            return { dump.begin(), dump.end() };
+        }
     }
 
     void registerDataFormatters() {
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.c", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.c"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, fmt::format("const uint8_t data[{0}] = {{", size), "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size, bool preview) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.cpp"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool preview) {
             if (!preview) {
-                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.copy_as.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor"_unlocalized, "hex.builtin.achievement.hex_editor.copy_as.name"_unlocalized);
             }
 
             return formatLanguageArray(provider, offset, size, fmt::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.java", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.java"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "final byte[] data = {", "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.csharp"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "byte[] data = {", "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.rust"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, fmt::format("let data: [u8; 0x{0:02X}] = [", size), "0x{0:02X}, ", "];");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.python", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.python"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "data = bytes([", "0x{0:02X}, ", "])");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.js", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.js"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "const data = new Uint8Array([", "0x{0:02X}, ", "]);");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.lua", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.lua"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "data = {", "0x{0:02X}, ", "}");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.go", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.go"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "data := [...]byte{", "0x{0:02X}, ", "}", false);
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.crystal", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.crystal"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "data = [", "0x{0:02X}, ", "] of UInt8");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.swift", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.swift"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "let data: [Uint8] = [", "0x{0:02X}, ", "]");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.pascal", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.pascal"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, fmt::format("data: array[0..{0}] of Byte = (", size - 1), "${0:02X}, ", ")");
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.base64", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.base64"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             std::vector<u8> data(size, 0x00);
             provider->read(offset, data.data(), size);
 
@@ -115,11 +193,11 @@ namespace hex::plugin::builtin {
             return std::string(result.begin(), result.end());
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.hex_view", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.hex_view"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return hex::generateHexView(offset, size, provider);
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.html", [](prv::Provider *provider, u64 offset, size_t size, bool preview) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.html"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool preview) {
             // Don't display a preview for this formatter as it wouldn't make much sense either way.
             if (preview)
                 return std::string();
@@ -200,23 +278,20 @@ namespace hex::plugin::builtin {
             return result;
         });
 
-        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.escaped_string", [](prv::Provider *provider, u64 offset, size_t size, bool) {
+        ContentRegistry::DataFormatter::addExportMenuEntry("hex.builtin.view.hex_editor.copy.escaped_string"_unlocalized, [](prv::Provider *provider, u64 offset, size_t size, bool) {
             return formatLanguageArray(provider, offset, size, "\"", "\\x{0:02X}", "\"", false, false);
         });
 
-        ContentRegistry::DataFormatter::addFindExportFormatter("csv", "csv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
-            export_fmt::ExportFormatterCsv formatter;
-            return formatter.format(occurrences, transformFunc);
+        ContentRegistry::DataFormatter::addExportFormatter("hex.builtin.view.hex_editor.find_export.csv"_unlocalized, "csv", [](const ExportTable& table) {
+            return formatTableDelimited(table, ',', escapeCsvField);
         });
 
-        ContentRegistry::DataFormatter::addFindExportFormatter("tsv", "tsv", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
-            export_fmt::ExportFormatterTsv formatter;
-            return formatter.format(occurrences, transformFunc);
+        ContentRegistry::DataFormatter::addExportFormatter("hex.builtin.view.hex_editor.find_export.tsv"_unlocalized, "tsv", [](const ExportTable& table) {
+            return formatTableDelimited(table, '\t', escapeTsvField);
         });
 
-        ContentRegistry::DataFormatter::addFindExportFormatter("json", "json", [](const std::vector<ContentRegistry::DataFormatter::impl::FindOccurrence>& occurrences, const auto &transformFunc) {
-            export_fmt::ExportFormatterJson formatter;
-            return formatter.format(occurrences, transformFunc);
+        ContentRegistry::DataFormatter::addExportFormatter("hex.builtin.view.hex_editor.find_export.json"_unlocalized, "json", [](const ExportTable& table) {
+            return formatTableJson(table);
         });
     }
 

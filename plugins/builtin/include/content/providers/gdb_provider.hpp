@@ -1,6 +1,9 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 #include <wolv/net/socket_client.hpp>
 
@@ -15,7 +18,12 @@ namespace hex::plugin::builtin {
 
     class GDBProvider : public prv::CachedProvider,
                         public prv::IProviderDataDescription,
-                        public prv::IProviderLoadInterface {
+                        public prv::IProviderLoadInterface,
+                        public prv::ProviderMatchStrategies<
+                            prv::PatternMatcherMIME,
+                            prv::PatternMatcherMagic,
+                            prv::PatternMatcherProviderType
+                        > {
     public:
         GDBProvider();
         ~GDBProvider() override = default;
@@ -46,7 +54,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.gdb";
+            return "hex.builtin.provider.gdb"_unlocalized;
         }
 
         [[nodiscard]] const char* getIcon() const override {

@@ -4,10 +4,10 @@
 
 #include <hex/ui/view.hpp>
 
+#include <hex/api/http/store_api.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/helpers/http_requests.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/default_paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <future>
 #include <string>
@@ -22,16 +22,7 @@ namespace hex::plugin::builtin {
         Succeeded,
     };
 
-    struct StoreEntry {
-        std::string name;
-        std::string description;
-        std::vector<std::string> authors;
-        std::string fileName;
-        std::string link;
-        std::string hash;
-
-        bool isFolder;
-
+    struct StoreEntry : StoreApi::Entry {
         bool downloading;
         bool installed;
         bool hasUpdate;
@@ -66,6 +57,7 @@ namespace hex::plugin::builtin {
         void handleDownloadFinished(const StoreCategory &category, StoreEntry &entry);
 
         void refresh();
+        void requestStore(bool forceRefresh);
         void parseResponse();
 
         void addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, const paths::impl::DefaultPath *path, std::function<void()> downloadCallback = []{});
@@ -75,9 +67,8 @@ namespace hex::plugin::builtin {
         void updateAll();
 
     private:
-        HttpRequest m_httpRequest = HttpRequest("GET", "");
-        std::future<HttpRequest::Result<std::string>> m_apiRequest;
-        std::future<HttpRequest::Result<std::string>> m_download;
+        StoreApi::Request m_apiRequest;
+        StoreApi::DownloadRequest m_download;
         std::fs::path m_downloadPath;
         RequestStatus m_requestStatus = RequestStatus::NotAttempted;
 

@@ -9,8 +9,8 @@
 
 namespace hex::plugin::builtin {
 
-    ViewThemeManager::ViewThemeManager() : View::Floating("hex.builtin.view.theme_manager.name", ICON_VS_SYMBOL_COLOR) {
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.theme_manager.name" }, ICON_VS_SYMBOL_COLOR, 2000, Shortcut::None, [&, this] {
+    ViewThemeManager::ViewThemeManager() : View::Floating("hex.builtin.view.theme_manager.name"_unlocalized, ICON_VS_SYMBOL_COLOR) {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras"_unlocalized, "hex.builtin.view.theme_manager.name"_unlocalized }, ICON_VS_SYMBOL_COLOR, 2000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }

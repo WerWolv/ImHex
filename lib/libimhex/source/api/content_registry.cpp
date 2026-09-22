@@ -18,6 +18,11 @@
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/content_registry/tools.hpp>
 #include <hex/api/content_registry/views.hpp>
+#include <hex/api/imhex_api/hex_editor.hpp>
+#include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/string_codec.hpp>
+
+#include <pl/core/evaluator.hpp>
 
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/events/requests_provider.hpp>
@@ -36,6 +41,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <jthread.hpp>
+#include <stdexcept>
 #include <hex/api/events/requests_interaction.hpp>
 
 #if defined(OS_WEB)
@@ -66,7 +72,7 @@ namespace hex {
                 OnSaveCallback callback;
             };
 
-            static AutoReset<std::map<std::string, std::map<std::string, std::vector<OnChange>>>> s_onChangeCallbacks;
+            static AutoReset<std::map<UnlocalizedString, std::map<UnlocalizedString, std::vector<OnChange>>>> s_onChangeCallbacks;
             static AutoReset<std::vector<OnSave>> s_onSaveCallbacks;
 
             static void runAllOnChangeCallbacks() {
@@ -76,7 +82,7 @@ namespace hex {
                             try {
                                 callback(getSetting(category, name, {}));
                             } catch (const std::exception &e) {
-                                log::error("Failed to load setting [{} / {}]: {}", category, name, e.what());
+                                log::error("Failed to load setting [{} / {}]: {}", category.get(), name.get(), e.what());
                             }
                         }
                     }
@@ -163,26 +169,40 @@ namespace hex {
 
             #else
 
+                static std::atomic<bool> s_settingsLoaded;
                 void load() {
                     bool loaded = false;
                     for (const auto &dir : paths::Config.read()) {
                         wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
 
                         if (file.isValid()) {
-                            s_settings = nlohmann::json::parse(file.readString());
-                            loaded = true;
-                            break;
+                            try {
+                                s_settings = nlohmann::json::parse(file.readString());
+                                loaded = true;
+                                break;
+                            } catch (const std::exception &e) {
+                                log::error("Failed to parse settings file! {}", e.what());
+                            }
                         }
                     }
 
-                    if (!loaded)
+                    s_settingsLoaded = true;
+
+                    if (!loaded) {
+                        log::warn("Failed to load settings file! Creating new one!");
                         store();
+                    }
 
                     runAllOnChangeCallbacks();
                 }
 
                 void store() {
                     thread_local bool isRunningCallbacks = false;
+
+                    // Refuse to store settings before they have been tried to be loaded
+                    // This is to ensure settings aren't lost accidentally
+                    if (!s_settingsLoaded)
+                        return;
 
                     if (isRunningCallbacks)
                         return;
@@ -712,6 +732,22 @@ namespace hex {
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
             runtime.reset();
 
+            // A string pattern's value is real text everywhere through this codec.
+            static const auto stringCodec = std::make_shared<PatternLanguageStringCodec>();
+            runtime.setStringEncodeDecode(stringCodec);
+
+            // #pragma encoding fails when this rejects its value.
+            runtime.setEncodingValidator([](const std::string &name) {
+                return getEncodingByName(name) != nullptr;
+            });
+
+            // A pragma runs off the main thread, but only the main thread may change the hex editor.
+            runtime.setOnDefaultEncodingChanged([](const std::string &name) {
+                TaskManager::doLater([name] {
+                    ImHexApi::HexEditor::setEncoding(name);
+                });
+            });
+
             if (provider != nullptr) {
                 runtime.setDataSource(provider->getBaseAddress(), provider->getActualSize(),
                                       [provider](u64 offset, u8 *buffer, size_t size) {
@@ -872,13 +908,48 @@ namespace hex {
 
         namespace EditWidget {
             std::optional<std::vector<u8>> TextInput::draw(std::string &value, std::endian endian) {
-                if (ImGui::InputText("##InspectorLineEditing", value,
-                                 ImGuiInputTextFlags_EnterReturnsTrue |
-                                 ImGuiInputTextFlags_AutoSelectAll)) {
-                    return getBytes(value, endian);
+                struct CallbackData {
+                    TextInput *self;
+                    std::string *value;
+                    std::endian endian;
+                } callbackData { this, &value, endian };
+
+                const bool borderPushed = m_hasInvalidValue;
+                if (borderPushed) {
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
                 }
 
-                return std::nullopt;
+                const bool submitted = ImGui::InputText("##InspectorLineEditing", value.data(), value.size() + 1,
+                    ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackResize,
+                    [](ImGuiInputTextCallbackData *data) -> int {
+                        auto &callbackData = *static_cast<CallbackData*>(data->UserData);
+
+                        // Grows the buffer only when ImGui needs more room for what was typed.
+                        if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+                            callbackData.value->resize(data->BufTextLen);
+                            data->Buf = callbackData.value->data();
+                            return 0;
+                        }
+
+                        std::string liveText(data->Buf, size_t(data->BufTextLen));
+                        auto bytes = callbackData.self->getBytes(liveText, callbackData.endian);
+                        callbackData.self->m_hasInvalidValue = !bytes.has_value();
+                        return 0;
+                    }, &callbackData);
+
+                if (borderPushed) {
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
+                }
+
+                if (!submitted)
+                    return std::nullopt;
+
+                auto bytes = getBytes(value, endian);
+                m_hasInvalidValue = !bytes.has_value();
+                return bytes;
             }
         }
 
@@ -922,7 +993,7 @@ namespace hex {
         }
 
         void addSeparator() {
-            impl::s_nodes->push_back({ "", "", [] { return nullptr; } });
+            impl::s_nodes->push_back({ {}, {}, [] { return nullptr; } });
         }
 
     }
@@ -1047,7 +1118,7 @@ namespace hex {
         void addTaskBarMenuItem(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
             log::debug("Added new taskbar menu item to menu {} ", unlocalizedMainMenuNames[0].get());
 
-            unlocalizedMainMenuNames.insert(unlocalizedMainMenuNames.begin(), impl::TaskBarMenuValue);
+            unlocalizedMainMenuNames.insert(unlocalizedMainMenuNames.begin(), UntranslatedString(impl::TaskBarMenuValue));
             impl::s_menuItems->insert({
                 priority, impl::MenuItem { .unlocalizedNames=unlocalizedMainMenuNames, .icon="", .shortcut=Shortcut::None, .view=nullptr, .callback=function, .enabledCallback=enabledCallback, .selectedCallback=[]{ return false; }, .toolbarIndex=-1 }
             });
@@ -1127,8 +1198,11 @@ namespace hex {
 
         namespace ContentRegistry::Provider::impl {
 
-            void add(const std::string &typeName, ProviderCreationFunction creationFunction) {
-                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
+            static AutoReset<std::map<std::string, ProviderCreationFunction>> s_providerCreationFunctions;
+
+            void add(const UnlocalizedString &typeName, ProviderCreationFunction creationFunction) {
+                (*s_providerCreationFunctions)[typeName.get()] = creationFunction;
+                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const UnlocalizedString &name, bool skipLoadInterface, bool selectProvider, std::shared_ptr<prv::Provider> *provider) {
                     if (name != expectedName) return;
 
                     auto newProvider = creationFunction();
@@ -1140,12 +1214,20 @@ namespace hex {
                 });
             }
 
+            std::shared_ptr<prv::Provider> create(const UnlocalizedString &typeName) {
+                const auto function = s_providerCreationFunctions->find(typeName.get());
+                if (function == s_providerCreationFunctions->end())
+                    return nullptr;
+                return function->second();
+            }
+
             static AutoReset<std::vector<Entry>> s_providerNames;
             const std::vector<Entry>& getEntries() {
                 return *s_providerNames;
             }
 
-            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon, std::vector<fs::ItemFilter> validFileExtensions, bool hidden) {
+            void addProviderMetadata(const UnlocalizedString &unlocalizedName, const char *icon,
+                                     std::vector<fs::ItemFilter> validFileExtensions, bool hidden) {
                 log::debug("Registered new provider: {}", unlocalizedName.get());
 
                 s_providerNames->emplace_back(unlocalizedName, icon, std::move(validFileExtensions), hidden);
@@ -1157,6 +1239,19 @@ namespace hex {
     
 
     namespace ContentRegistry::DataFormatter {
+        ExportTable::ExportTable(std::vector<std::string> headers) {
+            if (!isUnique(headers)) {
+                throw std::invalid_argument("All table headers must be unique");
+            }
+            m_headers = std::move(headers);
+        }
+
+        void ExportTable::addRow(std::vector<Cell> row) {
+            if (m_headers.size() != row.size()) {
+                throw std::invalid_argument("Table row and header item count mismatch");
+            }
+            m_rows.push_back(std::move(row));
+        }
 
         namespace impl {
 
@@ -1165,23 +1260,23 @@ namespace hex {
                 return *s_exportMenuEntries;
             }
 
-            static AutoReset<std::vector<FindExporterEntry>> s_findExportEntries;
-            const std::vector<FindExporterEntry>& getFindExporterEntries() {
-                return *s_findExportEntries;
+            static AutoReset<std::vector<ExportFormatterEntry>> s_exportFormatterEntries;
+            const std::vector<ExportFormatterEntry>& getExportFormatterEntries() {
+                return *s_exportFormatterEntries;
             }
 
         }
 
-        void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
+        void addExportMenuEntry(const UnlocalizedString &unlocalizedName, const impl::ExportMenuCallback &callback) {
             log::debug("Registered new data formatter: {}", unlocalizedName.get());
 
             impl::s_exportMenuEntries->push_back({ unlocalizedName, callback });
         }
 
-        void addFindExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::FindExporterCallback &callback) {
+        void addExportFormatter(const UnlocalizedString &unlocalizedName, const std::string &fileExtension, const impl::ExportFormatterCallback &callback) {
             log::debug("Registered new export formatter: {}", unlocalizedName.get());
 
-            impl::s_findExportEntries->push_back({ unlocalizedName, fileExtension, callback });
+            impl::s_exportFormatterEntries->push_back({ unlocalizedName, fileExtension, callback });
         }
 
     }
@@ -1422,12 +1517,12 @@ namespace hex {
         namespace impl {
 
             std::unique_ptr<mcp::Server>& getMcpServerInstance() {
-                static std::unique_ptr<mcp::Server> server;
+                static AutoReset<std::unique_ptr<mcp::Server>> server;
 
-                if (server == nullptr)
+                if (*server == nullptr)
                     server = std::make_unique<mcp::Server>();
 
-                return server;
+                return *server;
             }
 
             static bool s_mcpEnabled = false;

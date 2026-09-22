@@ -8,8 +8,10 @@
 #include <hex/api/achievement_manager.hpp>
 
 #include <content/differing_byte_searcher.hpp>
+#include <content/helpers/popup_encoding_chooser.hpp>
 
 #include <hex/api/events/events_provider.hpp>
+#include <hex/api/events/events_interaction.hpp>
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/events/requests_gui.hpp>
 
@@ -18,6 +20,7 @@
 #include <hex/helpers/default_paths.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
+
 #include <toasts/toast_notification.hpp>
 
 #include <wolv/math_eval/math_evaluator.hpp>
@@ -54,19 +57,13 @@ namespace hex::plugin::builtin {
     /* Hex Editor */
 
     ViewHexEditor::ViewHexEditor()
-        : View::Window("hex.builtin.view.hex_editor.name", ICON_VS_FILE_BINARY),
+        : View::Window("hex.builtin.view.hex_editor.name"_unlocalized, ICON_VS_FILE_BINARY),
           m_customEncodings({
               .typeId = "hex.builtin.custom-encoding",
-              .displayName = "hex.builtin.menu.file.import.custom_encoding",
+              .displayName = "hex.builtin.menu.file.import.custom_encoding"_unlocalized,
               .displayIcon = "あ",
-              .extensions = { { "Thingy Table File", "tbl" } },
-              .encode = [](const std::optional<EncodingFile> &encoding) {
-                  if (!encoding.has_value())
-                      return std::vector<u8>();
-
-                  const auto &content = encoding->getTableContent();
-                  return std::vector<u8>(content.begin(), content.end());
-              },
+              .extensions = { },
+              .encode = [](const std::optional<EncodingFile> &) { return std::vector<u8>(); },
               .decode = [](std::span<const u8> bytes) -> std::optional<std::optional<EncodingFile>> {
                   if (bytes.empty())
                       return std::optional<std::optional<EncodingFile>>(std::in_place);
@@ -113,38 +110,38 @@ namespace hex::plugin::builtin {
 
         static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_highlights"> showHighlights = true;
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.gray_out_zeros", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.gray_out_zeros"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.enableGrayOutZeros(value.get<bool>(true));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.upper_case_hex", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.upper_case_hex"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.enableUpperCaseHex(value.get<bool>(true));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_ascii", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_ascii"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.enableShowAscii(value.get<bool>(true));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_extended_ascii", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_hexEditor.enableShowExtendedAscii(value.get<bool>(false));
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_control_pictures"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.enableShowControlPictures(value.get<bool>(false));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap", [this](const ContentRegistry::Settings::SettingsValue &value) {
-            m_hexEditor.setMiniMapVisualizer(value.get<std::string>(""));
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_hexEditor.setMiniMapVisualizer(UnlocalizedString(value.get<std::string>("")));
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap_width", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap_width"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setMiniMapWidth(value.get<int>(m_hexEditor.getMiniMapWidth()));
         });
 
         ContentRegistry::Settings::onSave([this] {
-            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
-            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.gray_out_zeros", m_hexEditor.shouldGrayOutZeros());
-            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.upper_case_hex", m_hexEditor.shouldUpperCaseHex());
-            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_ascii", m_hexEditor.shouldShowAscii());
-            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_extended_ascii", m_hexEditor.shouldShowExtendedAscii());
-            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap", m_hexEditor.getMiniMapVisualizer().value_or(""));
-            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.minimap_width", m_hexEditor.getMiniMapWidth());
+            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.bytes_per_row"_untranslated, m_hexEditor.getBytesPerRow());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.gray_out_zeros"_untranslated, m_hexEditor.shouldGrayOutZeros());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.upper_case_hex"_untranslated, m_hexEditor.shouldUpperCaseHex());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_ascii"_untranslated, m_hexEditor.shouldShowAscii());
+            ContentRegistry::Settings::write<bool>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_control_pictures"_untranslated, m_hexEditor.shouldShowControlPictures());
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap"_untranslated, m_hexEditor.getMiniMapVisualizer().value_or(""));
+            ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.minimap_width"_untranslated, m_hexEditor.getMiniMapWidth());
         });
 
         m_hexEditor.setBackgroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
@@ -229,6 +226,8 @@ namespace hex::plugin::builtin {
     }
 
     ViewHexEditor::~ViewHexEditor() {
+        RequestChangeEncoding::unsubscribe(this);
+        EventPatternEvaluating::unsubscribe(this);
         RequestHexEditorSelectionChange::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
@@ -325,7 +324,7 @@ namespace hex::plugin::builtin {
             return;
 
         fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
-            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data", TaskManager::NoProgress, [=](Task &){
+            PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data"_unlocalized, ProgressValue::None(), [=](Task &){
                 provider->saveAs(path);
             }));
         });
@@ -390,8 +389,8 @@ namespace hex::plugin::builtin {
         // Selection is over one byte, we have to check the settings to decide the course of action
 
         auto setting = ContentRegistry::Settings::read<std::string>(
-            "hex.builtin.setting.hex_editor",
-            "hex.builtin.setting.hex_editor.paste_behaviour",
+            "hex.builtin.setting.hex_editor"_unlocalized,
+            "hex.builtin.setting.hex_editor.paste_behaviour"_unlocalized,
             "none");
 
         if (setting == "everything")
@@ -402,8 +401,8 @@ namespace hex::plugin::builtin {
             this->openPopup<PopupPasteBehaviour>(selection,
                 [](const Region &selection, const bool selectionCheck) {
                     ContentRegistry::Settings::write<std::string>(
-                        "hex.builtin.setting.hex_editor",
-                        "hex.builtin.setting.hex_editor.paste_behaviour",
+                        "hex.builtin.setting.hex_editor"_unlocalized,
+                        "hex.builtin.setting.hex_editor.paste_behaviour"_unlocalized,
                         selectionCheck ? "selection" : "everything");
                     pasteBytes(selection, selectionCheck, false);
                 });
@@ -444,7 +443,7 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::registerShortcuts() {
 
         // Remove selection
-        ShortcutManager::addShortcut(this, Keys::Escape, "hex.builtin.view.hex_editor.shortcut.remove_selection", [this] {
+        ShortcutManager::addShortcut(this, Keys::Escape, "hex.builtin.view.hex_editor.shortcut.remove_selection"_unlocalized, [this] {
             auto provider = ImHexApi::Provider::get();
             if (provider == nullptr)
                 return;
@@ -457,13 +456,13 @@ namespace hex::plugin::builtin {
             EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ Region::Invalid(), provider });
         });
 
-        ShortcutManager::addShortcut(this, Keys::Enter, "hex.builtin.view.hex_editor.shortcut.enter_editing", [this] {
+        ShortcutManager::addShortcut(this, Keys::Enter, "hex.builtin.view.hex_editor.shortcut.enter_editing"_unlocalized, [this] {
             if (auto cursor = m_hexEditor.getCursorPosition(); cursor.has_value())
                 m_hexEditor.setEditingAddress(cursor.value());
         });
 
         // Move cursor around
-        ShortcutManager::addShortcut(this, Keys::Up, "hex.builtin.view.hex_editor.shortcut.cursor_up", [this] {
+        ShortcutManager::addShortcut(this, Keys::Up, "hex.builtin.view.hex_editor.shortcut.cursor_up"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
@@ -473,7 +472,7 @@ namespace hex::plugin::builtin {
                 m_hexEditor.jumpIfOffScreen();
             }
         });
-        ShortcutManager::addShortcut(this, Keys::Down, "hex.builtin.view.hex_editor.shortcut.cursor_down", [this] {
+        ShortcutManager::addShortcut(this, Keys::Down, "hex.builtin.view.hex_editor.shortcut.cursor_down"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
@@ -481,7 +480,7 @@ namespace hex::plugin::builtin {
             this->setSelection(pos, pos);
             m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, Keys::Left, "hex.builtin.view.hex_editor.shortcut.cursor_left", [this] {
+        ShortcutManager::addShortcut(this, Keys::Left, "hex.builtin.view.hex_editor.shortcut.cursor_left"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
@@ -491,7 +490,7 @@ namespace hex::plugin::builtin {
                 m_hexEditor.jumpIfOffScreen();
             }
         });
-        ShortcutManager::addShortcut(this, Keys::Right, "hex.builtin.view.hex_editor.shortcut.cursor_right", [this] {
+        ShortcutManager::addShortcut(this, Keys::Right, "hex.builtin.view.hex_editor.shortcut.cursor_right"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
@@ -500,16 +499,16 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpIfOffScreen();
         });
 
-        ShortcutManager::addShortcut(this, Keys::PageUp, "hex.builtin.view.hex_editor.shortcut.cursor_page_up", [this] {
+        ShortcutManager::addShortcut(this, Keys::PageUp, "hex.builtin.view.hex_editor.shortcut.cursor_page_up"_unlocalized, [this] {
             const i64 visibleRowCount = m_hexEditor.getVisibleRowCount();
             m_hexEditor.setScrollPosition(m_hexEditor.getScrollPosition() - visibleRowCount);
         });
-        ShortcutManager::addShortcut(this, Keys::PageDown, "hex.builtin.view.hex_editor.shortcut.cursor_page_down", [this] {
+        ShortcutManager::addShortcut(this, Keys::PageDown, "hex.builtin.view.hex_editor.shortcut.cursor_page_down"_unlocalized, [this] {
             const i64 visibleRowCount = m_hexEditor.getVisibleRowCount();
             m_hexEditor.setScrollPosition(m_hexEditor.getScrollPosition() + visibleRowCount);
         });
 
-        ShortcutManager::addShortcut(this, Keys::Home, "hex.builtin.view.hex_editor.shortcut.cursor_start", [this] {
+        ShortcutManager::addShortcut(this, Keys::Home, "hex.builtin.view.hex_editor.shortcut.cursor_start"_unlocalized, [this] {
             const auto selection = getSelection();
             const auto baseAddress = m_hexEditor.getProvider()->getBaseAddress();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress()) - baseAddress;
@@ -519,7 +518,7 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpIfOffScreen();
         });
 
-        ShortcutManager::addShortcut(this, Keys::End, "hex.builtin.view.hex_editor.shortcut.cursor_end", [this] {
+        ShortcutManager::addShortcut(this, Keys::End, "hex.builtin.view.hex_editor.shortcut.cursor_end"_unlocalized, [this] {
             const auto selection = getSelection();
             const auto baseAddress = m_hexEditor.getProvider()->getBaseAddress();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress()) - baseAddress;
@@ -530,7 +529,7 @@ namespace hex::plugin::builtin {
         });
 
         // Move selection around
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Up, "hex.builtin.view.hex_editor.shortcut.selection_up", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Up, "hex.builtin.view.hex_editor.shortcut.selection_up"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition();
 
@@ -549,7 +548,7 @@ namespace hex::plugin::builtin {
 
             m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Down, "hex.builtin.view.hex_editor.shortcut.selection_down", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Down, "hex.builtin.view.hex_editor.shortcut.selection_down"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition();
 
@@ -568,7 +567,7 @@ namespace hex::plugin::builtin {
 
             m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Left, "hex.builtin.view.hex_editor.shortcut.selection_left", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Left, "hex.builtin.view.hex_editor.shortcut.selection_left"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition();
 
@@ -587,7 +586,7 @@ namespace hex::plugin::builtin {
 
             m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, SHIFT + Keys::Right, "hex.builtin.view.hex_editor.shortcut.selection_right", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::Right, "hex.builtin.view.hex_editor.shortcut.selection_right"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition();
 
@@ -606,7 +605,7 @@ namespace hex::plugin::builtin {
 
             m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, SHIFT + Keys::PageUp, "hex.builtin.view.hex_editor.shortcut.selection_page_up", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::PageUp, "hex.builtin.view.hex_editor.shortcut.selection_page_up"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
@@ -625,7 +624,7 @@ namespace hex::plugin::builtin {
 
             m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, SHIFT + Keys::PageDown, "hex.builtin.view.hex_editor.shortcut.selection_page_down", [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::PageDown, "hex.builtin.view.hex_editor.shortcut.selection_page_down"_unlocalized, [this] {
             auto selection = getSelection();
             auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
@@ -647,7 +646,52 @@ namespace hex::plugin::builtin {
 
     }
 
+    void ViewHexEditor::applyEncoding(prv::Provider *provider) {
+        std::optional<std::string> encodingName;
+        if (provider != nullptr)
+            encodingName = m_declaredEncodingNames.get(provider);
+
+        const EncodingFile *encoding = encodingName.has_value() ? getEncodingByName(*encodingName) : nullptr;
+
+        // A multi-byte encoding cannot drive a one byte cell, so the column stays on ASCII.
+        std::optional<Codepage> codepage;
+        if (encoding != nullptr)
+            codepage = Codepage::fromEncoding(*encoding);
+
+        m_hexEditor.setCodepage(codepage.value_or(Codepage::ascii()));
+        ImHexApi::HexEditor::impl::setCurrentEncodingName(std::move(encodingName));
+    }
+
     void ViewHexEditor::registerEvents() {
+        RequestChangeEncoding::subscribe(this, [this](const std::string &name) {
+            auto *provider = ImHexApi::Provider::get();
+            if (provider == nullptr || getEncodingByName(name) == nullptr)
+                return;
+
+            auto &encodingName = m_declaredEncodingNames.get(provider);
+            if (encodingName == name)
+                return;
+
+            encodingName = name;
+            this->applyEncoding(provider);
+        });
+
+        // Clears at the start of a run; the pragma handler sets it again if declared.
+        EventPatternEvaluating::subscribe(this, [this] {
+            TaskManager::doLater([this] {
+                auto *provider = ImHexApi::Provider::get();
+                if (provider == nullptr)
+                    return;
+
+                auto &encodingName = m_declaredEncodingNames.get(provider);
+                if (!encodingName.has_value())
+                    return;
+
+                encodingName.reset();
+                this->applyEncoding(provider);
+            });
+        });
+
         RequestHexEditorSelectionChange::subscribe(this, [this](ImHexApi::HexEditor::ProviderRegion region) {
             auto provider = region.getProvider();
 
@@ -692,6 +736,8 @@ namespace hex::plugin::builtin {
                 m_hexEditor.clearCustomEncoding();
             }
 
+            this->applyEncoding(newProvider);
+
             if (isSelectionValid()) {
                 EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });
             }
@@ -710,24 +756,24 @@ namespace hex::plugin::builtin {
             m_backgroundHighlights.get(provider).clear();
         });
 
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.bytes_per_row"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setBytesPerRow(value.get<int>(m_hexEditor.getBytesPerRow()));
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.highlight_color"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setSelectionColor(value.get<int>(0x60C08080));
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.sync_scrolling"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.enableSyncScrolling(value.get<bool>(false));
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.byte_padding"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setByteCellPadding(value.get<int>(0));
         });
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.char_padding"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             m_hexEditor.setCharacterCellPadding(value.get<int>(0));
         });
 
         static bool showSelectionInWindowFooter = true;
-        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.show_selection", [this](const ContentRegistry::Settings::SettingsValue &value) {
+        ContentRegistry::Settings::onChange("hex.builtin.setting.hex_editor"_unlocalized, "hex.builtin.setting.hex_editor.show_selection"_unlocalized, [this](const ContentRegistry::Settings::SettingsValue &value) {
             const auto show = value.get<bool>(false);
 
             m_hexEditor.setShowSelectionInFooter(show);
@@ -749,23 +795,23 @@ namespace hex::plugin::builtin {
 
     void ViewHexEditor::registerMenuItems() {
         /* Undo */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.undo" }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.undo"_unlocalized }, ICON_VS_DISCARD, 1000, CTRLCMD + Keys::Z, [] {
             auto provider = ImHexApi::Provider::get();
                 provider->undo();
         }, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->canUndo(); },
         this);
 
         /* Redo */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.redo" }, ICON_VS_REDO, 1050, CTRLCMD + Keys::Y, [] {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.redo"_unlocalized }, ICON_VS_REDO, 1050, CTRLCMD + Keys::Y, [] {
             auto provider = ImHexApi::Provider::get();
                 provider->redo();
         }, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->canRedo(); },
         this);
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1300);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized }, 1300);
 
         /* Save */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save" }, ICON_VS_SAVE, 1350,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.save"_unlocalized }, ICON_VS_SAVE, 1350,
             CTRLCMD + Keys::S,
             save,
             [] {
@@ -778,7 +824,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Save As */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as" }, ICON_VS_SAVE_AS, 1375,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.save_as"_unlocalized }, ICON_VS_SAVE_AS, 1375,
             CTRLCMD + SHIFT + Keys::S,
             saveAs,
             [] {
@@ -791,7 +837,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Load Encoding File */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.custom_encoding" }, "あ", 5700, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized, "hex.builtin.menu.file.import.custom_encoding"_unlocalized }, "あ", 5700, Shortcut::None,
             [this]{
                 const auto basePaths = paths::Encodings.read();
                 std::vector<std::fs::path> paths;
@@ -804,10 +850,10 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
+                PopupEncodingChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                 [this](const auto &path) {
                     auto *provider = ImHexApi::Provider::get();
-                    TaskManager::createTask("hex.builtin.task.loading_encoding_file", 0, [this, path, provider](auto&) {
+                    TaskManager::createTask("hex.builtin.task.loading_encoding_file"_unlocalized, ProgressValue::None(), [this, path, provider](auto&) {
                         auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
 
                         TaskManager::doLater([this, provider, encoding = std::move(encoding)]() mutable {
@@ -824,10 +870,10 @@ namespace hex::plugin::builtin {
             this
         );
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1500, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized }, 1500, this);
 
         /* Search */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.search" }, ICON_VS_SEARCH, 1550,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.search"_unlocalized }, ICON_VS_SEARCH, 1550,
             CTRLCMD + Keys::F,
             [this] {
                 this->openPopup<PopupFind>(this);
@@ -837,7 +883,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Goto */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.goto" }, ICON_VS_DEBUG_STEP_INTO, 1600,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.goto"_unlocalized }, ICON_VS_DEBUG_STEP_INTO, 1600,
             CTRLCMD + Keys::G,
             [this] {
                 this->openPopup<PopupGoto>();
@@ -847,7 +893,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Skip until */
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.skip_until" }, ICON_VS_DEBUG_STEP_OVER, 1610,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.view.hex_editor.menu.file.skip_until"_unlocalized }, ICON_VS_DEBUG_STEP_OVER, 1610,
             []{},
             canSearchForDifferingByte,
             this
@@ -855,9 +901,9 @@ namespace hex::plugin::builtin {
 
         /* Skip until previous differing byte */
         ContentRegistry::UserInterface::addMenuItem({
-                "hex.builtin.menu.file",
-                "hex.builtin.view.hex_editor.menu.file.skip_until",
-                "hex.builtin.view.hex_editor.menu.file.skip_until.previous_differing_byte"
+                "hex.builtin.menu.file"_unlocalized,
+                "hex.builtin.view.hex_editor.menu.file.skip_until"_unlocalized,
+                "hex.builtin.view.hex_editor.menu.file.skip_until.previous_differing_byte"_unlocalized
             },
             ICON_VS_DEBUG_STEP_BACK,
             1620,
@@ -896,9 +942,9 @@ namespace hex::plugin::builtin {
 
         /* Skip until next differing byte */
         ContentRegistry::UserInterface::addMenuItem({
-                "hex.builtin.menu.file",
-                "hex.builtin.view.hex_editor.menu.file.skip_until",
-                "hex.builtin.view.hex_editor.menu.file.skip_until.next_differing_byte"
+                "hex.builtin.menu.file"_unlocalized,
+                "hex.builtin.view.hex_editor.menu.file.skip_until"_unlocalized,
+                "hex.builtin.view.hex_editor.menu.file.skip_until.next_differing_byte"_unlocalized
             },
             ICON_VS_DEBUG_STEP_OVER,
             1630,
@@ -936,10 +982,10 @@ namespace hex::plugin::builtin {
         );
 
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized }, 1100, this);
 
         /* Copy */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy" }, ICON_VS_COPY, 1150,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy"_unlocalized }, ICON_VS_COPY, 1150,
             CurrentView + CTRLCMD + Keys::C,
             [] {
                 auto selection = ImHexApi::HexEditor::getSelection();
@@ -950,10 +996,10 @@ namespace hex::plugin::builtin {
             this
         );
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as" }, ICON_VS_PREVIEW, 1190, []{}, ImHexApi::HexEditor::isSelectionValid, this);
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy_as"_unlocalized }, ICON_VS_PREVIEW, 1190, []{}, ImHexApi::HexEditor::isSelectionValid, this);
 
         /* Copy As */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.ascii" }, ICON_VS_SYMBOL_KEY, 1200,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy_as"_unlocalized, "hex.builtin.view.hex_editor.copy.ascii"_unlocalized }, ICON_VS_SYMBOL_KEY, 1200,
             CurrentView + CTRLCMD + ALT + Keys::C,
             [] {
                 auto selection = ImHexApi::HexEditor::getSelection();
@@ -965,7 +1011,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Copy address */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.address" }, ICON_VS_LOCATION, 1250,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy_as"_unlocalized, "hex.builtin.view.hex_editor.copy.address"_unlocalized }, ICON_VS_LOCATION, 1250,
             Shortcut::None,
             [] {
                 auto selection = ImHexApi::HexEditor::getSelection();
@@ -977,7 +1023,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Copy custom encoding */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.custom_encoding" }, "あ", 1300,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy_as"_unlocalized, "hex.builtin.view.hex_editor.copy.custom_encoding"_unlocalized }, "あ", 1300,
             SHIFT + ALT + Keys::C,
             [this] {
                 auto selection = ImHexApi::HexEditor::getSelection();
@@ -991,10 +1037,10 @@ namespace hex::plugin::builtin {
             this
         );
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as" }, 1350, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy_as"_unlocalized }, 1350, this);
 
         /* Copy as... */
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as" }, ICON_VS_FILE_CODE, 1400, []{
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.copy_as"_unlocalized }, ICON_VS_FILE_CODE, 1400, []{
             auto selection = ImHexApi::HexEditor::getSelection();
             auto provider  = ImHexApi::Provider::get();
 
@@ -1034,7 +1080,7 @@ namespace hex::plugin::builtin {
         }, this);
 
         /* Paste */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, ICON_VS_OUTPUT, 1450, CurrentView + CTRLCMD + Keys::V,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste"_unlocalized }, ICON_VS_OUTPUT, 1450, CurrentView + CTRLCMD + Keys::V,
             [this] {
                 processPasteBehaviour(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())));
             },
@@ -1043,14 +1089,14 @@ namespace hex::plugin::builtin {
         );
 
         /* Paste... */
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_as" }, ICON_VS_CLIPPY, 1490,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste_as"_unlocalized }, ICON_VS_CLIPPY, 1490,
             []{},
             ImHexApi::HexEditor::isSelectionValid,
             this
         );
 
         /* Paste... > Paste all */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_as", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, ICON_VS_CLIPPY, 1500, CurrentView + CTRLCMD + SHIFT + Keys::V,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste_as"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste_all"_unlocalized }, ICON_VS_CLIPPY, 1500, CurrentView + CTRLCMD + SHIFT + Keys::V,
             [] {
                 pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, false);
             },
@@ -1059,7 +1105,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Paste... > Paste all as string */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_as", "hex.builtin.view.hex_editor.menu.edit.paste_all_string" }, ICON_VS_SYMBOL_KEY, 1510,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste_as"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste_all_string"_unlocalized }, ICON_VS_SYMBOL_KEY, 1510,
             Shortcut::None,
             [] {
                 pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get())), false, true);
@@ -1069,7 +1115,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Paste from Source... */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.title" }, ICON_VS_REFERENCES, 1515, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.paste_from_source.popup.title"_unlocalized }, ICON_VS_REFERENCES, 1515, Shortcut::None,
             [this] {
                 auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, nullptr));
                 this->openPopup<PopupPasteFromSource>(selection);
@@ -1078,10 +1124,10 @@ namespace hex::plugin::builtin {
             this
         );
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1520, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized }, 1520, this);
 
         /* Select */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select" }, ICON_VS_LIST_SELECTION, 1525,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.select"_unlocalized }, ICON_VS_LIST_SELECTION, 1525,
             CTRLCMD + SHIFT + Keys::A,
             [this] {
                 auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion{ { .address=0, .size=1 }, nullptr });
@@ -1092,7 +1138,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Select All */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select_all" }, ICON_VS_LIST_FLAT, 1550, CurrentView + CTRLCMD + Keys::A,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.select_all"_unlocalized }, ICON_VS_LIST_FLAT, 1550, CurrentView + CTRLCMD + Keys::A,
             [] {
                 auto provider = ImHexApi::Provider::get();
                 ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
@@ -1102,7 +1148,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Swap selection cursor */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.swap_cursor" }, ICON_TA_REPLACE, 1575, CurrentView + CTRLCMD + Keys::T,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.swap_cursor"_unlocalized }, ICON_TA_REPLACE, 1575, CurrentView + CTRLCMD + Keys::T,
             [this] {
                 this->m_hexEditor.swapCursorStartEnd();
             },
@@ -1111,32 +1157,32 @@ namespace hex::plugin::builtin {
         );
 
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1600, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized }, 1600, this);
 
         /* Set Base Address */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.set_base" }, ICON_VS_LOCATION, 1650, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.set_base"_unlocalized }, ICON_VS_LOCATION, 1650, Shortcut::None,
             [this] {
-                auto provider = ImHexApi::Provider::get();
-                this->openPopup<PopupBaseAddress>(provider->getBaseAddress());
+                auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get()));
+                this->openPopup<PopupBaseAddress>(selection);
             },
             [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isReadable(); },
             this
         );
 
         /* Resize */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.resize" }, ICON_VS_ARROW_BOTH, 1700, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.resize"_unlocalized }, ICON_VS_ARROW_BOTH, 1700, Shortcut::None,
             [this] {
-                auto provider = ImHexApi::Provider::get();
-                this->openPopup<PopupResize>(provider->getActualSize());
+                auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion(Region { .address=0, .size=0 }, ImHexApi::Provider::get()));
+                this->openPopup<PopupResize>(selection);
             },
             [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isResizable(); },
             this
         );
 
         /* Insert */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.insert" }, ICON_VS_INSERT, 1750, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.insert"_unlocalized }, ICON_VS_INSERT, 1750, Shortcut::None,
             [this] {
-                auto selection      = ImHexApi::HexEditor::getSelection();
+                auto selection = ImHexApi::HexEditor::getSelection();
 
                 this->openPopup<PopupInsert>(selection->getStartAddress(), 0x00);
             },
@@ -1145,7 +1191,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Remove */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.remove" }, ICON_VS_CLEAR_ALL, 1800, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.remove"_unlocalized }, ICON_VS_CLEAR_ALL, 1800, Shortcut::None,
             [this] {
                 auto selection = ImHexApi::HexEditor::getSelection();
 
@@ -1156,7 +1202,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Fill */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.fill" }, ICON_VS_PAINTCAN, 1810, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.fill"_unlocalized }, ICON_VS_PAINTCAN, 1810, Shortcut::None,
             [this] {
                 auto selection = ImHexApi::HexEditor::getSelection();
 
@@ -1167,7 +1213,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Toggle Overwrite/Insert mode */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.insert_mode" }, ICON_VS_EDIT, 1820, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.insert_mode"_unlocalized }, ICON_VS_EDIT, 1820, Shortcut::None,
             [this] {
                 if (m_hexEditor.getMode() == ui::HexEditor::Mode::Insert)
                     m_hexEditor.setMode(ui::HexEditor::Mode::Overwrite);
@@ -1187,7 +1233,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Jump to */
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, ICON_VS_DEBUG_STEP_OUT, 1850,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.jump_to"_unlocalized }, ICON_VS_DEBUG_STEP_OUT, 1850,
             [] {
                 auto provider = ImHexApi::Provider::get();
                 if (provider == nullptr)
@@ -1234,7 +1280,7 @@ namespace hex::plugin::builtin {
         );
 
         /* Set Page Size */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.set_page_size" }, ICON_VS_BROWSER, 1860, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.set_page_size"_unlocalized }, ICON_VS_BROWSER, 1860, Shortcut::None,
             [this] {
                 auto provider = ImHexApi::Provider::get();
                 this->openPopup<PopupPageSize>(provider->getPageSize());
@@ -1243,14 +1289,14 @@ namespace hex::plugin::builtin {
             this
         );
 
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1900, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.edit"_unlocalized }, 1900, this);
 
         /* Open in new provider */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider" }, ICON_VS_GO_TO_FILE, 1950, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider"_unlocalized }, ICON_VS_GO_TO_FILE, 1950, Shortcut::None,
             [] {
                 auto selection = ImHexApi::HexEditor::getSelection();
 
-                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view"_unlocalized, true);
                 if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider.get()); viewProvider != nullptr) {
                     viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
                     ImHexApi::Provider::openProvider(newProvider);
@@ -1261,11 +1307,11 @@ namespace hex::plugin::builtin {
         );
 
         /* Decode as Text */
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.decode_as_text" }, ICON_VS_CHAT_SPARKLE, 1960, Shortcut::None,
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.edit"_unlocalized, "hex.builtin.view.hex_editor.menu.edit.decode_as_text"_unlocalized }, ICON_VS_CHAT_SPARKLE, 1960, Shortcut::None,
             [this] {
                 const auto selection = ImHexApi::HexEditor::getSelection();
 
-                TaskManager::createTask("", TaskManager::NoProgress, [this, selection] {
+                TaskManager::createTask("hex.ui.common.processing"_unlocalized, ProgressValue::None(), [this, selection] {
                     const auto &customEncoding = this->m_hexEditor.getCustomEncoding();
                     if (!customEncoding.has_value())
                         return;

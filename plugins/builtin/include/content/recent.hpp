@@ -54,31 +54,6 @@ namespace hex::plugin::builtin::recent {
 
     };
 
-    class PopupAutoBackups : public Popup<PopupAutoBackups> {
-    private:
-        struct BackupEntry {
-            std::string displayName;
-            std::fs::path path;
-            std::tm time;
-
-            bool operator<(const BackupEntry& other) const {
-                auto a = this->time;
-                auto b = other.time;
-                return std::mktime(&a) < std::mktime(&b);
-            }
-        };
-    public:
-        PopupAutoBackups();
-
-        void drawContent() override;
-        [[nodiscard]] ImGuiWindowFlags getFlags() const override;
-
-        static std::vector<BackupEntry> getAutoBackups();
-
-    private:
-        std::vector<BackupEntry> m_backups;
-    };
-
     void registerEventHandlers();
 
     /**

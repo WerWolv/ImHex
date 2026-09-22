@@ -28,6 +28,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isWritable() const override { return false; }
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
+        [[nodiscard]] bool isSavableAsRecent() const override { return false; }
 
         [[nodiscard]] OpenResult open() override { return {}; }
         void close() override { }
@@ -44,7 +45,7 @@ namespace hex::plugin::builtin {
         }
         [[nodiscard]] u64 getActualSize() const override { return 0x00; }
 
-        [[nodiscard]] std::string getName() const override { return "ImHex"; }
+        [[nodiscard]] std::string getName() const override { return "hex.builtin.provider.null.name"_lang; }
 
         [[nodiscard]] const char* getIcon() const override {
             return "";
@@ -54,7 +55,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.null";
+            return "hex.builtin.provider.null"_unlocalized;
         }
     };
 

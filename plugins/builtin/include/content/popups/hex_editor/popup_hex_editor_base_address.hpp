@@ -7,12 +7,20 @@ namespace hex::plugin::builtin {
 
     class PopupBaseAddress : public ViewHexEditor::Popup {
     public:
-        explicit PopupBaseAddress(u64 baseAddress);
+        explicit PopupBaseAddress(const ImHexApi::HexEditor::ProviderRegion &selection);
         void draw(ViewHexEditor *editor) override;
         [[nodiscard]] UnlocalizedString getTitle() const override;
         [[nodiscard]] bool isValid() const;
+
+        void setBaseAddress() const;
+        bool isNewAddressValid() const;
+
     private:
-        static void setBaseAddress(u64 baseAddress);
+        ImHexApi::HexEditor::ProviderRegion m_selection;
         u64 m_baseAddress;
+        u64 m_byteAddress;
+        u64 m_byteOffset;
+        bool m_byteAddressMode;
+        bool m_byteAddressDisable;
     };
 }

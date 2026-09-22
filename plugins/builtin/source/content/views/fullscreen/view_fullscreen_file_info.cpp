@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
             return;
         }
 
-        m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing", TaskManager::NoProgress, [this](Task &task) {
+        m_analysisTask = TaskManager::createBlockingTask("hex.builtin.view.fullscreen.file_info.analyzing"_unlocalized, ProgressValue::None(), [this](Task &task) {
             m_mimeType = magic::getMIMEType(&m_provider);
             if (!magic::isValidMIMEType(m_mimeType)) {
                 m_mimeType.clear();
@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                 m_fileDescription = magic::getDescription(&m_provider, 0, 100_KiB, true);
             }
 
-            m_foundPatterns = magic::findViablePatterns(&m_provider, &task);
+            m_foundPatterns = magic::findViablePatterns(&m_provider, false, &task);
             if (!m_foundPatterns.empty()) {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, &m_provider);
@@ -86,10 +86,11 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosX(ImGui::GetWindowSize().x - 300_scaled);
 
             if (ImGuiExt::BeginSubWindow("hex.builtin.view.fullscreen.file_info.match_info"_lang)) {
-                if (firstMatch.mimeType.has_value())
+                // TODO: Implement this again
+                /*if (firstMatch.mimeType.has_value())
                     ImGuiExt::TextFormattedWrapped("hex.builtin.view.fullscreen.file_info.match_info.mime"_lang);
                 else if (firstMatch.magicOffset.has_value())
-                    ImGuiExt::TextFormattedWrapped("hex.builtin.view.fullscreen.file_info.match_info.magic"_lang, *firstMatch.magicOffset);
+                    ImGuiExt::TextFormattedWrapped("hex.builtin.view.fullscreen.file_info.match_info.magic"_lang, *firstMatch.magicOffset);*/
             }
             ImGuiExt::EndSubWindow();
         } else {

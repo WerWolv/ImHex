@@ -4,19 +4,23 @@
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/menu_items.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <fonts/tabler_icons.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::diffing {
 
     using ContentRegistry::Diffing::DifferenceType;
 
-    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF) {
+    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name"_unlocalized, ICON_VS_DIFF) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             this->reset();
@@ -113,12 +117,11 @@ namespace hex::plugin::diffing {
 
             return shouldReanalyze;
         }
-
     }
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing", commonSize, [this, providerA, providerB](Task &task) {
+        m_diffTask = TaskManager::createTask("hex.diffing.view.diff.task.diffing"_unlocalized, ProgressValue::Size(commonSize), [this, providerA, providerB](Task &task) {
             task.setInterruptCallback([this]{ m_analysisInterrupted = true; });
 
             for (auto &column : m_columns) {
@@ -246,7 +249,7 @@ namespace hex::plugin::diffing {
 
 
         // Draw the two hex editor columns side by side
-        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, diffingColumnSize)) {
+        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_BordersOuter, diffingColumnSize)) {
             ImGui::TableSetupColumn(fmt::format(" {}", "hex.diffing.view.diff.provider_a"_lang).c_str());
             ImGui::TableSetupColumn(fmt::format(" {}", "hex.diffing.view.diff.provider_b"_lang).c_str());
             ImGui::TableHeadersRow();
@@ -257,6 +260,15 @@ namespace hex::plugin::diffing {
                 ImGui::TableNextColumn();
                 if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     RequestOpenPopup::post("##DiffingAlgorithmSettings");
+
+                ImGui::SameLine();
+
+                ImGui::BeginDisabled(!m_analyzed);
+                if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    RequestOpenPopup::post("##ExportDifferences");
+                }
+                ImGui::SetItemTooltip("%s", "hex.diffing.view.diff.export"_lang.get());
+                ImGui::EndDisabled();
 
                 ImGui::SameLine();
 
@@ -336,10 +348,28 @@ namespace hex::plugin::diffing {
                         const auto &[regionA, typeA] = differencesA[i];
                         const auto &[regionB, typeB] = differencesB[i];
 
+                        ImGui::TableNextColumn();
                         // Draw a clickable row for each difference that will select the difference in both hex editors
+                        if (ImGui::Selectable("##DifferenceRow", false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            const Region selectionA = { regionA.start, ((regionA.end - regionA.start) + 1) };
+                            const Region selectionB = { regionB.start, ((regionB.end - regionB.start) + 1) };
+
+                            a.hexEditor.setSelection(selectionA);
+                            a.hexEditor.jumpToSelection();
+                            b.hexEditor.setSelection(selectionB);
+                            b.hexEditor.jumpToSelection();
+
+                            const auto &providers = ImHexApi::Provider::getProviders();
+                            auto openProvider = ImHexApi::Provider::get();
+
+                            if (providers[a.provider] == openProvider)
+                                ImHexApi::HexEditor::setSelection(selectionA);
+                            else if (providers[b.provider] == openProvider)
+                                ImHexApi::HexEditor::setSelection(selectionB);
+                        }
+                        ImGui::SameLine();
 
                         // Draw difference type
-                        ImGui::TableNextColumn();
                         switch (typeA) {
                             case DifferenceType::Mismatch:
                                 ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), ICON_VS_DIFF_MODIFIED);
@@ -357,29 +387,33 @@ namespace hex::plugin::diffing {
                                 break;
                         }
 
-                        // Draw start address
+                        // Draw region A address range
                         ImGui::TableNextColumn();
-                        if (ImGui::Selectable(fmt::format("0x{:04X} - 0x{:04X}", regionA.start, regionA.end).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            const Region selectionA = { regionA.start, ((regionA.end - regionA.start) + 1) };
-                            const Region selectionB = { regionB.start, ((regionB.end - regionB.start) + 1) };
+                        ImGui::TextUnformatted(fmt::format("0x{:04X} - 0x{:04X}", regionA.start, regionA.end).c_str());
 
-                            a.hexEditor.setSelection(selectionA);
-                            a.hexEditor.jumpToSelection();
-                            b.hexEditor.setSelection(selectionB);
-                            b.hexEditor.jumpToSelection();
-
-                            const auto &providers = ImHexApi::Provider::getProviders();
-                            auto openProvider = ImHexApi::Provider::get();
-
-                            if (providers[a.provider] == openProvider)
-                                ImHexApi::HexEditor::setSelection(selectionA);
-                            else if (providers[b.provider] == openProvider)
-                                ImHexApi::HexEditor::setSelection(selectionB);
+                        if (ImGui::BeginPopupContextItem("##RegionAContextMenu")) {
+                            if (menu::menuItemEx("hex.diffing.view.diff.context.copy_start_address"_lang, ICON_VS_COPY)) {
+                                ImGui::SetClipboardText(fmt::format("0x{:04X}", regionA.start).c_str());
+                            }
+                            if (menu::menuItemEx("hex.diffing.view.diff.context.copy_end_address"_lang, ICON_VS_COPY)) {
+                                ImGui::SetClipboardText(fmt::format("0x{:04X}", regionA.end).c_str());
+                            }
+                            ImGui::EndPopup();
                         }
 
-                        // Draw end address
+                        // Draw region B address range
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(fmt::format("0x{:04X} - 0x{:04X}", regionB.start, regionB.end).c_str());
+
+                        if (ImGui::BeginPopupContextItem("##RegionBContextMenu")) {
+                            if (menu::menuItemEx("hex.diffing.view.diff.context.copy_start_address"_lang, ICON_VS_COPY)) {
+                                ImGui::SetClipboardText(fmt::format("0x{:04X}", regionB.start).c_str());
+                            }
+                            if (menu::menuItemEx("hex.diffing.view.diff.context.copy_end_address"_lang, ICON_VS_COPY)) {
+                                ImGui::SetClipboardText(fmt::format("0x{:04X}", regionB.end).c_str());
+                            }
+                            ImGui::EndPopup();
+                        }
 
                         const auto &providers = ImHexApi::Provider::getProviders();
                         std::vector<u8> data;
@@ -462,20 +496,63 @@ namespace hex::plugin::diffing {
 
             ImGui::EndPopup();
         }
+        if (ImGui::BeginPopup("##ExportDifferences")) {
+            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getExportFormatterEntries()) {
+                const auto name = toUpper(Lang(formatter.unlocalizedName));
+                const auto &extension = formatter.fileExtension;
+
+                if (ImGui::MenuItem(name.c_str())) {
+                    fs::openFileBrowser(fs::DialogMode::Save, { { .name = name.c_str(), .spec = extension.c_str() } }, [&](const std::fs::path &path) {
+                        wolv::io::File file(path, wolv::io::File::Mode::Create);
+                        if (!file.isValid()) {
+                            return;
+                        }
+                        ContentRegistry::DataFormatter::ExportTable table({
+                            "type", "offset_a", "size_a", "offset_b", "size_b"
+                        });
+                        const auto &differencesA = m_columns[0].differences;
+                        const auto &differencesB = m_columns[1].differences;
+                        const size_t count = std::min(differencesA.size(), differencesB.size());
+
+                        for (size_t i = 0; i < count; ++i) {
+                            const auto &[regionA, typeA] = differencesA[i];
+                            const auto &[regionB, typeB] = differencesB[i];
+
+                            std::string typeStr;
+                            switch (typeA) {
+                                case DifferenceType::Match: typeStr = "match"; break;
+                                case DifferenceType::Mismatch: typeStr = "mismatch"; break;
+                                case DifferenceType::Insertion: typeStr = "insertion"; break;
+                                case DifferenceType::Deletion: typeStr = "deletion"; break;
+                            }
+                            table.addRow({
+                                typeStr,
+                                regionA.start,
+                                regionA.end - regionA.start + 1,
+                                regionB.start,
+                                regionB.end - regionB.start + 1,
+                            });
+                        }
+                        file.writeVector(formatter.callback(table));
+                    });
+                }
+            }
+            ImGui::EndPopup();
+        }
     }
 
     void ViewDiff::registerMenuItems() {
-        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1700, this);
+        ContentRegistry::UserInterface::addMenuItemSeparator({ "hex.builtin.menu.file"_unlocalized }, 1700, this);
 
-        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.diffing.view.diff.menu.file.jumping" }, ICON_TA_ARROWS_MOVE_HORIZONTAL, 1710,
+        ContentRegistry::UserInterface::addMenuItemSubMenu({ "hex.builtin.menu.file"_unlocalized, "hex.diffing.view.diff.menu.file.jumping"_unlocalized }, ICON_TA_ARROWS_MOVE_HORIZONTAL, 1710,
                                                            []{},
                                                            [this]{ return (bool) m_analyzed; },
                                                            this);
 
         ContentRegistry::UserInterface::addMenuItem({
-                "hex.builtin.menu.file",
-                "hex.diffing.view.diff.menu.file.jumping",
-                "hex.diffing.view.diff.menu.file.jumping.prev_diff"
+                "hex.builtin.menu.file"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping.prev_diff"_unlocalized
             },
             ICON_TA_ARROW_BAR_TO_LEFT_DASHED,
             1720,
@@ -511,9 +588,9 @@ namespace hex::plugin::diffing {
         );
 
         ContentRegistry::UserInterface::addMenuItem({
-                "hex.builtin.menu.file",
-                "hex.diffing.view.diff.menu.file.jumping",
-                "hex.diffing.view.diff.menu.file.jumping.next_diff"
+                "hex.builtin.menu.file"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping"_unlocalized,
+                "hex.diffing.view.diff.menu.file.jumping.next_diff"_unlocalized
             },
             ICON_TA_ARROW_BAR_TO_RIGHT_DASHED,
             1730,

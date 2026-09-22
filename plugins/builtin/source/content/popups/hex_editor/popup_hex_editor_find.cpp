@@ -11,6 +11,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/search.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
@@ -55,7 +56,7 @@ namespace hex::plugin::builtin {
 
         if (ImGuiExt::IconHyperlink(ICON_VS_SEARCH, "hex.builtin.view.hex_editor.search.advanced"_lang)) {
             TaskManager::doLater([editor] {
-                const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name");
+                const auto& view = ContentRegistry::Views::getViewByName("hex.builtin.view.find.name"_unlocalized);
 
                 view->getWindowOpenState() = true;
                 ImGui::SetWindowFocus(view->getName().c_str());
@@ -94,8 +95,8 @@ namespace hex::plugin::builtin {
             this->processInputString();
 
             if (!m_searchTask.isRunning() && !m_searchByteSequence.empty()) {
-                m_searchTask = TaskManager::createTask("hex.ui.common.processing",
-                                                       ImHexApi::Provider::get()->getActualSize(),
+                m_searchTask = TaskManager::createTask("hex.ui.common.processing"_unlocalized,
+                                                       ProgressValue::Size(ImHexApi::Provider::get()->getActualSize()),
                                                        doSearch);
             }
             m_requestSearch = false;
@@ -234,35 +235,6 @@ namespace hex::plugin::builtin {
         auto startAbsolutePosition = provider->getBaseAddress();
         auto endAbsolutePosition = provider->getBaseAddress() + providerSize - 1;
 
-        const auto searchFunction = [&](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
-            if (needleBegin == needleEnd)
-                return haystackBegin;
-
-            for (auto current = haystackBegin; current != haystackEnd; ++current) {
-                auto haystackIt = current;
-                auto needleIt = needleBegin;
-
-                while (haystackIt != haystackEnd && needleIt != needleEnd && *haystackIt == *needleIt) {
-                    ++haystackIt;
-                    ++needleIt;
-                }
-
-                if (needleIt == needleEnd)
-                    return current;
-
-                if (haystackIt == haystackEnd)
-                    return haystackEnd;
-
-                using namespace hex::literals;
-                // Important: Keep this aligned to a power of 2 so it gets optimized nicely
-                if (const auto address = current.getAddress(); (address % 16_MiB) == 0) [[unlikely]] {
-                    task.update(address);
-                }
-            }
-
-            return haystackEnd;
-        };
-
         if (!m_searchBackwards) {
             if (m_reachedEnd || !m_foundRegion.has_value()) {
                 reader.seek(startAbsolutePosition);
@@ -271,7 +243,7 @@ namespace hex::plugin::builtin {
             }
             reader.setEndAddress(endAbsolutePosition);
 
-            auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
+            auto occurrence = searchInterruptable(reader.begin(), reader.end(), sequence.begin(), sequence.end(), task);
             if (occurrence != reader.end()) {
                 return Region{.address=occurrence.getAddress(), .size=sequence.size()};
             }
@@ -283,7 +255,7 @@ namespace hex::plugin::builtin {
             }
             reader.seek(startAbsolutePosition);
 
-            auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend());
+            auto occurrence = searchInterruptable(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend(), task);
             if (occurrence != reader.rend()) {
                 return Region{.address=occurrence.getAddress() - (sequence.size() - 1), .size=sequence.size()};
             }
@@ -355,6 +327,6 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] UnlocalizedString PopupFind::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.file.search";
+        return "hex.builtin.view.hex_editor.menu.file.search"_unlocalized;
     }
 }

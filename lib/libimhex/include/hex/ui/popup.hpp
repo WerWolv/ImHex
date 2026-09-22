@@ -18,8 +18,8 @@ namespace hex {
 
         class PopupBase {
         public:
-            explicit PopupBase(UnlocalizedString unlocalizedName, bool closeButton, bool modal)
-                : m_unlocalizedName(std::move(unlocalizedName)), m_closeButton(closeButton), m_modal(modal) { }
+            explicit PopupBase(UnlocalizedString unlocalizedName, const char *icon, bool closeButton, bool modal)
+                : m_unlocalizedName(std::move(unlocalizedName)), m_icon(icon), m_closeButton(closeButton), m_modal(modal) { }
 
             virtual ~PopupBase() = default;
 
@@ -56,10 +56,15 @@ namespace hex {
                 return m_close;
             }
 
+            [[nodiscard]] const char *getIcon() const {
+                return m_icon;
+            }
+
         protected:
             static std::mutex& getMutex();
         private:
             UnlocalizedString m_unlocalizedName;
+            const char *m_icon;
             bool m_closeButton, m_modal;
             std::atomic<bool> m_close = false;
         };
@@ -70,7 +75,7 @@ namespace hex {
     template<typename T>
     class Popup : public impl::PopupBase {
     protected:
-        explicit Popup(UnlocalizedString unlocalizedName, bool closeButton = true, bool modal = true) : PopupBase(std::move(unlocalizedName), closeButton, modal) { }
+        explicit Popup(UnlocalizedString unlocalizedName, const char *icon, bool closeButton = true, bool modal = true) : PopupBase(std::move(unlocalizedName), icon, closeButton, modal) { }
 
     public:
         template<typename ...Args>

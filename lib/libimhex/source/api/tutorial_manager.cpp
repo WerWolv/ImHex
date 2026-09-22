@@ -19,7 +19,7 @@ namespace hex {
 
     namespace {
 
-        AutoReset<std::map<std::string, TutorialManager::Tutorial>> s_tutorials;
+        AutoReset<std::map<UnlocalizedString, TutorialManager::Tutorial>> s_tutorials;
         auto s_currentTutorial = s_tutorials->end();
 
         AutoReset<std::map<ImGuiID, std::string>> s_highlights;
@@ -139,11 +139,11 @@ namespace hex {
         }
     }
 
-    const std::map<std::string, TutorialManager::Tutorial>& TutorialManager::getTutorials() {
+    const std::map<UnlocalizedString, TutorialManager::Tutorial>& TutorialManager::getTutorials() {
         return s_tutorials;
     }
 
-    std::map<std::string, TutorialManager::Tutorial>::iterator TutorialManager::getCurrentTutorial() {
+    std::map<UnlocalizedString, TutorialManager::Tutorial>::iterator TutorialManager::getCurrentTutorial() {
         return s_currentTutorial;
     }
 
@@ -318,10 +318,10 @@ namespace hex {
 
         if (!message.has_value()) {
             message = Tutorial::Step::Message {
-                 .position=Position::None,
-                .unlocalizedTitle="",
-                .unlocalizedMessage="",
-                .allowSkip=false
+                .position           = Position::None,
+                .unlocalizedTitle   = {},
+                .unlocalizedMessage = {},
+                .allowSkip          = false
             };
         }
 
@@ -474,7 +474,7 @@ namespace hex {
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
-        return this->addHighlight("", std::forward<decltype(ids)>(ids));
+        return this->addHighlight({}, std::forward<decltype(ids)>(ids));
     }
 
 
@@ -496,8 +496,8 @@ namespace hex {
         } else {
             m_message = Message {
                 .position=Position::Bottom | Position::Right,
-                .unlocalizedTitle="",
-                .unlocalizedMessage="",
+                .unlocalizedTitle={},
+                .unlocalizedMessage={},
                 .allowSkip=true
             };
         }

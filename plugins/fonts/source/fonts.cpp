@@ -6,15 +6,15 @@
 namespace hex::fonts {
 
     const ImHexApi::Fonts::Font& Default() {
-        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.default");
+        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.default"_unlocalized);
         return font;
     }
     const ImHexApi::Fonts::Font& HexEditor()  {
-        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.hex_editor");
+        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.hex_editor"_unlocalized);
         return font;
     }
     const ImHexApi::Fonts::Font& CodeEditor() {
-        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.code_editor");
+        static auto font = ImHexApi::Fonts::Font("hex.fonts.font.code_editor"_unlocalized);
         return font;
     }
 

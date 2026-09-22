@@ -95,14 +95,24 @@ EXPORT_MODULE namespace hex {
         const char *m_unlocalizedString = nullptr;
     };
 
+    struct UntranslatedString {
+        explicit UntranslatedString(const char *string) : m_untranslatedString(string) {}
+        explicit UntranslatedString(std::string string) : m_untranslatedString(std::move(string)) {}
+
+        const std::string& get() const { return m_untranslatedString; }
+    private:
+        std::string m_untranslatedString;
+    };
+
     struct UnlocalizedString {
     public:
         UnlocalizedString() = default;
 
-        UnlocalizedString(const std::string &string) : m_unlocalizedString(string) { }
-        UnlocalizedString(const char *string) : m_unlocalizedString(string) { }
+        explicit UnlocalizedString(const char *string) : m_unlocalizedString(string) {}
+        explicit UnlocalizedString(std::string string) : m_unlocalizedString(std::move(string)) {}
+
         UnlocalizedString(const Lang& arg) = delete;
-        UnlocalizedString(std::string &&string) : m_unlocalizedString(std::move(string)) { }
+        UnlocalizedString(const UntranslatedString &untranslatedString) : m_unlocalizedString(untranslatedString.get()) {}
         UnlocalizedString(UnlocalizedString &&) = default;
         UnlocalizedString(const UnlocalizedString &) = default;
 
@@ -111,15 +121,15 @@ EXPORT_MODULE namespace hex {
         UnlocalizedString &operator=(const std::string &string) { m_unlocalizedString = string; return *this; }
         UnlocalizedString &operator=(std::string &&string) { m_unlocalizedString = std::move(string); return *this; }
 
-        [[nodiscard]] operator std::string() const {
+        [[nodiscard]] explicit operator std::string() const {
             return m_unlocalizedString;
         }
 
-        [[nodiscard]] operator std::string_view() const {
+        [[nodiscard]] explicit operator std::string_view() const {
             return m_unlocalizedString;
         }
 
-        [[nodiscard]] operator const char *() const {
+        [[nodiscard]] explicit operator const char *() const {
             return m_unlocalizedString.c_str();
         }
 
@@ -137,12 +147,29 @@ EXPORT_MODULE namespace hex {
         }
 
     private:
+        template<wolv::type::StaticString>
+        friend UnlocalizedString operator""_unlocalized();
+
+        template<wolv::type::StaticString>
+        friend UnlocalizedString operator""_untranslated();
+
+    private:
         std::string m_unlocalizedString;
     };
 
     template<wolv::type::StaticString String>
     [[nodiscard]] consteval LangConst operator""_lang() {
         return LangConst(LangConst::hash(String.value.data()), String.value.data());
+    }
+
+    template<wolv::type::StaticString String>
+    [[nodiscard]] UnlocalizedString operator""_unlocalized() {
+        return UnlocalizedString(String.value.data());
+    }
+
+    template<wolv::type::StaticString String>
+    [[nodiscard]] UntranslatedString operator""_untranslated() {
+        return UntranslatedString(String.value.data());
     }
 
     // {fmt} formatter for hex::Lang and hex::LangConst

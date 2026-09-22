@@ -9,6 +9,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
 
+#include <hex/api/content_registry/background_services.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
@@ -111,6 +112,9 @@ namespace hex::init {
             log::fatal("To the person fixing this, read the comment above this message for more information.");
         });
 
+        // A service thread must not reach an AutoReset object that cleanup() already reset.
+        ContentRegistry::BackgroundServices::impl::stopServices();
+
         ImHexApi::System::impl::cleanup();
 
         EventImHexClosing::post();
@@ -126,8 +130,10 @@ namespace hex::init {
                 PluginManager::addLoadPath(dir);
             }
 
-            PluginManager::loadLibraries();
-            PluginManager::load();
+            if (!PluginManager::loadLibraries())
+                ImHexApi::System::impl::addInitArgument("bad-plugin");
+            if (!PluginManager::load())
+                ImHexApi::System::impl::addInitArgument("bad-plugin");
         #endif
 
         // Get loaded plugins
@@ -249,7 +255,6 @@ namespace hex::init {
         };
 
         keepNewest(10, paths::Logs);
-        keepNewest(25, paths::Backups);
 
         // Remove all old update files
         for (const auto &path : paths::Updates.all()) {

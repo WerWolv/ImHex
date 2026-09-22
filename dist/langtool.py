@@ -65,7 +65,7 @@ def find_lang_keys_in_source(
     mode="lang": match "..."_lang patterns.
     mode="hex":  match plain "hex.*" string literals."""
     if mode == "lang":
-        pattern = r'"([^"]*?)"_lang'
+        pattern = r'"([^"]*?)"(_lang|_unlocalized)'
     elif mode == "hex":
         pattern = r'"(hex\.[a-zA-Z0-9_.]+)"'
     else:

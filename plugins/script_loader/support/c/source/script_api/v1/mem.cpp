@@ -86,7 +86,7 @@ public:
 
     [[nodiscard]] u64 getActualSize() const override { return m_getSizeFunction(); }
 
-    void setTypeName(std::string typeName) { m_typeName = std::move(typeName);}
+    void setTypeName(hex::UnlocalizedString typeName) { m_typeName = std::move(typeName);}
     void setName(std::string name) { m_name = std::move(name);}
     [[nodiscard]] hex::UnlocalizedString getTypeName() const override { return m_typeName; }
     [[nodiscard]] std::string getName() const override { return m_name; }
@@ -97,11 +97,12 @@ private:
     WriteFunction m_writeFunction = nullptr;
     GetSizeFunction m_getSizeFunction = nullptr;
 
-    std::string m_typeName, m_name;
+    hex::UnlocalizedString m_typeName;
+    std::string m_name;
 };
 
 SCRIPT_API(void registerProvider, const char *typeName, const char *name, ScriptDataProvider::ReadFunction readFunc, ScriptDataProvider::WriteFunction writeFunc, ScriptDataProvider::GetSizeFunction getSizeFunc) {
-    auto typeNameString = std::string(typeName);
+    auto typeNameString = hex::UnlocalizedString(typeName);
     auto nameString = std::string(name);
 
     hex::ContentRegistry::Provider::impl::add(typeNameString, [typeNameString, nameString, readFunc, writeFunc, getSizeFunc]() -> std::unique_ptr<hex::prv::Provider> {

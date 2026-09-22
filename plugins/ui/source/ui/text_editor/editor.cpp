@@ -7,6 +7,7 @@
 #include <utility>
 #include <wolv/utils/string.hpp>
 #include <popups/popup_question.hpp>
+#include <hex/helpers/formatting.hpp>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
@@ -87,7 +88,7 @@ namespace hex::ui {
     }
 
     void Lines::appendLine(const std::string &value) {
-        auto text = wolv::util::replaceStrings(wolv::util::preprocessText(value), "\000", ".");
+        auto text = wolv::util::replaceStrings(value, "\000", ".");
         if (text.empty())
             return;
         auto maxColumn = stringCharacterCount(text);
@@ -104,7 +105,7 @@ namespace hex::ui {
     }
 
     void TextEditor::appendLine(const std::string &value) {
-       m_lines.appendLine(value);
+        m_lines.appendLine(value);
         m_lines.setCursorPosition(m_lines.lineCoordinates(m_lines.size() - 1, 0), false);
         m_lines.m_unfoldedLines.back().m_colorized = false;
         m_lines.ensureCursorVisible();
@@ -825,7 +826,7 @@ namespace hex::ui {
     void TextEditor::doPaste(const char *clipText) {
         UndoRecord u;
         if (clipText != nullptr) {
-            auto clipTextStr = wolv::util::preprocessText(clipText);
+            auto clipTextStr = preprocessPattern(clipText, getTabSize());
 
             u.m_before = m_lines.m_state;
 
@@ -860,7 +861,7 @@ namespace hex::ui {
         if (clipText != nullptr) {
             auto stringVector = wolv::util::splitString(clipText, "\n", false);
             if (std::ranges::any_of(stringVector, [](const std::string &s) { return s.size() > 1024; })) {
-                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_lang, [this, clipText]() {
+                ui::PopupQuestion::open("hex.builtin.view.pattern_editor.warning_paste_large"_unlocalized, [this, clipText]() {
                     this->doPaste(clipText);
                 }, [] {});
             } else {
@@ -893,7 +894,7 @@ namespace hex::ui {
         m_lines.refreshSearchResults();
     }
 
-    std::string Lines::getText(bool includeHiddenLines) {
+    std::string Lines::getText() {
         auto start = lineCoordinates(0, 0);
         auto size = m_unfoldedLines.size();
         auto line = m_unfoldedLines[size - 1];
@@ -901,11 +902,6 @@ namespace hex::ui {
         if (start == Invalid || end == Invalid)
             return "";
         std::string result;
-        if (includeHiddenLines) {
-            for (const auto &hiddenLine: m_hiddenLines) {
-                result += hiddenLine.m_line + "\n";
-            }
-        }
         result += getRange(Range(start, end));
         return result;
     }

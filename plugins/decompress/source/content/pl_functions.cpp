@@ -2,6 +2,7 @@
 #include <hex/plugin.hpp>
 
 #include <hex/api/content_registry/pattern_language.hpp>
+#include <hex/helpers/literals.hpp>
 #include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
 
@@ -9,6 +10,8 @@
 
 #include <vector>
 #include <optional>
+#include <cstring>
+#include <algorithm>
 
 #if IMHEX_FEATURE_ENABLED(ZLIB)
     #include <zlib.h>
@@ -344,6 +347,73 @@ namespace hex::plugin::decompress {
                 std::ignore = params;
                 err::E0012.throwError("hex::dec::lz4_decompress is not available. Please recompile ImHex with liblz4 support.");
             #endif
+        });
+
+        /* lzf_decompress(compressed_pattern, section_id) */
+        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lzf_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
+            // original liblzf implementation: http://software.schmorp.de/pkg/liblzf.html (use Wayback Machine to access it)
+            using namespace hex::literals;
+
+            const auto input = getCompressedData(evaluator, params[0]);
+            auto &output = evaluator->getSection(u64(params[1].toUnsigned()));
+
+            // decompressed size heuristic with a limit
+            constexpr size_t InitialSizeLimit = 1_GiB;
+            output.resize(std::min(input.size() * 12, InitialSizeLimit));
+
+            size_t inputIdx = 0;
+            size_t outputIdx = 0;
+
+            while (inputIdx < input.size()) {
+                const u8 ctrl = input[inputIdx++];
+
+                if (ctrl < 32u) { // literal run
+                    const size_t len = ctrl + 1;
+                    if (inputIdx + len > input.size()) {
+                        return u128(0); // error: out of bounds
+                    }
+                    if (outputIdx + len > output.size()) {
+                        output.resize(outputIdx + len);
+                    }
+                    std::memcpy(output.data() + outputIdx, input.data() + inputIdx, len);
+                    outputIdx += len;
+                    inputIdx += len;
+                } else { // back reference
+                    size_t len = ctrl >> 5;
+                    size_t offset = ((ctrl & 0x1F) << 8) + 1;
+
+                    if (len == 7) {
+                        if (inputIdx >= input.size()) {
+                            return u128(0); // error: out of bounds
+                        }
+                        len += input[inputIdx++];
+                    }
+                    if (inputIdx >= input.size()) {
+                        return u128(0); // error: out of bounds
+                    }
+                    offset += input[inputIdx++];
+                    len += 2;
+
+                    if (offset > outputIdx) {
+                        return u128(0); // error: back reference before start of output
+                    }
+                    if (outputIdx + len > output.size()) {
+                        output.resize(outputIdx + len);
+                    }
+                    if (offset >= len) {
+                        // no overlapping
+                        std::memcpy(output.data() + outputIdx, output.data() + outputIdx - offset, len);
+                    } else {
+                        // overlapping, forward copy byte-by-byte to repeat newly copied bytes (cannot use memmove here)
+                        for (size_t i = 0; i < len; ++i) {
+                            output[outputIdx + i] = output[outputIdx - offset + i];
+                        }
+                    }
+                    outputIdx += len;
+                }
+            }
+            output.resize(outputIdx);
+            return u128(input.size()); // return number of bytes read from the input
         });
     }
 

@@ -16,7 +16,7 @@ using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
 
-    ViewPatches::ViewPatches() : View::Window("hex.builtin.view.patches.name", ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES) {
+    ViewPatches::ViewPatches() : View::Window("hex.builtin.view.patches.name"_unlocalized, ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES) {
 
         MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
              m_savedOperations.get(from) = 0;

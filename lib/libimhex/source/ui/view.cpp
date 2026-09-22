@@ -154,7 +154,7 @@ namespace hex {
 
         std::string focusedSubWindowName;
         if (focusedSubWindow != nullptr || m_focusedSubWindow != nullptr) {
-            if (glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FOCUSED)) {
+            if (ImHexApi::System::isMainWindowFocused()) {
                 focusedSubWindowName = focusedSubWindow != nullptr ? focusedSubWindow->Name : m_focusedSubWindow->Name;
                 if (focusedSubWindow != nullptr && m_focusedSubWindow != nullptr) {
                     std::string_view windowName = m_focusedSubWindow->Name;

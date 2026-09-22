@@ -30,4 +30,6 @@ pacman -S $@ --needed \
   zstd          \
   lz4           \
   libssh2       \
-  md4c
+  md4c          \
+  elfutils      \
+  libelf

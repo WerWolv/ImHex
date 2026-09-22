@@ -3,11 +3,19 @@
 #include <content/helpers/sftp_client.hpp>
 #include <fonts/vscode_icons.hpp>
 #include <hex/providers/cached_provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 namespace hex::plugin::remote {
 
     class SSHProvider : public prv::CachedProvider,
-                        public prv::IProviderLoadInterface {
+                        public prv::IProviderLoadInterface,
+                        public prv::ProviderMatchStrategies<
+                             prv::PatternMatcherMIME,
+                             prv::PatternMatcherMagic,
+                             prv::PatternMatcherProviderType
+                         > {
     public:
         bool isAvailable() const override { return m_remoteFile != nullptr && m_remoteFile->isOpen(); }
         bool isReadable() const override  { return isAvailable(); }
@@ -23,7 +31,7 @@ namespace hex::plugin::remote {
         void writeToSource(uint64_t offset, const void* buffer, size_t size) override;
 
         u64 getSourceSize() const override;
-        UnlocalizedString getTypeName() const override { return "hex.plugin.remote.ssh_provider"; }
+        UnlocalizedString getTypeName() const override { return "hex.plugin.remote.ssh_provider"_unlocalized; }
         std::string getName() const override;
 
         [[nodiscard]] const char* getIcon() const override {

@@ -1,8 +1,7 @@
 #include <crash_handlers.hpp>
 
-#include <hex/api/project_manager.hpp>
+#include <hex/api/imhex_api/system.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/api/workspace_manager.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/default_paths.hpp>
@@ -37,7 +36,6 @@
 
 namespace hex::crash {
 
-    constexpr static auto CrashBackupFileName = "crash_backup";
     constexpr static auto Signals = { SIGSEGV, SIGILL, SIGABRT, SIGFPE };
 
     void resetCrashHandlers();
@@ -54,13 +52,11 @@ namespace hex::crash {
         s_crashCallback = std::move(callback);
     }
 
-    static std::fs::path s_crashBackupPath;
     static void saveCrashFile(const std::string& message) {
         log::fatal("{}", message);
 
         const nlohmann::json crashData {
             { "logFile", wolv::io::fs::toNormalizedPathString(hex::log::impl::getFile().getPath()) },
-            { "project", wolv::io::fs::toNormalizedPathString(s_crashBackupPath) },
         };
         
         for (const auto &path : paths::Config.write()) {
@@ -230,28 +226,6 @@ namespace hex::crash {
 
         // Configure the uncaught exception handler
         std::set_terminate(uncaughtExceptionHandler);
-
-        // Save a backup project when the application crashes
-        // We need to save the project no mater if it is dirty,
-        // because this save is responsible for telling us which files
-        // were opened in case there wasn't a project
-        // Only do it when ImHex has finished its loading
-        EventImHexStartupFinished::subscribe([] {
-            EventAbnormalTermination::subscribe([](int) {
-                WorkspaceManager::exportToFile();
-
-                // Create crash backup if any providers are open
-                if (ImHexApi::Provider::isValid()) {
-                    for (const auto &path : paths::Config.write()) {
-                        if (ProjectManager::store(path / CrashBackupFileName, false)) {
-                            s_crashBackupPath = path / CrashBackupFileName;
-                            log::fatal("Saved crash backup to '{}'", wolv::util::toUTF8String(s_crashBackupPath));
-                            break;
-                        }
-                    }
-                }
-            });
-        });
 
         // Change the crash callback when ImHex has finished startup
         EventImHexStartupFinished::subscribe([]{

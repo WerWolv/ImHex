@@ -10,6 +10,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 
 EXPORT_MODULE namespace hex {
@@ -23,8 +24,8 @@ EXPORT_MODULE namespace hex {
 
         class InformationSection {
         public:
-            InformationSection(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription = "", bool hasSettings = false)
-                : m_unlocalizedName(unlocalizedName), m_unlocalizedDescription(unlocalizedDescription),
+            InformationSection(UnlocalizedString unlocalizedName, UnlocalizedString unlocalizedDescription = {}, bool hasSettings = false)
+                : m_unlocalizedName(std::move(unlocalizedName)), m_unlocalizedDescription(std::move(unlocalizedDescription)),
                   m_hasSettings(hasSettings) { }
             virtual ~InformationSection() = default;
 

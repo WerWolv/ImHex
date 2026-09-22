@@ -8,6 +8,7 @@
 
 #include <pl/formatters.hpp>
 
+#include <optional>
 #include <set>
 
 #include <ui/pattern_value_editor.hpp>
@@ -93,6 +94,8 @@ namespace hex::ui {
         bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const;
         [[nodiscard]] bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
+        void startEditing(const pl::ptrn::Pattern &pattern);
+        void focusIfJustStartedEditing();
         void traversePatternTree(const std::shared_ptr<pl::ptrn::Pattern> &pattern, std::vector<std::string> &patternPath, const std::function<void(const std::shared_ptr<pl::ptrn::Pattern>&)> &callback);
         [[nodiscard]] std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
 
@@ -119,6 +122,7 @@ namespace hex::ui {
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         const pl::ptrn::Pattern *m_contextMenuPattern = nullptr;
         u64 m_editingPatternOffset = 0;
+        bool m_justStartedEditing = false;
         hex::ui::VisualizerDrawer m_visualizerDrawer;
         hex::ui::PatternValueEditor m_valueEditor;
 

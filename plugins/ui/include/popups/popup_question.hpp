@@ -5,6 +5,8 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/imhex_api/system.hpp>
 
+#include <fonts/vscode_icons.hpp>
+
 #include <functional>
 #include <string>
 
@@ -12,13 +14,13 @@ namespace hex::ui {
 
     class PopupQuestion : public Popup<PopupQuestion> {
     public:
-        PopupQuestion(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction)
-                : hex::Popup<PopupQuestion>("hex.ui.common.question", false),
+        PopupQuestion(UnlocalizedString message, std::function<void()> yesFunction, std::function<void()> noFunction)
+                : hex::Popup<PopupQuestion>("hex.ui.common.question"_unlocalized, ICON_VS_QUESTION, false),
                   m_message(std::move(message)),
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 
         void drawContent() override {
-            ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", Lang(m_message));
             ImGui::NewLine();
             ImGui::Separator();
 
@@ -51,14 +53,14 @@ namespace hex::ui {
         }
 
     private:
-        std::string m_message;
+        UnlocalizedString m_message;
         std::function<void()> m_yesFunction, m_noFunction;
     };
 
     class PopupCancelableQuestion : public Popup<PopupCancelableQuestion> {
     public:
         PopupCancelableQuestion(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction)
-                : hex::Popup<PopupCancelableQuestion>("hex.ui.common.question", false),
+                : hex::Popup<PopupCancelableQuestion>("hex.ui.common.question"_unlocalized, ICON_VS_QUESTION, false),
                   m_message(std::move(message)),
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 

@@ -17,6 +17,9 @@ set(LIBIMHEX_SOURCES
         source/api/achievement_manager.cpp
         source/api/localization_manager.cpp
         source/api/tutorial_manager.cpp
+        source/api/http/github_api.cpp
+        source/api/http/store_api.cpp
+        source/api/http/tips_api.cpp
 
         source/data_processor/attribute.cpp
         source/data_processor/link.cpp
@@ -32,7 +35,10 @@ set(LIBIMHEX_SOURCES
         source/helpers/http_requests_emscripten.cpp
         source/helpers/opengl.cpp
         source/helpers/patches.cpp
+        source/helpers/codepage.cpp
         source/helpers/encoding_file.cpp
+        source/helpers/string_codec.cpp
+        source/helpers/unicode.cpp
         source/helpers/logger.cpp
         source/helpers/tar.cpp
         source/helpers/debugging.cpp
@@ -43,6 +49,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/udp_server.cpp
         source/helpers/scaling.cpp
         source/helpers/binary_pattern.cpp
+        source/helpers/formatting.cpp
 
         source/test/tests.cpp
 

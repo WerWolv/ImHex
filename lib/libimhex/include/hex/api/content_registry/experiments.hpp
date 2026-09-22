@@ -25,7 +25,7 @@ EXPORT_MODULE namespace hex {
         void addExperiment(
             const std::string &experimentName,
             const UnlocalizedString &unlocalizedName,
-            const UnlocalizedString &unlocalizedDescription = ""
+            const UnlocalizedString &unlocalizedDescription = {}
         );
 
         void enableExperiement(const std::string &experimentName, bool enabled);

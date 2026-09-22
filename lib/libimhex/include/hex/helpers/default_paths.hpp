@@ -62,6 +62,7 @@ namespace hex::paths {
     std::vector<std::fs::path> getConfigPaths(bool includeSystemFolders);
 
     const static inline impl::ConfigPath Config("config");
+    const static inline impl::ConfigPath Variables("config/variables");
     const static inline impl::ConfigPath Recent("recent");
     const static inline impl::ConfigPath Updates("updates");
 
@@ -73,7 +74,6 @@ namespace hex::paths {
     const static inline impl::DataPath Magic("magic");
     const static inline impl::DataPath Yara("yara");
     const static inline impl::DataPath YaraAdvancedAnalysis("yara/advanced_analysis");
-    const static inline impl::DataPath Backups("backups");
     const static inline impl::DataPath Resources("resources");
     const static inline impl::DataPath Constants("constants");
     const static inline impl::DataPath Encodings("encodings");
@@ -88,6 +88,7 @@ namespace hex::paths {
 
     constexpr static inline std::array<const impl::DefaultPath*, 22> All = {
         &Config,
+        &Variables,
         &Recent,
         &Updates,
 
@@ -99,7 +100,6 @@ namespace hex::paths {
         &Magic,
         &Yara,
         &YaraAdvancedAnalysis,
-        &Backups,
         &Resources,
         &Constants,
         &Encodings,

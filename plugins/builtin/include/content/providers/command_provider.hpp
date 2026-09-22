@@ -6,11 +6,19 @@
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/providers/cached_provider.hpp>
+#include <hex/providers/matchers/mime.hpp>
+#include <hex/providers/matchers/magic.hpp>
+#include <hex/providers/matchers/provider_type.hpp>
 
 namespace hex::plugin::builtin {
 
     class CommandProvider : public prv::CachedProvider,
-                            public prv::IProviderLoadInterface {
+                            public prv::IProviderLoadInterface,
+                            public prv::ProviderMatchStrategies<
+                                 prv::PatternMatcherMIME,
+                                 prv::PatternMatcherMagic,
+                                 prv::PatternMatcherProviderType
+                             >{
     public:
         CommandProvider();
         ~CommandProvider() override = default;
@@ -38,7 +46,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
         [[nodiscard]] UnlocalizedString getTypeName() const override {
-            return "hex.builtin.provider.command";
+            return "hex.builtin.provider.command"_unlocalized;
         }
 
         [[nodiscard]] const char* getIcon() const override {

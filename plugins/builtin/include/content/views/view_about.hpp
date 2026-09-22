@@ -3,9 +3,9 @@
 #include <hex.hpp>
 
 #include <imgui.h>
+#include <hex/api/http/github_api.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/plugin.hpp>
-#include <hex/helpers/http_requests.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -48,7 +48,8 @@ namespace hex::plugin::builtin {
 
         ImGuiExt::Texture m_logoTexture;
 
-        std::future<HttpRequest::Result<std::string>> m_releaseNoteRequest, m_commitHistoryRequest;
+        GitHubApi::ReleaseRequest m_releaseNoteRequest;
+        GitHubApi::CommitsRequest m_commitHistoryRequest;
         u32 m_clickCount = 0;
     };
 

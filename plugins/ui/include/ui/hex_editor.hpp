@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/content_registry/hex_editor.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/codepage.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
 #include <hex/api/events/events_interaction.hpp>
@@ -112,6 +113,40 @@ namespace hex::ui {
         void drawScrollbar(ImVec2 characterSize);
         void drawMinimap(ImVec2 characterSize);
         void drawMinimapPopup();
+
+        struct CollapsedRegion {
+            u64 firstRow;
+            u64 endRow;
+        };
+
+        struct CollapsedState {
+            std::vector<CollapsedRegion> regions;
+            u64 bytesPerRow = 0;
+            u64 pageAddress = 0;
+        };
+
+        class CollapsedStateStorage {
+        public:
+            CollapsedStateStorage() = default;
+            CollapsedStateStorage(const CollapsedStateStorage&) { }
+            CollapsedStateStorage(CollapsedStateStorage&&) noexcept { }
+            CollapsedStateStorage& operator=(const CollapsedStateStorage&) { return *this; }
+            CollapsedStateStorage& operator=(CollapsedStateStorage&&) noexcept { return *this; }
+
+            CollapsedState& get(const prv::Provider *provider) { return m_states.get(provider); }
+            const CollapsedState& get(const prv::Provider *provider) const { return m_states.get(provider); }
+
+        private:
+            PerProvider<CollapsedState> m_states;
+        };
+
+        [[nodiscard]] u64 getPhysicalNumberOfRows() const;
+        [[nodiscard]] u64 displayRowToPhysicalRow(u64 row, bool *collapsed = nullptr) const;
+        [[nodiscard]] u64 physicalRowToDisplayRow(u64 row) const;
+        [[nodiscard]] std::optional<CollapsedRegion> getCollapsibleRegion(const Region &region) const;
+        [[nodiscard]] std::optional<CollapsedRegion> getCollapsibleRegion(u64 row) const;
+        void initializeCollapsedRegions();
+        void expandCollapsedRegion(u64 row);
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
         std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
@@ -265,12 +300,12 @@ namespace hex::ui {
             return m_showAscii;
         }
 
-        void enableShowExtendedAscii(bool showExtendedAscii) {
-            m_showExtendedAscii = showExtendedAscii;
+        void enableShowControlPictures(bool showControlPictures) {
+            m_showControlPictures = showControlPictures;
         }
 
-        bool shouldShowExtendedAscii() const {
-            return m_showExtendedAscii;
+        bool shouldShowControlPictures() const {
+            return m_showControlPictures;
         }
 
         void enableSyncScrolling(bool syncScrolling) {
@@ -316,6 +351,18 @@ namespace hex::ui {
                     }
                 }
             }
+        }
+
+        /**
+         * @brief Sets the codepage the text column reads the data with
+         *
+         * Unlike the custom encoding below, this is not a separate view the user switches on.
+         * ASCII is simply no longer the only possible codepage.
+         *
+         * @param codepage The codepage to read with
+         */
+        void setCodepage(const Codepage &codepage) {
+            m_codepage = codepage;
         }
 
         [[nodiscard]] const std::optional<EncodingFile>& getCustomEncoding() const {
@@ -457,7 +504,7 @@ namespace hex::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
-        bool m_showExtendedAscii = false;
+        bool m_showControlPictures = false;
         bool m_showCustomEncoding = true;
         bool m_showMiniMap = false;
         bool m_showSelectionInFooter = false;
@@ -467,7 +514,9 @@ namespace hex::ui {
         bool m_footerCollapsed = true;
 
         std::optional<EncodingFile> m_currCustomEncoding;
+        Codepage m_codepage = Codepage::ascii();
         std::vector<u64> m_encodingLineStartAddresses;
+        mutable CollapsedStateStorage m_collapsedState;
 
         std::pair<Region, bool> m_currValidRegion = { Region::Invalid(), false };
 

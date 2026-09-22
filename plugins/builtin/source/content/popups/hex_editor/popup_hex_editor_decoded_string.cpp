@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
     }
 
     UnlocalizedString PopupDecodedString::getTitle() const {
-        return "hex.builtin.view.hex_editor.menu.edit.decoded_string.popup.title";
+        return "hex.builtin.view.hex_editor.menu.edit.decoded_string.popup.title"_unlocalized;
     }
 
     bool PopupDecodedString::canBePinned() const { return true; }

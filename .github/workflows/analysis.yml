@@ -8,7 +8,7 @@ on:
 jobs:
   codeql:
     name: 🐛 CodeQL
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
@@ -49,7 +49,7 @@ jobs:
         set -x
         mkdir -p build
         cd build
-        CC=gcc-14 CXX=g++-14 cmake                \
+        CC=gcc-16 CXX=g++-16 cmake                \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache      \

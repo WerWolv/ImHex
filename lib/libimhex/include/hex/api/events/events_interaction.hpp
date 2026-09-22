@@ -51,6 +51,15 @@ namespace hex {
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
 
     /**
+     * @brief Signals that the current provider's declared file encoding changed
+     *
+     * This fires whenever ImHexApi::HexEditor::getEncodingName() would return a different value than
+     * before, including a change back to std::nullopt. A view that caches text decoded with this
+     * encoding, rather than decoding it fresh every frame, needs this to know when to redo that work.
+     */
+    EVENT_DEF(EventFileEncodingChanged);
+
+    /**
      * @brief Signals a theme change
      *
      * On Windows OS, this is used to reflect the theme color onto the window frame.

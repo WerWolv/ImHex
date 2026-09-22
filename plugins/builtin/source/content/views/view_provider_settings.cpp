@@ -10,13 +10,13 @@
 
 namespace hex::plugin::builtin {
 
-    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name", ICON_VS_SETTINGS) {
+    ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name"_unlocalized, ICON_VS_SETTINGS) {
         EventProviderCreated::subscribe(this, [this](std::shared_ptr<prv::Provider> provider) {
             if (dynamic_cast<const prv::IProviderLoadInterface*>(provider.get()) != nullptr && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
         });
 
-        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.view.provider_settings.name", ICON_VS_SERVER_PROCESS, [] {
+        ContentRegistry::UserInterface::addSidebarItem("hex.builtin.view.provider_settings.name"_unlocalized, ICON_VS_SERVER_PROCESS, [] {
             auto provider = hex::ImHexApi::Provider::get();
 
             if (auto *sidebarInterfaceProvider = dynamic_cast<prv::IProviderSidebarInterface*>(provider); sidebarInterfaceProvider != nullptr)

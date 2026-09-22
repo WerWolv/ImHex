@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
     ImGui::CreateContext();
     for (const auto &plugin : hex::PluginManager::getPlugins())
         plugin.setImGuiContext(ImGui::GetCurrentContext());
+    hex::TaskManager::init();
 
     int result = test(argc, argv);
 

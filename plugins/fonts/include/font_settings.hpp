@@ -29,13 +29,20 @@ namespace hex::fonts {
         static DropDown create() {
             if (isSubpixelRenderingSupported()) {
                 return DropDown(
-                    std::vector<UnlocalizedString>{ "hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale", "hex.fonts.setting.font.antialias_subpixel" },
+                    std::vector{
+                        "hex.fonts.setting.font.antialias_none"_unlocalized,
+                        "hex.fonts.setting.font.antialias_grayscale"_unlocalized,
+                        "hex.fonts.setting.font.antialias_subpixel"_unlocalized
+                    },
                     { "none", "grayscale" , "subpixel" },
                     "subpixel"
                 );
             } else {
                 return DropDown(
-                    std::vector<UnlocalizedString>{ "hex.fonts.setting.font.antialias_none", "hex.fonts.setting.font.antialias_grayscale" },
+                    std::vector{
+                        "hex.fonts.setting.font.antialias_none"_unlocalized,
+                        "hex.fonts.setting.font.antialias_grayscale"_unlocalized
+                    },
                     { "none", "grayscale" },
                     "grayscale"
                 );

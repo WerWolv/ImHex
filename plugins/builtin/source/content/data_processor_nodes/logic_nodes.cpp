@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseNOT : public dp::Node {
     public:
-        NodeBitwiseNOT() : Node("hex.builtin.nodes.bitwise.not.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBitwiseNOT() : Node("hex.builtin.nodes.bitwise.not.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -23,10 +23,10 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseShiftLeft : public dp::Node {
     public:
-        NodeBitwiseShiftLeft() : Node("hex.builtin.nodes.bitwise.shift_left.header", {
-                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"),
-                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.amount"),
-                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output")
+        NodeBitwiseShiftLeft() : Node("hex.builtin.nodes.bitwise.shift_left.header"_unlocalized, {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.amount"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
         }) { }
 
         void process() override {
@@ -52,10 +52,10 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseShiftRight : public dp::Node {
     public:
-        NodeBitwiseShiftRight() : Node("hex.builtin.nodes.bitwise.shift_right.header", {
-                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"),
-                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.amount"),
-                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output")
+        NodeBitwiseShiftRight() : Node("hex.builtin.nodes.bitwise.shift_right.header"_unlocalized, {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.amount"_unlocalized),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized)
         }) { }
 
         void process() override {
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseADD : public dp::Node {
     public:
-        NodeBitwiseADD() : Node("hex.builtin.nodes.bitwise.add.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBitwiseADD() : Node("hex.builtin.nodes.bitwise.add.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"_unlocalized), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getBufferOnInput(0);
@@ -97,7 +97,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseAND : public dp::Node {
     public:
-        NodeBitwiseAND() : Node("hex.builtin.nodes.bitwise.and.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBitwiseAND() : Node("hex.builtin.nodes.bitwise.and.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"_unlocalized), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getBufferOnInput(0);
@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseOR : public dp::Node {
     public:
-        NodeBitwiseOR() : Node("hex.builtin.nodes.bitwise.or.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBitwiseOR() : Node("hex.builtin.nodes.bitwise.or.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"_unlocalized), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getBufferOnInput(0);
@@ -131,7 +131,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseXOR : public dp::Node {
     public:
-        NodeBitwiseXOR() : Node("hex.builtin.nodes.bitwise.xor.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBitwiseXOR() : Node("hex.builtin.nodes.bitwise.xor.header"_unlocalized, { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"_unlocalized), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             const auto &inputA = this->getBufferOnInput(0);
@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseSwap : public dp::Node {
     public:
-        NodeBitwiseSwap() : Node("hex.builtin.nodes.bitwise.swap.header", {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBitwiseSwap() : Node("hex.builtin.nodes.bitwise.swap.header"_unlocalized, {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"_unlocalized), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output"_unlocalized) }) { }
 
         void process() override {
             // Table contains reversed nibble entries
@@ -167,14 +167,14 @@ namespace hex::plugin::builtin {
     };
     
     void registerLogicDataProcessorNodes() {
-        ContentRegistry::DataProcessor::add<NodeBitwiseADD>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.add");
-        ContentRegistry::DataProcessor::add<NodeBitwiseAND>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.and");
-        ContentRegistry::DataProcessor::add<NodeBitwiseOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.or");
-        ContentRegistry::DataProcessor::add<NodeBitwiseXOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.xor");
-        ContentRegistry::DataProcessor::add<NodeBitwiseNOT>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.not");
-        ContentRegistry::DataProcessor::add<NodeBitwiseShiftLeft>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.shift_left");
-        ContentRegistry::DataProcessor::add<NodeBitwiseShiftRight>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.shift_right");
-        ContentRegistry::DataProcessor::add<NodeBitwiseSwap>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.swap");
+        ContentRegistry::DataProcessor::add<NodeBitwiseADD>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.add"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseAND>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.and"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseOR>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.or"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseXOR>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.xor"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseNOT>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.not"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseShiftLeft>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.shift_left"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseShiftRight>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.shift_right"_unlocalized);
+        ContentRegistry::DataProcessor::add<NodeBitwiseSwap>("hex.builtin.nodes.bitwise"_unlocalized, "hex.builtin.nodes.bitwise.swap"_unlocalized);
     }
 
 }

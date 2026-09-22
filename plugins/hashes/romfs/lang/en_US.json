@@ -29,5 +29,14 @@
     "hex.hashes.hash.common.xor_out": "XOR Out",
     "hex.hashes.hash.hmac.hash_settings": "Underlying Hash Settings",
     "hex.hashes.hash.sum": "Sum",
-    "hex.hashes.hash.sum.fold": "Fold result down to output size"
+    "hex.hashes.hash.sum.fold": "Fold result down to output size",
+    "hex.hashes.hash.crc": "Cyclic Redundancy Check (CRC)",
+    "hex.hashes.hash.snefru": "Snefru",
+    "hex.hashes.hash.haval": "Haval",
+    "hex.hashes.hash.hmac": "HMAC",
+    "hex.hashes.hash.tiger": "Tiger",
+    "hex.hashes.hash.tiger2": "Tiger2",
+    "hex.hashes.hash.blake2b": "Blake2b",
+    "hex.hashes.hash.blake2s": "Blake2s"
+
 }

@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
 
             this->saveAs(path);
 
-            auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+            auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file"_unlocalized, true);
 
             if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider.get()); fileProvider != nullptr) {
                 fileProvider->setPickedPath(path);
@@ -79,7 +79,11 @@ namespace hex::plugin::builtin {
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
         return {
-            MenuEntry { .name=Lang("hex.builtin.provider.mem_file.rename"), .icon=ICON_VS_TAG, .callback=[this] { this->renameFile(); } }
+            MenuEntry {
+                .name = "hex.builtin.provider.mem_file.rename"_unlocalized,
+                .icon = ICON_VS_TAG,
+                .callback = [this] { this->renameFile(); }
+            }
         };
     }
 
@@ -109,7 +113,7 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::renameFile() {
-        ui::PopupTextInput::open("hex.builtin.provider.rename", "hex.builtin.provider.rename.desc", [this](const std::string &name) {
+        ui::PopupTextInput::open("hex.builtin.provider.rename"_unlocalized, "hex.builtin.provider.rename.desc"_unlocalized, [this](const std::string &name) {
             m_name = name;
             RequestUpdateWindowTitle::post();
         });

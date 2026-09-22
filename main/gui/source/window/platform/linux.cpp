@@ -67,7 +67,7 @@ namespace hex {
             ImHexApi::System::impl::setNativeScale(newScale);
 
             const auto interfaceScale = ContentRegistry::Settings::read<float>(
-                "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F
+                "hex.builtin.setting.interface"_unlocalized, "hex.builtin.setting.interface.scaling_factor"_unlocalized, 0.0F
             );
             if (interfaceScale == 0.0F)
                 scheduleDpiChange(oldScale, newScale);

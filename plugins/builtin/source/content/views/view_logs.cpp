@@ -7,8 +7,8 @@
 
 namespace hex::plugin::builtin {
 
-    ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name", ICON_VS_DEBUG_LINE_BY_LINE) {
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, ICON_VS_BRACKET_ERROR, 2500, Shortcut::None, [&, this] {
+    ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name"_unlocalized, ICON_VS_DEBUG_LINE_BY_LINE) {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras"_unlocalized, "hex.builtin.view.logs.name"_unlocalized }, ICON_VS_BRACKET_ERROR, 2500, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }

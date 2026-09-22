@@ -1,7 +1,6 @@
 #include "content/views/view_store.hpp"
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api_urls.hpp>
 
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/api/content_registry/settings.hpp>
@@ -21,45 +20,41 @@
 
 #include <filesystem>
 #include <functional>
-#include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
-    using namespace std::literals::string_literals;
     using namespace std::literals::chrono_literals;
 
-    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name", ICON_VS_EXTENSIONS) {
-        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
+    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name"_unlocalized, ICON_VS_EXTENSIONS) {
+        ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.extras"_unlocalized, "hex.builtin.view.store.name"_unlocalized }, ICON_VS_EXTENSIONS, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
-                this->refresh();
+                this->requestStore(false);
 
             this->getWindowOpenState() = true;
         });
 
-        m_httpRequest.setTimeout(30'000);
-
-        addCategory("hex.builtin.view.store.tab.patterns",     "patterns",      &paths::Patterns);
-        addCategory("hex.builtin.view.store.tab.includes",     "includes",      &paths::PatternsInclude);
-        addCategory("hex.builtin.view.store.tab.magic",        "magic",         &paths::Magic, []{
+        addCategory("hex.builtin.view.store.tab.patterns"_unlocalized,     "patterns",      &paths::Patterns);
+        addCategory("hex.builtin.view.store.tab.includes"_unlocalized,     "includes",      &paths::PatternsInclude);
+        addCategory("hex.builtin.view.store.tab.magic"_unlocalized,        "magic",         &paths::Magic, []{
             magic::compile();
         });
-        addCategory("hex.builtin.view.store.tab.nodes",        "nodes",         &paths::Nodes);
-        addCategory("hex.builtin.view.store.tab.encodings",    "encodings",     &paths::Encodings);
-        addCategory("hex.builtin.view.store.tab.disassemblers","disassemblers", &paths::Disassemblers);
-        addCategory("hex.builtin.view.store.tab.constants",    "constants",     &paths::Constants);
-        addCategory("hex.builtin.view.store.tab.themes",       "themes",        &paths::Themes, [this]{
+        addCategory("hex.builtin.view.store.tab.nodes"_unlocalized,        "nodes",         &paths::Nodes);
+        addCategory("hex.builtin.view.store.tab.encodings"_unlocalized,    "encodings",     &paths::Encodings);
+        addCategory("hex.builtin.view.store.tab.disassemblers"_unlocalized,"disassemblers", &paths::Disassemblers);
+        addCategory("hex.builtin.view.store.tab.constants"_unlocalized,    "constants",     &paths::Constants);
+        addCategory("hex.builtin.view.store.tab.themes"_unlocalized,       "themes",        &paths::Themes, [this]{
             auto themeFile = wolv::io::File(m_downloadPath, wolv::io::File::Mode::Read);
 
             ThemeManager::addTheme(themeFile.readString());
         });
-        addCategory("hex.builtin.view.store.tab.yara",         "yara",         &paths::Yara);
+        addCategory("hex.builtin.view.store.tab.yara"_unlocalized,         "yara",         &paths::Yara);
 
         TaskManager::doLater([this] {
             // Force update all installed items after an update so that there's no old and incompatible versions around anymore
             {
-                const auto prevUpdateVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "");
+                const auto prevUpdateVersion = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.prev_launch_version"_untranslated, "");
                 if (SemanticVersion(prevUpdateVersion) != ImHexApi::System::getImHexVersion()) {
                     updateAll();
                 }
@@ -97,11 +92,11 @@ namespace hex::plugin::builtin {
 
     void ViewStore::drawTab(hex::plugin::builtin::StoreCategory &category) {
         if (ImGui::BeginTabItem(Lang(category.unlocalizedName))) {
-            if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
+            if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_RowBg)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
-                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_WidthStretch, 0.3F);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_WidthStretch, 0.7F);
                 ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                 ImGui::TableHeadersRow();
@@ -111,6 +106,11 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.name.c_str());
+
+                    // The space makes a padding in the UI
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
+
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.description.c_str());
                     if (ImGui::IsItemHovered()) {
@@ -120,11 +120,8 @@ namespace hex::plugin::builtin {
                         ImGui::PopTextWrapPos();
                         ImGui::EndTooltip();
                     }
-                    ImGui::TableNextColumn();
-                    // The space makes a padding in the UI
-                    ImGuiExt::TextFormatted("{} ", wolv::util::combineStrings(entry.authors, ", "));
-                    ImGui::TableNextColumn();
 
+                    ImGui::TableNextColumn();
                     ImGui::PushID(id);
                     ImGui::BeginDisabled(m_updateAllTask.isRunning() || (m_download.valid() && m_download.wait_for(0s) != std::future_status::ready));
                     {
@@ -153,7 +150,7 @@ namespace hex::plugin::builtin {
                             } else if (!entry.installed) {
                                 if (ImGuiExt::DimmedIconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     entry.downloading = this->download(category.path, entry.fileName, entry.link);
-                                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.download_from_store.name");
+                                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc"_unlocalized, "hex.builtin.achievement.misc.download_from_store.name"_unlocalized);
                                 }
                                 ImGui::SetItemTooltip("%s", "hex.builtin.view.store.download"_lang.get());
                             } else {
@@ -188,8 +185,10 @@ namespace hex::plugin::builtin {
             else {
                 try {
                     this->parseResponse();
-                } catch (nlohmann::json::exception &e) {
+                } catch (const std::exception &e) {
                     log::error("Failed to parse store response: {}", e.what());
+                    m_requestStatus = RequestStatus::Failed;
+                    m_apiRequest = { };
                 }
             }
         }
@@ -226,6 +225,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::refresh() {
+        this->requestStore(true);
+    }
+
+    void ViewStore::requestStore(bool forceRefresh) {
         // Do not refresh if a refresh is already in progress
         if (m_requestStatus == RequestStatus::InProgress)
             return;
@@ -235,41 +238,27 @@ namespace hex::plugin::builtin {
             category.entries.clear();
         }
 
-        m_httpRequest.setUrl(ImHexApiURL + "/store"s);
-        m_apiRequest = m_httpRequest.execute();
+        m_apiRequest = forceRefresh ? StoreApi::refresh() : StoreApi::get();
     }
 
     void ViewStore::parseResponse() {
-        const auto response = m_apiRequest.get();
+        const auto &response = m_apiRequest.get();
         m_requestStatus = response.isSuccess() ? RequestStatus::Succeeded : RequestStatus::Failed;
+        if (!response.isSuccess() && !response.getErrorMessage().empty())
+            log::error("Failed to load store response: {}", response.getErrorMessage());
+
         if (m_requestStatus == RequestStatus::Succeeded) {
-            const auto json = nlohmann::json::parse(response.getData());
-
-            auto parseStoreEntries = [](auto storeJson, StoreCategory &category) {
-                // Check if the response handles the type of files
-                if (storeJson.contains(category.requestName)) {
-
-                    for (auto &entry : storeJson[category.requestName]) {
-
-                        // Check if entry is valid
-                        if (entry.contains("name") && entry.contains("desc") && entry.contains("authors") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
-
-                            // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], HttpRequest::curlify(entry["url"]), entry["hash"], entry["folder"], false, false, false, false };
-
-                            updateEntryMetadata(storeEntry, category);
-                            category.entries.push_back(storeEntry);
-                        }
-                    }
-                }
-
-                std::sort(category.entries.begin(), category.entries.end(), [](const auto &lhs, const auto &rhs) {
-                    return lhs.name < rhs.name;
-                });
-            };
-
             for (auto &category : m_categories) {
-                parseStoreEntries(json, category);
+                const auto &store = response.getData().categories;
+                const auto entries = store.find(category.requestName);
+                if (entries == store.end())
+                    continue;
+
+                for (const auto &entry : entries->second) {
+                    StoreEntry storeEntry = { entry, false, false, false, false };
+                    updateEntryMetadata(storeEntry, category);
+                    category.entries.push_back(std::move(storeEntry));
+                }
             }
 
             m_updateCount = 0;
@@ -291,33 +280,8 @@ namespace hex::plugin::builtin {
     }
 
     bool ViewStore::download(const paths::impl::DefaultPath *pathType, const std::string &fileName, const std::string &url) {
-        bool downloading = false;
-        for (const auto &folderPath : pathType->write()) {
-            if (!fs::isPathWritable(folderPath))
-                continue;
-
-            // Verify that we write the file to the right folder
-            // this is to prevent the filename from having elements like ../
-            const auto fullPath = std::fs::absolute(folderPath / std::fs::path(fileName));
-            const auto [folderIter, pathIter] = std::mismatch(folderPath.begin(), folderPath.end(), fullPath.begin());
-            if (folderIter != folderPath.end()) {
-                continue;
-            }
-
-            downloading = true;
-            m_downloadPath = fullPath;
-
-            m_httpRequest.setUrl(url);
-            m_download = m_httpRequest.downloadFile(fullPath);
-            break;
-        }
-
-        if (!downloading) {
-            ui::ToastError::open("hex.builtin.view.store.download_error"_lang);
-            return false;
-        }
-
-        return downloading;
+        m_download = StoreApi::download(pathType, fileName, url);
+        return m_download.valid();
     }
 
     bool ViewStore::remove(const paths::impl::DefaultPath *pathType, const std::string &fileName) {
@@ -345,17 +309,11 @@ namespace hex::plugin::builtin {
                         if (!m_download.valid())
                             continue;
 
-                        m_download.wait();
-
                         while (m_download.valid() && m_download.wait_for(100ms) != std::future_status::ready) {
                             task.update();
                         }
 
-                        entry.hasUpdate = false;
-                        entry.downloading = false;
-
-                        if (m_updateCount > 0)
-                            m_updateCount -= 1;
+                        this->handleDownloadFinished(category, entry);
 
                         task.increment();
                     }
@@ -363,7 +321,7 @@ namespace hex::plugin::builtin {
             }
 
             TaskManager::doLater([] {
-                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion().get(false));
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general"_unlocalized, "hex.builtin.setting.general.prev_launch_version"_untranslated, ImHexApi::System::getImHexVersion().get(false));
             });
         });
     }
@@ -376,8 +334,10 @@ namespace hex::plugin::builtin {
     void ViewStore::handleDownloadFinished(const StoreCategory &category, StoreEntry &entry) {
         entry.downloading = false;
 
-        auto response = m_download.get();
+        const auto response = m_download.get();
         if (response.isSuccess()) {
+            m_downloadPath = response.getPath();
+
             if (entry.hasUpdate)
                 m_updateCount -= 1;
 
@@ -395,7 +355,10 @@ namespace hex::plugin::builtin {
 
             category.downloadCallback();
         } else {
-            log::error("Download failed! {}", response.getStatusCode().toString());
+            if (response.getStatus() == StoreApi::DownloadResult::Status::NoWritablePath)
+                ui::ToastError::open("hex.builtin.view.store.download_error"_lang);
+            else
+                log::error("Download failed! {}", response.getErrorMessage());
         }
 
         m_download = {};

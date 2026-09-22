@@ -108,8 +108,8 @@ namespace hex::ui {
         if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
             if (!value.empty()) {
                 auto result = hex::decodeByteString(value);
-                if (!result.empty())
-                    pattern.setValue(char(result[0]));
+                if (result.has_value() && !result->empty())
+                    pattern.setValue(char((*result)[0]));
 
                 m_onEditCallback();
             }

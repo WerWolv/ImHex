@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
         View* getMenuItemInheritView() const override {
-            return ContentRegistry::Views::getViewByName("hex.builtin.view.pattern_editor.name");
+            return ContentRegistry::Views::getViewByName("hex.builtin.view.pattern_editor.name"_unlocalized);
         }
 
         void drawHelpText() override;
