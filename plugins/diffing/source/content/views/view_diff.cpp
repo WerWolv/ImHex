@@ -4,14 +4,17 @@
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/events/requests_gui.hpp>
 #include <hex/api/content_registry/user_interface.hpp>
+#include <hex/api/content_registry/data_formatter.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/menu_items.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <fonts/tabler_icons.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::diffing {
 
@@ -260,6 +263,15 @@ namespace hex::plugin::diffing {
 
                 ImGui::SameLine();
 
+                ImGui::BeginDisabled(!m_analyzed);
+                if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    RequestOpenPopup::post("##ExportDifferences");
+                }
+                ImGui::SetItemTooltip("%s", "hex.diffing.view.diff.export"_lang.get());
+                ImGui::EndDisabled();
+
+                ImGui::SameLine();
+
                 // Draw first provider selector
                 if (drawProviderSelector(a)) m_analysisInterrupted = m_analyzed = false;
 
@@ -482,6 +494,49 @@ namespace hex::plugin::diffing {
                     ImGuiExt::TextFormatted("hex.diffing.view.diff.settings.no_settings"_lang);
             }
 
+            ImGui::EndPopup();
+        }
+        if (ImGui::BeginPopup("##ExportDifferences")) {
+            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getExportFormatterEntries()) {
+                const auto name = toUpper(Lang(formatter.unlocalizedName));
+                const auto &extension = formatter.fileExtension;
+
+                if (ImGui::MenuItem(name.c_str())) {
+                    fs::openFileBrowser(fs::DialogMode::Save, { { .name = name.c_str(), .spec = extension.c_str() } }, [&](const std::fs::path &path) {
+                        wolv::io::File file(path, wolv::io::File::Mode::Create);
+                        if (!file.isValid()) {
+                            return;
+                        }
+                        ContentRegistry::DataFormatter::ExportTable table({
+                            "type", "offset_a", "size_a", "offset_b", "size_b"
+                        });
+                        const auto &differencesA = m_columns[0].differences;
+                        const auto &differencesB = m_columns[1].differences;
+                        const size_t count = std::min(differencesA.size(), differencesB.size());
+
+                        for (size_t i = 0; i < count; ++i) {
+                            const auto &[regionA, typeA] = differencesA[i];
+                            const auto &[regionB, typeB] = differencesB[i];
+
+                            std::string typeStr;
+                            switch (typeA) {
+                                case DifferenceType::Match: typeStr = "match"; break;
+                                case DifferenceType::Mismatch: typeStr = "mismatch"; break;
+                                case DifferenceType::Insertion: typeStr = "insertion"; break;
+                                case DifferenceType::Deletion: typeStr = "deletion"; break;
+                            }
+                            table.addRow({
+                                typeStr,
+                                regionA.start,
+                                regionA.end - regionA.start + 1,
+                                regionB.start,
+                                regionB.end - regionB.start + 1,
+                            });
+                        }
+                        file.writeVector(formatter.callback(table));
+                    });
+                }
+            }
             ImGui::EndPopup();
         }
     }

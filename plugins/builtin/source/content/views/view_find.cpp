@@ -206,10 +206,10 @@ namespace hex::plugin::builtin {
         return fmt::format("{}", value);
     }
 
-    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
+    std::vector<FindOccurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
         using enum SearchSettings::StringType;
 
-        std::vector<Occurrence> results;
+        std::vector<FindOccurrence> results;
 
         if (settings.type == ASCII_UTF16BE || settings.type == ASCII_UTF16LE) {
             auto newSettings = settings;
@@ -235,17 +235,17 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        const auto [decodeType, endian] = [&]() -> std::pair<Occurrence::DecodeType, std::endian> {
+        const auto [decodeType, endian] = [&]() -> std::pair<FindOccurrence::DecodeType, std::endian> {
             if (settings.type == ASCII)
-                return { Occurrence::DecodeType::ASCII, std::endian::native };
+                return { FindOccurrence::DecodeType::ASCII, std::endian::native };
             if (settings.type == UTF8)
-                return { Occurrence::DecodeType::UTF8, std::endian::native };
+                return { FindOccurrence::DecodeType::UTF8, std::endian::native };
             else if (settings.type == SearchSettings::StringType::UTF16BE)
-                return { Occurrence::DecodeType::UTF16, std::endian::big };
+                return { FindOccurrence::DecodeType::UTF16, std::endian::big };
             else if (settings.type == SearchSettings::StringType::UTF16LE)
-                return { Occurrence::DecodeType::UTF16, std::endian::little };
+                return { FindOccurrence::DecodeType::UTF16, std::endian::little };
             else
-                return { Occurrence::DecodeType::Binary, std::endian::native };
+                return { FindOccurrence::DecodeType::Binary, std::endian::native };
         }();
 
         const auto validAscii = [&](u8 byte) {
@@ -325,7 +325,7 @@ namespace hex::plugin::builtin {
             if (!validChar || startAddress + countedCharacters == endAddress) {
                 if (countedCharacters >= settings.minLength) {
                     if (!settings.nullTermination || byte == 0x00) {
-                        results.push_back(Occurrence { Region { .address=startAddress, .size=size_t(countedCharacters) }, endian, decodeType, false, {} });
+                        results.push_back(FindOccurrence { Region { .address=startAddress, .size=size_t(countedCharacters) }, endian, decodeType, false, {} });
                     }
                 }
 
@@ -339,8 +339,8 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
-        std::vector<Occurrence> results;
+    std::vector<FindOccurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
+        std::vector<FindOccurrence> results;
 
         auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
@@ -351,13 +351,13 @@ namespace hex::plugin::builtin {
             return { };
 
         std::vector<u8> bytes;
-        auto decodeType = Occurrence::DecodeType::Binary;
+        auto decodeType = FindOccurrence::DecodeType::Binary;
         std::endian endian;
         switch (settings.type) {
             default:
             case SearchSettings::StringType::ASCII:
                 bytes = input;
-                decodeType = Occurrence::DecodeType::ASCII;
+                decodeType = FindOccurrence::DecodeType::ASCII;
                 endian = std::endian::native;
                 break;
             case SearchSettings::StringType::UTF16LE: {
@@ -365,7 +365,7 @@ namespace hex::plugin::builtin {
 
                 bytes.resize(wString.size() * 2);
                 std::memcpy(bytes.data(), wString.data(), bytes.size());
-                decodeType = Occurrence::DecodeType::UTF16;
+                decodeType = FindOccurrence::DecodeType::UTF16;
                 endian = std::endian::little;
 
                 break;
@@ -375,7 +375,7 @@ namespace hex::plugin::builtin {
 
                 bytes.resize(wString.size() * 2);
                 std::memcpy(bytes.data(), wString.data(), bytes.size());
-                decodeType = Occurrence::DecodeType::UTF16;
+                decodeType = FindOccurrence::DecodeType::UTF16;
                 endian = std::endian::big;
 
                 for (size_t i = 0; i < bytes.size(); i += 2)
@@ -413,14 +413,14 @@ namespace hex::plugin::builtin {
 
             auto address = occurrence.getAddress();
             reader.seek(address + 1);
-            results.push_back(Occurrence{ Region { .address=address, .size=bytes.size() }, endian, decodeType, false, {} });
+            results.push_back(FindOccurrence{ Region { .address=address, .size=bytes.size() }, endian, decodeType, false, {} });
             progress = address - searchRegion.getStartAddress();
         }
 
         return results;
     }
 
-    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
+    std::vector<FindOccurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
         auto stringOccurrences = searchStrings(task, provider, searchRegion, SearchSettings::Strings {
             .minLength          = settings.minLength,
             .nullTermination    = settings.nullTermination,
@@ -434,7 +434,7 @@ namespace hex::plugin::builtin {
             .lineFeeds          = true
         });
 
-        std::vector<Occurrence> result;
+        std::vector<FindOccurrence> result;
         boost::regex regex(settings.pattern);
         for (const auto &occurrence : stringOccurrences) {
             std::string string(occurrence.region.getSize(), '\x00');
@@ -454,8 +454,8 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
-        std::vector<Occurrence> results;
+    std::vector<FindOccurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
+        std::vector<FindOccurrence> results;
 
         auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
@@ -474,7 +474,7 @@ namespace hex::plugin::builtin {
                     if (matchedBytes == settings.pattern.getSize()) {
                         auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
-                        results.push_back(Occurrence { Region { .address=occurrenceAddress, .size=patternSize }, std::endian::native, Occurrence::DecodeType::Binary, false, {} });
+                        results.push_back(FindOccurrence { Region { .address=occurrenceAddress, .size=patternSize }, std::endian::native, FindOccurrence::DecodeType::Binary, false, {} });
                         it.setAddress(occurrenceAddress);
                         matchedBytes = 0;
                     }
@@ -500,7 +500,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (match)
-                    results.push_back(Occurrence { Region { .address=address, .size=patternSize }, std::endian::native, Occurrence::DecodeType::Binary, false, {} });
+                    results.push_back(FindOccurrence { Region { .address=address, .size=patternSize }, std::endian::native, FindOccurrence::DecodeType::Binary, false, {} });
             }
         }
 
@@ -518,8 +518,8 @@ namespace hex::plugin::builtin {
         }
     }
 
-    std::vector<hex::ContentRegistry::DataFormatter::impl::FindOccurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
-        std::vector<Occurrence> results;
+    std::vector<FindOccurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
+        std::vector<FindOccurrence> results;
 
         auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
@@ -560,10 +560,10 @@ namespace hex::plugin::builtin {
             }, min);
 
             if (result) {
-                Occurrence::DecodeType decodeType = [&]{
+                FindOccurrence::DecodeType decodeType = [&]{
                     switch (settings.type) {
                         using enum SearchSettings::Value::Type;
-                        using enum Occurrence::DecodeType;
+                        using enum FindOccurrence::DecodeType;
 
                         case U8:
                         case U16:
@@ -584,15 +584,15 @@ namespace hex::plugin::builtin {
                     }
                 }();
 
-                results.push_back(Occurrence { Region { .address=address, .size=size }, settings.endian, decodeType, false, {} });
+                results.push_back(FindOccurrence { Region { .address=address, .size=size }, settings.endian, decodeType, false, {} });
             }
         }
 
         return results;
     }
 
-    std::vector<ViewFind::Occurrence> ViewFind::searchConstants(Task &task, prv::Provider* provider, Region searchRegion, const SearchSettings::Constants &settings) {
-        std::vector<Occurrence> results;
+    std::vector<FindOccurrence> ViewFind::searchConstants(Task &task, prv::Provider* provider, Region searchRegion, const SearchSettings::Constants &settings) {
+        std::vector<FindOccurrence> results;
 
         std::vector<ConstantGroup> constantGroups;
         for (const auto &path : paths::Constants.read()) {
@@ -631,10 +631,10 @@ namespace hex::plugin::builtin {
                             if (matchedBytes == pattern.getSize()) {
                                 auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
-                                results.push_back(Occurrence {
+                                results.push_back(FindOccurrence {
                                     Region { .address=occurrenceAddress, .size=patternSize },
                                     std::endian::native,
-                                    Occurrence::DecodeType::ASCII,
+                                    FindOccurrence::DecodeType::ASCII,
                                     false,
                                     fmt::format("[{}] {}", group.getName(), constant.name)
                                 });
@@ -663,10 +663,10 @@ namespace hex::plugin::builtin {
                         }
 
                         if (match)
-                            results.push_back(Occurrence {
+                            results.push_back(FindOccurrence {
                                 Region { .address=address, .size=patternSize },
                                 std::endian::native,
-                                Occurrence::DecodeType::ASCII,
+                                FindOccurrence::DecodeType::ASCII,
                                 false,
                                 fmt::format("[] {}", group.getName(), constant.name)
                             });
@@ -741,7 +741,7 @@ namespace hex::plugin::builtin {
         EventHighlightingChanged::post();
     }
 
-    std::string ViewFind::decodeValue(prv::Provider *provider, const Occurrence &occurrence, size_t maxBytes) const {
+    std::string ViewFind::decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes) const {
         std::vector<u8> bytes(std::min<size_t>(occurrence.region.getSize(), maxBytes));
         provider->read(occurrence.region.getStartAddress(), bytes.data(), bytes.size());
 
@@ -755,7 +755,7 @@ namespace hex::plugin::builtin {
             case Regex:
             {
                 switch (occurrence.decodeType) {
-                    using enum Occurrence::DecodeType;
+                    using enum FindOccurrence::DecodeType;
                     case Binary:
                     case ASCII:
                         result = hex::encodeByteString(bytes);
@@ -798,7 +798,7 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    void ViewFind::drawContextMenu(Occurrence &target, const std::string &value) {
+    void ViewFind::drawContextMenu(FindOccurrence& target, const std::string &value) {
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
             ImGui::OpenPopup("FindContextMenu");
             target.selected = true;
@@ -1192,7 +1192,7 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportResults")) {
-            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getFindExporterEntries()) {
+            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getExportFormatterEntries()) {
                 const auto formatterName = Lang(formatter.unlocalizedName);
                 const auto name = toUpper(formatterName);
 
@@ -1204,11 +1204,15 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             return;
 
-                        auto result = formatter.callback(
-                                m_sortedOccurrences.get(provider),
-                                [&](Occurrence o){ return this->decodeValue(provider, o); });
-
-                        file.writeVector(result);
+                        ContentRegistry::DataFormatter::ExportTable table({"offset", "size", "data"});
+                        for (const auto &occurrence : m_sortedOccurrences.get(provider)) {
+                            table.addRow({
+                                u64{occurrence.region.getStartAddress()},
+                                u64{occurrence.region.getSize()},
+                                this->decodeValue(provider, occurrence),
+                            });
+                        }
+                        file.writeVector(formatter.callback(table));
                         file.close();
                     });
                 }
@@ -1230,7 +1234,8 @@ namespace hex::plugin::builtin {
             }
 
             if (sortSpecs->SpecsDirty) {
-                std::ranges::stable_sort(currOccurrences, [this, &sortSpecs, provider](const Occurrence &left, const Occurrence &right) -> bool {
+                std::ranges::stable_sort(currOccurrences, [this, &sortSpecs, provider](const FindOccurrence& left,
+                                         const FindOccurrence& right) -> bool {
                     if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                         if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                             return left.region.getStartAddress() < right.region.getStartAddress();
