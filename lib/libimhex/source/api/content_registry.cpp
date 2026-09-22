@@ -907,13 +907,48 @@ namespace hex {
 
         namespace EditWidget {
             std::optional<std::vector<u8>> TextInput::draw(std::string &value, std::endian endian) {
-                if (ImGui::InputText("##InspectorLineEditing", value,
-                                 ImGuiInputTextFlags_EnterReturnsTrue |
-                                 ImGuiInputTextFlags_AutoSelectAll)) {
-                    return getBytes(value, endian);
+                struct CallbackData {
+                    TextInput *self;
+                    std::string *value;
+                    std::endian endian;
+                } callbackData { this, &value, endian };
+
+                const bool borderPushed = m_hasInvalidValue;
+                if (borderPushed) {
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1_scaled);
                 }
 
-                return std::nullopt;
+                const bool submitted = ImGui::InputText("##InspectorLineEditing", value.data(), value.size() + 1,
+                    ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue |
+                    ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackResize,
+                    [](ImGuiInputTextCallbackData *data) -> int {
+                        auto &callbackData = *static_cast<CallbackData*>(data->UserData);
+
+                        // Grows the buffer only when ImGui needs more room for what was typed.
+                        if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+                            callbackData.value->resize(data->BufTextLen);
+                            data->Buf = callbackData.value->data();
+                            return 0;
+                        }
+
+                        std::string liveText(data->Buf, size_t(data->BufTextLen));
+                        auto bytes = callbackData.self->getBytes(liveText, callbackData.endian);
+                        callbackData.self->m_hasInvalidValue = !bytes.has_value();
+                        return 0;
+                    }, &callbackData);
+
+                if (borderPushed) {
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
+                }
+
+                if (!submitted)
+                    return std::nullopt;
+
+                auto bytes = getBytes(value, endian);
+                m_hasInvalidValue = !bytes.has_value();
+                return bytes;
             }
         }
 

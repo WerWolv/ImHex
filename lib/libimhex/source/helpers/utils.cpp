@@ -449,7 +449,7 @@ namespace hex {
         return result;
     }
 
-    std::vector<u8> decodeByteString(const std::string &string) {
+    std::optional<std::vector<u8>> decodeByteString(const std::string &string) {
         u32 offset = 0;
         std::vector<u8> result;
 
