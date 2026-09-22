@@ -33,8 +33,25 @@ namespace hex::plugin::builtin {
             std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
             bool editing;
             u64 requiredSize;
+            u64 maxSize;
+
+            /**
+             * @brief The number of bytes to select when this row is clicked
+             *
+             * Unset when a click should leave the current selection alone, for
+             * a variable size row with no way to know how much a value used.
+             */
+            std::optional<u64> clickSelectSize;
 
             std::string filterValue;
+
+            /**
+             * @brief Shown in the name column instead of translating unlocalizedName
+             *
+             * Set for a row whose name is not known until it is built, such as
+             * the document encoding row naming the encoding in effect.
+             */
+            std::optional<std::string> displayName;
 
             /**
              * @brief Whether this row's display error is already logged
@@ -48,6 +65,7 @@ namespace hex::plugin::builtin {
         void invalidateData();
         void updateInspectorRows();
         void updateInspectorRowsTask();
+        void addDocumentEncodingRow();
 
         void executeInspectors();
         void executeInspector(const std::string& code, const std::fs::path& path, const std::map<std::string, pl::core::Token::Literal>& inVariables);

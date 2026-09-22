@@ -146,6 +146,7 @@ add_imhex_plugin(
         source/content/text_highlighting/pattern_language.cpp
 
         source/content/helpers/constants.cpp
+        source/content/helpers/decoded_string.cpp
         source/content/helpers/encoding_chooser.cpp
     INCLUDES
         include

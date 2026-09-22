@@ -38,6 +38,17 @@ set(AVAILABLE_TESTS
         EncodingLookupRejectsPathTraversal
         CodepageFromEncoding
         DecodeByteStringEscapes
+
+    # Decoded string
+        DecodeThroughSelectionStopsAtTheSelection
+        DecodeThroughSelectionFinishesAStraddlingCodePoint
+        DecodeThroughSelectionReportsMalformedBytes
+        DecodeThroughSelectionHonoursTheDisplayBudget
+        ExtendToWholeCodePoints
+        FormatDecodedStringMarksTruncation
+        NulPictureRoundTrip
+        FormatCodePoint
+        CodePointSize
 )
 
 if (NOT IMHEX_OFFLINE_BUILD)
@@ -52,17 +63,24 @@ endif ()
 
 add_executable(${PROJECT_NAME}
         source/common.cpp
+        source/decoded_string.cpp
         source/encoding.cpp
         source/encoding_line_cache.cpp
         source/file.cpp
         source/net.cpp
         source/utils.cpp
+
+        # A test for plugin code needs the plugin's own implementation compiled in too.
+        ${CMAKE_SOURCE_DIR}/plugins/builtin/source/content/helpers/decoded_string.cpp
 )
 
 
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 
-target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_include_directories(${PROJECT_NAME} PRIVATE
+        include
+        ${CMAKE_SOURCE_DIR}/plugins/builtin/include
+        ${CMAKE_SOURCE_DIR}/plugins/ui/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex tests_common ${FMT_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY})

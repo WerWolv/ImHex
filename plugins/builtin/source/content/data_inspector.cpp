@@ -2,6 +2,9 @@
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
 #include <hex/api/content_registry/data_inspector.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
+#include <hex/api/events/events_interaction.hpp>
+#include <hex/providers/provider_data.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
@@ -12,15 +15,23 @@
 
 #include <hex/providers/provider.hpp>
 
+#include <cctype>
 #include <cstring>
+#include <functional>
+#include <memory>
+#include <span>
 #include <string>
 
 #include <imgui_internal.h>
 #include <fonts/vscode_icons.hpp>
 #include <hex/helpers/default_paths.hpp>
 #include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/string_codec.hpp>
+#include <hex/helpers/logger.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <content/helpers/popup_encoding_chooser.hpp>
+#include <hex/helpers/unicode.hpp>
+#include <content/helpers/decoded_string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -149,7 +160,6 @@ namespace hex::plugin::builtin {
 
     // clang-format off
     void registerDataInspectorEntries() {
-
         ContentRegistry::DataInspector::add("hex.builtin.inspector.binary"_unlocalized, sizeof(u8),
             [](auto buffer, auto endian, auto style) {
                 std::ignore = endian;
@@ -512,211 +522,194 @@ namespace hex::plugin::builtin {
             })
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.utf8"_unlocalized, sizeof(char8_t) * 4,
+        // One row per byte order: a declared encoding names UTF-16LE or UTF-16BE outright, not a shared toggle.
+        const auto addCodePointRow = [](const UnlocalizedString &unlocalizedName, std::string_view encodingName, size_t codeUnitSize, size_t maxSize) {
+            ContentRegistry::DataInspector::add(unlocalizedName, codeUnitSize, maxSize,
+                [encodingName](auto buffer, auto endian, auto style) {
+                    std::ignore = endian;
+                    std::ignore = style;
+
+                    const auto value = formatCodePoint(encodingName, buffer);
+
+                    return [value] {
+                        if (value.has_value())
+                            ImGui::TextUnformatted(value->c_str());
+                        else
+                            ImGuiExt::TextFormattedDisabled("hex.builtin.inspector.invalid"_lang);
+
+                        return value.value_or("hex.builtin.inspector.invalid"_lang.get());
+                    };
+                },
+                std::nullopt,
+                [encodingName, codeUnitSize](const std::vector<u8> &buffer, std::endian) -> size_t {
+                    return codePointSize(encodingName, buffer, codeUnitSize);
+                }
+            );
+        };
+
+        addCodePointRow("hex.builtin.inspector.utf8"_unlocalized,    "UTF-8",    sizeof(char8_t),  sizeof(char8_t) * 4);
+        addCodePointRow("hex.builtin.inspector.utf16le"_unlocalized, "UTF-16LE", sizeof(char16_t), sizeof(char16_t) * 2);
+        addCodePointRow("hex.builtin.inspector.utf16be"_unlocalized, "UTF-16BE", sizeof(char16_t), sizeof(char16_t) * 2);
+        addCodePointRow("hex.builtin.inspector.utf32le"_unlocalized, "UTF-32LE", sizeof(char32_t), sizeof(char32_t));
+        addCodePointRow("hex.builtin.inspector.utf32be"_unlocalized, "UTF-32BE", sizeof(char32_t), sizeof(char32_t));
+
+        // UTF-32 spends 4 bytes per code point, the most of any supported encoding.
+        constexpr static auto MaxStringSize = DisplayBudget * 4;
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.stringutf8"_unlocalized, 1, MaxStringSize,
             [](auto buffer, auto endian, auto style) {
                 std::ignore = endian;
                 std::ignore = style;
 
-                char utf8Buffer[5]      = { 0 };
-                char codepointString[5] = { 0 };
-                u32 codepoint           = 0;
+                auto currSelection = ImHexApi::HexEditor::getSelection();
 
-                std::memcpy(utf8Buffer, reinterpret_cast<char8_t *>(buffer.data()), 4);
-                u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, nullptr);
+                std::string value, copyValue;
+                bool valid = true;
 
-                std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
-                auto value =
-                    codepoint == 0xFFFD ? "Invalid" :
-                    fmt::format("'{0}' (U+{1:04X})",
-                        (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
-                        codepoint
-                    );
+                if (currSelection.has_value()) {
+                    const auto decoded = decodeThroughSelection(buffer, currSelection->size, DisplayBudget,
+                        [](std::span<const u8> bytes) { return decodeUtf8Bounded(bytes, 1); });
+                    valid = decoded.stopReason != pl::core::DecodeStop::MalformedBytes;
 
-                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+                    copyValue = nulToPicture(decoded.text);
+                    value = valid ? formatDecodedString("", decoded, currSelection->size) : "";
+                } else {
+                    value = "";
+                    copyValue = "";
+                }
+
+                return [value, copyValue, valid] {
+                    if (!valid)
+                        ImGuiExt::TextFormattedDisabled("hex.builtin.inspector.invalid"_lang);
+                    else
+                        ImGuiExt::TextFormatted("{}", value);
+                    return copyValue;
+                };
+            },
+            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian) -> std::optional<std::vector<u8>> {
+                auto bytes = pictureToNul(value);
+                if (!isValidUtf8(bytes))
+                    return std::nullopt;
+
+                return std::vector<u8>(bytes.begin(), bytes.end());
+            }),
+            [](const std::vector<u8> &buffer, std::endian) -> size_t {
+                auto currSelection = ImHexApi::HexEditor::getSelection();
+                const size_t targetSize = currSelection.has_value() ? currSelection->size : 0;
+
+                return extendToWholeCodePoints(buffer, targetSize,
+                    [](std::span<const u8> bytes) { return decodeUtf8Bounded(bytes, 1); });
             }
         );
 
+        // One row per byte order, the same reason as addCodePointRow above.
+        const auto addUtf16StringRow = [](const UnlocalizedString &unlocalizedName, std::endian rowEndian) {
+            ContentRegistry::DataInspector::add(unlocalizedName, sizeof(char16_t), MaxStringSize,
+                [rowEndian](auto buffer, auto endian, auto style) {
+                    std::ignore = endian;
+                    std::ignore = style;
+
+                    auto currSelection = ImHexApi::HexEditor::getSelection();
+
+                    std::string value, copyValue;
+                    bool valid = true;
+
+                    if (currSelection.has_value()) {
+                        const auto decoded = decodeThroughSelection(buffer, currSelection->size, DisplayBudget,
+                            [rowEndian](std::span<const u8> bytes) { return decodeUtf16Bounded(bytes, rowEndian, 1); });
+                        valid = decoded.stopReason != pl::core::DecodeStop::MalformedBytes;
+
+                        copyValue = nulToPicture(decoded.text);
+                        value = valid ? formatDecodedString("u", decoded, currSelection->size) : "";
+                    } else {
+                        value = "";
+                        copyValue = "";
+                    }
+
+                    return [value, copyValue, valid] {
+                        if (!valid)
+                            ImGuiExt::TextFormattedDisabled("hex.builtin.inspector.invalid"_lang);
+                        else
+                            ImGuiExt::TextFormatted("{}", value);
+                        return copyValue;
+                    };
+                },
+                ContentRegistry::DataInspector::EditWidget::TextInput([rowEndian](const std::string &value, std::endian) -> std::optional<std::vector<u8>> {
+                    auto utf8 = pictureToNul(value);
+                    if (!isValidUtf8(utf8))
+                        return std::nullopt;
+
+                    return encodeUtf16(utf8, rowEndian);
+                }),
+                [rowEndian](const std::vector<u8> &buffer, std::endian) -> size_t {
+                    auto currSelection = ImHexApi::HexEditor::getSelection();
+                    const size_t targetSize = currSelection.has_value() ? currSelection->size : 0;
+
+                    return extendToWholeCodePoints(buffer, targetSize,
+                        [rowEndian](std::span<const u8> bytes) { return decodeUtf16Bounded(bytes, rowEndian, 1); });
+                }
+            );
+        };
+        addUtf16StringRow("hex.builtin.inspector.string16le"_unlocalized, std::endian::little);
+        addUtf16StringRow("hex.builtin.inspector.string16be"_unlocalized, std::endian::big);
+
+        const auto addUtf32StringRow = [](const UnlocalizedString &unlocalizedName, std::endian rowEndian) {
+            ContentRegistry::DataInspector::add(unlocalizedName, sizeof(char32_t), MaxStringSize,
+                [rowEndian](auto buffer, auto endian, auto style) {
+                    std::ignore = endian;
+                    std::ignore = style;
+
+                    auto currSelection = ImHexApi::HexEditor::getSelection();
+
+                    std::string value, copyValue;
+                    bool valid = true;
+
+                    if (currSelection.has_value()) {
+                        const auto decoded = decodeThroughSelection(buffer, currSelection->size, DisplayBudget,
+                            [rowEndian](std::span<const u8> bytes) { return decodeUtf32Bounded(bytes, rowEndian, 1); });
+                        valid = decoded.stopReason != pl::core::DecodeStop::MalformedBytes;
+
+                        copyValue = nulToPicture(decoded.text);
+                        value = valid ? formatDecodedString("U", decoded, currSelection->size) : "";
+                    } else {
+                        value = "";
+                        copyValue = "";
+                    }
+
+                    return [value, copyValue, valid] {
+                        if (!valid)
+                            ImGuiExt::TextFormattedDisabled("hex.builtin.inspector.invalid"_lang);
+                        else
+                            ImGuiExt::TextFormatted("{}", value);
+                        return copyValue;
+                    };
+                },
+                ContentRegistry::DataInspector::EditWidget::TextInput([rowEndian](const std::string &value, std::endian) -> std::optional<std::vector<u8>> {
+                    auto utf8 = pictureToNul(value);
+                    if (!isValidUtf8(utf8))
+                        return std::nullopt;
+
+                    return encodeUtf32(utf8, rowEndian);
+                }),
+                [rowEndian](const std::vector<u8> &buffer, std::endian) -> size_t {
+                    auto currSelection = ImHexApi::HexEditor::getSelection();
+                    const size_t targetSize = currSelection.has_value() ? currSelection->size : 0;
+
+                    return extendToWholeCodePoints(buffer, targetSize,
+                        [rowEndian](std::span<const u8> bytes) { return decodeUtf32Bounded(bytes, rowEndian, 1); });
+                }
+            );
+        };
+        addUtf32StringRow("hex.builtin.inspector.string32le"_unlocalized, std::endian::little);
+        addUtf32StringRow("hex.builtin.inspector.string32be"_unlocalized, std::endian::big);
+
         constexpr static auto MaxStringLength = 64;
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string"_unlocalized, 1, 512,
-            [](auto buffer, auto endian, auto style) {
-                std::ignore = buffer;
-                std::ignore = endian;
-                std::ignore = style;
+        // Shared with the edit widget below, so it encodes with the same table.
+        auto encodingFilePtr = std::make_shared<EncodingFile>();
 
-                std::string value, copyValue;
-
-                auto currSelection = ImHexApi::HexEditor::getSelection();
-                if (currSelection.has_value()) {
-                    std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
-                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
-
-                    value = copyValue = hex::encodeByteString(stringBuffer);
-
-                    copyValue = value;
-                    value = hex::limitStringLength(value, MaxStringLength, false);
-                } else {
-                    value = "";
-                    copyValue = "";
-                }
-
-                return [value, copyValue] { ImGuiExt::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
-            },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
-                std::ignore = endian;
-
-                return hex::decodeByteString(value);
-            })
-        );
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.wstring"_unlocalized, sizeof(wchar_t), 512,
-            [](auto buffer, auto endian, auto style) {
-                std::ignore = buffer;
-                std::ignore = endian;
-                std::ignore = style;
-
-                auto currSelection = ImHexApi::HexEditor::getSelection();
-
-                std::string value, copyValue;
-
-                if (currSelection.has_value()) {
-                    std::wstring stringBuffer(std::min<size_t>(alignTo<size_t>(currSelection->size, sizeof(wchar_t)), 0x1000), 0x00);
-                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
-
-                    for (auto &c : stringBuffer)
-                        c = hex::changeEndianness(c, endian);
-
-                    std::erase_if(stringBuffer, [](auto c) { return c == 0x00; });
-
-                    auto string = wolv::util::wstringToUtf8(stringBuffer).value_or("Invalid");
-
-                    copyValue = string;
-                    value = hex::limitStringLength(string, MaxStringLength, false);
-                } else {
-                    value = "";
-                    copyValue = "";
-                }
-
-                return [value, copyValue] { ImGuiExt::TextFormatted("L\"{0}\"", value.c_str()); return copyValue; };
-            },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
-                auto utf8 = hex::decodeByteString(value);
-                if (!utf8.has_value())
-                    return std::nullopt;
-
-                auto wstring = wolv::util::utf8ToWstring({ utf8->begin(), utf8->end() });
-                if (!wstring.has_value())
-                    return {};
-
-                for (auto &c : wstring.value()) {
-                    c = hex::changeEndianness(c, endian);
-                }
-
-                std::vector<u8> bytes(wstring->size() * sizeof(wchar_t), 0x00);
-                std::memcpy(bytes.data(), wstring->data(), bytes.size());
-                return bytes;
-            })
-        );
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string16"_unlocalized, sizeof(char16_t), 512,
-            [](auto buffer, auto endian, auto style) {
-                std::ignore = buffer;
-                std::ignore = endian;
-                std::ignore = style;
-
-                auto currSelection = ImHexApi::HexEditor::getSelection();
-
-                std::string value, copyValue;
-
-                if (currSelection.has_value()) {
-                    std::u16string stringBuffer(std::min<size_t>(alignTo<size_t>(currSelection->size, sizeof(char16_t)), 0x1000), 0x00);
-                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
-
-                    for (auto &c : stringBuffer)
-                        c = hex::changeEndianness(c, endian);
-
-                    std::erase_if(stringBuffer, [](auto c) { return c == 0x00; });
-
-                    auto string = wolv::util::utf16ToUtf8(stringBuffer).value_or("Invalid");
-
-                    copyValue = string;
-                    value = hex::limitStringLength(string, MaxStringLength, false);
-                } else {
-                    value = "";
-                    copyValue = "";
-                }
-
-                return [value, copyValue] { ImGuiExt::TextFormatted("u\"{0}\"", value.c_str()); return copyValue; };
-            },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
-                auto utf8 = hex::decodeByteString(value);
-                if (!utf8.has_value())
-                    return std::nullopt;
-
-                auto utf16 = wolv::util::utf8ToUtf16({ utf8->begin(), utf8->end() });
-                if (!utf16.has_value())
-                    return {};
-
-                for (auto &c : utf16.value()) {
-                    c = hex::changeEndianness(c, endian);
-                }
-
-                std::vector<u8> bytes(utf16->size() * sizeof(char16_t), 0x00);
-                std::memcpy(bytes.data(), utf16->data(), bytes.size());
-                return bytes;
-            })
-        );
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string32"_unlocalized, sizeof(char32_t), 512,
-            [](auto buffer, auto endian, auto style) {
-                std::ignore = buffer;
-                std::ignore = endian;
-                std::ignore = style;
-
-                auto currSelection = ImHexApi::HexEditor::getSelection();
-
-                std::string value, copyValue;
-
-                if (currSelection.has_value()) {
-                    std::u32string stringBuffer(std::min<size_t>(alignTo<size_t>(currSelection->size, sizeof(char32_t)), 0x1000), 0x00);
-                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
-
-                    for (auto &c : stringBuffer)
-                        c = hex::changeEndianness(c, endian);
-
-                    std::erase_if(stringBuffer, [](auto c) { return c == 0x00; });
-
-                    auto string = wolv::util::utf32ToUtf8(stringBuffer).value_or("Invalid");
-
-                    copyValue = string;
-                    value = hex::limitStringLength(string, MaxStringLength, false);
-                } else {
-                    value = "";
-                    copyValue = "";
-                }
-
-                return [value, copyValue] { ImGuiExt::TextFormatted("U\"{0}\"", value.c_str()); return copyValue; };
-            },
-            ContentRegistry::DataInspector::EditWidget::TextInput([](const std::string &value, std::endian endian) -> std::optional<std::vector<u8>> {
-                auto utf8 = hex::decodeByteString(value);
-                if (!utf8.has_value())
-                    return std::nullopt;
-
-                auto utf32 = wolv::util::utf8ToUtf32({ utf8->begin(), utf8->end() });
-                if (!utf32.has_value())
-                    return {};
-
-                for (auto &c : utf32.value()) {
-                    c = hex::changeEndianness(c, endian);
-                }
-
-                std::vector<u8> bytes(utf32->size() * sizeof(char32_t), 0x00);
-                std::memcpy(bytes.data(), utf32->data(), bytes.size());
-                return bytes;
-            })
-        );
-
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding"_unlocalized, 1, 512, [encodingFile = EncodingFile()](const std::vector<u8> &, std::endian, Style) mutable {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.custom_encoding"_unlocalized, 1, 512, [encodingFilePtr](const std::vector<u8> &, std::endian, Style) {
+            auto &encodingFile = *encodingFilePtr;
             std::string value, copyValue;
 
             if (encodingFile.valid()) {
@@ -727,11 +720,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
                     copyValue = value = encodingFile.decodeAll(stringBuffer);
-
-                    if (value.size() > MaxStringLength) {
-                        value.resize(MaxStringLength);
-                        value += "...";
-                    }
+                    value = hex::limitStringLength(value, MaxStringLength, false);
                 } else {
                     value = "";
                     copyValue = "";
@@ -739,7 +728,8 @@ namespace hex::plugin::builtin {
             } else {
                 value = "Invalid";
             }
-            return [&, value, copyValue]() mutable -> std::string {
+            return [encodingFilePtr, value, copyValue]() -> std::string {
+                auto &encodingFile = *encodingFilePtr;
                 ContentRegistry::DataInspector::drawMenuItems([&] {
                     if (ImGui::MenuItemEx("hex.builtin.inspector.custom_encoding.change"_lang, "あ")) {
                         const auto basePaths = paths::Encodings.read();
@@ -750,8 +740,8 @@ namespace hex::plugin::builtin {
                             }
                         }
 
-                        PopupEncodingChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [&](const auto &path) {
-                            encodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
+                        PopupEncodingChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [encodingFilePtr](const auto &path) {
+                            *encodingFilePtr = EncodingFile(EncodingFile::Type::Thingy, path);
                         });
                     }
                 });
@@ -764,7 +754,13 @@ namespace hex::plugin::builtin {
 
                 return copyValue;
             };
-        });
+        }, ContentRegistry::DataInspector::EditWidget::TextInput([encodingFilePtr](const std::string &value, std::endian) -> std::optional<std::vector<u8>> {
+            auto &encodingFile = *encodingFilePtr;
+            if (!encodingFile.valid() || !encodingFile.canEncode())
+                return {};
+
+            return encodingFile.encodeAll(value).value_or(std::vector<u8>{});
+        }));
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32"_unlocalized, sizeof(u32), [](auto buffer, auto endian, auto style) {
             std::ignore = style;
