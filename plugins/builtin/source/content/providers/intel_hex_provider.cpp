@@ -182,7 +182,7 @@ namespace hex::plugin::builtin {
         std::memset(buffer, 0x00, size);
         auto bytes = static_cast<u8*>(buffer);
         for (const auto &[interval, data] : intervals) {
-            for (u32 i = std::max(interval.start, offset); i <= interval.end && (i - offset) < size; i++) {
+            for (u64 i = std::max(interval.start, offset); i <= interval.end && (i - offset) < size; i++) {
                 bytes[i - offset] = (*data)[i - interval.start];
             }
         }
