@@ -734,8 +734,12 @@ namespace hex::plugin::builtin {
                     if (ImGui::MenuItemEx("hex.builtin.inspector.custom_encoding.change"_lang, "あ")) {
                         const auto basePaths = paths::Encodings.read();
                         std::vector<std::fs::path> paths;
+                        // Recursive, since the generated tables live in each folder's "builtin" subfolder.
                         for (const auto &basePath : basePaths) {
-                            for (const auto &entry : std::filesystem::directory_iterator(basePath)) {
+                            std::error_code error;
+                            for (const auto &entry : std::filesystem::recursive_directory_iterator(basePath, error)) {
+                                if (!entry.is_regular_file()) continue;
+
                                 paths.push_back(entry.path());
                             }
                         }
