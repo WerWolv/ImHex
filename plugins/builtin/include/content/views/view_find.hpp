@@ -138,7 +138,15 @@ namespace hex::plugin::builtin {
         static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
 
         void runSearch();
-        std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
+        std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes) const;
+
+        /**
+         * @brief Sorts occurrences by their raw bytes, without decoding them
+         * @param provider The provider to read the bytes from
+         * @param occurrences The occurrences to sort
+         * @param ascending The sort direction
+         */
+        void sortOccurrencesByValue(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, bool ascending) const;
     };
 
 }

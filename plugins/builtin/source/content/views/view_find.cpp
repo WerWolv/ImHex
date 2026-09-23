@@ -16,6 +16,7 @@
 #include <imgui_internal.h>
 
 #include <array>
+#include <numeric>
 #include <string>
 #include <utility>
 #include <barrier>
@@ -798,6 +799,37 @@ namespace hex::plugin::builtin {
         return result;
     }
 
+    void ViewFind::sortOccurrencesByValue(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, bool ascending) const {
+        // A shorter value gets a shorter key. The table shows no more, so a longer key cannot change the visible order.
+        constexpr static size_t MaxKeySize = 256;
+
+        // Read each key once. A comparison then touches no provider and allocates nothing.
+        std::vector<std::vector<u8>> keys;
+        keys.reserve(occurrences.size());
+        for (const auto &occurrence : occurrences) {
+            if (m_decodeSettings.mode == SearchSettings::Mode::Constants) {
+                keys.emplace_back(occurrence.string.begin(), occurrence.string.end());
+            } else {
+                auto &key = keys.emplace_back(std::min<size_t>(occurrence.region.getSize(), MaxKeySize));
+                provider->read(occurrence.region.getStartAddress(), key.data(), key.size());
+            }
+        }
+
+        std::vector<size_t> order(occurrences.size());
+        std::iota(order.begin(), order.end(), 0);
+        std::ranges::stable_sort(order, [&keys, ascending](size_t left, size_t right) {
+            return ascending ? keys[left] < keys[right] : keys[right] < keys[left];
+        });
+
+        std::vector<FindOccurrence> sorted;
+        sorted.reserve(occurrences.size());
+        for (const auto index : order)
+            sorted.push_back(std::move(occurrences[index]));
+
+        // Keep the buffer. m_lastSelectedOccurrence points into it.
+        std::ranges::move(sorted, occurrences.begin());
+    }
+
     void ViewFind::drawContextMenu(FindOccurrence& target, const std::string &value) {
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
             ImGui::OpenPopup("FindContextMenu");
@@ -1174,7 +1206,7 @@ namespace hex::plugin::builtin {
                         task.update(progress);
                         progress += 1;
 
-                        return !hex::containsIgnoreCase(this->decodeValue(provider, region), filter);
+                        return !hex::containsIgnoreCase(this->decodeValue(provider, region, region.region.getSize()), filter);
                     });
                 });
             }
@@ -1209,7 +1241,7 @@ namespace hex::plugin::builtin {
                             table.addRow({
                                 u64{occurrence.region.getStartAddress()},
                                 u64{occurrence.region.getSize()},
-                                this->decodeValue(provider, occurrence),
+                                this->decodeValue(provider, occurrence, occurrence.region.getSize()),
                             });
                         }
                         file.writeVector(formatter.callback(table));
@@ -1233,8 +1265,13 @@ namespace hex::plugin::builtin {
                 sortSpecs->SpecsDirty = true;
             }
 
+            if (sortSpecs->SpecsDirty && sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
+                this->sortOccurrencesByValue(provider, currOccurrences, sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending);
+                sortSpecs->SpecsDirty = false;
+            }
+
             if (sortSpecs->SpecsDirty) {
-                std::ranges::stable_sort(currOccurrences, [this, &sortSpecs, provider](const FindOccurrence& left,
+                std::ranges::stable_sort(currOccurrences, [&sortSpecs](const FindOccurrence& left,
                                          const FindOccurrence& right) -> bool {
                     if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                         if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
@@ -1246,11 +1283,6 @@ namespace hex::plugin::builtin {
                             return left.region.getSize() < right.region.getSize();
                         else
                             return left.region.getSize() > right.region.getSize();
-                    } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
-                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return this->decodeValue(provider, left) < this->decodeValue(provider, right);
-                        else
-                            return this->decodeValue(provider, left) > this->decodeValue(provider, right);
                     }
 
                     return false;
