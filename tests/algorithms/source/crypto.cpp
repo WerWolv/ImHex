@@ -35,6 +35,10 @@ TEST_SEQUENCE("EncodeDecode16") {
         TEST_ASSERT((vec = hex::crypt::decode16(i.string)) == i.vec, "vec: {} i.vec: {} from: '{}'", vec, i.vec, i.string);
     }
 
+    TEST_ASSERT(hex::crypt::decode16("0").empty());
+    TEST_ASSERT(hex::crypt::decode16("0G").empty());
+    TEST_ASSERT(hex::crypt::decode16("GG").empty());
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution dataLen(0, 1024);
@@ -84,6 +88,10 @@ TEST_SEQUENCE("EncodeDecode64") {
         std::vector<u8> vec;
         TEST_ASSERT((vec = hex::crypt::decode64(stringToVector(i.string))) == i.vec, "vec: {} i.vec: {} from: '{}'", vec, i.vec, i.string);
     }
+
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("A")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("AA=A")).empty());
+    TEST_ASSERT(hex::crypt::decode64(stringToVector("!!!!")).empty());
 
     std::random_device rd;
     std::mt19937 gen(rd());

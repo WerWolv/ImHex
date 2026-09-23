@@ -40,6 +40,9 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex tests_common ${FMT_LIBRARIES})
+if (CRYPTO_BACKEND STREQUAL "mbedtls")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IMHEX_CRYPTO_BACKEND_MBEDTLS)
+endif ()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${IMHEX_MAIN_OUTPUT_DIRECTORY})
 
