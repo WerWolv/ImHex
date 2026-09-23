@@ -72,6 +72,23 @@ namespace hex {
         }
 
         /**
+         * @brief Lists the directories a table is looked up in by name, in the order they are tried
+         *
+         * Every encodings search path first, then the "builtin" folder inside each, which holds
+         * the tables ImHex-Patterns generates. A table a person puts in an encodings folder
+         * itself replaces a built-in table of the same name.
+         */
+        std::vector<std::fs::path> encodingSearchDirectories() {
+            const auto basePaths = paths::Encodings.read();
+
+            std::vector<std::fs::path> result(basePaths.begin(), basePaths.end());
+            for (const auto &basePath : basePaths)
+                result.push_back(basePath / "builtin");
+
+            return result;
+        }
+
+        /**
          * @brief Finds the table file `name` names, if there is one, whatever case it is
          * written in
          *
@@ -89,8 +106,8 @@ namespace hex {
 
             const auto fileName = encodingFileName(name) + ".tbl";
 
-            for (const auto &basePath : paths::Encodings.read()) {
-                auto path = basePath / fileName;
+            for (const auto &directory : encodingSearchDirectories()) {
+                auto path = directory / fileName;
                 if (std::fs::is_regular_file(path))
                     return path;
             }
@@ -112,8 +129,8 @@ namespace hex {
 
             const auto fileName = std::string(stem) + ".tbl";
 
-            for (const auto &basePath : paths::Encodings.read()) {
-                auto path = basePath / fileName;
+            for (const auto &directory : encodingSearchDirectories()) {
+                auto path = directory / fileName;
                 if (std::fs::is_regular_file(path))
                     return path;
             }
@@ -192,8 +209,8 @@ namespace hex {
             if (!context.empty()) {
                 path = findIncludedFile(context, name);
             } else {
-                for (const auto &basePath : paths::Encodings.read()) {
-                    if (path = findIncludedFile(basePath, name); path.has_value())
+                for (const auto &directory : encodingSearchDirectories()) {
+                    if (path = findIncludedFile(directory, name); path.has_value())
                         break;
                 }
             }
@@ -218,9 +235,9 @@ namespace hex {
             static const auto files = [] {
                 std::map<std::string, std::fs::path> result;
 
-                for (const auto &basePath : paths::Encodings.read()) {
+                for (const auto &directory : encodingSearchDirectories()) {
                     std::error_code error;
-                    for (const auto &entry : std::fs::directory_iterator(basePath, error)) {
+                    for (const auto &entry : std::fs::directory_iterator(directory, error)) {
                         if (entry.path().extension() != ".tbl")
                             continue;
 
