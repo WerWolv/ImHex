@@ -7,6 +7,7 @@
 #include <hex/helpers/binary_pattern.hpp>
 #include <ui/widgets.hpp>
 
+#include <mutex>
 #include <vector>
 
 #include <wolv/container/interval_tree.hpp>
@@ -118,7 +119,35 @@ namespace hex::plugin::builtin {
         PerProvider<FindOccurrence*> m_lastSelectedOccurrence;
         PerProvider<OccurrenceTree> m_occurrenceTree;
         PerProvider<std::string> m_currFilter;
+
+        /**
+         * @brief The filter that m_sortedOccurrences holds all matches of
+         */
+        PerProvider<std::string> m_sortedFilter;
         PerProvider<bool> m_settingsCollapsed;
+
+        /**
+         * @brief The maximum number of bytes of a value that the result table shows
+         */
+        constexpr static size_t MaxDisplayedValueSize = 256;
+
+        /**
+         * @brief A result table column to sort on
+         */
+        enum class SortColumn { Offset, Size, Value };
+
+        /**
+         * @brief A sort order of the result table
+         */
+        struct SortOrder {
+            SortColumn column = SortColumn::Offset;
+            bool ascending = true;
+        } m_sortOrder;
+
+        /**
+         * @brief Held by a filter task, and by a search while it replaces the results
+         */
+        std::mutex m_filterMutex;
 
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
@@ -138,7 +167,17 @@ namespace hex::plugin::builtin {
         static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
 
         void runSearch();
-        std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
+        std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes) const;
+
+        /**
+         * @brief Sorts occurrences
+         * @param provider The provider to read the values from
+         * @param occurrences The occurrences to sort
+         * @param sortOrder The sort order
+         * @param task The task that can interrupt the sort, or nullptr
+         * @note Sorts values by the text that the result table shows. Decodes each value one time.
+         */
+        void sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder, const Task *task) const;
     };
 
 }
