@@ -1199,18 +1199,25 @@ namespace hex::plugin::builtin {
         ImGui::PushItemWidth(-30_scaled);
         auto prevFilterLength = m_currFilter->length();
         if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *m_currFilter)) {
-            if (prevFilterLength > m_currFilter->length())
-                *m_sortedOccurrences = *m_foundOccurrences;
-
             if (m_filterTask.isRunning())
                 m_filterTask.interrupt();
 
             static std::mutex mutex;
             std::scoped_lock lock(mutex);
 
-            if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
+            // A shorter filter can match more results. Start again from all of them.
+            const bool widened = prevFilterLength > m_currFilter->length();
+            if (widened)
+                currOccurrences = *m_foundOccurrences;
+
+            if (widened || !m_currFilter->empty()) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, widened, filter = m_currFilter.get(provider)](Task &task) {
                     std::scoped_lock lock(mutex);
+
+                    if (widened)
+                        this->sortOccurrences(provider, currOccurrences);
+                    if (filter.empty())
+                        return;
 
                     u64 progress = 0;
                     std::erase_if(currOccurrences, [this, provider, &task, &progress, &filter](const auto &region) {
@@ -1271,24 +1278,27 @@ namespace hex::plugin::builtin {
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
-            bool sortDirty = sortSpecs->SpecsDirty;
-            if (m_sortedOccurrences->empty() && !m_foundOccurrences->empty()) {
-                currOccurrences = *m_foundOccurrences;
-                sortDirty = true;
-            }
+            // The filter task owns the list while it runs, and sorts it itself.
+            if (!m_filterTask.isRunning()) {
+                bool sortDirty = sortSpecs->SpecsDirty;
+                if (m_sortedOccurrences->empty() && !m_foundOccurrences->empty()) {
+                    currOccurrences = *m_foundOccurrences;
+                    sortDirty = true;
+                }
 
-            if (sortDirty) {
-                const auto column = sortSpecs->Specs->ColumnUserID;
-                if (column == ImGui::GetID("size"))
-                    m_sortColumn = SortColumn::Size;
-                else if (column == ImGui::GetID("value"))
-                    m_sortColumn = SortColumn::Value;
-                else
-                    m_sortColumn = SortColumn::Offset;
-                m_sortAscending = sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending;
+                if (sortDirty) {
+                    const auto column = sortSpecs->Specs->ColumnUserID;
+                    if (column == ImGui::GetID("size"))
+                        m_sortColumn = SortColumn::Size;
+                    else if (column == ImGui::GetID("value"))
+                        m_sortColumn = SortColumn::Value;
+                    else
+                        m_sortColumn = SortColumn::Offset;
+                    m_sortAscending = sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending;
 
-                this->sortOccurrences(provider, currOccurrences);
-                sortSpecs->SpecsDirty = false;
+                    this->sortOccurrences(provider, currOccurrences);
+                    sortSpecs->SpecsDirty = false;
+                }
             }
 
             ImGui::TableHeadersRow();
