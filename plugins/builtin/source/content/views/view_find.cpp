@@ -798,15 +798,15 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    void ViewFind::sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences) const {
-        const auto sortBy = [ascending = m_sortAscending](auto &range, auto projection) {
+    void ViewFind::sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder) const {
+        const auto sortBy = [ascending = sortOrder.ascending](auto &range, auto projection) {
             if (ascending)
                 std::ranges::stable_sort(range, std::ranges::less{}, projection);
             else
                 std::ranges::stable_sort(range, std::ranges::greater{}, projection);
         };
 
-        switch (m_sortColumn) {
+        switch (sortOrder.column) {
             case SortColumn::Offset:
                 sortBy(occurrences, [](const FindOccurrence &occurrence) { return occurrence.region.getStartAddress(); });
                 return;
@@ -822,21 +822,19 @@ namespace hex::plugin::builtin {
             return;
         }
 
-        // A shorter value gets a shorter key. The table shows no more, so a longer key cannot change the visible order.
-        constexpr static size_t MaxKeySize = 256;
-
         // Read each key once. A comparison then touches no provider and allocates nothing.
         std::vector<std::pair<std::vector<u8>, FindOccurrence>> keyed;
         keyed.reserve(occurrences.size());
         for (auto &occurrence : occurrences) {
-            std::vector<u8> key(std::min<size_t>(occurrence.region.getSize(), MaxKeySize));
+            // The table shows no more bytes, so a longer key cannot change the visible order.
+            std::vector<u8> key(std::min<size_t>(occurrence.region.getSize(), MaxDisplayedValueSize));
             provider->read(occurrence.region.getStartAddress(), key.data(), key.size());
             keyed.emplace_back(std::move(key), std::move(occurrence));
         }
 
         sortBy(keyed, &decltype(keyed)::value_type::first);
 
-        // Keep the buffer. m_lastSelectedOccurrence points into it.
+        // m_lastSelectedOccurrence points into this buffer.
         for (size_t i = 0; i < occurrences.size(); i += 1)
             occurrences[i] = std::move(keyed[i].second);
     }
@@ -1211,11 +1209,11 @@ namespace hex::plugin::builtin {
                 currOccurrences = *m_foundOccurrences;
 
             if (widened || !m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, widened, filter = m_currFilter.get(provider)](Task &task) {
+                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, widened, sortOrder = m_sortOrder, filter = m_currFilter.get(provider)](Task &task) {
                     std::scoped_lock lock(mutex);
 
                     if (widened)
-                        this->sortOccurrences(provider, currOccurrences);
+                        this->sortOccurrences(provider, currOccurrences, sortOrder);
                     if (filter.empty())
                         return;
 
@@ -1272,9 +1270,9 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.ui.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
-            ImGui::TableSetupColumn("hex.ui.common.size"_lang, 0, -1, ImGui::GetID("size"));
-            ImGui::TableSetupColumn("hex.ui.common.value"_lang, ImGuiTableColumnFlags_WidthStretch, -1, ImGui::GetID("value"));
+            ImGui::TableSetupColumn("hex.ui.common.offset"_lang, 0, -1, ImGuiID(SortColumn::Offset));
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang, 0, -1, ImGuiID(SortColumn::Size));
+            ImGui::TableSetupColumn("hex.ui.common.value"_lang, ImGuiTableColumnFlags_WidthStretch, -1, ImGuiID(SortColumn::Value));
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
@@ -1287,16 +1285,12 @@ namespace hex::plugin::builtin {
                 }
 
                 if (sortDirty) {
-                    const auto column = sortSpecs->Specs->ColumnUserID;
-                    if (column == ImGui::GetID("size"))
-                        m_sortColumn = SortColumn::Size;
-                    else if (column == ImGui::GetID("value"))
-                        m_sortColumn = SortColumn::Value;
-                    else
-                        m_sortColumn = SortColumn::Offset;
-                    m_sortAscending = sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending;
+                    m_sortOrder = {
+                        .column = SortColumn(sortSpecs->Specs->ColumnUserID),
+                        .ascending = sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending
+                    };
 
-                    this->sortOccurrences(provider, currOccurrences);
+                    this->sortOccurrences(provider, currOccurrences, m_sortOrder);
                     sortSpecs->SpecsDirty = false;
                 }
             }
@@ -1320,7 +1314,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushID(i);
 
-                    auto value = this->decodeValue(provider, foundItem, 256);
+                    auto value = this->decodeValue(provider, foundItem, MaxDisplayedValueSize);
                     ImGuiExt::TextFormatted("{}", value);
                     ImGui::SameLine();
                     if (ImGui::Selectable("##line", foundItem.selected, ImGuiSelectableFlags_SpanAllColumns)) {

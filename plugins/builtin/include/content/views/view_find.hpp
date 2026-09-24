@@ -121,11 +121,22 @@ namespace hex::plugin::builtin {
         PerProvider<bool> m_settingsCollapsed;
 
         /**
+         * @brief The maximum number of bytes of a value that the result table shows
+         */
+        constexpr static size_t MaxDisplayedValueSize = 256;
+
+        /**
          * @brief A result table column to sort on
          */
         enum class SortColumn { Offset, Size, Value };
-        SortColumn m_sortColumn = SortColumn::Offset;
-        bool m_sortAscending = true;
+
+        /**
+         * @brief A sort order of the result table
+         */
+        struct SortOrder {
+            SortColumn column = SortColumn::Offset;
+            bool ascending = true;
+        } m_sortOrder;
 
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
@@ -148,12 +159,13 @@ namespace hex::plugin::builtin {
         std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes) const;
 
         /**
-         * @brief Sorts occurrences by m_sortColumn and m_sortAscending
+         * @brief Sorts occurrences
          * @param provider The provider to read the values from
          * @param occurrences The occurrences to sort
-         * @note Sorts values by their raw bytes, without decoding them
+         * @param sortOrder The sort order
+         * @note Sorts values by raw bytes and constants by name. It does not decode values.
          */
-        void sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences) const;
+        void sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder) const;
     };
 
 }
