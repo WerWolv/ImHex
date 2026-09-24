@@ -175,7 +175,7 @@ namespace hex::plugin::builtin {
          * @param occurrences The occurrences to sort
          * @param sortOrder The sort order
          * @param task The task that can interrupt the sort, or nullptr
-         * @note Sorts values by raw bytes and constants by name. It does not decode values.
+         * @note Sorts values by the text that the result table shows. Decodes each value one time.
          */
         void sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder, const Task *task) const;
     };

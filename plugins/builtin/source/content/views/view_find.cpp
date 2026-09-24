@@ -830,29 +830,22 @@ namespace hex::plugin::builtin {
                 break;
         }
 
-        if (m_decodeSettings.mode == SearchSettings::Mode::Constants) {
-            sortBy(occurrences, &FindOccurrence::string);
-            return;
-        }
-
-        // Read each key once. A comparison then touches no provider and allocates nothing.
-        std::vector<std::pair<std::vector<u8>, FindOccurrence>> keyed;
-        keyed.reserve(occurrences.size());
+        // Decode each value one time. A comparison then touches no provider and allocates nothing.
+        std::vector<std::pair<std::string, FindOccurrence>> keyedOccurrences;
+        keyedOccurrences.reserve(occurrences.size());
         for (auto &occurrence : occurrences) {
             if (task != nullptr)
                 task->update();
 
-            // The table shows no more bytes, so a longer key cannot change the visible order.
-            std::vector<u8> key(std::min<size_t>(occurrence.region.getSize(), MaxDisplayedValueSize));
-            provider->read(occurrence.region.getStartAddress(), key.data(), key.size());
-            keyed.emplace_back(std::move(key), std::move(occurrence));
+            auto text = this->decodeValue(provider, occurrence, MaxDisplayedValueSize);
+            keyedOccurrences.emplace_back(std::move(text), std::move(occurrence));
         }
 
-        sortBy(keyed, &decltype(keyed)::value_type::first);
+        sortBy(keyedOccurrences, &decltype(keyedOccurrences)::value_type::first);
 
-        // m_lastSelectedOccurrence points into this buffer.
+        // Reuse the buffer, because m_lastSelectedOccurrence can point into it.
         for (size_t i = 0; i < occurrences.size(); i += 1)
-            occurrences[i] = std::move(keyed[i].second);
+            occurrences[i] = std::move(keyedOccurrences[i].second);
     }
 
     void ViewFind::drawContextMenu(FindOccurrence& target, const std::string &value) {
