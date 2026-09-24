@@ -21,6 +21,7 @@
 #include <barrier>
 
 #include <boost/regex.hpp>
+#include <wolv/utils/lock.hpp>
 
 #include <content/helpers/constants.hpp>
 #include <toasts/toast_notification.hpp>
@@ -695,33 +696,42 @@ namespace hex::plugin::builtin {
         m_occurrenceTree->clear();
         EventHighlightingChanged::post();
 
+        if (m_filterTask.isRunning())
+            m_filterTask.interrupt();
+
         m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching"_unlocalized, ProgressValue::Size(searchRegion.getSize()), [this, settings = m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
+            std::vector<FindOccurrence> occurrences;
             switch (settings.mode) {
                 using enum SearchSettings::Mode;
                 case Strings:
-                    m_foundOccurrences.get(provider) = searchStrings(task, provider, searchRegion, settings.strings);
+                    occurrences = searchStrings(task, provider, searchRegion, settings.strings);
                     break;
                 case Sequence:
-                    m_foundOccurrences.get(provider) = searchSequence(task, provider, searchRegion, settings.bytes);
+                    occurrences = searchSequence(task, provider, searchRegion, settings.bytes);
                     break;
                 case Regex:
-                    m_foundOccurrences.get(provider) = searchRegex(task, provider, searchRegion, settings.regex);
+                    occurrences = searchRegex(task, provider, searchRegion, settings.regex);
                     break;
                 case BinaryPattern:
-                    m_foundOccurrences.get(provider) = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
+                    occurrences = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
                     break;
                 case Value:
-                    m_foundOccurrences.get(provider) = searchValue(task, provider, searchRegion, settings.value);
+                    occurrences = searchValue(task, provider, searchRegion, settings.value);
                     break;
                 case Constants:
-                    m_foundOccurrences.get(provider) = searchConstants(task, provider, searchRegion, settings.constants);
+                    occurrences = searchConstants(task, provider, searchRegion, settings.constants);
                     break;
             }
 
-            m_sortedOccurrences.get(provider).clear();
-            m_lastSelectedOccurrence = nullptr;
+            {
+                // A filter task that still runs cannot write old results over the new ones.
+                std::scoped_lock lock(m_filterMutex);
+                m_foundOccurrences.get(provider) = std::move(occurrences);
+                m_sortedOccurrences.get(provider).clear();
+                m_lastSelectedOccurrence = nullptr;
+            }
 
             for (const auto &occurrence : m_foundOccurrences.get(provider))
                 m_occurrenceTree->insert({ .start=occurrence.region.getStartAddress(), .end=occurrence.region.getEndAddress() }, occurrence);
@@ -733,8 +743,11 @@ namespace hex::plugin::builtin {
         });
 
         m_decodeSettings = m_searchSettings;
-        m_foundOccurrences->clear();
-        m_sortedOccurrences->clear();
+        // A filter task that still runs keeps the old results. The search replaces them when it ends.
+        if (TRY_LOCK(m_filterMutex)) {
+            m_foundOccurrences->clear();
+            m_sortedOccurrences->clear();
+        }
         m_occurrenceTree->clear();
         m_lastSelectedOccurrence = nullptr;
 
@@ -798,7 +811,7 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    void ViewFind::sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder) const {
+    void ViewFind::sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder, const Task *task) const {
         const auto sortBy = [ascending = sortOrder.ascending](auto &range, auto projection) {
             if (ascending)
                 std::ranges::stable_sort(range, std::ranges::less{}, projection);
@@ -826,6 +839,9 @@ namespace hex::plugin::builtin {
         std::vector<std::pair<std::vector<u8>, FindOccurrence>> keyed;
         keyed.reserve(occurrences.size());
         for (auto &occurrence : occurrences) {
+            if (task != nullptr)
+                task->update();
+
             // The table shows no more bytes, so a longer key cannot change the visible order.
             std::vector<u8> key(std::min<size_t>(occurrence.region.getSize(), MaxDisplayedValueSize));
             provider->read(occurrence.region.getStartAddress(), key.data(), key.size());
@@ -1195,37 +1211,40 @@ namespace hex::plugin::builtin {
         auto &currOccurrences = *m_sortedOccurrences;
 
         ImGui::PushItemWidth(-30_scaled);
-        auto prevFilterLength = m_currFilter->length();
         if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *m_currFilter)) {
             if (m_filterTask.isRunning())
                 m_filterTask.interrupt();
 
-            static std::mutex mutex;
-            std::scoped_lock lock(mutex);
+            m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(m_foundOccurrences->size()), [this, provider, &currOccurrences, sortOrder = m_sortOrder, filter = m_currFilter.get(provider)](Task &task) {
+                // The UI thread never takes this lock, so a slow task cannot freeze it.
+                std::scoped_lock lock(m_filterMutex);
+                task.update();
 
-            // A shorter filter can match more results. Start again from all of them.
-            const bool widened = prevFilterLength > m_currFilter->length();
-            if (widened)
-                currOccurrences = *m_foundOccurrences;
+                // Each match of the new filter also matches a filter that it contains.
+                auto &sortedFilter = m_sortedFilter.get(provider);
+                const bool narrowed = !currOccurrences.empty() && hex::containsIgnoreCase(filter, sortedFilter);
 
-            if (widened || !m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, widened, sortOrder = m_sortOrder, filter = m_currFilter.get(provider)](Task &task) {
-                    std::scoped_lock lock(mutex);
+                // The table keeps the old list while the task builds the new one.
+                auto occurrences = narrowed ? currOccurrences : m_foundOccurrences.get(provider);
+                if (!narrowed)
+                    this->sortOccurrences(provider, occurrences, sortOrder, &task);
 
-                    if (widened)
-                        this->sortOccurrences(provider, currOccurrences, sortOrder);
-                    if (filter.empty())
-                        return;
-
+                if (!filter.empty()) {
                     u64 progress = 0;
-                    std::erase_if(currOccurrences, [this, provider, &task, &progress, &filter](const auto &region) {
+                    std::erase_if(occurrences, [this, provider, &task, &progress, &filter](const auto &region) {
                         task.update(progress);
                         progress += 1;
 
                         return !hex::containsIgnoreCase(this->decodeValue(provider, region, region.region.getSize()), filter);
                     });
-                });
-            }
+                }
+
+                task.update();
+
+                // Reuse the buffer, because m_lastSelectedOccurrence can point into it.
+                currOccurrences.assign(std::make_move_iterator(occurrences.begin()), std::make_move_iterator(occurrences.end()));
+                sortedFilter = filter;
+            });
         }
         ImGui::PopItemWidth();
 
@@ -1290,7 +1309,7 @@ namespace hex::plugin::builtin {
                         .ascending = sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending
                     };
 
-                    this->sortOccurrences(provider, currOccurrences, m_sortOrder);
+                    this->sortOccurrences(provider, currOccurrences, m_sortOrder, nullptr);
                     sortSpecs->SpecsDirty = false;
                 }
             }
