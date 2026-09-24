@@ -120,6 +120,13 @@ namespace hex::plugin::builtin {
         PerProvider<std::string> m_currFilter;
         PerProvider<bool> m_settingsCollapsed;
 
+        /**
+         * @brief A result table column to sort on
+         */
+        enum class SortColumn { Offset, Size, Value };
+        SortColumn m_sortColumn = SortColumn::Offset;
+        bool m_sortAscending = true;
+
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
         std::string m_replaceBuffer;
@@ -141,12 +148,12 @@ namespace hex::plugin::builtin {
         std::string decodeValue(prv::Provider *provider, const FindOccurrence& occurrence, size_t maxBytes) const;
 
         /**
-         * @brief Sorts occurrences by their raw bytes, without decoding them
-         * @param provider The provider to read the bytes from
+         * @brief Sorts occurrences by m_sortColumn and m_sortAscending
+         * @param provider The provider to read the values from
          * @param occurrences The occurrences to sort
-         * @param ascending The sort direction
+         * @note Sorts values by their raw bytes, without decoding them
          */
-        void sortOccurrencesByValue(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, bool ascending) const;
+        void sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences) const;
     };
 
 }
