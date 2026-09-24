@@ -16,6 +16,13 @@ set(AVAILABLE_TESTS
         FileAccess
         FileBackedProviderData
 
+    # Pattern editor
+        ToggleLineCommentsAddsAndRemoves
+        ToggleLineCommentsUsesTheShallowestIndent
+        ToggleLineCommentsTreatsARunAsAWhole
+        ToggleLineCommentsLeavesBlankLinesAlone
+        ToggleLineCommentsNeedsAToken
+
     # Utils
         ExtractBits
         EncodeByteString
@@ -67,11 +74,13 @@ add_executable(${PROJECT_NAME}
         source/encoding.cpp
         source/encoding_line_cache.cpp
         source/file.cpp
+        source/line_comment.cpp
         source/net.cpp
         source/utils.cpp
 
         # A test for plugin code needs the plugin's own implementation compiled in too.
         ${CMAKE_SOURCE_DIR}/plugins/builtin/source/content/helpers/decoded_string.cpp
+        ${CMAKE_SOURCE_DIR}/plugins/ui/source/ui/line_comment.cpp
 )
 
 
