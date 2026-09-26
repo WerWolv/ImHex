@@ -37,6 +37,8 @@
 #include <toasts/toast_notification.hpp>
 
 #include <chrono>
+#include <ranges>
+#include <thread>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
@@ -2989,6 +2991,42 @@ namespace hex::plugin::builtin {
         });
     }
 
+    void ViewPatternEditor::readPatternNames(const std::vector<std::fs::path> &paths) {
+        std::vector<std::fs::path> unnamedPaths;
+        {
+            std::scoped_lock lock(m_patternNamesMutex);
+            std::ranges::copy_if(paths, std::back_inserter(unnamedPaths), [this](const auto &path) {
+                return !m_patternNames.contains(path);
+            });
+        }
+
+        if (unnamedPaths.empty())
+            return;
+
+        const auto taskCount = std::max<size_t>(std::thread::hardware_concurrency(), 1);
+        const auto chunkSize = (unnamedPaths.size() + taskCount - 1) / taskCount;
+        for (const auto &chunk : unnamedPaths | std::views::chunk(chunkSize)) {
+            TaskManager::createBackgroundTask("Parsing pattern names", [this, chunkPaths = std::vector(chunk.begin(), chunk.end())](Task &task) {
+                // Reading the pragmas only runs the lexer, so the runtime needs no provider.
+                pl::PatternLanguage runtime;
+
+                for (const auto &path : chunkPaths) {
+                    task.update();
+
+                    wolv::io::File file(path, wolv::io::File::Mode::Read);
+                    const auto pragmaValues = runtime.getPragmaValues(file.readString());
+
+                    auto name = wolv::util::toUTF8String(path.filename());
+                    if (auto it = pragmaValues.find("description"); it != pragmaValues.end() && !it->second.empty())
+                        name = fmt::format("{} ({})", it->second, name);
+
+                    std::scoped_lock lock(m_patternNamesMutex);
+                    m_patternNames[path] = std::move(name);
+                }
+            });
+        }
+    }
+
     void ViewPatternEditor::openPatternFile(bool trackFile) {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
@@ -3006,42 +3044,18 @@ namespace hex::plugin::builtin {
             }
         }
 
-        auto createRuntime = [provider] {
-            auto runtime = std::make_shared<pl::PatternLanguage>();
-            ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
-
-            return runtime;
-        };
+        this->readPatternNames(paths);
 
         ui::PopupNamedFileChooser::open(
             basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" }, { "Pattern Import File", "pat" } }, false,
-            [this, createRuntime](const std::fs::path &path, const std::fs::path &adjustedPath) mutable -> std::string {
-                static std::mutex mutex;
-
-                std::scoped_lock lock(mutex);
+            [this](const std::fs::path &path, const std::fs::path &adjustedPath) -> std::string {
+                std::scoped_lock lock(m_patternNamesMutex);
 
                 if (auto it = m_patternNames.find(path); it != m_patternNames.end()) {
                     return it->second;
                 }
 
-                const auto fileName = wolv::util::toUTF8String(adjustedPath.filename());
-
-                m_patternNames[path] = fileName;
-
-                TaskManager::createBackgroundTask("Parsing pattern names", [this, path, fileName, runtime = createRuntime()] {
-                    wolv::io::File file(path, wolv::io::File::Mode::Read);
-
-                    const auto pragmaValues = runtime->getPragmaValues(file.readString());
-
-                    std::scoped_lock lock(mutex);
-                    if (auto it = pragmaValues.find("description"); it != pragmaValues.end() && !it->second.empty()) {
-                        m_patternNames[path] = fmt::format("{} ({})", it->second, fileName);
-                    } else {
-                        m_patternNames[path] = fileName;
-                    }
-                });
-
-                return fileName;
+                return wolv::util::toUTF8String(adjustedPath.filename());
             },
             [this, provider, trackFile](const std::fs::path &path) {
                 this->loadPatternFile(path, provider, trackFile);
