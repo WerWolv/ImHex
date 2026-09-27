@@ -201,8 +201,9 @@ namespace hex {
      *
      * `name` reaches encodings/`name`.tbl, in lower case, so `#pragma encoding ASCII` reads
      * encodings/ascii.tbl. A table in a folder directly inside encodings answers too, such as
-     * encodings/`folder`/ascii.tbl. The lookup stays in the encodings directory: a name with a directory
-     * part in it reaches no table. A table whose only line is `-alias` is another name for the
+     * encodings/`folder`/ascii.tbl. A name can also give that folder, such as `folder/ascii`. The
+     * lookup stays in the encodings directory: a name with any other directory part reaches no
+     * table. A table whose only line is `-alias` is another name for the
      * table it points at, though a `-alias` line itself takes the stem it names literally, in
      * the case it is written. Each table is parsed once and cached for the life of the process.
      *
