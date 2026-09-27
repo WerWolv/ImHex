@@ -61,6 +61,8 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderDataInserted::subscribe(this, [](prv::Provider *provider, u64 offset, u64 size) {
+            offset -= provider->getBaseAddress();
+
             provider->getUndoStack().add<undo::OperationInsert>(offset, size);
         });
 
