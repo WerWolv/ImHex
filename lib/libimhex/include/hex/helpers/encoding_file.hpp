@@ -200,7 +200,8 @@ namespace hex {
      * @brief Looks an encoding up by its name
      *
      * `name` reaches encodings/`name`.tbl, in lower case, so `#pragma encoding ASCII` reads
-     * encodings/ascii.tbl. The lookup stays in the encodings directory: a name with a directory
+     * encodings/ascii.tbl. A table in a folder directly inside encodings answers too, such as
+     * encodings/`folder`/ascii.tbl. The lookup stays in the encodings directory: a name with a directory
      * part in it reaches no table. A table whose only line is `-alias` is another name for the
      * table it points at, though a `-alias` line itself takes the stem it names literally, in
      * the case it is written. Each table is parsed once and cached for the life of the process.
@@ -224,6 +225,16 @@ namespace hex {
      * @return The name in lower case
      */
     std::string encodingFileName(std::string_view name);
+
+    /**
+     * @brief Lists the table files that a lookup by name can find
+     *
+     * Reads the top level of each encodings search path, then each folder directly inside it.
+     * A deeper folder is not read, so it can hold tables that are only included.
+     *
+     * @return The table files, in the order a lookup by name tries them
+     */
+    std::vector<std::fs::path> getEncodingFiles();
 
     /**
      * @brief What a table's header says about the encoding

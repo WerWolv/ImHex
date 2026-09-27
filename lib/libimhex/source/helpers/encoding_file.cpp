@@ -74,16 +74,26 @@ namespace hex {
         /**
          * @brief Lists the directories a table is looked up in by name, in the order they are tried
          *
-         * Every encodings search path first, then the "builtin" folder inside each, which holds
-         * the tables ImHex-Patterns generates. A table a person puts in an encodings folder
-         * itself replaces a built-in table of the same name.
+         * The top level of every encodings search path comes first. So a table a person puts
+         * there replaces a table of the same name in a folder. Then each folder directly inside
+         * a search path, in name order. A deeper folder is not read, so it can hold tables that
+         * are only included.
          */
         std::vector<std::fs::path> encodingSearchDirectories() {
             const auto basePaths = paths::Encodings.read();
 
             std::vector<std::fs::path> result(basePaths.begin(), basePaths.end());
-            for (const auto &basePath : basePaths)
-                result.push_back(basePath / "builtin");
+            for (const auto &basePath : basePaths) {
+                std::vector<std::fs::path> folders;
+                std::error_code error;
+                for (const auto &entry : std::fs::directory_iterator(basePath, error)) {
+                    if (entry.is_directory(error))
+                        folders.push_back(entry.path());
+                }
+
+                std::ranges::sort(folders);
+                std::ranges::move(folders, std::back_inserter(result));
+            }
 
             return result;
         }
@@ -228,22 +238,15 @@ namespace hex {
          *
          * Read once, on the first name that no file answers to by its own spelling. This finds a
          * table file whose own name is not in lower case, which findEncodingFile() misses on a
-         * file system that tells case apart. A base path earlier in the list wins, the same way
+         * file system that tells case apart. A directory earlier in the list wins, the same way
          * findEncodingFile() takes the first it finds.
          */
         const std::map<std::string, std::fs::path>& encodingFilesByName() {
             static const auto files = [] {
                 std::map<std::string, std::fs::path> result;
 
-                for (const auto &directory : encodingSearchDirectories()) {
-                    std::error_code error;
-                    for (const auto &entry : std::fs::directory_iterator(directory, error)) {
-                        if (entry.path().extension() != ".tbl")
-                            continue;
-
-                        result.emplace(encodingFileName(entry.path().stem().string()), entry.path());
-                    }
-                }
+                for (const auto &path : getEncodingFiles())
+                    result.emplace(encodingFileName(path.stem().string()), path);
 
                 return result;
             }();
@@ -745,6 +748,24 @@ namespace hex {
 
         for (auto &character : result)
             character = char(std::tolower(u8(character)));
+
+        return result;
+    }
+
+    std::vector<std::fs::path> getEncodingFiles() {
+        std::vector<std::fs::path> result;
+
+        for (const auto &directory : encodingSearchDirectories()) {
+            std::vector<std::fs::path> files;
+            std::error_code error;
+            for (const auto &entry : std::fs::directory_iterator(directory, error)) {
+                if (entry.is_regular_file(error) && entry.path().extension() == ".tbl")
+                    files.push_back(entry.path());
+            }
+
+            std::ranges::sort(files);
+            std::ranges::move(files, std::back_inserter(result));
+        }
 
         return result;
     }

@@ -733,16 +733,7 @@ namespace hex::plugin::builtin {
                 ContentRegistry::DataInspector::drawMenuItems([&] {
                     if (ImGui::MenuItemEx("hex.builtin.inspector.custom_encoding.change"_lang, "あ")) {
                         const auto basePaths = paths::Encodings.read();
-                        std::vector<std::fs::path> paths;
-                        // Recursive, since the generated tables live in each folder's "builtin" subfolder.
-                        for (const auto &basePath : basePaths) {
-                            std::error_code error;
-                            for (const auto &entry : std::filesystem::recursive_directory_iterator(basePath, error)) {
-                                if (!entry.is_regular_file()) continue;
-
-                                paths.push_back(entry.path());
-                            }
-                        }
+                        const auto paths = getEncodingFiles();
 
                         PopupEncodingChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [encodingFilePtr](const auto &path) {
                             *encodingFilePtr = EncodingFile(EncodingFile::Type::Thingy, path);
