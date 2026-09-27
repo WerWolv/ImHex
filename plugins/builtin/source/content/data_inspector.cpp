@@ -733,12 +733,7 @@ namespace hex::plugin::builtin {
                 ContentRegistry::DataInspector::drawMenuItems([&] {
                     if (ImGui::MenuItemEx("hex.builtin.inspector.custom_encoding.change"_lang, "あ")) {
                         const auto basePaths = paths::Encodings.read();
-                        std::vector<std::fs::path> paths;
-                        for (const auto &basePath : basePaths) {
-                            for (const auto &entry : std::filesystem::directory_iterator(basePath)) {
-                                paths.push_back(entry.path());
-                            }
-                        }
+                        const auto paths = getEncodingFiles();
 
                         PopupEncodingChooser::open(basePaths, paths, std::vector<fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false, [encodingFilePtr](const auto &path) {
                             *encodingFilePtr = EncodingFile(EncodingFile::Type::Thingy, path);

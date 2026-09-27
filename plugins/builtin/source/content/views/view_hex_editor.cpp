@@ -840,15 +840,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::UserInterface::addMenuItem({ "hex.builtin.menu.file"_unlocalized, "hex.builtin.menu.file.import"_unlocalized, "hex.builtin.menu.file.import.custom_encoding"_unlocalized }, "あ", 5700, Shortcut::None,
             [this]{
                 const auto basePaths = paths::Encodings.read();
-                std::vector<std::fs::path> paths;
-                for (const auto &path : basePaths) {
-                    std::error_code error;
-                    for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
-                        if (!entry.is_regular_file()) continue;
-
-                        paths.push_back(entry);
-                    }
-                }
+                const auto paths = getEncodingFiles();
 
                 PopupEncodingChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                 [this](const auto &path) {
