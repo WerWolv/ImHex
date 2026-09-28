@@ -8,6 +8,8 @@
 
 #include <wolv/utils/guards.hpp>
 
+#include <array>
+#include <span>
 #include <vector>
 #include <optional>
 #include <cstring>
@@ -414,6 +416,145 @@ namespace hex::plugin::decompress {
             }
             output.resize(outputIdx);
             return u128(input.size()); // return number of bytes read from the input
+        });
+
+        /* dcl_decompress(compressed_pattern, section_id) */
+        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "dcl_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
+            // PKWARE Data Compression Library "implode" data, as decoded by blast.c from zlib's contrib folder
+            const auto input = getCompressedData(evaluator, params[0]);
+            auto &output = evaluator->getSection(u64(params[1].toUnsigned()));
+            output.clear();
+
+            size_t inputIdx = 0;
+            u32 bitBuffer = 0;
+            u8 bitCount = 0;
+            bool outOfInput = false;
+
+            // Bits are read starting with the least significant bit of each byte
+            auto bits = [&](u8 count) -> u32 {
+                while (bitCount < count) {
+                    if (inputIdx >= input.size()) {
+                        outOfInput = true;
+                        return 0;
+                    }
+                    bitBuffer |= u32(input[inputIdx++]) << bitCount;
+                    bitCount += 8;
+                }
+                const u32 value = bitBuffer & ((1U << count) - 1);
+                bitBuffer >>= count;
+                bitCount -= count;
+                return value;
+            };
+
+            // Canonical Huffman codes, given as runs of code lengths: each byte
+            // holds a length in its low nibble and a repeat count minus one in its high nibble
+            struct Huffman {
+                std::array<u16, 14> count = { };
+                std::array<u16, 256> symbol = { };
+            };
+            auto construct = [](std::span<const u8> compact) {
+                Huffman huffman;
+                std::array<u8, 256> lengths = { };
+                size_t symbols = 0;
+                for (u8 byte : compact) {
+                    for (u8 i = 0; i <= byte >> 4; i += 1)
+                        lengths[symbols++] = byte & 0x0F;
+                }
+
+                for (size_t i = 0; i < symbols; i += 1)
+                    huffman.count[lengths[i]] += 1;
+
+                std::array<u16, 14> offsets = { };
+                for (size_t length = 1; length < offsets.size() - 1; length += 1)
+                    offsets[length + 1] = offsets[length] + huffman.count[length];
+                for (size_t i = 0; i < symbols; i += 1) {
+                    if (lengths[i] != 0)
+                        huffman.symbol[offsets[lengths[i]]++] = i;
+                }
+
+                return huffman;
+            };
+
+            // Codes are stored with their bits inverted, most significant bit first
+            auto decode = [&](const Huffman &huffman) -> std::optional<u16> {
+                i32 code = 0, first = 0, index = 0;
+                for (size_t length = 1; length < huffman.count.size(); length += 1) {
+                    code |= bits(1) ^ 1;
+                    if (outOfInput)
+                        return std::nullopt;
+                    const i32 count = huffman.count[length];
+                    if (code < first + count)
+                        return huffman.symbol[index + (code - first)];
+                    index += count;
+                    first += count;
+                    first <<= 1;
+                    code <<= 1;
+                }
+                return std::nullopt;
+            };
+
+            constexpr static std::array<u8, 98> LiteralLengths = {
+                11, 124, 8, 7, 28, 7, 188, 13, 76, 4, 10, 8, 12, 10, 12, 10, 8, 23, 8,
+                9, 7, 6, 7, 8, 7, 6, 55, 8, 23, 24, 12, 11, 7, 9, 11, 12, 6, 7, 22, 5,
+                7, 24, 6, 11, 9, 6, 7, 22, 7, 11, 38, 7, 9, 8, 25, 11, 8, 11, 9, 12,
+                8, 12, 5, 38, 5, 38, 5, 11, 7, 5, 6, 21, 6, 10, 53, 8, 7, 24, 10, 27,
+                44, 253, 253, 253, 252, 252, 252, 13, 12, 45, 12, 45, 12, 61, 12, 45,
+                44, 173
+            };
+            constexpr static std::array<u8, 6> LengthLengths = { 2, 35, 36, 53, 38, 23 };
+            constexpr static std::array<u8, 7> DistanceLengths = { 2, 20, 53, 230, 247, 151, 248 };
+            constexpr static std::array<u16, 16> LengthBase = { 3, 2, 4, 5, 6, 7, 8, 9, 10, 12, 16, 24, 40, 72, 136, 264 };
+            constexpr static std::array<u8, 16> LengthExtra = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+
+            static const Huffman LiteralCodes = construct(LiteralLengths);
+            static const Huffman LengthCodes = construct(LengthLengths);
+            static const Huffman DistanceCodes = construct(DistanceLengths);
+
+            const u32 codedLiterals = bits(8);
+            const u32 dictionaryBits = bits(8);
+            if (outOfInput || codedLiterals > 1 || dictionaryBits < 4 || dictionaryBits > 6)
+                return u128(0);
+
+            // Stops at the end code, or keeps what was decoded if the data ends early or is invalid
+            while (true) {
+                if (bits(1) != 0) {
+                    const auto lengthSymbol = decode(LengthCodes);
+                    if (!lengthSymbol.has_value())
+                        break;
+                    const u32 length = LengthBase[*lengthSymbol] + bits(LengthExtra[*lengthSymbol]);
+                    if (outOfInput || length == 519)
+                        break;
+
+                    const u8 shift = length == 2 ? 2 : dictionaryBits;
+                    const auto distanceSymbol = decode(DistanceCodes);
+                    if (!distanceSymbol.has_value())
+                        break;
+                    const size_t distance = (size_t(*distanceSymbol) << shift) + bits(shift) + 1;
+                    if (outOfInput || distance > output.size())
+                        break;
+
+                    // Copies may overlap the bytes they produce
+                    for (u32 i = 0; i < length; i += 1)
+                        output.push_back(output[output.size() - distance]);
+                } else {
+                    u32 literal;
+                    if (codedLiterals != 0) {
+                        const auto symbol = decode(LiteralCodes);
+                        if (!symbol.has_value())
+                            break;
+                        literal = *symbol;
+                    } else {
+                        literal = bits(8);
+                    }
+                    if (outOfInput)
+                        break;
+                    output.push_back(u8(literal));
+                }
+                if (outOfInput)
+                    break;
+            }
+
+            return u128(inputIdx);
         });
     }
 
