@@ -80,7 +80,7 @@ add_executable(${PROJECT_NAME}
 
         # A test for plugin code needs the plugin's own implementation compiled in too.
         ${CMAKE_SOURCE_DIR}/plugins/builtin/source/content/helpers/decoded_string.cpp
-        ${CMAKE_SOURCE_DIR}/plugins/ui/source/ui/line_comment.cpp
+        ${CMAKE_SOURCE_DIR}/plugins/ui/source/ui/text_editor/line_comment.cpp
 )
 
 
