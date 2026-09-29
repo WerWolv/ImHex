@@ -104,6 +104,7 @@ namespace hex::plugin::hashes {
         [[nodiscard]] nlohmann::json store() const override {
             nlohmann::json result;
 
+            result["width"] = m_width;
             result["polynomial"] = m_polynomial;
             result["initialValue"] = m_initialValue;
             result["xorOut"] = m_xorOut;
@@ -115,6 +116,7 @@ namespace hex::plugin::hashes {
 
         void load(const nlohmann::json &json) override {
             try {
+                m_width           = json.value("width", m_width);
                 m_polynomial      = json.at("polynomial");
                 m_initialValue    = json.at("initialValue");
                 m_xorOut          = json.at("xorOut");
