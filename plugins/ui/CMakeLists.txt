@@ -22,6 +22,7 @@ add_imhex_plugin(
         source/ui/text_editor/support.cpp
         source/ui/text_editor/utf8.cpp
         source/ui/text_editor/code_folder.cpp
+        source/ui/text_editor/line_comment.cpp
     INCLUDES
         include
     LIBRARIES
