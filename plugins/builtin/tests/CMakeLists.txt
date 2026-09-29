@@ -4,6 +4,7 @@ project(${IMHEX_PLUGIN_NAME}_tests)
 set(AVAILABLE_TESTS
     Providers/ReadWrite
     Providers/InvalidResize
+    Providers/UndoRedoInsertBaseAddress
     Project/ParseLegacy
     Project/ImportLegacy
     Project/MigrateLegacy
