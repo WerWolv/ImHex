@@ -164,6 +164,39 @@ typedef mbedtls_sha256_context yr_sha256_ctx;
 #endif
 
 #define HAVE_COMMONCRYPTO_COMMONCRYPTO_H
+#elif defined(HAVE_NETTLE)
+
+#include <nettle/md5.h>
+#include <nettle/sha1.h>
+#include <nettle/sha2.h>
+#include <nettle/version.h>
+
+typedef struct md5_ctx yr_md5_ctx;
+typedef struct sha1_ctx yr_sha1_ctx;
+typedef struct sha256_ctx yr_sha256_ctx;
+
+#define yr_md5_init(ctx)                    md5_init(ctx)
+#define yr_md5_update(ctx, data, len)       md5_update(ctx, len, data)
+#define yr_sha1_init(ctx)                   sha1_init(ctx)
+#define yr_sha1_update(ctx, data, len)      sha1_update(ctx, len, data)
+#define yr_sha256_init(ctx)                 sha256_init(ctx)
+#define yr_sha256_update(ctx, data, len)    sha256_update(ctx, len, data)
+
+#if NETTLE_VERSION_MAJOR >= 4
+
+#define yr_md5_final(digest, ctx)           md5_digest(ctx, digest)
+#define yr_sha1_final(digest, ctx)          sha1_digest(ctx, digest)
+#define yr_sha256_final(digest, ctx)        sha256_digest(ctx, digest)
+
+#else
+
+#define yr_md5_final(digest, ctx)           md5_digest(ctx, YR_MD5_LEN, digest)
+#define yr_sha1_final(digest, ctx)          sha1_digest(ctx, YR_SHA1_LEN, digest)
+#define yr_sha256_final(digest, ctx)        sha256_digest(ctx, YR_SHA256_LEN, digest)
+
+#endif
+
+#define HAVE_COMMONCRYPTO_COMMONCRYPTO_H
 #endif
 
 #endif

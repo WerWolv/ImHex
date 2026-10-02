@@ -32,6 +32,11 @@ option(IMHEX_GENERATE_PDBS              "Enable generating PDB files in non-debu
 option(IMHEX_REPLACE_DWARF_WITH_PDB     "Remove DWARF information from binaries when generating PDBS (Windows only)"                    OFF)
 option(IMHEX_STRICT_WARNINGS            "Enable most available warnings and treat them as errors"                                       ON )
 option(IMHEX_DISABLE_STACKTRACE         "Disables support for printing stack traces"                                                    OFF)
+set   (CRYPTO_BACKEND                   "mbedtls" CACHE STRING "Crypto backend to use (mbedtls or nettle)"                                 )
+set_property(CACHE CRYPTO_BACKEND PROPERTY STRINGS mbedtls nettle)
+if (NOT CRYPTO_BACKEND STREQUAL "mbedtls" AND NOT CRYPTO_BACKEND STREQUAL "nettle")
+    message(FATAL_ERROR "Invalid CRYPTO_BACKEND '${CRYPTO_BACKEND}': expected 'mbedtls' or 'nettle'")
+endif ()
 ## Plugins
 option(IMHEX_STATIC_LINK_PLUGINS        "Statically link all plugins into the main executable"                                          OFF)
 option(IMHEX_ENABLE_PLUGIN_TESTS        "Enable building plugin tests"                                                                  OFF)
