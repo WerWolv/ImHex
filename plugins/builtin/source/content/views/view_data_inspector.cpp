@@ -64,6 +64,11 @@ namespace hex::plugin::builtin {
             m_shouldInvalidate = true;
         });
 
+        // The UTF-16 and UTF-32 rows follow the byte order the pattern declares.
+        EventPatternExecuted::subscribe(this, [this](const std::string &) {
+            m_shouldInvalidate = true;
+        });
+
         ContentRegistry::Settings::onChange("hex.builtin.setting.data_inspector"_unlocalized, "hex.builtin.setting.data_inspector.hidden_rows"_untranslated, [this](const ContentRegistry::Settings::SettingsValue &value) {
             auto filterValues = value.get<std::vector<std::string>>({});
             m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
@@ -80,6 +85,7 @@ namespace hex::plugin::builtin {
         EventRegionSelected::unsubscribe(this);
         EventProviderClosed::unsubscribe(this);
         EventFileEncodingChanged::unsubscribe(this);
+        EventPatternExecuted::unsubscribe(this);
     }
 
     void ViewDataInspector::updateInspectorRows() {
