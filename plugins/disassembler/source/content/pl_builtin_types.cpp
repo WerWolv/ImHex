@@ -46,11 +46,7 @@ namespace hex::plugin::disasm {
         }
 
     protected:
-        [[nodiscard]] std::string formatDisplayValue() override {
-            return m_instructionString;
-        }
-
-       [[nodiscard]] std::string toString() override {
+        std::string defaultToString() const override {
              return m_instructionString;
         }
 
