@@ -46,7 +46,6 @@ namespace hex::plugin::builtin {
         using TokenInterval         = IdentifierHighlighter::TokenInterval;
         using Token                 = pl::core::Token;
         using ASTNode               = pl::core::ast::ASTNode;
-        using CompileError          = pl::core::err::CompileError;
         using Identifier            = Token::Identifier;
         using IdentifierType        = Identifier::IdentifierType;
         using UnorderedBlocks       = std::map<std::string,TokenInterval>;
@@ -64,7 +63,6 @@ namespace hex::plugin::builtin {
         using Types                 = std::map<std::string, pl::hlp::safe_shared_ptr<pl::core::ast::ASTNodeTypeDecl>>;
         using ParsedImports         = std::map<std::string,std::vector<Token>>;
         using Str2StrMap            = std::map<std::string,std::string>;
-        using CompileErrors         = std::vector<CompileError>;
         using TokenSequence         = std::vector<Token>;
         using TokenIdVector         = std::vector<i32>;
         using TokenIdSet            = std::set<i32>;
@@ -99,7 +97,6 @@ namespace hex::plugin::builtin {
             Str2StrMap importedHeaders;
             TokenSequence fullTokens;
             std::string editedText;
-            CompileErrors compileErrors;
             StringVector linesOfColors;
         public:
             RequiredInputs() : m_identifierHighlighter(nullptr) {};
@@ -109,7 +106,6 @@ namespace hex::plugin::builtin {
             void setNamespaces();
             void setImports();
             void setText();
-            void setCompileErrors();
             void applyLinesOfColors(bool colorizeIdentifiers = true);
         };
         /// to define functions and types
@@ -193,7 +189,7 @@ namespace hex::plugin::builtin {
         /**
         * @brief Create data to pass to text editor
         */
-        void setRequestedIdentifierColors(bool colorizeIdentifiers = true);
+        i32 setRequestedIdentifierColors(bool colorizeIdentifiers = true);
 
         /**
         * @brief Set the color of a token
@@ -206,10 +202,6 @@ namespace hex::plugin::builtin {
 
         void colorRemainingIdentifierTokens();
 
-        /**
-         * @brief Renders compile errors in real time
-         */
-        void renderErrors();
         /// A token range is the set of token indices of a definition. The namespace token
         /// ranges are obtained first because they are needed to obtain unique identifiers.
         void getTokenRanges(IdentifierType identifierTypeToSearch);
