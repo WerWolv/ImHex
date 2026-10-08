@@ -116,6 +116,16 @@ namespace hex::log {
         }
 
         void addLogEntry(std::string_view project, std::string_view level, std::string message) {
+            // s_logEntries is a shared std::vector; every caller must hold
+            // s_loggerMutex before mutating it. print() already does, but
+            // hex::log::debug()'s disabled-logging path called this
+            // directly with no lock held, racing concurrent debug() calls
+            // against each other on the same vector (see #2751). Locking
+            // here, rather than only at each call site, makes every current
+            // and future caller safe by construction. s_loggerMutex is a
+            // std::recursive_mutex, so nesting under print()'s own lock is
+            // safe.
+            std::scoped_lock lock(s_loggerMutex);
             s_logEntries->emplace_back(
                 project,
                 level,
