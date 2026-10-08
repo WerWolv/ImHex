@@ -70,6 +70,20 @@ namespace hex::ui {
         return {m_line - o.m_line, m_column - o.m_column};
     }
 
+    Coordinates Coordinates::operator+(const std::string &str) const {
+        auto inc = Lines::stringIndexCoords(str.size(), str);
+        if (inc.m_line == 0)
+            return {m_line, m_column + inc.m_column};
+        return {m_line + inc.m_line, inc.m_column};
+    }
+
+    Coordinates Coordinates::operator-(const std::string &str) const {
+        auto inc = Lines::stringIndexCoords(str.size(), str);
+        if (inc.m_line == 0)
+            return {m_line, m_column - inc.m_column};
+        return {m_line - inc.m_line, inc.m_column};
+    }
+
     bool Range::operator==(const Range &o) const {
         return m_start == o.m_start && m_end == o.m_end;
     }
@@ -77,17 +91,17 @@ namespace hex::ui {
         return m_start != o.m_start || m_end != o.m_end;
     }
 
-    Coordinates Range::getSelectedLines() {
+    Interval Range::getSelectedLines() const {
         return {m_start.m_line, m_end.m_line};
     }
 
-    Coordinates Range::getSelectedColumns() {
+    Coordinates Range::getSelectedColumns() const {
         if (isSingleLine())
             return {m_start.m_column, m_end.m_column - m_start.m_column};
         return {m_start.m_column, m_end.m_column};
     }
 
-    bool Range::isSingleLine() {
+    bool Range::isSingleLine() const {
         return m_start.m_line == m_end.m_line;
     }
 
@@ -151,6 +165,34 @@ namespace hex::ui {
 
         return result;
     }
+
+    bool Range::operator<(const Range &o) const {
+        return o.m_end == m_end ? o.m_start < m_start :  m_end < o.m_end;
+    }
+
+    bool Range::operator>(const Range &o) const {
+        return o.m_end == m_end ? o.m_start > m_start : m_end > o.m_end;
+    }
+
+    bool Range::operator<=(const Range &o) const {
+        return !(*this > o);
+    }
+
+    bool Range::operator>=(const Range &o) const {
+        return !(*this < o);
+    }
+
+    Range Range::operator+(const Range &o) const  {
+        Coordinates newStart = m_start + o.m_start;
+        Coordinates newEnd = m_end + o.m_end;
+        return {newStart, newEnd};
+    };
+
+    Range Range::operator-(const Range &o) const  {
+        Coordinates newStart = m_start - o.m_start;
+        Coordinates newEnd = m_end - o.m_end;
+        return {newStart, newEnd};
+    };
 
     bool Line::operator==(const Line &line) const {
         return m_chars == line.m_chars && m_colors == line.m_colors && m_flags == line.m_flags &&
@@ -396,6 +438,16 @@ namespace hex::ui {
         return m_chars.substr(utf8Start, utf8CharLen);
     }
 
+    std::string Line::part(LinePart part) const {
+        if (part == LinePart::Chars || part == LinePart::Utf8)
+            return m_chars;
+        if (part == LinePart::Colors)
+            return m_colors;
+        if (part == LinePart::Flags)
+            return m_flags;
+        return "";
+    }
+
     void Line::setNeedsUpdate(bool needsUpdate) {
         m_colorized = m_colorized && !needsUpdate;
     }
@@ -603,8 +655,8 @@ namespace hex::ui {
         return m_lines.getSelection();
     }
 
-    void TextEditor::selectWordUnderCursor() {
-        auto wordStart = findWordStart(getCursorPosition());
+    void Lines::selectWordUnderCursor() {
+        auto wordStart = findWordStart(m_state.m_cursorPosition);
         setSelection(Range(wordStart, findWordEnd(wordStart)));
     }
 
@@ -663,11 +715,11 @@ namespace hex::ui {
 
     TextEditor::PaletteIndex Lines::getColorIndexFromFlags(Line::Flags flags) {
         auto commentBits = flags.m_value & inComment;
-        if (commentBits == (i32) Line::FlagValues::Global)
+        if (commentBits == (i32) Line::FlagValues::GlobalDoc)
             return PaletteIndex::GlobalDocComment;
         if (commentBits == (i32) Line::FlagValues::BlockDoc)
             return PaletteIndex::DocBlockComment;
-        if (commentBits == (i32) Line::FlagValues::Doc)
+        if (commentBits == (i32) Line::FlagValues::LineDoc)
             return PaletteIndex::DocComment;
         if (commentBits == (i32) Line::FlagValues::Block)
             return PaletteIndex::BlockComment;
@@ -759,7 +811,7 @@ namespace hex::ui {
                 else if (doubleClick) {
                     if (!ctrl) {
                         m_lines.setEditorState(coordinates);
-                        selectWordUnderCursor();
+                        m_lines.selectWordUnderCursor();
                     }
 
                     m_lastClick = (float) ImGui::GetTime();
@@ -772,7 +824,7 @@ namespace hex::ui {
                 else if (click) {
                     if (ctrl) {
                         m_lines.setEditorState(coordinates);
-                        selectWordUnderCursor();
+                        m_lines.selectWordUnderCursor();
                     } else if (shift)
                         m_lines.setEditorState(coordinates, false);
                     else
@@ -1172,19 +1224,17 @@ namespace hex::ui {
         if (matchIndex != 0) {
             UndoRecord u;
             u.m_before = state;
-            u.m_removed = lines->getSelectedText();
-            u.m_removedRange = state.m_selection;
+            u.m_removedText = lines->getSelectedText();
+            u.m_removedPlace = state.m_selection.m_start;
             lines->deleteSelection();
             if (getFindRegEx()) {
                 std::string replacedText = std::regex_replace(lines->getText(), std::regex(m_findWord), m_replaceWord,std::regex_constants::format_first_only |std::regex_constants::format_no_copy);
-                u.m_added = replacedText;
+                u.m_addedText = replacedText;
             } else
-                u.m_added = m_replaceWord;
+                u.m_addedText = m_replaceWord;
 
-            u.m_addedRange.m_start = lines->lineCoordinates(lines->m_state.m_cursorPosition);
-            lines->insertText(u.m_added);
-
-            u.m_addedRange.m_end = lines->lineCoordinates(lines->m_state.m_cursorPosition);
+            u.m_addedPlace = lines->lineCoordinates(lines->m_state.m_cursorPosition);
+            lines->insertText(u.m_addedText);
 
             lines->ensureCursorVisible();
             ImGui::SetKeyboardFocusHere(0);

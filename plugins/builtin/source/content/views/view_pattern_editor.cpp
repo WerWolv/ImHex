@@ -273,115 +273,6 @@ namespace hex::plugin::builtin {
         m_tabSize = std::max(0, std::min(32, value));
     }
 
-    static const ui::TextEditor::LanguageDefinition &PatternLanguage() {
-        static bool initialized = false;
-        static ui::TextEditor::LanguageDefinition langDef;
-        if (!initialized) {
-            constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
-            };
-            for (auto &k : keywords)
-                langDef.m_keywords.insert(k);
-
-            constexpr static std::array builtInTypes = {
-                "u8", "u16", "u24", "u32", "u48", "u64", "u96", "u128", "s8", "s16", "s24", "s32", "s48", "s64", "s96", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
-            };
-            for (const auto name : builtInTypes) {
-                ui::TextEditor::Identifier id;
-                id.m_declaration = "";
-                langDef.m_identifiers.insert(std::make_pair(std::string(name), id));
-            }
-            constexpr static std::array directives = {
-                    "include", "define", "ifdef", "ifndef", "endif", "undef", "pragma", "error"
-            };
-            for (const auto name : directives) {
-                ui::TextEditor::Identifier id;
-                id.m_declaration = "";
-                langDef.m_preprocIdentifiers.insert(std::make_pair(std::string(name), id));
-            }
-            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, ui::TextEditor::PaletteIndex &paletteIndex) -> bool {
-                paletteIndex = ui::TextEditor::PaletteIndex::Max;
-
-                while (inBegin < inEnd && isascii(*inBegin) && std::isblank(*inBegin))
-                    ++inBegin;
-
-                if (inBegin == inEnd) {
-                    outBegin     = inEnd;
-                    outEnd       = inEnd;
-                    paletteIndex = ui::TextEditor::PaletteIndex::Default;
-                } else if (ui::tokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = ui::TextEditor::PaletteIndex::Identifier;
-                } else if (ui::tokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = ui::TextEditor::PaletteIndex::NumericLiteral;
-                } else if (ui::tokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = ui::TextEditor::PaletteIndex::CharLiteral;
-                } else if (ui::tokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = ui::TextEditor::PaletteIndex::StringLiteral;
-                } else if (ui::tokenizeCStyleSeparator(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = ui::TextEditor::PaletteIndex::Separator;
-                } else if (ui::tokenizeCStyleOperator(inBegin, inEnd, outBegin, outEnd)) {
-                    paletteIndex = ui::TextEditor::PaletteIndex::Operator;
-                }
-                return paletteIndex != ui::TextEditor::PaletteIndex::Max;
-            };
-
-            langDef.m_commentStart      = "/*";
-            langDef.m_commentEnd        = "*/";
-            langDef.m_singleLineComment = "//";
-
-            langDef.m_caseSensitive   = true;
-            langDef.m_autoIndentation = true;
-            langDef.m_preprocChar     = '#';
-
-            langDef.m_globalDocComment    = "/*!";
-            langDef.m_blockDocComment     = "/**";
-            langDef.m_docComment          = "///";
-
-            langDef.m_name = "Pattern Language";
-
-            initialized = true;
-        }
-
-        return langDef;
-    }
-
-    static const ui::TextEditor::LanguageDefinition &ConsoleLog() {
-        static bool initialized = false;
-        static ui::TextEditor::LanguageDefinition langDef;
-        if (!initialized) {
-            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, ui::TextEditor::PaletteIndex &paletteIndex) -> bool {
-                std::string_view inView(inBegin, inEnd);
-                if (inView.starts_with("D: "))
-                    paletteIndex = ui::TextEditor::PaletteIndex::DefaultText;
-                else if (inView.starts_with("I: "))
-                    paletteIndex = ui::TextEditor::PaletteIndex::DebugText;
-                else if (inView.starts_with("W: "))
-                    paletteIndex = ui::TextEditor::PaletteIndex::WarningText;
-                else if (inView.starts_with("E: "))
-                    paletteIndex = ui::TextEditor::PaletteIndex::ErrorText;
-                else
-                    paletteIndex = ui::TextEditor::PaletteIndex::Max;
-
-                outBegin = inBegin;
-                outEnd = inEnd;
-
-                return true;
-            };
-
-            langDef.m_name = "Console Log";
-            langDef.m_caseSensitive   = false;
-            langDef.m_autoIndentation = false;
-            langDef.m_commentStart = "";
-            langDef.m_commentEnd = "";
-            langDef.m_singleLineComment = "";
-            langDef.m_docComment = "";
-            langDef.m_globalDocComment = "";
-
-            initialized = true;
-        }
-        return langDef;
-    }
-
     ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name"_unlocalized, ICON_VS_SYMBOL_NAMESPACE) {
         m_editorRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
@@ -389,8 +280,9 @@ namespace hex::plugin::builtin {
         m_sourceCode.setChangedCallback([this](prv::Provider *provider) {
             auto sourceCode = m_sourceCode.get(provider);
             auto &editor = m_textEditor.get(provider);
+            std::string path;
             if (m_sourceCode.getBinding(provider).has_value()) {
-                auto path = m_sourceCode.getBinding(provider)->string();
+                path = m_sourceCode.getBinding(provider)->generic_string();
                 editor.setPath(path);
             }
             if (editor.getText() == sourceCode)
@@ -398,6 +290,12 @@ namespace hex::plugin::builtin {
             editor.setText(sourceCode);
             editor.setTextChanged(false);
             m_hasUnparsedChanges.get(provider) = true;
+            if (!path.empty()) {
+                if (editor.getLines().getLanguageDefinition().m_tokenize == nullptr)
+                    editor.setLanguageDefinition(ui::TextEditor::LanguageDefinition::PatternLanguage());
+                editor.getLines().setAllCodeFolds(path);
+                editor.getLines().applyCodeFoldStates(path);
+            }
         });
 
         registerEvents();
@@ -406,6 +304,8 @@ namespace hex::plugin::builtin {
 
         // Initialize the text editor with some basic help text
         m_textEditor.setOnCreateCallback([this](auto *provider, ui::TextEditor &editor) {
+            if (editor.getLines().getLanguageDefinition().m_tokenize == nullptr)
+                editor.setLanguageDefinition(ui::TextEditor::LanguageDefinition::PatternLanguage());
             if (ImHexApi::Provider::getProviders().size() > 1)
                 return;
             if (!m_sourceCode.get(provider).empty())
@@ -416,6 +316,21 @@ namespace hex::plugin::builtin {
 
             editor.setText(text);
             editor.setTextChanged(false);
+        });
+
+        m_consoleEditor.setOnCreateCallback([](prv::Provider *, ui::TextEditor &editor) {
+            if (editor.getLines().getLanguageDefinition().m_tokenize == nullptr) {
+                editor.setLanguageDefinition(ui::TextEditor::LanguageDefinition::ConsoleLog());
+                editor.setShowWhitespaces(false);
+                editor.setReadOnly(true);
+                editor.setShowCursor(false);
+                editor.setShowLineNumbers(false);
+                editor.getLines().enableCodeFolds(false);
+                std::string error = "E: ";
+                std::string arrow = "  -->   in ";
+                editor.addClickableText(error);
+                editor.addClickableText(error + arrow);
+            }
         });
     }
 
@@ -582,7 +497,7 @@ namespace hex::plugin::builtin {
                 m_textEditor.get(provider).clearRaiseContextMenu();
 
                 if (!m_textEditor.get(provider).hasSelection())
-                    m_textEditor.get(provider).selectWordUnderCursor();
+                    m_textEditor.get(provider).getLines().selectWordUnderCursor();
             }
 
             if (auto editor = getEditorFromFocusedWindow(); editor != nullptr) {
@@ -757,6 +672,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawTextEditorFindReplacePopup(ui::TextEditor *textEditor) {
         ImGuiWindowFlags popupFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar;
         if (ImGui::BeginPopup("##text_editor_view_find_replace_popup", popupFlags)) {
+            ImGuiIO &io = ImGui::GetIO();
             static std::string findWord;
             static bool requestFocus = false;
             static u64 position = 0;
@@ -769,7 +685,7 @@ namespace hex::plugin::builtin {
 
                 // Use selection as find word if there is one, otherwise use the word under the cursor
                 if (!textEditor->hasSelection())
-                    textEditor->selectWordUnderCursor();
+                    textEditor->getLines().selectWordUnderCursor();
 
                 findWord = textEditor->getSelectedText();
 
@@ -783,8 +699,8 @@ namespace hex::plugin::builtin {
                 canReplace = m_focusedSubWindowName.contains(TextEditorView);
             }
             bool enter     = ImGui::IsKeyPressed(ImGuiKey_Enter, false)         || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false);
-            bool upArrow   = ImGui::IsKeyPressed(ImGuiKey_UpArrow, false)       || ImGui::IsKeyPressed(ImGuiKey_Keypad8, false);
-            bool downArrow = ImGui::IsKeyPressed(ImGuiKey_DownArrow, false)     || ImGui::IsKeyPressed(ImGuiKey_Keypad2, false);
+            bool upArrow   = ImGui::IsKeyPressed(ImGuiKey_UpArrow, false)       || (ImGui::IsKeyPressed(ImGuiKey_Keypad8, false) && io.InputQueueCharacters.empty());
+            bool downArrow = ImGui::IsKeyPressed(ImGuiKey_DownArrow, false)     || (ImGui::IsKeyPressed(ImGuiKey_Keypad2, false) && io.InputQueueCharacters.empty());
             bool shift     = ImGui::IsKeyDown(ImGuiKey_LeftShift)               || ImGui::IsKeyDown(ImGuiKey_RightShift);
             bool alt       = ImGui::IsKeyDown(ImGuiKey_LeftAlt)                 || ImGui::IsKeyDown(ImGuiKey_RightAlt);
             std::string childName;
@@ -1164,32 +1080,36 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
+        auto &consoleEditor = m_consoleEditor.get(provider);
 
-        if (m_consoleEditor.get(provider).raiseContextMenu()) {
+        consoleEditor.setSourceCodeEditor(&m_textEditor.get(provider));
+        if (consoleEditor.raiseContextMenu()) {
             RequestOpenPopup::post("hex.builtin.menu.edit");
-            m_consoleEditor.get(provider).clearRaiseContextMenu();
+            consoleEditor.clearRaiseContextMenu();
         }
 
 
         if (m_consoleNeedsUpdate) {
             std::scoped_lock lock(m_logMutex);
-            auto lineCount = m_consoleEditor.get(provider).getTextLines().size();
-            if (m_console->size() < lineCount || (lineCount == 1 && m_consoleEditor.get(provider).getLineText(0).empty())) {
-                m_consoleEditor.get(provider).setText("");
+            auto lineCount = consoleEditor.getTextLines().size();
+            if (m_console.get(provider).size() < lineCount || (lineCount == 1 && consoleEditor.getLineText(0).empty())) {
+                consoleEditor.setText("");
                 lineCount = 0;
             }
 
-            const auto linesToAdd = m_console->size() - lineCount;
+            const auto linesToAdd = m_console.get(provider).size() - lineCount;
 
             for (size_t i = 0; i < linesToAdd; i += 1) {
-                m_consoleEditor.get(provider).appendLine(m_console->at(lineCount + i));
+                consoleEditor.appendLine(m_console.get(provider).at(lineCount + i));
             }
             m_consoleNeedsUpdate = false;
         }
 
         if (ImGui::BeginChild("##console_border", size, ImGuiChildFlags_Borders)) {
             fonts::CodeEditor().push();
-            m_consoleEditor.get(provider).render("##console", ImGui::GetContentRegionAvail(), false);
+            consoleEditor.render("##console", ImGui::GetContentRegionAvail(), false);
             fonts::CodeEditor().pop();
         }
 
@@ -1521,65 +1441,83 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         if (provider == nullptr)
             return;
+        auto &textEditor = m_textEditor.get(provider);
+
+        const auto processMessage = [](const auto &message) {
+            auto lines = wolv::util::splitString(message, "\n");
+
+            std::ranges::transform(lines, lines.begin(), [](auto line) {
+                if (line.size() >= 128)
+                    line = wolv::util::trim(line);
+
+                return hex::limitStringLength(line, 128);
+            });
+
+            return wolv::util::combineStrings(lines, "\n");
+        };
 
         if (!m_lastEvaluationProcessed) {
             if (m_lastEvaluationResult != 0) {
-                const auto processMessage = [](const auto &message) {
-                    auto lines = wolv::util::splitString(message, "\n");
-
-                    std::ranges::transform(lines, lines.begin(), [](auto line) {
-                        if (line.size() >= 128)
-                            line = wolv::util::trim(line);
-
-                        return hex::limitStringLength(line, 128);
-                    });
-
-                    return wolv::util::combineStrings(lines, "\n");
-                };
 
                 ui::TextEditor::ErrorMarkers errorMarkers;
-                if (*m_callStack != nullptr && !(*m_callStack)->empty()) {
-                    for (const auto &frame : **m_callStack | std::views::reverse) {
+                if (m_callStack.get(provider) != nullptr) {
+                    for (const auto &frame : *m_callStack.get(provider) | std::views::reverse) {
                         auto location = frame.node->getLocation();
                         if (location.source != nullptr && location.source->mainSource) {
-                            std::string message;
-                            if (m_lastEvaluationError->has_value())
-                                message = processMessage((*m_lastEvaluationError)->message);
-                            auto key = ui::TextEditor::Coordinates(location.line, location.column);
-                            errorMarkers[key] = std::make_pair(u32(location.length), message);
+                            if (m_lastEvaluationError.get(provider).has_value())
+                                errorMarkers[ui::TextEditor::Coordinates(location)] = std::make_pair(u32(location.length), processMessage(m_lastEvaluationError.get(provider)->message));
                         }
                     }
                 } else {
-                    if (m_lastEvaluationError->has_value()) {
-                        auto key = ui::TextEditor::Coordinates((*m_lastEvaluationError)->line, 0);
-                        errorMarkers[key] = std::make_pair(0,processMessage((*m_lastEvaluationError)->message));
+                    if (m_lastEvaluationError.get(provider).has_value()) {
+                        errorMarkers[ui::TextEditor::Coordinates(m_lastEvaluationError.get(provider)->line, 0)] = std::make_pair(0,processMessage(m_lastEvaluationError.get(provider)->message));
                     }
                 }
 
-                if (!m_lastCompileError->empty()) {
-                    for (const auto &error : *m_lastCompileError) {
-                       auto source = error.getLocation().source;
-                        if (source != nullptr && source->mainSource) {
-                            auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
-                            if (!errorMarkers.contains(key) || (u32) errorMarkers[key].first < error.getLocation().length)
-                                    errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
-                        }
+
+                for (const auto &error : m_lastCompileError.get(provider)) {
+                    auto source = error.getLocation().source;
+                    if (source != nullptr && source->mainSource) {
+                        auto key = ui::TextEditor::Coordinates(error.getLocation());
+                        if (!errorMarkers.contains(key) || (u32) errorMarkers[key].first < error.getLocation().length)
+                            errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
                     }
                 }
 
-                m_textEditor.get(provider).setErrorMarkers(errorMarkers);
+                textEditor.setErrorMarkers(errorMarkers);
             } else {
-                for (auto &[name, variable] : *m_patternVariables) {
-                    if (variable.outVariable && m_lastEvaluationOutVars->contains(name))
-                        variable.value = m_lastEvaluationOutVars->at(name);
+                for (auto &[name, variable] : m_patternVariables.get(provider)) {
+                    if (variable.outVariable && m_lastEvaluationOutVars.get(provider).contains(name))
+                        variable.value = m_lastEvaluationOutVars.get(provider).at(name);
                 }
 
                 EventHighlightingChanged::post();
             }
 
             m_lastEvaluationProcessed = true;
-            *m_executionDone = true;
+            m_executionDone.get(provider) = true;
         }
+
+
+        if (m_runningParsers == 0) {
+            ui::TextEditor::ErrorMarkers errorMarkers;
+            auto compilerErrors = m_editorRuntime->getCompileErrors();
+            for (const auto &error : compilerErrors) {
+                auto source = error.getLocation().source;
+                if (source != nullptr && source->mainSource) {
+                    auto key = ui::TextEditor::Coordinates(error.getLocation());
+                    if (!errorMarkers.contains(key))
+                        errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
+                    else if ((u32) errorMarkers[key].first < error.getLocation().length) {
+                        errorMarkers.erase(key);
+                        errorMarkers[key] = std::make_pair(u32(error.getLocation().length), processMessage(error.getMessage()));
+                    }
+                }
+            }
+
+            textEditor.setErrorMarkers(errorMarkers);
+        } else
+            textEditor.clearErrorMarkers();
 
         if (m_shouldAnalyze.get(provider)) {
 
@@ -1612,9 +1550,9 @@ namespace hex::plugin::builtin {
         }
 
         {
-            if (m_textEditor.get(provider).isBreakpointsChanged()) {
-                ui::TextEditor::Breakpoints breakpoints = m_textEditor.get(provider).getBreakpoints();
-                m_textEditor.get(provider).clearBreakpointsChanged();
+            if (textEditor.isBreakpointsChanged()) {
+                ui::TextEditor::Breakpoints breakpoints = textEditor.getBreakpoints();
+                textEditor.clearBreakpointsChanged();
                 const auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 auto &evaluator = runtime.getInternals().evaluator;
                 if (evaluator) {
@@ -1622,10 +1560,13 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (m_textEditor.get(provider).isTextChanged()) {
-                m_textEditor.get(provider).setTextChanged(false);
-                m_sourceCode.set(provider, m_textEditor.get(provider).getText());
+            if (textEditor.isTextChanged()) {
+                textEditor.setTextChanged(false);
+                m_sourceCode.set(provider, textEditor.getText());
                 m_hasUnparsedChanges.get(provider) = true;
+                if (m_sourceCode.getBinding(provider).has_value()) {
+                    textEditor.getLines().setAllCodeFolds(m_sourceCode.getBinding(provider)->generic_string());
+                }
                 m_lastEditorChangeTime = std::chrono::steady_clock::now();
             }
 
@@ -1633,7 +1574,7 @@ namespace hex::plugin::builtin {
                 (std::chrono::steady_clock::now() - m_lastEditorChangeTime) > std::chrono::seconds(1ll)) {
                     m_changesWereColored = false;
                     m_allStepsCompleted = false;
-                    auto code = m_textEditor.get(provider).getText();
+                    auto code = textEditor.getText();
                     EventPatternEditorChanged::post(code);
                     ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
                         std::ignore = runtime;
@@ -1657,7 +1598,7 @@ namespace hex::plugin::builtin {
             }
 
             if (provider->isAvailable() && m_triggerAutoEvaluate.exchange(false)) {
-                this->evaluatePattern(m_textEditor.get(provider).getText(), provider);
+                this->evaluatePattern(textEditor.getText(), provider);
             }
 
             if (m_runningHighlighters > 0 && (m_hasUnparsedChanges.get(provider) || m_runningParsers > 0))
@@ -1675,11 +1616,12 @@ namespace hex::plugin::builtin {
                 m_runningHighlighters += 1;
                 TaskManager::createBackgroundTask("hex.builtin.task.highlighting_pattern", [this,provider](auto &) { m_identifierHighlighter.get(provider).highlightSourceCode(); });
             } else if (m_changesWereColored && !m_allStepsCompleted) {
-                m_identifierHighlighter.get(provider).setRequestedIdentifierColors(m_colorizeIdentifiers);
-                if (m_sourceCode.getBinding(provider).has_value()) {
-                    m_textEditor.get(provider).getLines().setAllCodeFolds(m_sourceCode.getBinding(provider)->string());
+                auto result = m_identifierHighlighter.get(provider).setRequestedIdentifierColors(m_colorizeIdentifiers);
+                if (result == 0)
+                    m_allStepsCompleted = true;
+                else {
+                    m_changesWereColored = false;
                 }
-                m_allStepsCompleted = true;
             }
 
             if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
@@ -1859,14 +1801,12 @@ namespace hex::plugin::builtin {
             m_sourceCode.unbind(provider);
             m_sourceCode.set(provider, code);
         }
-
+        auto &editor = m_textEditor.get(provider);
         this->evaluatePattern(code, provider);
-        m_textEditor.get(provider).setText(code, true);
-        if (m_sourceCode.getBinding(provider).has_value()) {
-            hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
-            auto states = closedFoldData.get(path);
-            m_textEditor.get(provider).getLines().applyCodeFoldStates(m_sourceCode.getBinding(provider)->string());
-        }
+        editor.setText(code, true);
+        editor.getLines().setAllCodeFolds(path.generic_string());
+        editor.getLines().applyCodeFoldStates(path.generic_string());
+
         ContentRegistry::PatternLanguage::addPragma("base_address", [](pl::PatternLanguage &runtime, const std::string &value) {
             std::ignore = runtime;
             auto baseAddress = wolv::util::from_chars<u64>(value);
@@ -2130,14 +2070,14 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             if (provider == nullptr)
                 return;
+            auto &editor = m_textEditor.get(provider);
 
-            m_textEditor.get(provider).setText(preprocessPattern(code, m_textEditor.get(provider).getTabSize()));
-            m_sourceCode.set(provider, m_textEditor.get(provider).getText());
+            editor.setText(preprocessPattern(code, m_textEditor.get(provider).getTabSize()));
+            m_sourceCode.set(provider, editor.getText());
             if (m_sourceCode.getBinding(provider).has_value()) {
-                auto path = m_sourceCode.getBinding(provider)->string();
-                hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
-                auto states = closedFoldData.get(path);
-                m_textEditor.get(provider).getLines().applyCodeFoldStates(path);
+                auto path = m_sourceCode.getBinding(provider)->generic_string();
+                editor.getLines().setAllCodeFolds(path);
+                editor.getLines().applyCodeFoldStates(path);
             }
             m_hasUnparsedChanges.get(provider) = true;
         });
@@ -2181,35 +2121,24 @@ namespace hex::plugin::builtin {
         });
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
-            m_sourceCode.setTabSize(m_tabSize);
-            m_textEditor.get(provider).setTabSize(m_tabSize);
-            m_textEditor.get(provider).setLanguageDefinition(PatternLanguage());
-            m_textEditor.get(provider).setCursorPosition(ui::TextEditor::Coordinates(0, 0),false,false);
-            m_textEditor.get(provider).setEnableHighlighting(m_colorizeSyntax);
-            m_textEditor.get(provider).setShowWhitespaces(m_showWhiteSpaces);
-            m_textEditor.get(provider).setDisableCodeFolds(m_codeFoldsDisabled);
-            m_textEditor.get(provider).setAutoIndent(m_autoIndent);
-            if (m_sourceCode.getBinding(provider).has_value()) {
-                auto path = m_sourceCode.getBinding(provider)->string();
-                hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
-                auto states = closedFoldData.get(path);
-                m_textEditor.get(provider).getLines().applyCodeFoldStates(path);
-            }
+            if (!ImHexApi::Provider::isValid())
+                return;
 
+            auto &editor = m_textEditor.get(provider);
+            editor.setCursorPosition(ui::TextEditor::Coordinates(0, 0),false,false);
+            editor.setTabSize(m_tabSize.get());
+            editor.setEnableHighlighting(m_colorizeSyntax);
+            editor.setShowWhitespaces(m_showWhiteSpaces);
+            editor.setDisableCodeFolds(m_codeFoldsDisabled);
+            editor.setAutoIndent(m_autoIndent);
 
-            m_consoleEditor.get(provider).setLanguageDefinition(ConsoleLog());
-            m_consoleEditor.get(provider).setShowWhitespaces(false);
-            m_consoleEditor.get(provider).setReadOnly(true);
-            m_consoleEditor.get(provider).setShowCursor(false);
-            m_consoleEditor.get(provider).setShowLineNumbers(false);
-            m_consoleEditor.get(provider).getLines().enableCodeFolds(false);
-            m_consoleEditor.get(provider).setSourceCodeEditor(&m_textEditor.get(provider));
-            std::string sourcecode = pl::api::Source::DefaultSource;
-            std::string error = "E: ";
-            std::string end = ":";
-            std::string arrow = "  -->   in ";
-            m_consoleEditor.get(provider).addClickableText(error + sourcecode + end);
-            m_consoleEditor.get(provider).addClickableText(error + arrow + sourcecode + end);
+            auto &consoleEditor = m_consoleEditor.get(provider);
+            consoleEditor.setShowWhitespaces(false);
+            consoleEditor.setReadOnly(true);
+            consoleEditor.setShowCursor(false);
+            consoleEditor.setShowLineNumbers(false);
+            consoleEditor.getLines().enableCodeFolds(false);
+            consoleEditor.setSourceCodeEditor(&editor);
             m_shouldAnalyze.get(provider) = true;
             m_envVarEntries.get(provider).emplace_back(0, "", i128(0), EnvVarType::Integer);
 
@@ -2224,21 +2153,17 @@ namespace hex::plugin::builtin {
 
             if (newProvider != nullptr) {
                 m_sourceCode.setTabSize(m_tabSize);
-                m_textEditor.get(newProvider).setTabSize(m_tabSize);
-                m_textEditor.get(newProvider).setText(preprocessPattern(m_sourceCode.get(newProvider), m_tabSize));
-                m_textEditor.get(newProvider).getLines().setScroll(m_scroll.get(newProvider));
-                m_textEditor.get(newProvider).setTextChanged(false);
-                m_textEditor.get(newProvider).setEnableHighlighting(m_colorizeSyntax);
-                m_textEditor.get(newProvider).setShowWhitespaces(m_showWhiteSpaces);
-                m_textEditor.get(newProvider).setDisableCodeFolds(m_codeFoldsDisabled);
-                m_textEditor.get(newProvider).setAutoIndent(m_autoIndent);
+                auto &textEditor = m_textEditor.get(newProvider);
+                textEditor.setTabSize(m_tabSize);
+                textEditor.setText(preprocessPattern(m_sourceCode.get(newProvider), m_tabSize));
+                textEditor.getLines().setScroll(m_scroll.get(newProvider));
+                textEditor.setTextChanged(false);
+                textEditor.setEnableHighlighting(m_colorizeSyntax);
+                textEditor.setShowWhitespaces(m_showWhiteSpaces);
+                textEditor.setDisableCodeFolds(m_codeFoldsDisabled);
+                textEditor.setAutoIndent(m_autoIndent);
+                textEditor.getLines().requestUseSavedFoldStates();
                 m_hasUnparsedChanges.get(newProvider) = true;
-                if (m_sourceCode.getBinding(newProvider).has_value()) {
-                    auto path = m_sourceCode.getBinding(newProvider)->string();
-                    hex::FileAttachedData<"closed_folds", std::string> closedFoldData;
-                    auto states = closedFoldData.get(path);
-                    m_textEditor.get(newProvider).getLines().applyCodeFoldStates(path);
-                }
                 m_consoleEditor.get(newProvider).setText(wolv::util::combineStrings(m_console.get(newProvider), "\n"));
                 m_consoleEditor.get(newProvider).getLines().setScroll(m_consoleScroll.get(newProvider));
             }

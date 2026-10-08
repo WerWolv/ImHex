@@ -265,11 +265,11 @@ namespace hex::ui {
                     if (withinComment)
                         flags.m_value = (i32) Line::FlagValues::Line;
                     else if (withinDocComment)
-                        flags.m_value = (i32) Line::FlagValues::Doc;
+                        flags.m_value = (i32) Line::FlagValues::LineDoc;
                     else if (withinBlockComment)
                         flags.m_value = (i32) Line::FlagValues::Block;
                     else if (withinGlobalDocComment)
-                        flags.m_value = (i32) Line::FlagValues::Global;
+                        flags.m_value = (i32) Line::FlagValues::GlobalDoc;
                     else if (withinBlockDocComment)
                         flags.m_value = (i32) Line::FlagValues::BlockDoc;
                     flags.m_bits.deactivated = withinNotDef;
@@ -394,22 +394,42 @@ namespace hex::ui {
                             };
 
                             if (!isComment && !withinComment && !withinDocComment && !withinPreproc && !withinString) {
-                                if (compareForth(m_languageDefinition.m_docComment, line.m_chars)) {
-                                    withinDocComment = !isComment;
-                                    commentLength = 3;
-                                } else if (compareForth(m_languageDefinition.m_singleLineComment, line.m_chars)) {
+                                bool isLineComment = false;
+                                bool isLineDocComment = false;
+                                bool isBlockDocComment = false;
+                                bool isBlockComment = false;
+                                bool isGlobalDocComment = compareForth(m_languageDefinition.m_globalDocComment, line.m_chars);
+                                if (!isGlobalDocComment) {
+                                    isBlockDocComment = compareForth(m_languageDefinition.m_blockDocComment, line.m_chars);
+                                    if (currentIndex < line.size() - 2 && isBlockDocComment) {
+                                        currentIndex+=2;
+                                        isBlockDocComment = !compareForth(m_languageDefinition.m_commentEnd, line.m_chars);
+                                        currentIndex-=2;
+                                    }
+                                    if (!isBlockDocComment) {
+                                        isBlockComment = compareForth(m_languageDefinition.m_commentStart, line.m_chars);
+                                        if (!isBlockComment) {
+                                            isLineDocComment =  compareForth(m_languageDefinition.m_docComment, line.m_chars);
+                                            if ( !isLineDocComment) {
+                                                isLineComment = compareForth(m_languageDefinition.m_singleLineComment, line.m_chars);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (isLineComment) {
                                     withinComment = !isComment;
                                     commentLength = 2;
+                                } else if (isLineDocComment) {
+                                    withinDocComment = !isComment;
+                                    commentLength = 3;
                                 } else {
-                                    bool isGlobalDocComment = compareForth(m_languageDefinition.m_globalDocComment, line.m_chars);
-                                    bool isBlockDocComment = compareForth(m_languageDefinition.m_blockDocComment, line.m_chars);
-                                    bool isBlockComment = compareForth(m_languageDefinition.m_commentStart, line.m_chars);
                                     if (isGlobalDocComment || isBlockDocComment || isBlockComment) {
                                         commentStartLine = currentLine;
                                         commentStartIndex = currentIndex;
                                         if (currentIndex < line.size() - 4 && isBlockComment &&
-                                            line.m_chars[currentIndex + 2] == '*' &&
-                                            line.m_chars[currentIndex + 3] == '/') {
+                                            line.m_chars[currentIndex + 2] == m_languageDefinition.m_commentEnd[0] &&
+                                            line.m_chars[currentIndex + 3] == m_languageDefinition.m_commentEnd[1]) {
                                             withinBlockComment = true;
                                             commentLength = 2;
                                         } else if (isGlobalDocComment) {
@@ -572,6 +592,110 @@ namespace hex::ui {
                 }
         };
         return p;
+    }
+
+
+    const ui::TextEditor::LanguageDefinition &LanguageDefinition::PatternLanguage() {
+        static bool initialized = false;
+        static ui::TextEditor::LanguageDefinition langDef;
+        if (!initialized) {
+            constexpr static std::array keywords = {
+                    "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as", "from"
+            };
+            for (auto &k : keywords)
+                langDef.m_keywords.insert(k);
+
+            constexpr static std::array builtInTypes = {
+                    "u8", "u16", "u24", "u32", "u48", "u64", "u96", "u128", "s8", "s16", "s24", "s32", "s48", "s64", "s96", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
+            };
+            for (const auto name : builtInTypes) {
+                ui::TextEditor::Identifier id;
+                id.m_declaration = "";
+                langDef.m_identifiers.insert(std::make_pair(std::string(name), id));
+            }
+            constexpr static std::array directives = {
+                    "include", "define", "ifdef", "ifndef", "endif", "undef", "pragma", "error"
+            };
+            for (const auto name : directives) {
+                ui::TextEditor::Identifier id;
+                id.m_declaration = "";
+                langDef.m_preprocIdentifiers.insert(std::make_pair(std::string(name), id));
+            }
+            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, ui::TextEditor::PaletteIndex &paletteIndex) -> bool {
+                paletteIndex = ui::TextEditor::PaletteIndex::Max;
+
+                while (inBegin < inEnd && isascii(*inBegin) && std::isblank(*inBegin))
+                    ++inBegin;
+
+                if (inBegin == inEnd) {
+                    outBegin     = inEnd;
+                    outEnd       = inEnd;
+                    paletteIndex = ui::TextEditor::PaletteIndex::Default;
+                } else if (ui::tokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::Identifier;
+                } else if (ui::tokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::NumericLiteral;
+                } else if (ui::tokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::CharLiteral;
+                } else if (ui::tokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::StringLiteral;
+                } else if (ui::tokenizeCStyleSeparator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::Separator;
+                } else if (ui::tokenizeCStyleOperator(inBegin, inEnd, outBegin, outEnd)) {
+                    paletteIndex = ui::TextEditor::PaletteIndex::Operator;
+                }
+                return paletteIndex != ui::TextEditor::PaletteIndex::Max;
+            };
+
+            langDef.m_commentStart      = "/*";
+            langDef.m_commentEnd        = "*/";
+            langDef.m_singleLineComment = "//";
+            langDef.m_globalDocComment  = "/*!";
+            langDef.m_blockDocComment   = "/**";
+            langDef.m_docComment        = "///";
+
+            langDef.m_caseSensitive   = true;
+            langDef.m_autoIndentation = true;
+            langDef.m_preprocChar     = '#';
+
+            langDef.m_name = "Pattern Language";
+
+            initialized = true;
+        }
+
+        return langDef;
+    }
+
+    const ui::TextEditor::LanguageDefinition &LanguageDefinition::ConsoleLog() {
+        static bool initialized = false;
+        static ui::TextEditor::LanguageDefinition langDef;
+        if (!initialized) {
+            langDef.m_tokenize = [](std::string::const_iterator inBegin, std::string::const_iterator inEnd, std::string::const_iterator &outBegin, std::string::const_iterator &outEnd, ui::TextEditor::PaletteIndex &paletteIndex) -> bool {
+                std::string_view inView(inBegin, inEnd);
+                if (inView.starts_with("D:"))
+                    paletteIndex = ui::TextEditor::PaletteIndex::DefaultText;
+                else if (inView.starts_with("I:"))
+                    paletteIndex = ui::TextEditor::PaletteIndex::DebugText;
+                else if (inView.starts_with("W:"))
+                    paletteIndex = ui::TextEditor::PaletteIndex::WarningText;
+                else if (inView.starts_with("E:"))
+                    paletteIndex = ui::TextEditor::PaletteIndex::ErrorText;
+                else
+                    paletteIndex = ui::TextEditor::PaletteIndex::Max;
+
+                outBegin = inBegin;
+                outEnd = inEnd;
+
+                return true;
+            };
+
+            langDef.m_name = "Console Log";
+            langDef.m_caseSensitive   = false;
+            langDef.m_autoIndentation = false;
+
+            initialized = true;
+        }
+        return langDef;
     }
 
     const LanguageDefinition &LanguageDefinition::CPlusPlus() {

@@ -54,6 +54,7 @@ namespace hex::ui {
                 Coordinates() : m_line(0), m_column(0) {}
                 explicit Coordinates(pl::core::Location location) : m_line(location.line - 1), m_column(location.column - 1) {}
                 Coordinates(i32 lineIndex, i32 column) : m_line(lineIndex), m_column(column) {}
+                explicit Coordinates(const Interval &interval) : m_line(interval.m_start), m_column(interval.m_end) {}
                 Coordinates sanitize(Lines &lines);
                 bool isValid(Lines &lines);
                 bool operator==(const Coordinates &o) const;
@@ -64,6 +65,8 @@ namespace hex::ui {
                 bool operator>=(const Coordinates &o) const;
                 Coordinates operator+(const Coordinates &o) const;
                 Coordinates operator-(const Coordinates &o) const;
+                Coordinates operator+(const std::string &o) const;
+                Coordinates operator-(const std::string &o) const;
                 [[nodiscard]] i32 getLine() const { return m_line; }
                 [[nodiscard]] i32 getColumn() const { return m_column; }
 
@@ -80,11 +83,11 @@ namespace hex::ui {
                 if (m_start > m_end) { std::swap(m_start, m_end); }}
 
 
-            Coordinates getSelectedLines();
-            Coordinates getSelectedColumns();
+            [[nodiscard]] Interval getSelectedLines() const;
+            [[nodiscard]] Coordinates getSelectedColumns() const;
             Coordinates getStart() { return m_start; }
             Coordinates getEnd() { return m_end; }
-            bool isSingleLine();
+            [[nodiscard]] bool isSingleLine() const;
             enum class EndsInclusive : u8 { None = 0, Start = 2, End = 1, Both = 3 };
             [[nodiscard]] bool contains(const Coordinates &coordinates, EndsInclusive endsInclusive = EndsInclusive::Both) const;
             [[nodiscard]] bool contains(const Range &range, EndsInclusive endsInclusive = EndsInclusive::Both) const;
@@ -93,18 +96,12 @@ namespace hex::ui {
             [[nodiscard]] bool overlaps(const Range &o, EndsInclusive endsInclusive = EndsInclusive::Both) const;
             bool operator==(const Range &o) const;
             bool operator!=(const Range &o) const;
-            bool operator<(const Range &o) const {
-                return o.m_end == m_end ? o.m_start < m_start :  m_end < o.m_end;
-            }
-            bool operator>(const Range &o) const {
-                return o.m_end == m_end ? o.m_start > m_start : m_end > o.m_end;
-            }
-            bool operator<=(const Range &o) const {
-                return !(*this > o);
-            }
-            bool operator>=(const Range &o) const {
-                return !(*this < o);
-            }
+            bool operator<(const Range &o) const;
+            bool operator>(const Range &o) const;
+            bool operator<=(const Range &o) const;
+            bool operator>=(const Range &o) const;
+            Range operator+(const Range &o) const;
+            Range operator-(const Range &o) const;
 
         private:
             Coordinates m_start;
@@ -121,6 +118,8 @@ namespace hex::ui {
             Interval(i32 start, i32 end) : m_start(start), m_end(end) {
                 if (m_start > m_end) std::swap(m_start, m_end);}
             Interval(const Interval &other) = default;
+            explicit Interval(const Coordinates &coords) : m_start(coords.m_line), m_end(coords.m_column) {
+                if (m_start > m_end) std::swap(m_start, m_end);}
             explicit Interval(ImVec2 vec) : m_start((i32)vec.x), m_end((i32)vec.y) {
                 if (m_start > m_end) std::swap(m_start, m_end);}
 
@@ -350,12 +349,12 @@ namespace hex::ui {
         public:
             friend class TextEditor;
             enum class FlagValues : u8 {
-                NoComment = 0,
-                Doc = 0b0001,
+                NoFlag = 0,
+                GlobalDoc = 0b0001,
                 Block = 0b0010,
                 BlockDoc = 0b0011,
                 Line = 0b0100,
-                Global = 0b0101,
+                LineDoc = 0b0101,
                 Deactivated = 0b1000,
                 Preprocessor = 0b10000,
                 MatchedDelimiter = 0b100000
@@ -363,7 +362,7 @@ namespace hex::ui {
             struct FlagBits {
                 bool doc: 1;
                 bool block: 1;
-                bool global: 1;
+                bool line: 1;
                 bool deactivated: 1;
                 bool preprocessor: 1;
                 bool matchedDelimiter: 1;
@@ -419,6 +418,8 @@ namespace hex::ui {
             // than u64 to avoid ambiguity.
             std::string operator[](i64 column) const;
             [[nodiscard]] std::string at(i64 column) const;
+            [[nodiscard]] std::string part(LinePart part) const;
+
             void setNeedsUpdate(bool needsUpdate);
             void append(const char *text);
             void append(char text);
@@ -430,6 +431,7 @@ namespace hex::ui {
             void insert(LineIterator iter, strConstIter beginString, strConstIter endString);
             void insert(LineIterator iter, const Line &line);
             void insert(LineIterator iter, LineIterator beginLine, LineIterator endLine);
+            void insert(u64 index, const std::string &text) { insert(begin() + index, text); }
             void erase(LineIterator begin);
             void erase(LineIterator begin, u64 count);
             void erase(u64 start, i64 length = -1);
@@ -541,6 +543,8 @@ namespace hex::ui {
             LanguageDefinition() : m_keywords({}), m_identifiers({}), m_preprocIdentifiers({}), m_tokenRegexStrings({}) {}
 
             void setAutoIndentation(bool autoIndentation) { m_autoIndentation = autoIndentation; }
+            static const LanguageDefinition &PatternLanguage();
+            static const LanguageDefinition &ConsoleLog();
             static const LanguageDefinition &CPlusPlus();
             static const LanguageDefinition &HLSL();
             static const LanguageDefinition &GLSL();
@@ -555,20 +559,21 @@ namespace hex::ui {
             friend class TextEditor;
             UndoRecord() = default;
             ~UndoRecord() = default;
-            UndoRecord( std::string added,
-                        Range addedRange,
-                        std::string removed,
-                        Range removedRange,
+            UndoRecord( std::string addedText,
+                        Coordinates addedPlace,
+                        std::string removedText,
+                        Coordinates removedPlace,
                         EditorState before,
                         EditorState after);
 
             void undo(TextEditor *editor);
             void redo(TextEditor *editor);
+            void clear();
         private:
-            std::string m_added;
-            Range m_addedRange;
-            std::string m_removed;
-            Range m_removedRange;
+            std::string m_addedText;
+            Coordinates m_addedPlace;
+            std::string m_removedText;
+            Coordinates m_removedPlace;
             EditorState m_before;
             EditorState m_after;
         };
@@ -606,6 +611,17 @@ namespace hex::ui {
             Line &at(i32 index);
             Line &operator[](i32 index);
             i32 size() const;
+            i32 lineSize(i32 lineIndex) { return at(lineIndex).maxColumn(); }
+            i32 unfoldedLineSize(i32 lineIndex) {
+                if (lineIndex >= 0 && lineIndex < size())
+                    return m_unfoldedLines[lineIndex].maxColumn();
+                return 0;
+            }
+            i32 unfoldedLineBytes(i32 lineIndex) {
+                if (lineIndex >= 0 && lineIndex < size())
+                    return m_unfoldedLines[lineIndex].m_chars.size();
+                return 0;
+            }
             void colorizeRange(bool force = false);
             void colorizeInternal(bool force = false);
             bool isEmpty();
@@ -661,6 +677,7 @@ namespace hex::ui {
             ImVec2 &getCharAdvance() { return m_charAdvance; }
             Keys getDeactivatedBlocks();
             std::string getSelectedText();
+            StringVector getTextLines() const;
             void deleteSelection();
             void selectUsingEnd(bool select, const Coordinates &oldPos);
             void selectUsingStart(bool select, const Coordinates &oldPos);
@@ -671,6 +688,7 @@ namespace hex::ui {
             const LanguageDefinition &getLanguageDefinition() const { return m_languageDefinition; }
             TextEditor::PaletteIndex getColorIndexFromFlags(Line::Flags flags);
             void insertLine(i32 index, const std::string &text);
+            void insertLines(const StringVector &lines);
             Coordinates lineIndexCoords(i32 lineNumber, i32 stringIndex);
             void colorize();
             i32 insertTextAt(Coordinates &where, const std::string &value);
@@ -690,7 +708,7 @@ namespace hex::ui {
             void printCodeFold(const Range &key);
             void resetCursorBlinkTime();
             void setUnfoldIfNeeded(bool unfoldIfNeeded) {m_unfoldIfNeeded = unfoldIfNeeded;}
-            std::string getRange(const Range &rangeToGet);
+            std::string getRange(const Range &rangeToGet, Line::LinePart part = Line::LinePart::Utf8);
             void setCursorPosition(const Coordinates &position, bool unfoldIfNeeded = true, bool scrollToCursor = true);
             void setFocusAtCoords(const Coordinates &coords, bool ensureVisible = false);
             void ensureCursorVisible();
@@ -705,7 +723,7 @@ namespace hex::ui {
             void deleteRange(const Range &rangeToDelete);
             void clearBreakpointsChanged() { m_breakPointsChanged = false; }
             bool isBreakpointsChanged() { return m_breakPointsChanged; }
-            Coordinates stringIndexCoords(i32 strIndex, const std::string &input);
+            static Coordinates stringIndexCoords(i32 strIndex, const std::string &input);
             void refreshSearchResults();
             void setReadOnly(bool value) { m_readOnly = value; }
             void removeLines(i32 start, i32 end);
@@ -747,6 +765,10 @@ namespace hex::ui {
             ImVec2 getScroll() const {return m_scroll;}
             void swapSelectionEnds();
             void setCdeFoldMaps();
+            void requestUseSavedFoldStates() { m_useSavedFoldStatesRequested = true; }
+            Coordinates findWordStart(const Coordinates &from);
+            Coordinates findWordEnd(const Coordinates &from);
+            void selectWordUnderCursor();
 
             constexpr static u32 Normal = 0;
             constexpr static u32 Not    = 1;
@@ -772,6 +794,8 @@ namespace hex::ui {
             friend bool Coordinates::operator>=(const Coordinates &o) const;
             friend Coordinates Coordinates::operator+(const Coordinates &o) const;
             friend Coordinates Coordinates::operator-(const Coordinates &o) const;
+            friend Coordinates Coordinates::operator+(const std::string &o) const;
+            friend Coordinates Coordinates::operator-(const std::string &o) const;
 
         private:
             UnfoldedLines m_unfoldedLines;
@@ -850,6 +874,7 @@ namespace hex::ui {
             IndentBlocks m_indentBlocks;
             i32 m_cachedGlobalRowMax{};
             bool m_globalRowMaxChanged = true;
+            std::string m_source;
             bool m_setScroll = false;
             ImVec2 m_scroll;
             bool m_hasHorizScroll = false;
@@ -859,6 +884,7 @@ namespace hex::ui {
         TextEditor();
         ~TextEditor();
         void setPath(std::string path) { m_path = std::move(path); }
+        std::string getPath() {return m_path;}
 
     private:
 // Rendering
@@ -898,7 +924,7 @@ namespace hex::ui {
 // Highlighting
     private:
         void preRender();
-        void drawSelection(float row, ImDrawList *drawList);
+        void drawSelection(float row, const ImVec2 &contentSize, ImDrawList *drawList);
         void renderBottomHorizontal(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
         void renderTopHorizontal(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
         void renderPointingDown(ImVec2 lineStartScreenPos, ImDrawList *drawList, float boxSize, float verticalMargin, i32 color);
@@ -970,7 +996,7 @@ namespace hex::ui {
         Lines &getLines() { return m_lines; }
         const Lines &getLines() const { return m_lines; }
         void setAutoIndent(bool value) {
-            LanguageDefinition &langDef = const_cast<LanguageDefinition&>(m_lines.getLanguageDefinition());
+            auto &langDef = const_cast<LanguageDefinition&>(m_lines.getLanguageDefinition());
             langDef.setAutoIndentation(value);
         }
 // Navigating
@@ -979,9 +1005,6 @@ namespace hex::ui {
         Coordinates lineCoordinates(i32 lineIndex, i32 column);
         Range lineCoordinates(const Range &value);
         void advance(Coordinates &coordinates);
-        Coordinates findWordStart(const Coordinates &from);
-        Coordinates findWordEnd(const Coordinates &from);
-
 
     public:
         void jumpToLine(i32 line = -1);
@@ -1008,7 +1031,6 @@ namespace hex::ui {
     public:
         void setSelection(const Range &selection);
         Range getSelection() const;
-        void selectWordUnderCursor();
         void selectLineUnderCursor();
         void selectAll();
         bool hasSelection() { return m_lines.hasSelection(); }

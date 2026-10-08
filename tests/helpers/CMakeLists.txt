@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(helpers_test)
 set(TEST_CATEGORY Helpers)
+add_compile_definitions(IMHEX_TESTS)
 
 # Add new tests here #
 set(AVAILABLE_TESTS
