@@ -202,6 +202,8 @@ namespace hex::plugin::disasm {
             auto optionsVector = wolv::util::splitString(std::string(options), ",");
             for (std::string_view option : optionsVector) {
                 option = wolv::util::trim(option);
+                if (option.empty())
+                    continue;
 
                 bool shouldAdd = true;
                 if (option.starts_with("no-")) {
