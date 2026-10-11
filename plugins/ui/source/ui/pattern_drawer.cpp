@@ -1571,6 +1571,7 @@ namespace hex::ui {
         std::scoped_lock lock(s_resetDrawMutex);
 
         this->resetEditing();
+        m_valueEditor.resetEditing();
         m_displayEnd.clear();
         m_visualizedPatterns.clear();
         m_currVisualizedPattern = nullptr;
