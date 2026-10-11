@@ -72,6 +72,45 @@ namespace hex {
         }
 
         /**
+         * @brief Lists the directories a table is looked up in by name, in the order they are tried
+         *
+         * The top level of every encodings search path comes first. So a table a person puts
+         * there replaces a table of the same name in a folder. Then each folder directly inside
+         * a search path, in name order. A deeper folder is not read, so it can hold tables that
+         * are only included.
+         */
+        std::vector<std::fs::path> encodingSearchDirectories() {
+            const auto basePaths = paths::Encodings.read();
+
+            std::vector<std::fs::path> result(basePaths.begin(), basePaths.end());
+            for (const auto &basePath : basePaths) {
+                std::vector<std::fs::path> folders;
+                std::error_code error;
+                for (const auto &entry : std::fs::directory_iterator(basePath, error)) {
+                    if (entry.is_directory(error))
+                        folders.push_back(entry.path());
+                }
+
+                std::ranges::sort(folders);
+                std::ranges::move(folders, std::back_inserter(result));
+            }
+
+            return result;
+        }
+
+        /**
+         * @brief Checks that a part of a table name names one file or folder, and nothing more
+         * @param part A folder or file name
+         * @return False for an empty part, "." or "..", or a part with a separator or drive in it
+         */
+        bool isPlainPathPart(std::string_view part) {
+            if (part.empty() || part == "." || part == "..")
+                return false;
+
+            return part.find_first_of("/\\:") == std::string_view::npos;
+        }
+
+        /**
          * @brief Finds the table file `name` names, if there is one, whatever case it is
          * written in
          *
@@ -79,18 +118,37 @@ namespace hex {
          * through `#pragma encoding`. A `-alias` line uses findEncodingFileByStem() instead,
          * since it names a file, not a name a person typed.
          *
-         * Takes `name` as the person wrote it. It rejects a directory part itself, so the
-         * lookup stays in the encodings directory whatever encodingFileName() does.
+         * Takes `name` as the person wrote it. A name can give one folder, such as
+         * "folder/ascii". It rejects every other directory part itself, so the lookup stays in
+         * the encodings directory whatever encodingFileName() does.
          */
         std::optional<std::fs::path> findEncodingFile(std::string_view name) {
-            // A script reaches this with no sandbox prompt, so a directory part reaches no file.
-            if (name.find_first_of("/\\") != std::string_view::npos)
+            if (const auto separator = name.find('/'); separator != std::string_view::npos) {
+                const auto folder = name.substr(0, separator);
+                const auto stem = name.substr(separator + 1);
+
+                // A script reaches this with no sandbox prompt, so each part must stay one plain name.
+                if (!isPlainPathPart(folder) || !isPlainPathPart(stem))
+                    return std::nullopt;
+
+                const auto fileName = encodingFileName(stem) + ".tbl";
+
+                for (const auto &basePath : paths::Encodings.read()) {
+                    auto path = basePath / encodingFileName(folder) / fileName;
+                    if (std::fs::is_regular_file(path))
+                        return path;
+                }
+
+                return std::nullopt;
+            }
+
+            if (!isPlainPathPart(name))
                 return std::nullopt;
 
             const auto fileName = encodingFileName(name) + ".tbl";
 
-            for (const auto &basePath : paths::Encodings.read()) {
-                auto path = basePath / fileName;
+            for (const auto &directory : encodingSearchDirectories()) {
+                auto path = directory / fileName;
                 if (std::fs::is_regular_file(path))
                     return path;
             }
@@ -112,8 +170,8 @@ namespace hex {
 
             const auto fileName = std::string(stem) + ".tbl";
 
-            for (const auto &basePath : paths::Encodings.read()) {
-                auto path = basePath / fileName;
+            for (const auto &directory : encodingSearchDirectories()) {
+                auto path = directory / fileName;
                 if (std::fs::is_regular_file(path))
                     return path;
             }
@@ -192,8 +250,8 @@ namespace hex {
             if (!context.empty()) {
                 path = findIncludedFile(context, name);
             } else {
-                for (const auto &basePath : paths::Encodings.read()) {
-                    if (path = findIncludedFile(basePath, name); path.has_value())
+                for (const auto &directory : encodingSearchDirectories()) {
+                    if (path = findIncludedFile(directory, name); path.has_value())
                         break;
                 }
             }
@@ -211,21 +269,21 @@ namespace hex {
          *
          * Read once, on the first name that no file answers to by its own spelling. This finds a
          * table file whose own name is not in lower case, which findEncodingFile() misses on a
-         * file system that tells case apart. A base path earlier in the list wins, the same way
+         * file system that tells case apart. A directory earlier in the list wins, the same way
          * findEncodingFile() takes the first it finds.
          */
         const std::map<std::string, std::fs::path>& encodingFilesByName() {
             static const auto files = [] {
                 std::map<std::string, std::fs::path> result;
 
-                for (const auto &basePath : paths::Encodings.read()) {
-                    std::error_code error;
-                    for (const auto &entry : std::fs::directory_iterator(basePath, error)) {
-                        if (entry.path().extension() != ".tbl")
-                            continue;
+                const auto basePaths = paths::Encodings.read();
+                for (const auto &path : getEncodingFiles()) {
+                    const auto stem = path.stem().string();
+                    result.emplace(encodingFileName(stem), path);
 
-                        result.emplace(encodingFileName(entry.path().stem().string()), entry.path());
-                    }
+                    // A table in a folder also answers to "folder/name".
+                    if (std::ranges::find(basePaths, path.parent_path()) == basePaths.end())
+                        result.emplace(encodingFileName(path.parent_path().filename().string() + "/" + stem), path);
                 }
 
                 return result;
@@ -728,6 +786,24 @@ namespace hex {
 
         for (auto &character : result)
             character = char(std::tolower(u8(character)));
+
+        return result;
+    }
+
+    std::vector<std::fs::path> getEncodingFiles() {
+        std::vector<std::fs::path> result;
+
+        for (const auto &directory : encodingSearchDirectories()) {
+            std::vector<std::fs::path> files;
+            std::error_code error;
+            for (const auto &entry : std::fs::directory_iterator(directory, error)) {
+                if (entry.is_regular_file(error) && entry.path().extension() == ".tbl")
+                    files.push_back(entry.path());
+            }
+
+            std::ranges::sort(files);
+            std::ranges::move(files, std::back_inserter(result));
+        }
 
         return result;
     }
