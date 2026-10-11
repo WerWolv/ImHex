@@ -1,5 +1,7 @@
 #include "imgui.h"
+#ifndef IMHEX_TESTS
 #include "fonts/fonts.hpp"
+#endif
 #include "hex/ui/imgui_imhex_extensions.h"
 #include <ui/text_editor.hpp>
 #include <hex/helpers/scaling.hpp>
@@ -1254,7 +1256,7 @@ namespace hex::ui {
                     }
                 }
 
-                drawSelection(lineIndex, drawList);
+                drawSelection(lineIndex, textEditorSize, drawList);
                 drawButtons(lineIndex);
 
                 if (m_showCursor)
@@ -1375,7 +1377,7 @@ namespace hex::ui {
         m_lines.m_numberOfLinesDisplayed = windowHeight / m_lines.m_charAdvance.y;
     }
 
-    void TextEditor::drawSelection(float lineIndex, ImDrawList *drawList) {
+    void TextEditor::drawSelection(float lineIndex, const ImVec2 &contentSize, ImDrawList *drawList) {
         pushClipRect(true, true);
         auto row = m_lines.lineIndexToRow(lineIndex);
         auto lineStartScreenPos = m_lines.getLineStartScreenPos(0, row);
@@ -1389,9 +1391,12 @@ namespace hex::ui {
 
         if (m_lines.m_state.m_selection.m_start <= lineCoords.m_end && m_lines.m_state.m_selection.m_end > lineCoords.m_start) {
             auto start = m_lines.unfoldedToFoldedCoords(std::max(m_lines.m_state.m_selection.m_start, lineCoords.m_start));
-            auto end = m_lines.unfoldedToFoldedCoords(std::min(m_lines.m_state.m_selection.m_end, lineCoords.m_end));
-            float selectionStart = m_lines.textDistanceToLineStart(start);//coordsToScreen(start).x;
-            float selectionEnd = m_lines.textDistanceToLineStart(end);//)coordsToScreen(end).x;
+            float selectionStart = m_lines.textDistanceToLineStart(start);
+            float selectionEnd;
+            if (lineCoords.m_end < m_lines.m_state.m_selection.m_end)
+                selectionEnd = m_lines.m_lineNumberFieldWidth + contentSize.x - (m_scrollY ? ImGuiStyle().ScrollbarSize : 0) - 3;
+            else
+                selectionEnd = m_lines.textDistanceToLineStart(m_lines.unfoldedToFoldedCoords(m_lines.m_state.m_selection.m_end));
 
             if (selectionStart < selectionEnd) {
                 ImVec2 rectStart = ImVec2(lineStartScreenPos.x + selectionStart, lineStartScreenPos.y);
@@ -1594,7 +1599,8 @@ namespace hex::ui {
         if (gotoKey != Invalid) {
             std::string errorLineColumn;
             bool found = false;
-            for (const auto &text: m_lines.m_clickableText) {
+            for (auto text: m_lines.m_clickableText) {
+                text += getSourceCodeEditor()->getPath() + ":";
                 if (lineText.starts_with(text)) {
                     errorLineColumn = lineText.substr(text.size());
                     if (!errorLineColumn.empty()) {
@@ -1657,9 +1663,10 @@ namespace hex::ui {
         auto text = line.substr(i, tokenLength);
 
         begin.x += line.textSize(i);
-
+#ifndef IMHEX_TESTS
         if (color <= (char) PaletteIndex::Comment && color >= (char) PaletteIndex::DocComment)
             fonts::CodeEditor().pushItalic();
+#endif
         auto index = text.find_first_not_of(' ');
         if (index == 0)
             TextUnformattedColoredAt(begin, m_palette[renderColor], text.c_str());
@@ -1677,11 +1684,12 @@ namespace hex::ui {
                 TextUnformattedColoredAt(begin, m_palette[renderColor], text.c_str());
             }
         }
+#ifndef IMHEX_TESTS
         if (color <= (char) PaletteIndex::Comment && color >= (char) PaletteIndex::DocComment)
            fonts::CodeEditor().pop();
-
+#endif
         ErrorMarkers::iterator errorIt;
-        auto errorHoverBoxKey = lineStart + Coordinates(1, 1);
+        auto errorHoverBoxKey = lineStart;
         if (errorIt = std::find_if(m_lines.m_errorMarkers.begin(), m_lines.m_errorMarkers.end(), [&](const auto &item) {
                 return item.first >= errorHoverBoxKey && item.first <= errorHoverBoxKey + Coordinates(0, tokenLength);
             }); errorIt != m_lines.m_errorMarkers.end()) {
@@ -1816,15 +1824,25 @@ namespace hex::ui {
                     }
                 }
             } else if (m_lines.m_codeFoldHighlighted.m_start.m_line == codeFoldKeyLine) {
-                if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted) && m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
+                if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted)) {
+                    if (m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
+                        state = FoldSymbol::Down;
+                    else
+                        state = FoldSymbol::Square;
+                } else {
+                    m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted] = true;
                     state = FoldSymbol::Down;
-                else
-                    state = FoldSymbol::Square;
+                }
             } else if (m_lines.m_codeFoldHighlighted.m_end.m_line == codeFoldKeyLine) {
-                if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted) && m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
+                if (m_lines.m_codeFoldState.contains(m_lines.m_codeFoldHighlighted)) {
+                    if (m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted])
+                        state = FoldSymbol::Up;
+                    else
+                        state = FoldSymbol::Square;
+                } else {
+                    m_lines.m_codeFoldState[m_lines.m_codeFoldHighlighted] = true;
                     state = FoldSymbol::Up;
-                else
-                    state = FoldSymbol::Square;
+                }
             }
         }
 
@@ -1986,9 +2004,5 @@ namespace hex::ui {
         ImVec2 p2 = lineStartScreenPos + ImVec2(0, verticalMargin + boxSize);
         drawList->AddLine(p1 + py, p2, color, 1.0f);
         drawList->AddLine(p1 + px + py, p2, color, 1.0f);
-    }
-
-    bool TextEditor::areEqual(const std::pair<Range, CodeFold> &a, const std::pair<Range, CodeFold> &b) {
-        return a.first == b.first && a.second.isOpen() == b.second.isOpen();
     }
 }

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(helpers_test)
 set(TEST_CATEGORY Helpers)
+add_compile_definitions(IMHEX_TESTS)
 
 # Add new tests here #
 set(AVAILABLE_TESTS
@@ -15,6 +16,13 @@ set(AVAILABLE_TESTS
     # File
         FileAccess
         FileBackedProviderData
+
+    # Pattern editor
+        ToggleLineCommentsAddsAndRemoves
+        ToggleLineCommentsUsesTheShallowestIndent
+        ToggleLineCommentsTreatsARunAsAWhole
+        ToggleLineCommentsLeavesBlankLinesAlone
+        ToggleLineCommentsNeedsAToken
 
     # Utils
         ExtractBits
@@ -67,11 +75,13 @@ add_executable(${PROJECT_NAME}
         source/encoding.cpp
         source/encoding_line_cache.cpp
         source/file.cpp
+        source/line_comment.cpp
         source/net.cpp
         source/utils.cpp
 
         # A test for plugin code needs the plugin's own implementation compiled in too.
         ${CMAKE_SOURCE_DIR}/plugins/builtin/source/content/helpers/decoded_string.cpp
+        ${CMAKE_SOURCE_DIR}/plugins/ui/source/ui/text_editor/line_comment.cpp
 )
 
 

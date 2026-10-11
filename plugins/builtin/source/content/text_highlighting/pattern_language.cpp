@@ -128,18 +128,11 @@ namespace hex::plugin::builtin {
 
     }
 
-    void IdentifierHighlighter::RequiredInputs::setCompileErrors() {
-        auto errors = m_identifierHighlighter->getPatternLanguage()->getCompileErrors();
-        compileErrors.resize(errors.size());
-        std::ranges::copy(errors, compileErrors.begin());
-    }
-
     void IdentifierHighlighter::RequiredInputs::setRequiredInputs() {
         setTypes();
         setNamespaces();
         setImports();
         setText();
-        setCompileErrors();
     }
 
     void IdentifierHighlighter::RequiredInputs::applyLinesOfColors(bool colorizeIdentifiers) {
@@ -1221,12 +1214,16 @@ namespace hex::plugin::builtin {
         if (peek(tkn::Separator::RightBrace,0)) {
 
             while (!peek(tkn::Separator::Semicolon, -1) && tokenIndex > 0) {
-                while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1))
+                bool foundComment = false;
+                while (peek(tkn::Literal::Comment, -1) || peek(tkn::Literal::DocComment, -1)) {
                     next(-1);
-                next(-1);
+                    foundComment = true;
+                }
+                if (!foundComment)
+                    next(-1);
                 tokenIndex = getTokenId();
             }
-        } else{
+        } else {
             tokenIndex = m_firstTokenIdOfLine.at(m_curr->location.line - 1);
         }
 
@@ -1477,41 +1474,6 @@ namespace hex::plugin::builtin {
             {Identifier::IdentifierType::ScopeResolutionUnknown, ui::TextEditor::PaletteIndex::UnkIdentifier},
             {Identifier::IdentifierType::GlobalVariable,         ui::TextEditor::PaletteIndex::GlobalVariable},
     };
-
-// Render the compilation errors using squiggly lines
-    void IdentifierHighlighter::renderErrors() {
-        const auto processMessage = [](const auto &message) {
-            auto lines = wolv::util::splitString(message, "\n");
-
-            std::ranges::transform(lines, lines.begin(), [](auto line) {
-
-                if (line.size() >= 128)
-                    line = wolv::util::trim(line);
-
-                return hex::limitStringLength(line, 128);
-            });
-
-            return wolv::util::combineStrings(lines, "\n");
-        };
-        ui::TextEditor::ErrorMarkers errorMarkers;
-
-        if (!m_requiredInputs.compileErrors.empty()) {
-            for (const auto &error: m_requiredInputs.compileErrors) {
-
-                if (isLocationValid(error.getLocation())) {
-                    auto key = ui::TextEditor::Coordinates(error.getLocation().line, error.getLocation().column);
-
-                    if (!errorMarkers.contains(key) || errorMarkers[key].first < (i32) error.getLocation().length)
-                        errorMarkers[key] = std::make_pair(error.getLocation().length, processMessage(error.getMessage()));
-                }
-            }
-        }
-        ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-        if (editor != nullptr)
-            editor->setErrorMarkers(errorMarkers);
-        else
-            log::warn("Text editor not found, provider is null");
-    }
 
 // creates a map from variable names to a vector of token indices
 // od every instance of the variable name in the code.
@@ -1843,19 +1805,31 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void IdentifierHighlighter::setRequestedIdentifierColors(bool colorizeIdentifiers) {
+    i32 IdentifierHighlighter::setRequestedIdentifierColors(bool colorizeIdentifiers) {
         if (m_tokenColors.empty() || m_firstTokenIdOfLine.empty() || m_requiredInputs.fullTokens.size() < 2)
-            return;
+            return 0;
+        ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
+        if (editor == nullptr) {
+            log::warn("Text editor not found, provider is null");
+            return -1;
+        }
+
+
         auto topLine = 0;
         while (m_firstTokenIdOfLine.at(topLine) == -1)
             topLine++;
         auto bottomLine = previousLine(m_firstTokenIdOfLine.size());
+        if (editor->getLines().size() != (i32) (bottomLine - 1))
+            return -1;
+
         m_requiredInputs.linesOfColors.resize(m_lines.size());
         std::vector<i32> identifierTokenIds(m_identifierTokenIds.begin(), m_identifierTokenIds.end());
         i32 identifierTokenIdsLength = (i32) identifierTokenIds.size();
         i32 startIndex = 0;
         i32 endIndex = 0;
         for (u32 line = topLine; line < bottomLine; line = nextLine(line)) {
+            if (m_lines[line].size() != (u32) editor->getLines().unfoldedLineBytes(line))
+                return -1;
             if (m_lines[line].empty())
                 continue;
             m_requiredInputs.linesOfColors[line] = std::string(m_lines[line].size(), 0);
@@ -1883,12 +1857,10 @@ namespace hex::plugin::builtin {
                         lineOfColors[tokenOffset + j] = color;
                 }
             }
-            ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-            if (editor != nullptr)
-                editor->setColorizedLine(line, lineOfColors, true, colorizeIdentifiers);
-            else
-                log::warn("Text editor not found, provider is null");
+
+            editor->setColorizedLine(line, lineOfColors, true, colorizeIdentifiers);
         }
+        return 0;
     }
 
     void IdentifierHighlighter::recurseInheritances(std::string name) {
@@ -2618,22 +2590,6 @@ namespace hex::plugin::builtin {
                 fixAutos();
                 fixChains();
                 colorRemainingIdentifierTokens();
-            }
-            ui::TextEditor *editor = m_viewPatternEditor->getTextEditor();
-            if (editor != nullptr)
-                editor->clearErrorMarkers();
-            else
-                log::warn("Text editor not found, provider is null");
-            m_requiredInputs.compileErrors = getPatternLanguage()->getCompileErrors();
-
-            if (!m_requiredInputs.compileErrors.empty())
-                renderErrors();
-            else {
-                editor = m_viewPatternEditor->getTextEditor();
-                if (editor != nullptr)
-                    editor->clearErrorMarkers();
-                else
-                    log::warn("Text editor not found, provider is null");
             }
         } catch (const std::out_of_range &e) {
             log::debug("TextHighlighter::highlightSourceCode: Out of range error: {}", e.what());

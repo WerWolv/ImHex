@@ -1139,6 +1139,7 @@
     "hex.builtin.view.pattern_editor.menu.edit.paste": "Paste",
     "hex.builtin.view.pattern_editor.menu.edit.undo": "Undo",
     "hex.builtin.view.pattern_editor.menu.edit.redo": "Redo",
+    "hex.builtin.view.pattern_editor.shortcut.toggle_comment": "Comment or uncomment the selected lines",
     "hex.builtin.view.pattern_editor.shortcut.toggle_insert": "Toggle Write Over",
     "hex.builtin.view.pattern_editor.shortcut.delete": "Delete One Character at the Cursor Position",
     "hex.builtin.view.pattern_editor.shortcut.backspace": "Delete One Character to the Left of Cursor",

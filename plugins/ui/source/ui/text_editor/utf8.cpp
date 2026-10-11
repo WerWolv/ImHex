@@ -1,7 +1,9 @@
 #include <ui/text_editor.hpp>
 #include <hex/helpers/scaling.hpp>
 #include <wolv/utils/string.hpp>
+#ifndef IMHEX_TESTS
 #include <fonts/fonts.hpp>
+#endif
 #include <algorithm>
 
 namespace hex::ui {
@@ -65,10 +67,14 @@ namespace hex::ui {
         if (str.empty())
             return 0;
         if (ImGui::GetFont() == nullptr) {
+#ifndef IMHEX_TESTS
             fonts::CodeEditor().push();
             i32 result =  ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
             fonts::CodeEditor().pop();
             return result;
+#else
+            return 0;
+#endif
         }
         return ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, str.c_str(), nullptr, nullptr).x;
     }
@@ -509,13 +515,14 @@ namespace hex::ui {
 
     Coordinates Lines::stringIndexCoords(i32 strIndex, const std::string &input) {
         if (strIndex < 0 || strIndex > (i32) input.size())
-            return lineCoordinates( 0, 0);
+            return {0,0};
         std::string str = input.substr(0, strIndex);
-        auto line = std::count(str.begin(), str.end(), '\n');
+        i32 line = std::count(str.begin(), str.end(), '\n');
         auto index = str.find_last_of('\n');
-        str = str.substr(index + 1);
+        if (index != std::string::npos)
+            str = str.substr(index + 1);
         auto col = stringCharacterCount(str);
 
-        return lineCoordinates( line, col);
+        return {line, col};
     }
 }

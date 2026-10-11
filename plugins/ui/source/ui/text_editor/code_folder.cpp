@@ -5,6 +5,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/file_attached_data.hpp>
 #include <hex/api/content_registry/pattern_language.hpp>
+#include <pl/core/lexer.hpp>
 #include <pl/core/preprocessor.hpp>
 #include <pl/api.hpp>
 
@@ -292,13 +293,18 @@ namespace hex::ui {
 
     void Lines::tokensFromSource() {
 
-        auto code = getText();
-        if (code.empty())
+        m_source = getText();
+        if (m_source.empty())
             return;
         std::unique_ptr<pl::PatternLanguage> runtime = std::make_unique<pl::PatternLanguage>();
+        auto internalSource = runtime->addVirtualSource(m_source,  pl::api::Source::DefaultSource, true);
         ContentRegistry::PatternLanguage::configureRuntime(*runtime, nullptr);
-        std::ignore = runtime->preprocessString(code, pl::api::Source::DefaultSource);
-        m_tokens = runtime->getInternals().preprocessor->getResult();
+        auto lexer = runtime->getInternals().lexer.get();
+        auto [tokens,errors] = lexer->lex(internalSource);
+        if (tokens.has_value())
+            m_tokens = std::move(tokens.value());
+        else
+            return;
         const u32 tokenCount = m_tokens.size();
         if (tokenCount == 0)
             return;
@@ -455,10 +461,6 @@ namespace hex::ui {
         else {
             stringVector = wolv::util::splitString(states, ",", true);
             count = stringVector.size();
-            if (m_codeFoldKeys.empty()) {
-                m_useSavedFoldStatesRequested = true;
-                return;
-            }
         }
         if (count == 1 && stringVector[0].empty())
             return;
@@ -801,7 +803,6 @@ namespace hex::ui {
     }
 
     void Lines::setAllCodeFolds(std::string path) {
-        initializeCodeFolds(path);
         tokensFromSource();
         m_foldPoints.clear();
         findFoldDelimiters(0, false);
@@ -814,11 +815,11 @@ namespace hex::ui {
         for (auto interval: m_foldPoints) {
             Range foldInterval(interval);
             m_indentBlocks.insert(foldInterval);
-            if (foldInterval.m_start.m_line > size() || foldInterval.m_end.m_line > size())
-                return;
+            if (foldInterval.m_start.m_line >= size() || foldInterval.m_end.m_line >= size())
+                continue;
             std::pair<char, char> foldDelimiters = {};
-            if (size_t(foldInterval.m_end.m_line) >= m_unfoldedLines.size())
-                break;
+            if (m_unfoldedLines[foldInterval.m_end.m_line].maxColumn() <= foldInterval.m_end.m_column)
+                continue;
 
             foldDelimiters.second = m_unfoldedLines[foldInterval.m_end.m_line].m_chars[foldInterval.m_end.m_column];
             if (foldDelimiters.second == '\0')

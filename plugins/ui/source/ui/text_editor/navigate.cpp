@@ -580,49 +580,59 @@ namespace hex::ui {
         coordinates.m_column += incr;
     }
 
-    Coordinates TextEditor::findWordStart(const Coordinates &from) {
-        Coordinates at = m_lines.lineCoordinates(from);
-        if (at.m_line >= m_lines.size())
+    Coordinates Lines::findWordStart(const Coordinates &from) {
+        Coordinates at = lineCoordinates(from);
+        if (at.m_line >= size())
             return at;
 
-        auto &line = m_lines.m_unfoldedLines[at.m_line];
-        auto charIndex = m_lines.lineCoordsIndex(at);
+        auto &line = m_unfoldedLines[at.m_line];
+        auto charIndex = lineCoordsIndex(at);
 
         bool found = false;
-        while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
+        if (isWordChar(line.m_chars[charIndex])) {
+            found = true;
+            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
+                --charIndex;
+        } else if (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1])) {
             found = true;
             --charIndex;
+            while (charIndex > 0 && isWordChar(line.m_chars[charIndex - 1]))
+                --charIndex;
         }
-        while (!found && charIndex > 0 && ispunct(line.m_chars[charIndex - 1])) {
-            found = true;
-            --charIndex;
+        if (!found) {
+            while (charIndex > 0 && ispunct(line.m_chars[charIndex - 1])) {
+                found = true;
+                --charIndex;
+            }
         }
         while (!found && charIndex > 0 && isspace(line.m_chars[charIndex - 1]))
             --charIndex;
-        return m_lines.lineIndexCoords(at.m_line + 1, charIndex);
+        return lineIndexCoords(at.m_line + 1, charIndex);
     }
 
-    Coordinates TextEditor::findWordEnd(const Coordinates &from) {
-        Coordinates at = m_lines.lineCoordinates(from);
-        if (at.m_line >= m_lines.size())
+    Coordinates Lines::findWordEnd(const Coordinates &from) {
+        Coordinates at = lineCoordinates(from);
+        if (at.m_line >= size())
             return at;
 
-        auto &line = m_lines.m_unfoldedLines[at.m_line];
-        auto charIndex = m_lines.lineCoordsIndex(at);
+        auto &line = m_unfoldedLines[at.m_line];
+        auto charIndex = lineCoordsIndex(at);
 
         bool found = false;
         while (charIndex < (i32) line.m_chars.size() && isWordChar(line.m_chars[charIndex])) {
             found = true;
             ++charIndex;
         }
-        while (!found && charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex])) {
-            found = true;
-            ++charIndex;
+        if (!found) {
+            while (charIndex < (i32) line.m_chars.size() && ispunct(line.m_chars[charIndex])) {
+                found = true;
+                ++charIndex;
+            }
         }
         while (!found && charIndex < (i32) line.m_chars.size() && isspace(line.m_chars[charIndex]))
             ++charIndex;
 
-        return m_lines.lineIndexCoords(at.m_line + 1, charIndex);
+        return lineIndexCoords(at.m_line + 1, charIndex);
     }
 
     Coordinates Lines::findNextWord(const Coordinates &from) {
