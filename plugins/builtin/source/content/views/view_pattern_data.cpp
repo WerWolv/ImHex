@@ -1,3 +1,5 @@
+#include <hex/api/events/requests_gui.hpp>
+#include <popups/popup_text_input.hpp>
 #include <content/views/view_pattern_data.hpp>
 
 #include <hex/api/content_registry/settings.hpp>
@@ -115,8 +117,24 @@ namespace hex::plugin::builtin {
     }
 
 
+    class PatternDataProvider : public prv::MemoryProvider, public prv::IProviderMenuItems {
+    public:
+        using prv::MemoryProvider::MemoryProvider;
+
+        std::vector<MenuEntry> getMenuEntries() override {
+            return {
+                MenuEntry { .name=Lang("hex.builtin.provider.rename"), .icon=ICON_VS_TAG, .callback=[this] {
+                    ui::PopupTextInput::open("hex.builtin.provider.rename", "hex.builtin.provider.rename.desc", [this](const std::string &name) {
+                        this->setName(name);
+                        RequestUpdateWindowTitle::post();
+                    });
+                } }
+            };
+        }
+    };
+
     static void loadPatternAsMemoryProvider(const VirtualFile *file) {
-        ImHexApi::Provider::add<prv::MemoryProvider>(file->data, wolv::util::toUTF8String(file->path.filename()));
+        ImHexApi::Provider::add<PatternDataProvider>(file->data, wolv::util::toUTF8String(file->path.filename()));
     }
 
     static void drawVirtualFileTree(const std::vector<const VirtualFile*> &virtualFiles, u32 level = 0) {
@@ -274,7 +292,7 @@ namespace hex::plugin::builtin {
                                     if (ImGui::MenuItemEx("hex.builtin.view.pattern_data.section.view_raw"_lang, ICON_VS_OPEN_PREVIEW)) {
                                         if (auto it = sections.find(selectedSection); it != sections.end()) {
                                             const auto &[sectionId, section] = *it;
-                                            ImHexApi::Provider::add<prv::MemoryProvider>(section.data, section.name);
+                                            ImHexApi::Provider::add<PatternDataProvider>(section.data, section.name);
                                         }
                                     }
                                     ImGui::EndPopup();

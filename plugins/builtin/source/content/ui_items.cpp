@@ -27,6 +27,7 @@
 
 #include <toasts/toast_notification.hpp>
 #include <popups/popup_question.hpp>
+#include <popups/popup_text_input.hpp>
 
 #include <csignal>
 #include <fonts/tabler_icons.hpp>
@@ -512,12 +513,11 @@ namespace hex::plugin::builtin {
 
         EventFrameBegin::subscribe([] {
             if (rightClickedProvider != nullptr) {
-                if (auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(rightClickedProvider); menuItemProvider != nullptr) {
-                    if (!menuItemProvider->getMenuEntries().empty()) {
-                        if (ImGui::BeginPopup("ProviderMenu")) {
-                            drawProviderContextMenu(rightClickedProvider);
-                            ImGui::EndPopup();
-                        }
+                auto *menuItemProvider = dynamic_cast<prv::IProviderMenuItems*>(rightClickedProvider);
+                if (menuItemProvider != nullptr && !menuItemProvider->getMenuEntries().empty()) {
+                    if (ImGui::BeginPopup("ProviderMenu")) {
+                        drawProviderContextMenu(rightClickedProvider);
+                        ImGui::EndPopup();
                     }
                 }
             }
