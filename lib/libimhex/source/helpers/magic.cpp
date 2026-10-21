@@ -237,7 +237,9 @@ namespace hex::magic {
         return true;
     }
 
-    static std::optional<FoundPattern> findViablePattern(const std::fs::path &path, prv::Provider *provider, const std::multimap<std::string, std::string> &pragmaValues, Task *task) {
+    using PatternMatchers = std::vector<std::shared_ptr<prv::PatternMatcherBase>>;
+
+    static std::optional<FoundPattern> findViablePattern(const std::fs::path &path, const PatternMatchers &matchers, const std::multimap<std::string, std::string> &pragmaValues, Task *task) {
         std::string author, description;
         for (auto [start, end] = pragmaValues.equal_range("author"); start != end; ++start) {
             author = start->second;
@@ -246,24 +248,20 @@ namespace hex::magic {
             description = start->second;
         }
 
-        if (auto matcherStrategies = dynamic_cast<prv::ProviderMatchStrategiesBase*>(provider)) {
-            const auto strategies = matcherStrategies->createMatchers(provider);
+        for (const auto &strategy : matchers) {
+            for (auto [it, itEnd] = pragmaValues.equal_range(std::string(strategy->getPragma())); it != itEnd; ++it) {
+                if (task != nullptr)
+                    task->update();
 
-            for (const auto &strategy : strategies) {
-                for (auto [it, itEnd] = pragmaValues.equal_range(std::string(strategy->getPragma())); it != itEnd; ++it) {
-                    if (task != nullptr)
-                        task->update();
-
-                    if (strategy->match(it->second)) {
-                        return FoundPattern {
-                            .patternFilePath = path,
-                            .author = std::move(author),
-                            .description = std::move(description),
-                            .matcher = strategy,
-                            .downloadUrl = { },
-                            .remote = false
-                        };
-                    }
+                if (strategy->match(it->second)) {
+                    return FoundPattern {
+                        .patternFilePath = path,
+                        .author = std::move(author),
+                        .description = std::move(description),
+                        .matcher = strategy,
+                        .downloadUrl = { },
+                        .remote = false
+                    };
                 }
             }
         }
@@ -272,6 +270,12 @@ namespace hex::magic {
     }
 
     std::vector<FoundPattern> findViablePatterns(prv::Provider *provider, bool searchOnline, Task *task) {
+        // Create the matchers one time. The MIME matcher loads the magic database each time it is created.
+        const auto matcherStrategies = dynamic_cast<prv::ProviderMatchStrategiesBase*>(provider);
+        if (matcherStrategies == nullptr)
+            return { };
+        const auto matchers = matcherStrategies->createMatchers(provider);
+
         std::set<FoundPattern> patterns;
 
         // Search local patterns
@@ -294,7 +298,7 @@ namespace hex::magic {
 
                     const auto pragmaValues = runtime.getPragmaValues(file.readString());
 
-                    if (auto foundPattern = findViablePattern(entry.path(), provider, pragmaValues, task); foundPattern.has_value()) {
+                    if (auto foundPattern = findViablePattern(entry.path(), matchers, pragmaValues, task); foundPattern.has_value()) {
                         patterns.insert(std::move(*foundPattern));
                     }
 
@@ -315,7 +319,7 @@ namespace hex::magic {
                     task->update();
 
                 for (const auto &patternEntry : start->second) {
-                    if (auto foundPattern = findViablePattern(patternEntry.fileName, provider, patternEntry.pragmas, task); foundPattern.has_value()) {
+                    if (auto foundPattern = findViablePattern(patternEntry.fileName, matchers, patternEntry.pragmas, task); foundPattern.has_value()) {
                         foundPattern->downloadUrl = patternEntry.link;
                         foundPattern->remote = true;
 
