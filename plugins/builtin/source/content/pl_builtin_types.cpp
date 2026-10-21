@@ -64,12 +64,12 @@ namespace hex::plugin::builtin {
             }
         }
 
-        std::string toString() override {
+    protected:
+        std::string defaultToString() const override {
             return m_encodedString;
         }
 
-    protected:
-        [[nodiscard]] std::string formatDisplayValue() override {
+        std::string defaultToDisplayValue() const override {
             auto size = std::min<size_t>(this->getSize(), 0x7F);
 
             if (size == 0)
@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
 
             auto buffer = m_encodedString.substr(0, size);
 
-            return Pattern::callUserFormatFunc(buffer).value_or(fmt::format("\"{0}\" {1}", buffer, size > this->getSize() ? "(truncated)" : ""));
+            return fmt::format("\"{0}\" {1}", buffer, size > this->getSize() ? "(truncated)" : "");
         }
 
     private:
