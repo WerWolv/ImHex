@@ -635,6 +635,8 @@
     "hex.builtin.sidebar.project.name": "Project",
     "hex.builtin.sidebar.project.provider_fallback": "Unknown data source",
     "hex.builtin.sidebar.project.temporary": "Temporary Project",
+    "hex.builtin.sidebar.project.clean": "Clean",
+    "hex.builtin.sidebar.project.clean.tooltip": "Removes missing data sources",
     "hex.builtin.task.query_docs": "Querying Docs...",
     "hex.builtin.task.sending_statistics": "Sending statistics...",
     "hex.builtin.task.check_updates": "Checking for updates...",
