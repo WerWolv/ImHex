@@ -169,7 +169,15 @@ struct ImGui_ImplFreeType_FontSrcData
 struct ImGui_ImplFreeType_FontSrcBakedData
 {
     FT_Size     FtSize;             // This represent a FT_Face with a given size.
-    ImGui_ImplFreeType_FontSrcBakedData() { memset((void*)this, 0, sizeof(*this)); }
+    // IMHEX PATCH BEGIN
+    // A non-scalable face (e.g. a bitmap-only color emoji font with a single embedded
+    // strike) can only be sized to one of its fixed strikes, never to an arbitrary UI
+    // text size. FixedSizeScale is the ratio between the requested size and the strike
+    // FreeType actually selected; it scales the glyph's on-screen geometry down (or up)
+    // to the requested size while the bitmap itself stays at native strike resolution.
+    float       FixedSizeScale;
+    // IMHEX PATCH END
+    ImGui_ImplFreeType_FontSrcBakedData() { memset((void*)this, 0, sizeof(*this)); FixedSizeScale = 1.0f; }
 };
 
 bool ImGui_ImplFreeType_FontSrcData::InitFont(FT_Library ft_library, const ImFontConfig* src, ImGuiFreeTypeLoaderFlags extra_font_loader_flags)
@@ -466,7 +474,35 @@ static bool ImGui_ImplFreeType_FontBakedInit(ImFontAtlas* atlas, ImFontConfig* s
     req.height = (uint32_t)(size * 64 * rasterizer_density);
     req.horiResolution = 0;
     req.vertResolution = 0;
-    FT_Request_Size(bd_font_data->FtFace, &req);
+    // IMHEX PATCH BEGIN
+    // FT_Request_Size() fails on a non-scalable face (FT_Err_Invalid_Pixel_Size) unless the
+    // requested size exactly matches one of its fixed strikes: a bitmap-only color emoji font
+    // typically ships a single strike far larger than any UI text size. Select the closest
+    // strike instead, and scale the glyph's on-screen geometry to the size actually requested;
+    // the bitmap itself stays at the strike's native resolution and is scaled down on display.
+    if (!FT_IS_SCALABLE(bd_font_data->FtFace) && bd_font_data->FtFace->num_fixed_sizes > 0)
+    {
+        FT_Face face = bd_font_data->FtFace;
+        const float wanted_height = size * rasterizer_density;
+        int best_index = 0;
+        float best_diff = FLT_MAX;
+        for (int i = 0; i < face->num_fixed_sizes; i++)
+        {
+            const float diff = ImFabs((float)face->available_sizes[i].height - wanted_height);
+            if (diff < best_diff)
+            {
+                best_diff = diff;
+                best_index = i;
+            }
+        }
+        FT_Select_Size(face, best_index);
+        bd_baked_data->FixedSizeScale = wanted_height / (float)face->available_sizes[best_index].height;
+    }
+    else
+    {
+        FT_Request_Size(bd_font_data->FtFace, &req);
+    }
+    // IMHEX PATCH END
 
     // Output
     if (src->MergeMode == false)
@@ -497,6 +533,7 @@ static void ImGui_ImplFreeType_FontBakedDestroy(ImFontAtlas* atlas, ImFontConfig
 static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConfig* src, ImFontBaked* baked, void* loader_data_for_baked_src, ImWchar codepoint, ImFontGlyph* out_glyph, float* out_advance_x)
 {
     ImGui_ImplFreeType_FontSrcData* bd_font_data = (ImGui_ImplFreeType_FontSrcData*)src->FontLoaderData;
+    ImGui_ImplFreeType_FontSrcBakedData* bd_baked_data = (ImGui_ImplFreeType_FontSrcBakedData*)loader_data_for_baked_src;
     uint32_t glyph_index = FT_Get_Char_Index(bd_font_data->FtFace, codepoint);
     if (glyph_index == 0)
         return false;
@@ -504,7 +541,6 @@ static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConf
     if (bd_font_data->BakedLastActivated != baked) // <-- could use id
     {
         // Activate current size
-        ImGui_ImplFreeType_FontSrcBakedData* bd_baked_data = (ImGui_ImplFreeType_FontSrcBakedData*)loader_data_for_baked_src;
         FT_Activate_Size(bd_baked_data->FtSize);
         bd_font_data->BakedLastActivated = baked;
     }
@@ -518,7 +554,7 @@ static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConf
     const float rasterizer_density = src->RasterizerDensity * baked->RasterizerDensity;
 
     // Load metrics only mode
-    const float advance_x = (slot->advance.x / FT_SCALEFACTOR) / rasterizer_density;
+    const float advance_x = (slot->advance.x / FT_SCALEFACTOR) * bd_baked_data->FixedSizeScale / rasterizer_density;
     if (out_advance_x != NULL)
     {
         IM_ASSERT(out_glyph == NULL);
@@ -575,8 +611,8 @@ static bool ImGui_ImplFreeType_FontBakedLoadGlyph(ImFontAtlas* atlas, ImFontConf
         const float offsets_scale = (ref_size != 0.0f) ? (baked->Size / ref_size) : 1.0f;
         float font_off_x = ImFloor(src->GlyphOffset.x * offsets_scale + 0.5f); // Snap scaled offset.
         float font_off_y = ImFloor(src->GlyphOffset.y * offsets_scale + 0.5f) + baked->Ascent;
-        float recip_h = 1.0f / rasterizer_density;
-        float recip_v = 1.0f / rasterizer_density;
+        float recip_h = bd_baked_data->FixedSizeScale / rasterizer_density;
+        float recip_v = bd_baked_data->FixedSizeScale / rasterizer_density;
 
         // Register glyph
         float glyph_off_x = (float)face->glyph->bitmap_left;

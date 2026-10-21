@@ -94,12 +94,16 @@ namespace hex::fonts::loader {
         }
 
         config.MergeMode = true;
+        const auto baseFontLoaderFlags = config.FontLoaderFlags;
         for (auto &extraFont : ImHexApi::Fonts::impl::getMergeFonts()) {
             config.OversampleH = 2;
             config.OversampleV = 1;
             config.RasterizerDensity = 1.0F;
             config.GlyphOffset = { extraFont.offset.x, -extraFont.offset.y };
             config.SizePixels = settings.getFontSize() * extraFont.fontSizeMultiplier.value_or(1);
+            config.FontLoaderFlags = baseFontLoaderFlags;
+            if (extraFont.colorGlyphs)
+                config.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_LoadColor | ImGuiFreeTypeLoaderFlags_Bitmap;
             atlas->AddFontFromMemoryTTF(const_cast<u8 *>(extraFont.fontData.data()), extraFont.fontData.size(), 0.0F, &config);
             atlas->Sources.back().FontDataOwnedByAtlas = false;
         }

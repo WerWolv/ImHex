@@ -24,6 +24,7 @@ EXPORT_MODULE namespace hex {
             std::span<const u8> fontData;
             Offset offset;
             std::optional<float> fontSizeMultiplier;
+            bool colorGlyphs;
         };
 
         class Font {
@@ -59,7 +60,7 @@ EXPORT_MODULE namespace hex {
 
         }
 
-        void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<float> fontSizeMultiplier = std::nullopt);
+        void registerMergeFont(const std::string &name, const std::span<const u8> &data, Offset offset = {}, std::optional<float> fontSizeMultiplier = std::nullopt, bool colorGlyphs = false);
 
         void registerFont(const Font& font);
         FontDefinition getFont(const UnlocalizedString &fontName);
