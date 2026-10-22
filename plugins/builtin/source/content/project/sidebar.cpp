@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <unordered_set>
 
 #include <hex/api/content_registry/file_type_handler.hpp>
 #include <hex/api/content_registry/provider.hpp>
@@ -639,9 +640,25 @@ namespace hex::plugin::builtin::project::impl {
                 ? std::string("hex.builtin.sidebar.project.temporary"_lang.get())
                 : wolv::util::toUTF8String(projectRoot.filename());
             const auto projectLabel = fmt::format("{}  {}", ICON_VS_PROJECT, projectName);
+
+            const auto clearButtonLabel = "hex.builtin.sidebar.project.clean"_lang.get();
+            const auto clearButtonWidth = ImGui::CalcTextSize(clearButtonLabel).x;
+            const auto oldPos = ImGui::GetCursorPos();
+
+            ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - clearButtonWidth);
+            const auto clearRequested = ImGui::Button(clearButtonLabel);
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("%s", "hex.builtin.sidebar.project.clean.tooltip"_lang.get());
+            }
+            ImGui::SetCursorPos(oldPos);
+
+            const auto cursorPos = ImGui::GetCursorScreenPos();
+            const auto availableRegion = ImGui::GetContentRegionAvail();
+            const auto remainingWidth = availableRegion.x - clearButtonWidth - ImGui::GetStyle().FramePadding.x * 3.0f;
+            ImGui::PushClipRect(cursorPos, ImVec2(cursorPos.x + remainingWidth, availableRegion.y), true);
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
             const bool projectOpen = ImGui::TreeNodeEx("##Project",
-                ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth,
+                ImGuiTreeNodeFlags_DrawLinesToNodes | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_FramePadding,
                 "%s", projectLabel.c_str());
 
             if (!ProjectManager::isTemporaryProject()) {
@@ -650,12 +667,27 @@ namespace hex::plugin::builtin::project::impl {
                 ImGui::TextDisabled("%s", wolv::util::toUTF8String(projectRoot).c_str());
                 fonts::Default().pop();
             }
+            ImGui::PopClipRect();
 
             auto &projectState = state();
+            std::unordered_set<u32> providersToRemove;
+
+            if (clearRequested) {
+                // only handle project state providers as the open providers are assumed to always exist
+                for (const auto id : projectState.projectProviderIds) {
+                    auto *provider = getProviderById(id);
+                    if (provider != nullptr)
+                        continue; // it's open, it exists
+
+                    const auto providerPath = getProviderPath(id);
+                    if (providerPath.has_value() && !wolv::io::fs::exists(*providerPath))
+                        providersToRemove.emplace(id);
+                }
+            }
+
             if (projectOpen) {
                 std::optional<u32> providerToOpen;
                 std::optional<u32> providerToReplace;
-                std::optional<u32> providerToRemove;
                 std::optional<u32> providerToClose;
 
                 std::set<u32> openProviderIds;
@@ -681,7 +713,7 @@ namespace hex::plugin::builtin::project::impl {
                     if (ImGui::BeginPopupContextItem("##ProviderContextMenu")) {
                         if (partOfProject) {
                             if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.remove_from_project"_lang, ICON_VS_TRASH))
-                                providerToRemove = provider->getID();
+                                providersToRemove.emplace(provider->getID());
                         } else {
                             if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.add_to_project"_lang, ICON_VS_ADD)) {
                                 projectState.projectProviderIds.insert(provider->getID());
@@ -742,7 +774,7 @@ namespace hex::plugin::builtin::project::impl {
                         if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.update_source"_lang, ICON_VS_REPLACE))
                             providerToReplace = id;
                         if (ImGui::MenuItemEx("hex.builtin.sidebar.project.menu.remove_from_project"_lang, ICON_VS_TRASH))
-                            providerToRemove = id;
+                            providersToRemove.emplace(id);
                         ImGui::EndPopup();
                     }
                     ImGui::PopID();
@@ -760,12 +792,16 @@ namespace hex::plugin::builtin::project::impl {
                             ui::ToastError::open(fmt::format("hex.builtin.popup.error.project.provider.open"_lang, getStoredProviderName(id)));
                     });
                 }
-                if (providerToRemove.has_value())
-                    TaskManager::doLater([id = *providerToRemove] { removeProviderFromProject(id); });
+
                 if (providerToClose.has_value())
                     TaskManager::doLater([id = *providerToClose] { ImHexApi::Provider::remove(getProviderById(id)); });
 
                 ImGui::TreePop();
+            }
+
+            if (!providersToRemove.empty()) {
+                for(const auto providerToRemove : providersToRemove)
+                    TaskManager::doLater([id = providerToRemove] { removeProviderFromProject(id); });
             }
 
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
