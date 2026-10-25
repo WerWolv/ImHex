@@ -110,5 +110,9 @@
     "hex.ui.pattern_drawer.context.copy_address": "Копіювати адресу",
     "hex.ui.pattern_drawer.context.copy_comment": "Копіювати коментар",
     "hex.ui.pattern_drawer.context.edit_value": "Редагувати значення",
-    "hex.ui.hex_editor.minimap.value_brightness": "Затінювати клітинки залежно від значення"
+    "hex.ui.hex_editor.minimap.value_brightness": "Затінювати клітинки залежно від значення",
+    "hex.ui.common.save": "Зберегти",
+    "hex.ui.common.save.data_only": "Зберегти тільки дані",
+    "hex.ui.common.data": "Дані",
+    "hex.ui.common.data.desc": "Змінені байти файлу"
 }
