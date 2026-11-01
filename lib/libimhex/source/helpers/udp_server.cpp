@@ -11,6 +11,8 @@
     #include <netinet/in.h>
 #endif
 
+#include <vector>
+
 namespace hex {
 
     UDPServer::UDPServer(u16 port, Callback callback)
