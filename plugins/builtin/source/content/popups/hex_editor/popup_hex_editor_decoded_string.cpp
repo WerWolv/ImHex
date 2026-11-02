@@ -18,18 +18,15 @@ namespace hex::plugin::builtin {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
 
-        auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
-            m_decodedString,
-            ImGui::CalcTextSize("M").x,
-            std::max(100_scaled, ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize)
-        ));
+        // ImGui wraps by glyph width, so a wide or multi-byte character is never split.
+        auto text = wolv::util::trim(m_decodedString);
 
         ImGui::InputTextMultiline(
                 "##",
                 text.data(),
                 text.size() + 1,
                 ImGui::GetContentRegionAvail(),
-                ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
+                ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_WordWrap
         );
 
         ImGui::PopStyleColor();
