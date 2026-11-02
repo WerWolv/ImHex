@@ -559,7 +559,6 @@ TEST_SEQUENCE("PatternLanguage/ReadStringDecodesPragmaEncoding") {
     pl::PatternLanguage runtime;
     ContentRegistry::PatternLanguage::configureRuntime(runtime, &provider);
 
-    // An out variable cannot carry the result. Its value is decoded again under the pragma.
     const auto result = runtime.executeString(R"(
         #pragma encoding macintosh
 
