@@ -643,9 +643,24 @@ namespace hex::plugin::builtin::project::impl {
 
             const auto clearButtonLabel = "hex.builtin.sidebar.project.clean"_lang.get();
             const auto clearButtonWidth = ImGui::CalcTextSize(clearButtonLabel).x;
+            const auto resetButtonLabel = "hex.builtin.sidebar.project.reset"_lang.get();
+            const auto resetButtonWidth = ImGui::CalcTextSize(resetButtonLabel).x;
             const auto oldPos = ImGui::GetCursorPos();
 
-            ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - clearButtonWidth);
+            auto endButtonsWidth = clearButtonWidth;
+            bool resetRequested = false;
+            if (ProjectManager::isTemporaryProject()) {
+                endButtonsWidth += resetButtonWidth + ImGui::GetStyle().FramePadding.x * 3.0f;
+
+                ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - resetButtonWidth);
+                resetRequested = ImGui::Button(resetButtonLabel);
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("%s", "hex.builtin.sidebar.project.reset.tooltip"_lang.get());
+                }
+                ImGui::SetCursorPos(oldPos);
+            }
+
+            ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - endButtonsWidth);
             const auto clearRequested = ImGui::Button(clearButtonLabel);
             if (ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("%s", "hex.builtin.sidebar.project.clean.tooltip"_lang.get());
@@ -654,7 +669,7 @@ namespace hex::plugin::builtin::project::impl {
 
             const auto cursorPos = ImGui::GetCursorScreenPos();
             const auto availableRegion = ImGui::GetContentRegionAvail();
-            const auto remainingWidth = availableRegion.x - clearButtonWidth - ImGui::GetStyle().FramePadding.x * 3.0f;
+            const auto remainingWidth = availableRegion.x - endButtonsWidth - ImGui::GetStyle().FramePadding.x * 3.0f;
             ImGui::PushClipRect(cursorPos, ImVec2(cursorPos.x + remainingWidth, availableRegion.y), true);
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
             const bool projectOpen = ImGui::TreeNodeEx("##Project",
@@ -672,7 +687,7 @@ namespace hex::plugin::builtin::project::impl {
             auto &projectState = state();
             std::unordered_set<u32> providersToRemove;
 
-            if (clearRequested) {
+            if (clearRequested || resetRequested) {
                 // only handle project state providers as the open providers are assumed to always exist
                 for (const auto id : projectState.projectProviderIds) {
                     auto *provider = getProviderById(id);
@@ -680,7 +695,7 @@ namespace hex::plugin::builtin::project::impl {
                         continue; // it's open, it exists
 
                     const auto providerPath = getProviderPath(id);
-                    if (providerPath.has_value() && !wolv::io::fs::exists(*providerPath))
+                    if (providerPath.has_value() && (resetRequested || !wolv::io::fs::exists(*providerPath)))
                         providersToRemove.emplace(id);
                 }
             }
