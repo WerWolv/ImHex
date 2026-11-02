@@ -7,6 +7,8 @@
 #include <hex/api/events/requests_interaction.hpp>
 #include <hex/api/imhex_api/bookmarks.hpp>
 #include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/imhex_api/system.hpp>
+#include <hex/api/content_registry/pattern_language.hpp>
 #include <hex/api/project_manager.hpp>
 #include <hex/helpers/tar.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
@@ -15,6 +17,7 @@
 #include <content/recent.hpp>
 #include <content/helpers/encoding_chooser.hpp>
 
+#include <pl/pattern_language.hpp>
 #include <nlohmann/json.hpp>
 #include <wolv/io/file.hpp>
 
@@ -536,5 +539,37 @@ TEST_SEQUENCE("Project/ProviderOpenState") {
     const auto detachedPatternPath = root / detachedPattern.get<std::string>();
     TEST_ASSERT(wolv::io::File(detachedPatternPath, wolv::io::File::Mode::Read).readString() == "u8 detached @ 0x00;");
 
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("PatternLanguage/ReadStringDecodesPragmaEncoding") {
+    INIT_PLUGIN("Built-in");
+
+    // Only the bytes this test reads. The real table needs ImHex-Patterns, which a test build may not have.
+    const auto dataRoot = std::filesystem::current_path() / "read_string_test";
+    std::filesystem::remove_all(dataRoot);
+    std::filesystem::create_directories(dataRoot / "encodings");
+    wolv::io::File(dataRoot / "encodings" / "macintosh.tbl", wolv::io::File::Mode::Create).writeString("48=H\n69=i\n6E=n\n6B=k\n73=s\nD5=\u2019\n");
+    ImHexApi::System::setAdditionalFolderPaths({ dataRoot });
+
+    auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
+    provider.resize(6);
+    provider.write(0, "\x48\x69\x6E\x6B\xD5\x73", 6);
+
+    pl::PatternLanguage runtime;
+    ContentRegistry::PatternLanguage::configureRuntime(runtime, &provider);
+
+    const auto result = runtime.executeString(R"(
+        #pragma encoding macintosh
+
+        if (builtin::std::mem::read_string(0, 6) != "Hink\u2019s")
+            builtin::std::error("macintosh bytes did not decode");
+        if (builtin::std::mem::read_string(0, 6, 0, "UTF-8") != "\x48\x69\x6E\x6B\xD5\x73")
+            builtin::std::error("UTF-8 did not give raw bytes");
+    )");
+    TEST_ASSERT(result == 0, "{}", runtime.getEvalError().has_value() ? runtime.getEvalError()->message : "compile error");
+
+    ImHexApi::System::setAdditionalFolderPaths({ });
+    std::filesystem::remove_all(dataRoot);
     TEST_SUCCESS();
 };

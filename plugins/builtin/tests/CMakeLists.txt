@@ -9,6 +9,7 @@ set(AVAILABLE_TESTS
     Project/MigrateLegacy
     Project/ProviderOpenState
     Encoding/ChooserLabels
+    PatternLanguage/ReadStringDecodesPragmaEncoding
 )
 
 add_library(${PROJECT_NAME} OBJECT
