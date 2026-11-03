@@ -283,6 +283,10 @@ namespace hex {
 
         int8_t suffixIndex = 6;
 
+        const bool negative = value < 0;
+        if (negative)
+            value = -value;
+
         while (suffixIndex != 0 && suffixIndex != 12 && (value >= 1000 || value < 1) && value != 0) {
             if (value >= 1000) {
                 value /= 1000;
@@ -293,7 +297,7 @@ namespace hex {
             }
         }
 
-        return std::to_string(value).substr(0, 5) + Suffixes[suffixIndex];
+        return (negative ? "-" : "") + std::to_string(value).substr(0, 5) + Suffixes[suffixIndex];
     }
 
     void startProgram(const std::vector<std::string> &command) {

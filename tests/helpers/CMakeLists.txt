@@ -26,6 +26,7 @@ set(AVAILABLE_TESTS
 
     # Utils
         ExtractBits
+        ToEngineeringString
         EncodeByteString
         EncodeByteStringRoundTrip
 
