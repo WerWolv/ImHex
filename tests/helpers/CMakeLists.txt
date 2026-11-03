@@ -29,6 +29,12 @@ set(AVAILABLE_TESTS
         EncodeByteString
         EncodeByteStringRoundTrip
 
+    # Patches
+        PatchesFromProviderKeepsMultiByteWrites
+        IPSPatchRLERecord
+        IPS32PatchRLERecord
+        IPSPatchRejectsAddressesAbove24Bits
+
     # Encoding
         DecodeUnicodeText
         DecodeUnicodeTextBounded
@@ -77,6 +83,7 @@ add_executable(${PROJECT_NAME}
         source/file.cpp
         source/line_comment.cpp
         source/net.cpp
+        source/patches.cpp
         source/utils.cpp
 
         # A test for plugin code needs the plugin's own implementation compiled in too.
