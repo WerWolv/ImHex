@@ -538,6 +538,7 @@ function(configureProject)
 
     if (APPLE)
         addCCXXFlag("-Wno-#warnings")
+        addCCXXFlag("-Wno-elaborated-enum-base")
     endif()
 
     if (NOT IMHEX_GENERATE_PDBS AND WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
