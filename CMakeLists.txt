@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.25)
 
+if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    set(IMHEX_IS_APPLECLANG ON)
+    set(IMHEX_IS_NOT_APPLECLANG OFF)
+else()
+    set(IMHEX_IS_APPLECLANG OFF)
+    set(IMHEX_IS_NOT_APPLECLANG ON)
+endif()
+
 # Options
 ## General
 option(IMHEX_STRIP_RELEASE              "Strip the release builds"                                                                      ON )
@@ -27,7 +35,7 @@ option(IMHEX_ENABLE_UNIT_TESTS          "Enable building unit tests"            
 option(IMHEX_ENABLE_IMGUI_TEST_ENGINE   "Enable the ImGui Test Engine"                                                                  OFF)
 option(IMHEX_ENABLE_STD_ASSERTS         "Enable debug asserts in the C++ std library. (Breaks Plugin ABI!)"                             OFF)
 ## Debug info
-option(IMHEX_COMPRESS_DEBUG_INFO        "Compress debug information"                                                                    ON )
+option(IMHEX_COMPRESS_DEBUG_INFO        "Compress debug information"                                                IMHEX_IS_NOT_APPLECLANG)
 option(IMHEX_GENERATE_PDBS              "Enable generating PDB files in non-debug builds (Windows only)"                                OFF)
 option(IMHEX_REPLACE_DWARF_WITH_PDB     "Remove DWARF information from binaries when generating PDBS (Windows only)"                    OFF)
 option(IMHEX_STRICT_WARNINGS            "Enable most available warnings and treat them as errors"                                       ON )
