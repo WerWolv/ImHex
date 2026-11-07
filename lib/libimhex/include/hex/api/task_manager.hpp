@@ -10,6 +10,8 @@
 #include <condition_variable>
 #include <source_location>
 #include <thread>
+#include <atomic>
+
 #include <hex/trace/exceptions.hpp>
 
 EXPORT_MODULE namespace hex {
