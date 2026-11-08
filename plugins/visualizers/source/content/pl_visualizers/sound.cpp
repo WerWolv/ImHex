@@ -64,8 +64,10 @@ namespace hex::plugin::visualizers {
                         return;
                     }
 
-                    ma_copy_pcm_frames(pOutput, waveData.data() + index, frameCount, device->playback.format, device->playback.channels);
-                    index += static_cast<u64>(frameCount) * device->playback.channels;
+                    const u64 framesLeft = (waveData.size() - index) / device->playback.channels;
+                    const u64 frames = std::min<u64>(frameCount, framesLeft);
+                    ma_copy_pcm_frames(pOutput, waveData.data() + index, frames, device->playback.format, device->playback.channels);
+                    index = frames < frameCount ? waveData.size() : index + frames * device->playback.channels;
                 };
 
                 deviceReady = ma_device_init(nullptr, &deviceConfig, &audioDevice) == MA_SUCCESS;
