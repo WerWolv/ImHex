@@ -7,6 +7,8 @@
 
 #include <hex/api/task_manager.hpp>
 
+#include <atomic>
+
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/utils.hpp>
@@ -24,6 +26,7 @@ namespace hex::plugin::visualizers {
         sampledData.resize(channels);
         static ma_device audioDevice;
         static ma_device_config deviceConfig;
+        static std::atomic<bool> deviceReady = false;
         static bool shouldStop = false;
         static u64 index = 0;
         static TaskHolder resetTask;
@@ -36,10 +39,13 @@ namespace hex::plugin::visualizers {
             throw std::logic_error(fmt::format("Invalid down sampling factor: {} / 2400 / {} = {}", wavePattern->getSize(), channels, downSampling));
         u64 sampledIndex;
         if (shouldReset) {
+            // A second ma_device_init without uninit leaks a worker thread that shares this device, and ma_device_stop then hangs.
+            if (deviceReady.exchange(false))
+                ma_device_uninit(&audioDevice);
+
             waveData.clear();
 
             resetTask = TaskManager::createTask("hex.visualizers.pl_visualizer.task.visualizing"_unlocalized, ProgressValue::None(), [=](Task &) {
-                ma_device_stop(&audioDevice);
                 waveData = patternToArray<i16>(wavePattern.get());
                 if (waveData.empty())
                     return;
@@ -62,7 +68,7 @@ namespace hex::plugin::visualizers {
                     index += static_cast<u64>(frameCount) * device->playback.channels;
                 };
 
-                ma_device_init(nullptr, &deviceConfig, &audioDevice);
+                deviceReady = ma_device_init(nullptr, &deviceConfig, &audioDevice) == MA_SUCCESS;
             });
         }
         sampledIndex = index / downSampling;
@@ -105,14 +111,16 @@ namespace hex::plugin::visualizers {
             index = sampledIndex * downSampling;
 
 
+            const bool ready = deviceReady && !resetTask.isRunning();
             if (shouldStop) {
                 shouldStop = false;
-                ma_device_stop(&audioDevice);
+                if (ready)
+                    ma_device_stop(&audioDevice);
             }
 
-            bool playing = ma_device_is_started(&audioDevice);
+            bool playing = ready && ma_device_is_started(&audioDevice);
 
-            if (ImGuiExt::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+            if (ImGuiExt::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) && ready) {
                 if (playing)
                     ma_device_stop(&audioDevice);
                 else
@@ -124,7 +132,8 @@ namespace hex::plugin::visualizers {
             if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                 index = 0;
                 sampledIndex = 0;
-                ma_device_stop(&audioDevice);
+                if (ready)
+                    ma_device_stop(&audioDevice);
             }
 
             ImGui::EndDisabled();
