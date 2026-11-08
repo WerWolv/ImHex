@@ -6,6 +6,7 @@
 #include <fonts/vscode_icons.hpp>
 
 #include <hex/api/task_manager.hpp>
+#include <hex/api/events/events_gui.hpp>
 
 #include <atomic>
 
@@ -30,6 +31,24 @@ namespace hex::plugin::visualizers {
         static bool shouldStop = false;
         static u64 index = 0;
         static TaskHolder resetTask;
+        static int lastDrawnFrame = 0;
+        static bool frameEndSubscribed = false;
+
+        lastDrawnFrame = ImGui::GetFrameCount();
+        if (!frameEndSubscribed) {
+            frameEndSubscribed = true;
+
+            // Stop playback in a frame that did not draw the visualizer, which means its popup was closed.
+            EventFrameEnd::subscribe([] {
+                if (lastDrawnFrame == ImGui::GetFrameCount() || !deviceReady || resetTask.isRunning())
+                    return;
+                if (!ma_device_is_started(&audioDevice))
+                    return;
+
+                ma_device_stop(&audioDevice);
+                index = 0;
+            });
+        }
 
         if (sampleRate == 0)
             throw std::logic_error(fmt::format("Invalid sample rate: {}", sampleRate));
@@ -58,8 +77,8 @@ namespace hex::plugin::visualizers {
                 deviceConfig.sampleRate        = sampleRate;
                 deviceConfig.pUserData         = &waveData;
                 deviceConfig.dataCallback      = [](ma_device *device, void *pOutput, const void *, ma_uint32 frameCount) {
+                    // Play silence until the UI stops the device, so the clip does not loop when the UI is not drawn.
                     if (index >= waveData.size()) {
-                        index = 0;
                         shouldStop = true;
                         return;
                     }
@@ -118,6 +137,8 @@ namespace hex::plugin::visualizers {
                 shouldStop = false;
                 if (ready)
                     ma_device_stop(&audioDevice);
+                index = 0;
+                sampledIndex = 0;
             }
 
             bool playing = ready && ma_device_is_started(&audioDevice);
