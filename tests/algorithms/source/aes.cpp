@@ -2,10 +2,18 @@
 #include <hex/test/tests.hpp>
 
 #if defined(IMHEX_CRYPTO_BACKEND_MBEDTLS)
-    #include <mbedtls/ccm.h>
-    #include <mbedtls/cipher.h>
+    #include <mbedtls/version.h>
     #include <mbedtls/error.h>
-    #include <mbedtls/gcm.h>
+    #if MBEDTLS_VERSION_MAJOR >= 4
+        #define MBEDTLS_DECLARE_PRIVATE_IDENTIFIERS
+        #include <mbedtls/private/ccm.h>
+        #include <mbedtls/private/cipher.h>
+        #include <mbedtls/private/gcm.h>
+    #else
+        #include <mbedtls/ccm.h>
+        #include <mbedtls/cipher.h>
+        #include <mbedtls/gcm.h>
+    #endif
 #endif
 
 #include <array>
