@@ -169,6 +169,7 @@ namespace hex::plugin::builtin {
         bool m_openFindReplacePopUp = false;
         bool m_openGotoLinePopUp = false;
         std::map<std::fs::path, std::string> m_patternNames;
+        std::mutex m_patternNamesMutex;
 
         ImRect m_textEditorHoverBox;
         ImRect m_consoleHoverBox;
@@ -214,6 +215,11 @@ namespace hex::plugin::builtin {
         void registerMenuItems();
         void registerHandlers();
 
+        /**
+         * @brief Reads the description of each pattern file in background tasks, one for each hardware thread
+         * @param paths The pattern files. A file that already has a name is skipped.
+         */
+        void readPatternNames(const std::vector<std::fs::path> &paths);
         void openPatternFile(bool trackFile);
         void savePatternToCurrentFile(bool trackFile);
         void savePatternAsNewFile(bool trackFile);
