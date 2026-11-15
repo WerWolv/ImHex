@@ -1199,6 +1199,37 @@ namespace ImGuiExt {
 
         ImPlot::AddTextCentered(ImGui::GetWindowDrawList(), ImGui::GetCursorScreenPos() + availableSpace / 2 - ImVec2(0, textSize.y / 2), ImGui::GetColorU32(ImGuiCol_Text), drawString.c_str());
     }
+
+    void TextUnformattedWrappedSelectable(const std::string &text) {
+        const auto &style = ImGui::GetStyle();
+        const auto textEnd = text.c_str() + text.size();
+
+        // The WordWrap flag keeps space for a scrollbar, so the box must include it.
+        const float boxWidth  = std::min(ImGui::CalcTextSize(text.c_str()).x + style.ScrollbarSize, ImGui::GetContentRegionAvail().x);
+        const float wrapWidth = std::max(1.0F, boxWidth - style.ScrollbarSize);
+
+        // Same wrap flags as the WordWrap flag, so the height matches its line count.
+        const auto textSize = ImFontCalcTextSizeEx(ImGui::GetFont(), ImGui::GetFontSize(), FLT_MAX, wrapWidth, text.c_str(), textEnd, textEnd, nullptr, nullptr, ImDrawTextFlags_WrapKeepBlanks);
+
+        ImGui::PushID(text.c_str());
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
+
+        ImGui::InputTextMultiline(
+                "##",
+                const_cast<char *>(text.c_str()),
+                text.size() + 1,
+                ImVec2(boxWidth, textSize.y),
+                ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_WordWrap
+        );
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar(2);
+
+        ImGui::PopID();
+    }
     
     bool InputTextIcon(const char *label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags) {
         return InputTextIconHint(label, icon, nullptr, buffer, flags);
