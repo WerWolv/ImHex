@@ -50,10 +50,8 @@ namespace hex {
                 const char c = string.front();
 
                 if (c == ')') break;
-                if (i == 0 && c == '-')
-                    negative = true;
-                else if (i == 0 && c == '+')
-                    continue;
+                if (i == 0 && (c == '-' || c == '+'))
+                    negative = c == '-';
                 else if (std::isdigit(c))
                     value = value * 10 + (c - '0');
                 else

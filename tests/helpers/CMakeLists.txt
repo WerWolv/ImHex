@@ -13,6 +13,9 @@ set(AVAILABLE_TESTS
         TestProvider_write
         EncodingLineStartAddressCache
 
+    # Binary pattern
+        BinaryPatternValueWithSign
+
     # File
         FileAccess
         FileBackedProviderData
@@ -70,6 +73,7 @@ endif ()
 
 
 add_executable(${PROJECT_NAME}
+        source/binary_pattern.cpp
         source/common.cpp
         source/decoded_string.cpp
         source/encoding.cpp
