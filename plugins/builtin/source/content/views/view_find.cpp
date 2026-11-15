@@ -21,6 +21,7 @@
 #include <barrier>
 
 #include <boost/regex.hpp>
+#include <wolv/utils/lock.hpp>
 
 #include <content/helpers/constants.hpp>
 #include <toasts/toast_notification.hpp>
@@ -695,33 +696,42 @@ namespace hex::plugin::builtin {
         m_occurrenceTree->clear();
         EventHighlightingChanged::post();
 
+        if (m_filterTask.isRunning())
+            m_filterTask.interrupt();
+
         m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching"_unlocalized, ProgressValue::Size(searchRegion.getSize()), [this, settings = m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
+            std::vector<FindOccurrence> occurrences;
             switch (settings.mode) {
                 using enum SearchSettings::Mode;
                 case Strings:
-                    m_foundOccurrences.get(provider) = searchStrings(task, provider, searchRegion, settings.strings);
+                    occurrences = searchStrings(task, provider, searchRegion, settings.strings);
                     break;
                 case Sequence:
-                    m_foundOccurrences.get(provider) = searchSequence(task, provider, searchRegion, settings.bytes);
+                    occurrences = searchSequence(task, provider, searchRegion, settings.bytes);
                     break;
                 case Regex:
-                    m_foundOccurrences.get(provider) = searchRegex(task, provider, searchRegion, settings.regex);
+                    occurrences = searchRegex(task, provider, searchRegion, settings.regex);
                     break;
                 case BinaryPattern:
-                    m_foundOccurrences.get(provider) = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
+                    occurrences = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
                     break;
                 case Value:
-                    m_foundOccurrences.get(provider) = searchValue(task, provider, searchRegion, settings.value);
+                    occurrences = searchValue(task, provider, searchRegion, settings.value);
                     break;
                 case Constants:
-                    m_foundOccurrences.get(provider) = searchConstants(task, provider, searchRegion, settings.constants);
+                    occurrences = searchConstants(task, provider, searchRegion, settings.constants);
                     break;
             }
 
-            m_sortedOccurrences.get(provider).clear();
-            m_lastSelectedOccurrence = nullptr;
+            {
+                // A filter task that still runs cannot write old results over the new ones.
+                std::scoped_lock lock(m_filterMutex);
+                m_foundOccurrences.get(provider) = std::move(occurrences);
+                m_sortedOccurrences.get(provider).clear();
+                m_lastSelectedOccurrence = nullptr;
+            }
 
             for (const auto &occurrence : m_foundOccurrences.get(provider))
                 m_occurrenceTree->insert({ .start=occurrence.region.getStartAddress(), .end=occurrence.region.getEndAddress() }, occurrence);
@@ -733,8 +743,11 @@ namespace hex::plugin::builtin {
         });
 
         m_decodeSettings = m_searchSettings;
-        m_foundOccurrences->clear();
-        m_sortedOccurrences->clear();
+        // A filter task that still runs keeps the old results. The search replaces them when it ends.
+        if (TRY_LOCK(m_filterMutex)) {
+            m_foundOccurrences->clear();
+            m_sortedOccurrences->clear();
+        }
         m_occurrenceTree->clear();
         m_lastSelectedOccurrence = nullptr;
 
@@ -796,6 +809,43 @@ namespace hex::plugin::builtin {
             result += "...";
 
         return result;
+    }
+
+    void ViewFind::sortOccurrences(prv::Provider *provider, std::vector<FindOccurrence> &occurrences, const SortOrder &sortOrder, const Task *task) const {
+        const auto sortBy = [ascending = sortOrder.ascending](auto &range, auto projection) {
+            if (ascending)
+                std::ranges::stable_sort(range, std::ranges::less{}, projection);
+            else
+                std::ranges::stable_sort(range, std::ranges::greater{}, projection);
+        };
+
+        switch (sortOrder.column) {
+            case SortColumn::Offset:
+                sortBy(occurrences, [](const FindOccurrence &occurrence) { return occurrence.region.getStartAddress(); });
+                return;
+            case SortColumn::Size:
+                sortBy(occurrences, [](const FindOccurrence &occurrence) { return occurrence.region.getSize(); });
+                return;
+            case SortColumn::Value:
+                break;
+        }
+
+        // Decode each value one time. A comparison then touches no provider and allocates nothing.
+        std::vector<std::pair<std::string, FindOccurrence>> keyedOccurrences;
+        keyedOccurrences.reserve(occurrences.size());
+        for (auto &occurrence : occurrences) {
+            if (task != nullptr)
+                task->update();
+
+            auto text = this->decodeValue(provider, occurrence, MaxDisplayedValueSize);
+            keyedOccurrences.emplace_back(std::move(text), std::move(occurrence));
+        }
+
+        sortBy(keyedOccurrences, &decltype(keyedOccurrences)::value_type::first);
+
+        // Reuse the buffer, because m_lastSelectedOccurrence can point into it.
+        for (size_t i = 0; i < occurrences.size(); i += 1)
+            occurrences[i] = std::move(keyedOccurrences[i].second);
     }
 
     void ViewFind::drawContextMenu(FindOccurrence& target, const std::string &value) {
@@ -1154,30 +1204,40 @@ namespace hex::plugin::builtin {
         auto &currOccurrences = *m_sortedOccurrences;
 
         ImGui::PushItemWidth(-30_scaled);
-        auto prevFilterLength = m_currFilter->length();
         if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *m_currFilter)) {
-            if (prevFilterLength > m_currFilter->length())
-                *m_sortedOccurrences = *m_foundOccurrences;
-
             if (m_filterTask.isRunning())
                 m_filterTask.interrupt();
 
-            static std::mutex mutex;
-            std::scoped_lock lock(mutex);
+            m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(m_foundOccurrences->size()), [this, provider, &currOccurrences, sortOrder = m_sortOrder, filter = m_currFilter.get(provider)](Task &task) {
+                // The UI thread never takes this lock, so a slow task cannot freeze it.
+                std::scoped_lock lock(m_filterMutex);
+                task.update();
 
-            if (!m_currFilter->empty()) {
-                m_filterTask = TaskManager::createTask("hex.builtin.task.filtering_data"_unlocalized, ProgressValue::Count(currOccurrences.size()), [this, provider, &currOccurrences, filter = m_currFilter.get(provider)](Task &task) {
-                    std::scoped_lock lock(mutex);
+                // Each match of the new filter also matches a filter that it contains.
+                auto &sortedFilter = m_sortedFilter.get(provider);
+                const bool narrowed = !currOccurrences.empty() && hex::containsIgnoreCase(filter, sortedFilter);
 
+                // The table keeps the old list while the task builds the new one.
+                auto occurrences = narrowed ? currOccurrences : m_foundOccurrences.get(provider);
+                if (!narrowed)
+                    this->sortOccurrences(provider, occurrences, sortOrder, &task);
+
+                if (!filter.empty()) {
                     u64 progress = 0;
-                    std::erase_if(currOccurrences, [this, provider, &task, &progress, &filter](const auto &region) {
+                    std::erase_if(occurrences, [this, provider, &task, &progress, &filter](const auto &region) {
                         task.update(progress);
                         progress += 1;
 
-                        return !hex::containsIgnoreCase(this->decodeValue(provider, region), filter);
+                        return !hex::containsIgnoreCase(this->decodeValue(provider, region, region.region.getSize()), filter);
                     });
-                });
-            }
+                }
+
+                task.update();
+
+                // Reuse the buffer, because m_lastSelectedOccurrence can point into it.
+                currOccurrences.assign(std::make_move_iterator(occurrences.begin()), std::make_move_iterator(occurrences.end()));
+                sortedFilter = filter;
+            });
         }
         ImGui::PopItemWidth();
 
@@ -1209,7 +1269,7 @@ namespace hex::plugin::builtin {
                             table.addRow({
                                 u64{occurrence.region.getStartAddress()},
                                 u64{occurrence.region.getSize()},
-                                this->decodeValue(provider, occurrence),
+                                this->decodeValue(provider, occurrence, occurrence.region.getSize()),
                             });
                         }
                         file.writeVector(formatter.callback(table));
@@ -1222,41 +1282,29 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.ui.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
-            ImGui::TableSetupColumn("hex.ui.common.size"_lang, 0, -1, ImGui::GetID("size"));
-            ImGui::TableSetupColumn("hex.ui.common.value"_lang, ImGuiTableColumnFlags_WidthStretch, -1, ImGui::GetID("value"));
+            ImGui::TableSetupColumn("hex.ui.common.offset"_lang, 0, -1, ImGuiID(SortColumn::Offset));
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang, 0, -1, ImGuiID(SortColumn::Size));
+            ImGui::TableSetupColumn("hex.ui.common.value"_lang, ImGuiTableColumnFlags_WidthStretch, -1, ImGuiID(SortColumn::Value));
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
-            if (m_sortedOccurrences->empty() && !m_foundOccurrences->empty()) {
-                currOccurrences = *m_foundOccurrences;
-                sortSpecs->SpecsDirty = true;
-            }
+            // The filter task owns the list while it runs, and sorts it itself.
+            if (!m_filterTask.isRunning()) {
+                bool sortDirty = sortSpecs->SpecsDirty;
+                if (m_sortedOccurrences->empty() && !m_foundOccurrences->empty()) {
+                    currOccurrences = *m_foundOccurrences;
+                    sortDirty = true;
+                }
 
-            if (sortSpecs->SpecsDirty) {
-                std::ranges::stable_sort(currOccurrences, [this, &sortSpecs, provider](const FindOccurrence& left,
-                                         const FindOccurrence& right) -> bool {
-                    if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
-                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return left.region.getStartAddress() < right.region.getStartAddress();
-                        else
-                            return left.region.getStartAddress() > right.region.getStartAddress();
-                    } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
-                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return left.region.getSize() < right.region.getSize();
-                        else
-                            return left.region.getSize() > right.region.getSize();
-                    } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
-                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                            return this->decodeValue(provider, left) < this->decodeValue(provider, right);
-                        else
-                            return this->decodeValue(provider, left) > this->decodeValue(provider, right);
-                    }
+                if (sortDirty) {
+                    m_sortOrder = {
+                        .column = SortColumn(sortSpecs->Specs->ColumnUserID),
+                        .ascending = sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending
+                    };
 
-                    return false;
-                });
-
-                sortSpecs->SpecsDirty = false;
+                    this->sortOccurrences(provider, currOccurrences, m_sortOrder, nullptr);
+                    sortSpecs->SpecsDirty = false;
+                }
             }
 
             ImGui::TableHeadersRow();
@@ -1278,7 +1326,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushID(i);
 
-                    auto value = this->decodeValue(provider, foundItem, 256);
+                    auto value = this->decodeValue(provider, foundItem, MaxDisplayedValueSize);
                     ImGuiExt::TextFormatted("{}", value);
                     ImGui::SameLine();
                     if (ImGui::Selectable("##line", foundItem.selected, ImGuiSelectableFlags_SpanAllColumns)) {
