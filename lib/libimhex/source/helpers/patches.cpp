@@ -35,7 +35,7 @@ namespace hex {
 
             void writeRaw(u64 offset, const void *buffer, size_t size) override {
                 for (u64 i = 0; i < size; i += 1)
-                    m_patches[offset] = static_cast<const u8*>(buffer)[i];
+                    m_patches[offset + i] = static_cast<const u8*>(buffer)[i];
             }
 
             [[nodiscard]] u64 getActualSize() const override {
@@ -131,7 +131,7 @@ namespace hex {
 
                 if (bytes.size() > 0xFFFF)
                     return wolv::util::Unexpected(IPSError::PatchTooLarge);
-                if (startAddress > 0xFFFF'FFFF)
+                if (startAddress > 0x00FF'FFFF)
                     return wolv::util::Unexpected(IPSError::AddressOutOfRange);
 
                 u32 address       = startAddress.value();
@@ -252,7 +252,7 @@ namespace hex {
                 if (ipsOffset + 3 > ipsPatch.size() - 3)
                     return wolv::util::Unexpected(IPSError::InvalidPatchFormat);
 
-                u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
+                u16 rleSize = ipsPatch[ipsOffset + 1] | (ipsPatch[ipsOffset + 0] << 8);
 
                 ipsOffset += 2;
 
@@ -305,7 +305,7 @@ namespace hex {
                 if (ipsOffset + 3 > ipsPatch.size() - 3)
                     return wolv::util::Unexpected(IPSError::InvalidPatchFormat);
 
-                u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
+                u16 rleSize = ipsPatch[ipsOffset + 1] | (ipsPatch[ipsOffset + 0] << 8);
 
                 ipsOffset += 2;
 
