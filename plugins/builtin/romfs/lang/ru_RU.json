@@ -731,7 +731,7 @@
     "hex.builtin.view.hex_editor.menu.edit.copy": "Копировать",
     "hex.builtin.view.hex_editor.menu.edit.copy_as": "Копировать как",
     "hex.builtin.view.hex_editor.menu.edit.fill": "Заполнить",
-    "hex.builtin.view.hex_editor.menu.edit.insert": "Вставить",
+    "hex.builtin.view.hex_editor.menu.edit.insert": "Вставка...",
     "hex.builtin.view.hex_editor.menu.edit.insert_mode": "Режим вставки",
     "hex.builtin.view.hex_editor.menu.edit.jump_to": "Перейти к",
     "hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern": "Текущее положение",
