@@ -4,7 +4,6 @@
 #include <hex/helpers/scaling.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/data_processor/node.hpp>
-#include <mbedtls/error.h>
 
 #include <nlohmann/json.hpp>
 
@@ -66,20 +65,8 @@ namespace hex::plugin::builtin {
                 : empty;
 
             auto output = crypt::aesDecrypt(mode, keyLength, key, nonce, iv, input, tag, aad);
-            if (!output) {
-                switch (output.error()) {
-                    case CRYPTO_ERROR_INVALID_KEY_LENGTH:
-                        throwNodeError("Invalid key length");
-                    case CRYPTO_ERROR_INVALID_MODE:
-                        throwNodeError("Invalid mode");
-                    default: {
-                        std::array<char, 128> errorBuffer = { 0 };
-                        mbedtls_strerror(output.error(), errorBuffer.data(), errorBuffer.size());
-
-                        throwNodeError(std::string(errorBuffer.data()));
-                    }
-                }
-            }
+            if (!output)
+                throwNodeError(crypt::getErrorString(output.error()));
 
             this->setBufferOnOutput(4, output.value());
         }
