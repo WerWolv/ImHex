@@ -96,6 +96,39 @@ TEST_SEQUENCE("Providers/InvalidResize") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("Providers/UndoRedoInsertBaseAddress") {
+    INIT_PLUGIN("Built-in");
+
+    auto &provider = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file"_unlocalized, true);
+    provider.setBaseAddress(0x07);
+    provider.insert(0x07, 1);
+
+    std::vector<u64> observedSizes = { provider.getActualSize() };
+    for (u32 cycle = 0; cycle < 8; cycle += 1) {
+        provider.undo();
+        observedSizes.push_back(provider.getActualSize());
+        provider.redo();
+        observedSizes.push_back(provider.getActualSize());
+    }
+
+    const std::vector<u64> expectedSizes = {
+        1,
+        0, 1,
+        0, 1,
+        0, 1,
+        0, 1,
+        0, 1,
+        0, 1,
+        0, 1,
+        0, 1,
+    };
+
+    TEST_ASSERT(observedSizes == expectedSizes,
+        "expected sizes [{}], observed sizes [{}]",
+        fmt::join(expectedSizes, ", "), fmt::join(observedSizes, ", "));
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("Project/ParseLegacy") {
     const auto projectPath = std::filesystem::current_path() / "legacy_project_test.hexproj";
     std::filesystem::remove(projectPath);
