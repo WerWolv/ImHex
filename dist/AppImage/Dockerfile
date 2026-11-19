@@ -197,6 +197,10 @@ LDAI_UPDATE_INFORMATION="gh-releases-zsync|WerWolv|ImHex|${release_tag}|imhex-*-
         --appdir AppDir \
         --output appimage \
         --exclude-library 'libmount.so*' \
+        --exclude-library 'libsytemd.so*' \
+        --exclude-library 'libdbus.so*' \
+        --exclude-library 'liblzma.so*' \
+        --exclude-library 'libgcrypt.so*' \
         --desktop-file AppDir/usr/share/applications/imhex.desktop \
         --custom-apprun /imhex/dist/AppImage/AppRun.sh
 
