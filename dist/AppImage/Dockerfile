@@ -197,7 +197,7 @@ LDAI_UPDATE_INFORMATION="gh-releases-zsync|WerWolv|ImHex|${release_tag}|imhex-*-
         --appdir AppDir \
         --output appimage \
         --exclude-library 'libmount.so*' \
-        --exclude-library 'libsytemd.so*' \
+        --exclude-library 'libsystemd.so*' \
         --exclude-library 'libdbus-1.so*' \
         --exclude-library 'liblzma.so*' \
         --exclude-library 'libgcrypt.so*' \
