@@ -140,6 +140,10 @@ parts:
       test -x "${CRAFT_PRIME}/bin/gpu-2604-provider-wrapper"
       test -d "${CRAFT_PRIME}/mesa-2604/usr/lib/${CRAFT_ARCH_TRIPLET_BUILD_FOR}"
       ${CRAFT_PART_SRC}/bin/gpu-2604-cleanup mesa-2604
+      # ImHex and its bundled helpers are 64-bit, so they do not need i386 drivers.
+      if [ "${CRAFT_ARCH_TRIPLET_BUILD_FOR}" = "x86_64-linux-gnu" ]; then
+        rm -rf "${CRAFT_PRIME}/mesa-2604/usr/lib/i386-linux-gnu"
+      fi
       # Classic snaps cannot declare interfaces, so invoke the provider directly.
       cat > "${CRAFT_PRIME}/bin/gpu-2604-wrapper" <<'EOF'
       #!/bin/sh
