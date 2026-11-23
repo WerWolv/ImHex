@@ -163,6 +163,10 @@ if (WIN32)
     target_link_libraries(builtin PRIVATE setupapi)
 endif ()
 
+if (IMHEX_ENABLE_IMGUI_TEST_ENGINE)
+    target_sources(builtin PRIVATE tests/ui/file_editing.cpp)
+endif ()
+
 include(CheckTypeSize)
 check_type_size(time_t TIME_T_SIZE)
 target_compile_definitions(builtin PRIVATE TIME_T_SIZE=${TIME_T_SIZE})

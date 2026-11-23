@@ -1084,6 +1084,17 @@ namespace hex::ui {
                                 // Draw frame around mouse selection
                                 this->drawSelection(x, y, selection, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize, ImGui::GetStyleColorVec4(ImGuiCol_Text));
 
+                                #if defined(IMGUI_TEST_ENGINE)
+                                    auto &g = *ImGui::GetCurrentContext();
+                                    if (g.TestEngineHookItems) {
+                                        // Expose the hit rectangle without turning the byte into a widget.
+                                        const auto label = fmt::format("hex-byte-{:X}", byteAddress);
+                                        const auto id = ImGui::GetID(label.c_str());
+                                        IMGUI_TEST_ENGINE_ITEM_ADD(id, ImRect(cellStartPos, cellStartPos + adjustedCellSize), nullptr);
+                                        IMGUI_TEST_ENGINE_ITEM_INFO(id, label.c_str(), ImGuiItemStatusFlags_None);
+                                    }
+                                #endif
+
                                 const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + adjustedCellSize, false) && ImGui::IsWindowHovered();
 
                                 this->handleSelection(byteAddress, bytesPerCell, &bytes[x * bytesPerCell], cellHovered);
