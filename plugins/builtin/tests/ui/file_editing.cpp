@@ -56,8 +56,8 @@ namespace hex::plugin::builtin {
             std::fs::path m_directory;
         };
 
-        // Use the drop handler instead of automating an OS-specific file picker.
-        prv::Provider *openFile(ImGuiTestContext *ctx, const std::fs::path &path) {
+        // This sets up the editor; it does not test a GUI file-opening action.
+        prv::Provider *openFileByInjectedDrop(ImGuiTestContext *ctx, const std::fs::path &path) {
             TaskManager::doLater([path] { EventFileDropped::post(path); });
             const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
             do {
@@ -93,13 +93,13 @@ namespace hex::plugin::builtin {
     }
 
     // Edit the last byte and verify the saved file after closing it.
-    IMGUI_TEST_SEQUENCE("Hex Editor", "Open, overwrite, save and close a file", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Overwrite, save and close a file", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
 
         const TestFiles files;
         const auto path = files.create("edit.bin", { 0x11, 0x22, 0x33 });
         IM_CHECK(!path.empty());
-        auto *provider = openFile(ctx, path);
+        auto *provider = openFileByInjectedDrop(ctx, path);
         IM_CHECK(provider != nullptr && provider->isWritable());
         IM_CHECK(provider->getActualSize() == 3);
 
@@ -121,16 +121,16 @@ namespace hex::plugin::builtin {
     };
 
     // Closing the selected tab should leave the other file open and selected.
-    IMGUI_TEST_SEQUENCE("Hex Editor", "Switch between two open files and close them", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Switch between two files and close them", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
 
         const TestFiles files;
         const auto firstPath = files.create("first.bin", { 0x11 });
         const auto secondPath = files.create("second.bin", { 0x22 });
         IM_CHECK(!firstPath.empty() && !secondPath.empty());
-        auto *first = openFile(ctx, firstPath);
+        auto *first = openFileByInjectedDrop(ctx, firstPath);
         IM_CHECK(first != nullptr);
-        auto *second = openFile(ctx, secondPath);
+        auto *second = openFileByInjectedDrop(ctx, secondPath);
         IM_CHECK(second != nullptr && second != first);
         IM_CHECK(ImHexApi::Provider::getProviders().size() == 2);
         IM_CHECK(ImHexApi::Provider::get() == second);
@@ -150,14 +150,14 @@ namespace hex::plugin::builtin {
     };
 
     // Insert in the middle so the test checks that the following bytes move.
-    IMGUI_TEST_SEQUENCE("Hex Editor", "Insert bytes, undo and redo", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Insert bytes, undo and redo", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
 
         const TestFiles files;
         const std::vector<u8> original = { 0x11, 0x22, 0x33 };
         const auto path = files.create("insert.bin", original);
         IM_CHECK(!path.empty());
-        auto *provider = openFile(ctx, path);
+        auto *provider = openFileByInjectedDrop(ctx, path);
         IM_CHECK(provider != nullptr && provider->isResizable());
 
         ctx->SetRef("###hex.builtin.view.hex_editor.name");
@@ -184,6 +184,57 @@ namespace hex::plugin::builtin {
         wolv::io::File saved(path, wolv::io::File::Mode::Read);
         IM_CHECK(saved.isValid());
         IM_CHECK(saved.readVector() == inserted);
+    };
+
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Remove a byte, undo and redo", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const std::vector<u8> original = { 0x11, 0x22, 0x33 };
+        const auto path = files.create("remove.bin", original);
+        IM_CHECK(!path.empty());
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr && provider->isResizable());
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-1", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.remove"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.remove");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x11, 0x33 }));
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.undo"_lang);
+        IM_CHECK(hasBytes(*provider, original));
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.redo"_lang);
+        IM_CHECK(hasBytes(*provider, { 0x11, 0x33 }));
+        clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.view.hex_editor.menu.file.save"_lang);
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        wolv::io::File saved(path, wolv::io::File::Mode::Read);
+        IM_CHECK(saved.isValid());
+        IM_CHECK(saved.readVector() == std::vector<u8>({ 0x11, 0x33 }));
+    };
+
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Copy and paste a byte", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const std::vector<u8> original = { 0x11, 0x22, 0x33 };
+        const auto path = files.create("copy-paste.bin", original);
+        IM_CHECK(!path.empty());
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr && provider->isWritable());
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-0", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.copy"_lang);
+        ctx->ItemClick("**/hex-byte-2", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        ctx->MenuClick(fmt::format("//##MainMenuBar/{}/{}/{}",
+            "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.paste_as"_lang,
+            "hex.builtin.view.hex_editor.menu.edit.paste_all"_lang).c_str());
+        IM_CHECK(hasBytes(*provider, { 0x11, 0x22, 0x11 }));
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.undo"_lang);
+        IM_CHECK(hasBytes(*provider, original));
+        clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.view.hex_editor.menu.file.save"_lang);
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
     };
 
 }
