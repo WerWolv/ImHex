@@ -18,6 +18,7 @@ add_executable(main ${APPLICATION_TYPE}
 
     source/init/splash_window.cpp
     source/init/tasks.cpp
+    source/init/ui_tests.cpp
 
     source/init/run/common.cpp
     source/init/run/desktop.cpp

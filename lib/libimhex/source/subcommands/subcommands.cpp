@@ -138,7 +138,7 @@ namespace hex::subcommands {
 
         // Exit the process if it's not the main instance (the commands have been forwarded to another instance)
         if (!ImHexApi::System::isMainInstance()) {
-            std::exit(0);
+            std::exit(exitCode.getType() == CommandResult::Type::Exit ? exitCode.getExitCode() : EXIT_SUCCESS);
         }
 
         if (exitCode.getType() != CommandResult::Type::Continue) {

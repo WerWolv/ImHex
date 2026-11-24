@@ -88,29 +88,11 @@ jobs:
     - name: 🧪 Perform Unit Tests
       run: |
         cd build
-        ctest --output-on-failure
+        ctest --output-on-failure -E '^ui_tests$'
 
     - name: 🧪 Perform UI Tests
       run: |
-        mkdir -p "$RUNNER_TEMP/imhex-ui/config/imhex/config" "$RUNNER_TEMP/imhex-ui/data" "$RUNNER_TEMP/imhex-ui/cache"
-        cat > "$RUNNER_TEMP/imhex-ui/config/imhex/config/settings.json" <<'EOF'
-        {
-          "hex.builtin.setting.general": {
-            "hex.builtin.setting.general.prev_launch_version": "1.39.0.WIP",
-            "hex.builtin.setting.general.server_contact": 2,
-            "hex.builtin.setting.general.show_tips": false
-          },
-          "hex.builtin.setting.interface": {
-            "hex.builtin.setting.interface.language": "en-US",
-            "hex.builtin.setting.interface.multi_windows": false
-          }
-        }
-        EOF
-        XDG_CONFIG_HOME="$RUNNER_TEMP/imhex-ui/config" \
-        XDG_DATA_HOME="$RUNNER_TEMP/imhex-ui/data" \
-        XDG_CACHE_HOME="$RUNNER_TEMP/imhex-ui/cache" \
-        IMHEX_RUN_UI_TESTS=1 IMHEX_SKIP_SPLASH_SCREEN=1 \
-        timeout 120s xvfb-run -a -s '-screen 0 1600x1000x24' ./build/imhex
+        ctest --test-dir build --output-on-failure --no-tests=error -R '^ui_tests$'
 
     # Generate report from all gcov .gcda files
     #- name: 🧪 Generate coverage report

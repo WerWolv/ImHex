@@ -27,7 +27,6 @@
 #include <hex/ui/banner.hpp>
 
 #include <cmath>
-#include <cstdlib>
 #include <numbers>
 
 #include <romfs/romfs.hpp>
@@ -927,20 +926,6 @@ namespace hex {
         #if defined(IMGUI_TEST_ENGINE)
             ImGuiTestEngine_PostSwap(m_testEngine);
 
-            // CI runs tests after the initial layout has settled.
-            if (getEnvironmentVariable("IMHEX_RUN_UI_TESTS") == "1") {
-                static int frames = 0;
-                if (++frames == 40) {
-                    ImGuiTestEngine_GetIO(m_testEngine).ConfigLogToTTY = true;
-                    ImGuiTestEngine_QueueTests(m_testEngine, ImGuiTestGroup_Tests, nullptr, ImGuiTestRunFlags_None);
-                } else if (frames > 40 && ImGuiTestEngine_IsTestQueueEmpty(m_testEngine)) {
-                    ImGuiTestEngineResultSummary result;
-                    ImGuiTestEngine_GetResultSummary(m_testEngine, &result);
-                    fmt::print(stderr, "UI test result: {} of {} passed\n", result.CountSuccess, result.CountTested);
-                    std::fflush(stderr);
-                    std::quick_exit(result.CountTested > 0 && result.CountSuccess == result.CountTested ? EXIT_SUCCESS : EXIT_FAILURE);
-                }
-            }
         #endif
 
         // Process layout load requests
