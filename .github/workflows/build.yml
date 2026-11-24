@@ -748,6 +748,29 @@ jobs:
           name: Linux AppImage zsync ${{ matrix.architecture }}
           path: 'out/*.AppImage.zsync'
 
+  # Check that the AppImage starts on several distributions, see dist/AppImage/test
+  appimage-test:
+    needs: appimage
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    name: 🧪 AppImage x86_64 on other distributions
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: dist/AppImage/test
+
+      - name: ⬇️ Download AppImage
+        uses: actions/download-artifact@v8
+        with:
+          name: Linux AppImage x86_64
+          path: appimage
+
+      - name: 🧪 Start ImHex on each distribution
+        run: |
+          bash dist/AppImage/test/run-all.sh appimage/*.AppImage
+
   # ArchLinux build
   archlinux-build:
     needs: ci-gate
