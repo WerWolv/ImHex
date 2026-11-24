@@ -1438,6 +1438,10 @@ namespace hex {
     }
 
     void Window::exitImGui() {
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_Stop(m_testEngine);
+        #endif
+
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
 
@@ -1445,6 +1449,10 @@ namespace hex {
         ImPlot3D::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
+
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine_DestroyContext(m_testEngine);
+        #endif
     }
 
 }
