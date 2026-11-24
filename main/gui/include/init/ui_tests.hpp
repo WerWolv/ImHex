@@ -15,8 +15,10 @@ namespace hex::init {
         [[nodiscard]] int result() const;
 
     private:
-        ImGuiTestEngine *m_engine = nullptr;
-        bool m_started = false;
+        #if defined(IMGUI_TEST_ENGINE)
+            ImGuiTestEngine *m_engine = nullptr;
+            bool m_started = false;
+        #endif
         int m_result = 1;
     };
 
