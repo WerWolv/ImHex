@@ -40,6 +40,26 @@
 namespace hex::plugin::builtin {
     using namespace hex::literals;
 
+    CommandResult handleUiTestsCommand(std::span<const std::string> args) {
+        #if defined(IMGUI_TEST_ENGINE)
+            if (args.size() > 1 || (!args.empty() && args.front().empty())) {
+                fmt::print(stderr, "Usage: imhex --run-ui-tests [test name]\n");
+                return CommandResult::Failure();
+            }
+            if (!ImHexApi::System::isMainInstance()) {
+                fmt::print(stderr, "UI tests require a separate ImHex instance\n");
+                return CommandResult::Failure();
+            }
+
+            ImHexApi::System::impl::addInitArgument("run-ui-tests", args.empty() ? "" : args.front());
+            return CommandResult::Continue();
+        #else
+            std::ignore = args;
+            fmt::print(stderr, "UI tests are not enabled in this build\n");
+            return CommandResult::Failure();
+        #endif
+    }
+
     CommandResult handleVersionCommand(std::span<const std::string> args) {
         std::ignore = args;
 

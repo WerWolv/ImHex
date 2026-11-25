@@ -92,9 +92,11 @@ add_subdirectory(lib/libimhex)
 add_subdirectory(main)
 
 # Add unit tests
-if (IMHEX_ENABLE_UNIT_TESTS)
+if (IMHEX_ENABLE_UNIT_TESTS OR IMHEX_ENABLE_IMGUI_TEST_ENGINE)
     enable_testing()
+endif ()
 
+if (IMHEX_ENABLE_UNIT_TESTS)
     if (NOT TARGET unit_tests)
         add_custom_target(unit_tests)
     endif ()
@@ -104,6 +106,23 @@ endif ()
 
 addPluginDirectories()
 add_subdirectory(lib/trace)
+
+if (IMHEX_ENABLE_IMGUI_TEST_ENGINE AND NOT EMSCRIPTEN)
+    find_program(IMHEX_XVFB_RUN xvfb-run)
+    add_test(NAME ui_tests
+        COMMAND ${CMAKE_COMMAND}
+            "-DIMHEX_EXECUTABLE=$<TARGET_FILE:main>"
+            "-DIMHEX_UI_TEST_PROFILE=${CMAKE_BINARY_DIR}/ui-test-profile"
+            "-DIMHEX_UI_TEST_VERSION=${IMHEX_VERSION}"
+            "-DIMHEX_XVFB_RUN=${IMHEX_XVFB_RUN}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/ui/run.cmake")
+    set_tests_properties(ui_tests PROPERTIES TIMEOUT 120 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+    add_custom_target(ui_tests
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --no-tests=error -R ui_tests
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        DEPENDS imhex_all
+        USES_TERMINAL)
+endif ()
 
 # Configure more resources that will be added to the install package
 if (IMHEX_BUNDLE_PLUGIN_SDK)

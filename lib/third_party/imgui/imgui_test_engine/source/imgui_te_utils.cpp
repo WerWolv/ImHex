@@ -210,7 +210,15 @@ ImGuiID ImHashDecoratedPath(const char* str, const char* str_end, ImGuiID seed)
 
         // Reset the hash when encountering ###
         if (c == '#' && current[0] == '#' && current[1] == '#')
+        {
             crc = seed;
+            // Dear ImGui 1.92.6 stopped including the marker in the ID hash.
+#if IMGUI_VERSION_NUM >= 19260
+            current += 2;
+            inhibit_one = new_section = false;
+            continue;
+#endif
+        }
 
         // Hash byte
         crc = (crc >> 8) ^ crc32_lut[(crc & 0xFF) ^ c];

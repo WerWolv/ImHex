@@ -5,6 +5,7 @@
     #include <wolv/utils/guards.hpp>
 
     #include <init/run.hpp>
+    #include <init/ui_tests.hpp>
     #include <window.hpp>
 
     #include <GLFW/glfw3.h>
@@ -20,6 +21,7 @@
             ON_SCOPE_EXIT { glfwTerminate(); };
 
             bool shouldRestart = false;
+            int exitCode = EXIT_SUCCESS;
             do {
                 // Register an event handler that will make ImHex restart when requested
                 shouldRestart = false;
@@ -48,16 +50,19 @@
 
                 // Main window
                 {
+                    UiTestRunner uiTests;
                     Window window;
                     initializationFinished();
 
                     window.loop();
+                    if (uiTestsEnabled())
+                        exitCode = uiTests.result();
                 }
 
                 deinitializeImHex();
             } while (shouldRestart);
 
-            return EXIT_SUCCESS;
+            return exitCode;
         }
 
     }

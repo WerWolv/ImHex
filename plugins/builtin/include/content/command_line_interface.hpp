@@ -33,6 +33,7 @@ namespace hex::plugin::builtin {
     CommandResult handleSaveEditorCommand(std::span<const std::string> args);
     CommandResult handleFileInfoCommand(std::span<const std::string> args);
     CommandResult handleMCPCommand(std::span<const std::string> args);
+    CommandResult handleUiTestsCommand(std::span<const std::string> args);
     CommandResult handleScalingCommand(std::span<const std::string> args);
 
     void registerCommandForwarders();
