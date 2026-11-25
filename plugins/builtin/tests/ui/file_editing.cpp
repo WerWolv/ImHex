@@ -4,7 +4,7 @@ namespace hex::plugin::builtin {
 
     using namespace ui_test;
 
-    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Overwrite, save and close a file", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor", "Overwrite, save and close a file", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
 
         // Open a writable file with a known last byte.
@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(saved.readVector() == expected);
     };
 
-    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Switch between two files and close them", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor", "Switch between two files and close them", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
 
         // Open two distinguishable files; the newest tab should be selected.
@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
     };
 
-    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Insert bytes, undo and redo", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor", "Insert bytes, undo and redo", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
 
         // Open a file with distinct bytes so shifts are visible.
@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(saved.readVector() == inserted);
     };
 
-    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Remove a byte, undo and redo", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor", "Remove a byte, undo and redo", ctx) {
         // Open a file with a distinct byte to remove between two neighbors.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
@@ -144,7 +144,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(saved.readVector() == std::vector<u8>({ 0x11, 0x33 }));
     };
 
-    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Copy and paste a byte", ctx) {
+    IMGUI_TEST_SEQUENCE("Hex Editor", "Copy and paste a byte", ctx) {
         // Use distinct values so the overwritten byte is easy to identify.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
