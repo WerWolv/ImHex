@@ -234,6 +234,34 @@ namespace hex::plugin::builtin {
         IM_CHECK(!ctx->ItemExists(row(0).c_str()));
     };
 
+    IMGUI_TEST_SEQUENCE("Find", "Binary pattern validation and matching", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
+        openFind(ctx);
+
+        tab(ctx, "hex.builtin.view.find.binary_pattern"_lang);
+        ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
+        constexpr auto marker = "DE AD BE EF 13 37 CE FA";
+        binaryPatternInput(ctx, marker);
+        ctx->Yield();
+        IM_CHECK(searchEnabled(ctx));
+
+        // A non-hex digit should invalidate the whole pattern, even after valid bytes.
+        binaryPatternInput(ctx, "DE AD BE EG 13 37 CE FA");
+        ctx->Yield();
+        IM_CHECK(!searchEnabled(ctx));
+
+        binaryPatternInput(ctx, marker);
+        ctx->Yield();
+        IM_CHECK(searchEnabled(ctx));
+        IM_CHECK(search(ctx));
+        selectRow(ctx, 0);
+        IM_CHECK(selectionIs(15, 8));
+        IM_CHECK(!ctx->ItemExists(row(1).c_str()));
+    };
+
     IMGUI_TEST_SEQUENCE("Find", "Numeric value search", ctx) {
         // Open the fixture in Find.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());

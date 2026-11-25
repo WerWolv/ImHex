@@ -2,9 +2,7 @@
 
 #include <fonts/vscode_icons.hpp>
 #include <hex/api/content_registry/views.hpp>
-#include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
-#include <hex/api/project_manager.hpp>
 
 #include <chrono>
 
@@ -13,27 +11,6 @@ namespace hex::plugin::builtin {
     using namespace ui_test;
 
     namespace {
-
-        // Restore the temporary project on early failure, before TestFiles removes the fixture.
-        struct ProjectCleanup {
-            std::fs::path path;
-
-            ~ProjectCleanup() {
-                if (ProjectManager::getPath() != path)
-                    return;
-
-                TaskManager::doLater([path = path] {
-                    if (ProjectManager::getPath() != path)
-                        return;
-
-                    ProjectManager::clearPath();
-                    EventProjectClosed::post();
-                    for (auto *provider : ImHexApi::Provider::getProviders())
-                        ImHexApi::Provider::remove(provider, true);
-                    ProjectManager::loadTemporaryProject();
-                });
-            }
-        };
 
         // The menu and provider registration both require foreground tasks to finish.
         bool waitForProjectTasks(ImGuiTestContext *ctx) {
@@ -53,9 +30,7 @@ namespace hex::plugin::builtin {
                 return false;
 
             // Closing must leave a temporary project with no providers.
-            ctx->MenuClick(fmt::format("//##MainMenuBar/{}/{}/{}",
-                "hex.builtin.menu.file"_lang, "hex.builtin.menu.file.project"_lang,
-                "hex.builtin.menu.file.project.close"_lang).c_str());
+            requestProjectClose(ctx);
             return waitForProjectTasks(ctx) && ProjectManager::isTemporaryProject() &&
                 ImHexApi::Provider::getProviders().empty();
         }
