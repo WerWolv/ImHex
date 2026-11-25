@@ -243,10 +243,16 @@ namespace hex::plugin::builtin {
 
                 PopupUnsavedChanges::open(dirtyStates,
                     [dirtyStates]{
-                        // Save data: write file data to disk for each dirty provider
+                        // A failed save leaves the provider dirty; don't discard its edits by closing it.
                         for (const auto &entry : dirtyStates) {
                             if (entry.dataDirty && entry.provider->isSavable())
                                 entry.provider->save();
+                            if (entry.dataDirty && entry.provider->isDataDirty()) {
+                                ui::ToastError::open("hex.builtin.popup.error.save_data"_lang);
+                                ImHexApi::Provider::impl::resetClosingProviders();
+                                imhexClosing = false;
+                                return;
+                            }
                         }
 
                         // Once saved, close requested providers and close the window if it was closing
