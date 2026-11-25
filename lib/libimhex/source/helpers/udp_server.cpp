@@ -1,5 +1,7 @@
 #include <hex/helpers/udp_server.hpp>
 
+#include <vector>
+
 #if defined(OS_WINDOWS)
     #include <winsock2.h>
     #include <ws2tcpip.h>

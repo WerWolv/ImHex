@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
 
+#include <atomic>
 #include <functional>
 #include <mutex>
 #include <memory>
