@@ -292,6 +292,14 @@ namespace hex::plugin::builtin {
         ctx->ItemClick("hex.ui.common.set"_lang.get());
         IM_CHECK(hasBytes(*provider, { 0x00 }));
 
+        // Save the new byte so the final save has a nonempty file to truncate.
+        clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.view.hex_editor.menu.file.save"_lang);
+        {
+            wolv::io::File saved(path, wolv::io::File::Mode::Read);
+            IM_CHECK(saved.isValid());
+            IM_CHECK(saved.readVector() == std::vector<u8>({ 0x00 }));
+        }
+
         // Remove the only byte and verify that the provider is empty again.
         ctx->SetRef("###hex.builtin.view.hex_editor.name");
         ctx->ItemClick("**/hex-byte-0", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
