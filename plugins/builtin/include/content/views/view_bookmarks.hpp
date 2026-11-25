@@ -17,6 +17,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawHelpText() override;
+        u64 baseAddressChangeHandler(i8 &sign);
 
     private:
         struct Bookmark {
@@ -46,6 +47,7 @@ namespace hex::plugin::builtin {
 
         FileBackedProviderData<Bookmarks> m_bookmarks;
         PerProvider<u64> m_currBookmarkId;
+        PerProvider<u64> m_baseAddress;
     };
 
 }

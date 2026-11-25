@@ -40,6 +40,7 @@ namespace hex::plugin::builtin {
 
         // Handle bookmark add requests sent by the API
         RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
+            m_baseAddress.get(ImHexApi::Provider::get()) = ImHexApi::Provider::get()->getBaseAddress();
             if (name.empty()) {
                 name = fmt::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
@@ -80,11 +81,19 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
             std::ignore = data;
 
+            i8 sign;
+            u64 baseAddressChange = baseAddressChangeHandler(sign);
             // Check all bookmarks for potential overlaps with the current address
             std::optional<ImColor> color;
-            for (const auto &bookmark : *m_bookmarks) {
+            for (auto &bookmark : *m_bookmarks) {
                 if (!bookmark.highlightVisible)
                     continue;
+                if (baseAddressChange != 0) {
+                    bookmark.entry.region.address += sign * baseAddressChange;
+                    m_baseAddress.get(ImHexApi::Provider::get()) = ImHexApi::Provider::get()->getBaseAddress();
+                    EventHighlightingChanged::post();
+                    m_bookmarks.markChanged();
+                }
 
                 if (Region { .address=address, .size=size }.isWithin(bookmark.entry.region)) {
                     color = blendColors(color, bookmark.entry.color);
@@ -190,6 +199,14 @@ namespace hex::plugin::builtin {
         });
 
         this->registerMenuItems();
+    }
+
+    u64 ViewBookmarks::baseAddressChangeHandler(i8 &sign) {
+        auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr || m_baseAddress.get(provider) == provider->getBaseAddress())
+            return 0;
+        sign = ((provider->getBaseAddress() > m_baseAddress.get(provider)) << 1) - 1;
+        return std::abs(static_cast<i64>(provider->getBaseAddress() - m_baseAddress.get(provider)));
     }
 
     ViewBookmarks::~ViewBookmarks() {
