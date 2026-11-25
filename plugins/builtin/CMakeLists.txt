@@ -164,7 +164,13 @@ if (WIN32)
 endif ()
 
 if (IMHEX_ENABLE_IMGUI_TEST_ENGINE)
-    target_sources(builtin PRIVATE tests/ui/file_editing.cpp)
+    target_sources(builtin PRIVATE
+        tests/ui/file_editing.cpp
+        tests/ui/read_only_file.cpp
+        tests/ui/project_handling.cpp
+        tests/ui/search.cpp
+        tests/ui/unsaved_close.cpp
+    )
 endif ()
 
 include(CheckTypeSize)

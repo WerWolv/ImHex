@@ -213,6 +213,96 @@ namespace hex::plugin::builtin {
         IM_CHECK(saved.readVector() == std::vector<u8>({ 0x11, 0x33 }));
     };
 
+    // Exercise both ends, including inserting at the address just past EOF.
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Insert and remove at file boundaries", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("boundaries.bin", { 0x11, 0x22 });
+        IM_CHECK(!path.empty());
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr && provider->isResizable());
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-0", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.insert"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.insert");
+        ctx->ItemClick("hex.ui.common.size"_lang.get());
+        ctx->KeyCharsReplace("1");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x00, 0x11, 0x22 }));
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-2", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.insert"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.insert");
+        ctx->ItemClick("hex.ui.common.address"_lang.get());
+        ctx->KeyCharsReplace("3");
+        ctx->ItemClick("hex.ui.common.size"_lang.get());
+        ctx->KeyCharsReplace("1");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x00, 0x11, 0x22, 0x00 }));
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-3", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.remove"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.remove");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x00, 0x11, 0x22 }));
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-0", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.remove"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.remove");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x11, 0x22 }));
+
+        clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.view.hex_editor.menu.file.save"_lang);
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        wolv::io::File saved(path, wolv::io::File::Mode::Read);
+        IM_CHECK(saved.isValid());
+        IM_CHECK(saved.readVector() == std::vector<u8>({ 0x11, 0x22 }));
+    };
+
+    // An empty file has no selectable byte; resize is still available.
+    IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Resize an empty file and remove its only byte", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("empty.bin", {});
+        IM_CHECK(!path.empty());
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr && provider->isResizable());
+        IM_CHECK(provider->getActualSize() == 0);
+
+        ctx->Yield(3);
+        const auto editMenu = fmt::format("//##MainMenuBar/{}", "hex.builtin.menu.edit"_lang);
+        ctx->MenuAction(ImGuiTestAction_Open, editMenu.c_str());
+        const auto insertItem = fmt::format("//$FOCUSED/{}", "hex.builtin.view.hex_editor.menu.edit.insert"_lang);
+        const auto insertInfo = ctx->ItemInfo(insertItem.c_str());
+        IM_CHECK(insertInfo.ID != 0 && (insertInfo.ItemFlags & ImGuiItemFlags_Disabled));
+        ctx->KeyPress(ImGuiKey_Escape);
+
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.resize"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.resize");
+        ctx->ItemClick("##resize");
+        ctx->KeyCharsReplace("1");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x00 }));
+
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-0", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.remove"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.remove");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(provider->getActualSize() == 0);
+        clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.view.hex_editor.menu.file.save"_lang);
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        wolv::io::File saved(path, wolv::io::File::Mode::Read);
+        IM_CHECK(saved.isValid());
+        IM_CHECK(saved.readVector().empty());
+    };
+
     IMGUI_TEST_SEQUENCE("Hex Editor (injected file setup)", "Copy and paste a byte", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
