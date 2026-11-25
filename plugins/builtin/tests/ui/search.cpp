@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
                     return;
 
                 wolv::io::File file(constants / "test.json", wolv::io::File::Mode::Create);
-                const std::string content = R"({"name":"Test","values":[{"name":"Marker","value":"DE AD BE EF 13 37 CE FA"}]})";
+                const std::string content = R"({"name":"ImHex UI test","values":[{"name":"Private list marker","value":"DE AD BE EF 13 37 CE FA"}]})";
                 if (!file.isValid() || file.writeString(content) != static_cast<i64>(content.size()))
                     return;
                 file.close();
@@ -271,16 +271,12 @@ namespace hex::plugin::builtin {
         tab(ctx, "hex.builtin.view.find.constants"_lang);
         IM_CHECK(search(ctx));
 
-        // Other installed constant lists may also match, so locate our marker by region.
-        bool found = false;
-        for (size_t index = 0; index < 100 && ctx->ItemExists(row(index).c_str()); index++) {
-            selectRow(ctx, index);
-            if (selectionIs(15, 8)) {
-                found = true;
-                break;
-            }
-        }
-        IM_CHECK(found);
+        // Filter by the fixture's result label so another list's match cannot satisfy the test.
+        input(ctx, "##filter", "[ImHex UI test] Private list marker");
+        IM_CHECK(waitForSearch(ctx));
+        selectRow(ctx, 0);
+        IM_CHECK(selectionIs(15, 8));
+        IM_CHECK(!ctx->ItemExists(row(1).c_str()));
     };
 
 }
