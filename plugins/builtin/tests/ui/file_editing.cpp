@@ -151,8 +151,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
     };
 
-    // Exercise both ends, including inserting at the address just past EOF.
-    IMGUI_TEST_SEQUENCE("Editing", "Insert at the beginning and EOF", ctx) {
+    IMGUI_TEST_SEQUENCE("Editing", "Insert bytes at the beginning, middle and end", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("boundaries.bin", { 0x11, 0x22 });
@@ -173,18 +172,29 @@ namespace hex::plugin::builtin {
         ctx->ItemClick("**/hex-byte-2", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
         clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.insert"_lang);
         ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.insert");
+        ctx->ItemClick("hex.ui.common.size"_lang.get());
+        ctx->KeyCharsReplace("2");
+        ctx->ItemClick("hex.ui.common.set"_lang.get());
+        IM_CHECK(hasBytes(*provider, { 0x00, 0x11, 0x00, 0x00, 0x22 }));
+
+        // Append at the address immediately after the last byte.
+        ctx->SetRef("###hex.builtin.view.hex_editor.name");
+        ctx->ItemClick("**/hex-byte-4", ImGuiMouseButton_Left, ImGuiTestOpFlags_NoCheckHoveredId);
+        clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.view.hex_editor.menu.edit.insert"_lang);
+        ctx->SetRef("##hex.builtin.view.hex_editor.menu.edit.insert");
         ctx->ItemClick("hex.ui.common.address"_lang.get());
-        ctx->KeyCharsReplace("3");
+        ctx->KeyCharsReplace("5");
         ctx->ItemClick("hex.ui.common.size"_lang.get());
         ctx->KeyCharsReplace("1");
         ctx->ItemClick("hex.ui.common.set"_lang.get());
-        IM_CHECK(hasBytes(*provider, { 0x00, 0x11, 0x22, 0x00 }));
+        const std::vector<u8> expected = { 0x00, 0x11, 0x00, 0x00, 0x22, 0x00 };
+        IM_CHECK(hasBytes(*provider, expected));
 
         clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.view.hex_editor.menu.file.save"_lang);
         closeFile(ctx);
         wolv::io::File saved(path, wolv::io::File::Mode::Read);
         IM_CHECK(saved.isValid());
-        IM_CHECK(saved.readVector() == std::vector<u8>({ 0x00, 0x11, 0x22, 0x00 }));
+        IM_CHECK(saved.readVector() == expected);
     };
 
     // Remove the ends and a middle span without losing the bytes around it.
