@@ -3,7 +3,7 @@
 # run-test.sh. Nothing ImHex-specific is installed: anything the AppImage needs
 # beyond a normal desktop must be bundled inside it.
 #
-# Both distribution families get the same set:
+# All distribution families get the same set:
 #   - GTK 3 and libdecor's GTK plugin: on Wayland, GLFW draws window decorations
 #     through libdecor, which loads the host's GTK into ImHex. That's how host
 #     libraries end up mixed with bundled ones.
@@ -39,6 +39,15 @@ case "${ID}" in
             weston \
             procps-ng shadow-utils
         dnf clean all
+        ;;
+    arch)
+        pacman -Syu --noconfirm --needed \
+            dbus \
+            gtk3 libdecor \
+            mesa libglvnd ttf-dejavu \
+            xorg-server-xvfb xorg-xwininfo \
+            weston \
+            procps-ng shadow
         ;;
     *)
         echo "Unsupported distribution: ${ID}" >&2

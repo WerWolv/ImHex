@@ -9,7 +9,7 @@
 # Requires Docker.
 set -euo pipefail
 
-distros=("ubuntu:24.04" "ubuntu:26.10" "fedora:45")
+distros=("ubuntu:24.04" "ubuntu:26.10" "fedora:45" "archlinux:latest")
 displays=("x11" "wayland")
 
 appimage=$(realpath "${1:?"Usage: $0 <path/to/ImHex.AppImage>"}")

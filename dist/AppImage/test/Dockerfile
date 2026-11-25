@@ -6,7 +6,6 @@
 #             --mount type=bind,src=/path/to/ImHex.AppImage,dst=/tmp/ImHex.AppImage,readonly \
 #             imhex-appimage-test wayland /tmp/ImHex.AppImage
 #
-# Supported base images: Ubuntu/Debian and Fedora (see install-packages.sh).
 
 ARG BASE_IMAGE=ubuntu:24.04
 FROM ${BASE_IMAGE}
