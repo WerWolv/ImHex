@@ -13,6 +13,7 @@ namespace hex::plugin::builtin {
 
     namespace {
 
+        // The fixture has mixed-case strings, short runs, and a unique binary marker.
         const std::vector<u8> SearchBytes = {
             'a', 'l', 'p', 'h', 'a', 0, 'A', 'L', 'P', 'H', 'A', 0, 0x42, 0x43, 0,
             0xDE, 0xAD, 0xBE, 0xEF, 0x13, 0x37, 0xCE, 0xFA, 0
@@ -129,15 +130,20 @@ namespace hex::plugin::builtin {
     }
 
     IMGUI_TEST_SEQUENCE("Find", "Extract strings with a minimum length", ctx) {
+        // Open the fixture in Find.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("search.bin", SearchBytes);
         IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
+
+        // Search the whole file for strings at least five bytes long.
         tab(ctx, "hex.builtin.view.find.strings"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
         input(ctx, "hex.builtin.view.find.strings.min_length"_lang, "5");
         IM_CHECK(search(ctx));
+
+        // Both five-byte strings should be selectable, with no extra results.
         selectRow(ctx, 0);
         IM_CHECK(selectionIs(0, 5));
         selectRow(ctx, 1);
@@ -146,21 +152,28 @@ namespace hex::plugin::builtin {
     };
 
     IMGUI_TEST_SEQUENCE("Find", "Sequence search and result navigation", ctx) {
+        // Open the fixture in Find.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("search.bin", SearchBytes);
         IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
+
+        // Ignore case so both variants can match across the whole file.
         tab(ctx, "hex.builtin.view.find.sequences"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
         input(ctx, "hex.ui.common.value"_lang, "alpha");
         ctx->ItemCheck(item("hex.builtin.view.find.sequences.ignore_case"_lang).c_str());
         IM_CHECK(search(ctx));
+
+        // Leave the second match selected for the range-restricted search.
         selectRow(ctx, 0);
         IM_CHECK(selectionIs(0, 5));
         selectRow(ctx, 1);
         IM_CHECK(selectionIs(6, 5));
         IM_CHECK(!ctx->ItemExists(row(2).c_str()));
+
+        // Clear the old results before narrowing the range.
         ctx->ItemClick(ICON_VS_SEARCH_STOP);
         IM_CHECK(!ctx->ItemExists(row(0).c_str()));
 
@@ -174,16 +187,21 @@ namespace hex::plugin::builtin {
     };
 
     IMGUI_TEST_SEQUENCE("Find", "Regex validation and matching", ctx) {
+        // Open the fixture in Find.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("search.bin", SearchBytes);
         IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
+
+        // An unclosed character class should disable the search button.
         tab(ctx, "hex.builtin.view.find.regex"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
         input(ctx, "hex.builtin.view.find.regex.pattern"_lang, "[");
         ctx->Yield();
         IM_CHECK(!searchEnabled(ctx));
+
+        // A valid full-match regex should select only the lowercase string.
         input(ctx, "hex.builtin.view.find.regex.pattern"_lang, "a.*a");
         ctx->ItemCheck(item("hex.builtin.view.find.regex.full_match"_lang).c_str());
         IM_CHECK(search(ctx));
@@ -193,11 +211,14 @@ namespace hex::plugin::builtin {
     };
 
     IMGUI_TEST_SEQUENCE("Find", "Binary wildcard and no matches", ctx) {
+        // Open the fixture in Find.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("search.bin", SearchBytes);
         IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
+
+        // The wildcard stands in for one byte of the lowercase string.
         tab(ctx, "hex.builtin.view.find.binary_pattern"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
         binaryPatternInput(ctx, "61 6C ?? 68 61");
@@ -206,6 +227,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(selectionIs(0, 5));
         IM_CHECK(!ctx->ItemExists(row(1).c_str()));
 
+        // A pattern absent from the fixture should leave the table empty.
         expandSettings(ctx);
         binaryPatternInput(ctx, "FF FF FF");
         IM_CHECK(search(ctx));
@@ -213,22 +235,28 @@ namespace hex::plugin::builtin {
     };
 
     IMGUI_TEST_SEQUENCE("Find", "Numeric value search", ctx) {
+        // Open the fixture in Find.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("search.bin", SearchBytes);
         IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
+
+        // Search for decimal 66 as a single value, not a range.
         tab(ctx, "hex.builtin.view.find.value"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
         ctx->ItemUncheck(item("hex.builtin.view.find.value.range"_lang).c_str());
         input(ctx, "hex.ui.common.value"_lang, "66");
         IM_CHECK(search(ctx));
+
+        // The fixture contains one 0x42 byte, at offset 12.
         selectRow(ctx, 0);
         IM_CHECK(selectionIs(12, 1));
         IM_CHECK(!ctx->ItemExists(row(1).c_str()));
     };
 
     IMGUI_TEST_SEQUENCE("Find", "Find a constant from a private list", ctx) {
+        // Open the fixture with its private constants list registered.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("search.bin", SearchBytes);

@@ -19,6 +19,7 @@ namespace hex::plugin::builtin::ui_test {
     // Isolate each test's files, including any backups written by Save.
     class TestFiles {
     public:
+        // Give each fixture its own temporary directory.
         TestFiles() {
             auto directory = std::fs::temp_directory_path() /
                 fmt::format("imhex-ui-test-{}", std::random_device{}());
@@ -26,10 +27,12 @@ namespace hex::plugin::builtin::ui_test {
                 m_directory = std::move(directory);
         }
 
+        // Clean up only if this fixture owns a directory.
         ~TestFiles() {
             if (m_directory.empty())
                 return;
 
+            // Close providers before deleting their files.
             TaskManager::doLater([directory = m_directory] {
                 for (auto *provider : ImHexApi::Provider::getProviders()) {
                     auto *file = dynamic_cast<prv::IProviderFilePicker *>(provider);
@@ -41,11 +44,13 @@ namespace hex::plugin::builtin::ui_test {
             });
         }
 
+        // Keep cleanup ownership with one fixture.
         TestFiles(const TestFiles &) = delete;
         TestFiles &operator=(const TestFiles &) = delete;
 
         const std::fs::path &directory() const { return m_directory; }
 
+        // Create an input file, returning no path if setup fails.
         std::fs::path create(const char *name, const std::vector<u8> &bytes) const {
             if (m_directory.empty())
                 return {};
@@ -87,10 +92,12 @@ namespace hex::plugin::builtin::ui_test {
                opened->isAvailable() ? opened : nullptr;
     }
 
+    // Select a command from the main menu bar.
     inline void clickMenu(ImGuiTestContext *ctx, const char *menu, const char *item) {
         ctx->MenuClick(fmt::format("//##MainMenuBar/{}/{}", menu, item).c_str());
     }
 
+    // Exercise the same close command a user would.
     inline void closeFile(ImGuiTestContext *ctx) {
         clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.menu.file.close"_lang);
     }

@@ -11,6 +11,7 @@ namespace hex::plugin::builtin {
     using namespace ui_test;
 
     namespace {
+        // Shared baseline and expected result for the file edits.
         const std::vector<u8> Original = { 0x11, 0x22, 0x33 };
         const std::vector<u8> Edited = { 0x11, 0x22, 0xA5 };
 
@@ -88,8 +89,8 @@ namespace hex::plugin::builtin {
 
     }
 
-    // Cancel leaves the dirty provider open without saving its edit.
     IMGUI_TEST_SEQUENCE("Unsaved Changes", "Cancel unsaved file close", ctx) {
+        // Leave one unsaved byte edit in a fresh file.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("cancel.bin", Original);
@@ -97,11 +98,14 @@ namespace hex::plugin::builtin {
         IM_CHECK(provider != nullptr);
         editByte(ctx, *provider);
 
+        // Cancel the close from the data-only prompt.
         closeFile(ctx);
         IM_CHECK(setUnsavedPopupRef(ctx));
         checkPrompt(ctx, true, false);
         ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.cancel"_lang).c_str());
         ctx->Yield(2);
+
+        // Verify the edit stays in memory but not on disk.
         IM_CHECK(getUnsavedPopup(ctx) == nullptr);
         IM_CHECK(ImHexApi::Provider::get() == provider);
         IM_CHECK(provider->isDataDirty());
@@ -109,8 +113,8 @@ namespace hex::plugin::builtin {
         IM_CHECK(diskHasBytes(path, Original));
     };
 
-    // Discard closes the provider without writing the edit.
     IMGUI_TEST_SEQUENCE("Unsaved Changes", "Discard unsaved file changes", ctx) {
+        // Leave one unsaved byte edit in a fresh file.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("discard.bin", Original);
@@ -118,16 +122,19 @@ namespace hex::plugin::builtin {
         IM_CHECK(provider != nullptr);
         editByte(ctx, *provider);
 
+        // Discard the edit from the data-only prompt.
         closeFile(ctx);
         IM_CHECK(setUnsavedPopupRef(ctx));
         checkPrompt(ctx, true, false);
         ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.discard"_lang).c_str());
+
+        // Verify the file closes without changing the disk bytes.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         IM_CHECK(diskHasBytes(path, Original));
     };
 
-    // Saving through the close prompt persists the edited data before closing.
     IMGUI_TEST_SEQUENCE("Unsaved Changes", "Save data on unsaved file close", ctx) {
+        // Leave one unsaved byte edit in a fresh file.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("save.bin", Original);
@@ -135,16 +142,19 @@ namespace hex::plugin::builtin {
         IM_CHECK(provider != nullptr);
         editByte(ctx, *provider);
 
+        // Save only the data from the close prompt.
         closeFile(ctx);
         IM_CHECK(setUnsavedPopupRef(ctx));
         checkPrompt(ctx, true, false);
         ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.save.data_only"_lang).c_str());
+
+        // Verify the file closes and the edit reaches disk.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         IM_CHECK(diskHasBytes(path, Edited));
     };
 
-    // Folder projects normally flush pattern edits rather than showing a close prompt.
     IMGUI_TEST_SEQUENCE("Unsaved Changes", "Warn before closing when a pattern cannot be saved", ctx) {
+        // Create separate data and pattern files for this provider.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto path = files.create("pattern.bin", Original);
@@ -153,6 +163,7 @@ namespace hex::plugin::builtin {
         auto *provider = openFileByInjectedDrop(ctx, path);
         IM_CHECK(provider != nullptr);
 
+        // Wait for the dropped pattern to bind as a clean backing file.
         auto *pattern = FileBackedProviderDataRegistry::get("hex.builtin.pattern-source");
         IM_CHECK(pattern != nullptr);
         TaskManager::doLater([patternPath] { EventFileDropped::post(patternPath); });
@@ -165,6 +176,7 @@ namespace hex::plugin::builtin {
         IM_CHECK(TaskManager::getRunningTaskCount() == 0);
         IM_CHECK(!pattern->hasPendingData(provider));
 
+        // Leave only a pending pattern edit, not a provider edit.
         editPattern(ctx);
         ctx->Yield();
         IM_CHECK(pattern->hasPendingData(provider));
@@ -176,10 +188,13 @@ namespace hex::plugin::builtin {
         IM_CHECK(!error);
         IM_CHECK(std::fs::create_directory(patternPath));
 
+        // Cancel the close from the project-save prompt.
         closeFile(ctx);
         IM_CHECK(setUnsavedPopupRef(ctx));
         checkPrompt(ctx, false, true);
         ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.cancel"_lang).c_str());
+
+        // Verify the pattern edit survives and the data file stays unchanged.
         IM_CHECK(getUnsavedPopup(ctx) == nullptr);
         IM_CHECK(ImHexApi::Provider::get() == provider);
         IM_CHECK(pattern->hasPendingData(provider));

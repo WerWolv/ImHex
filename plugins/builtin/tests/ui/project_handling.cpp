@@ -48,9 +48,11 @@ namespace hex::plugin::builtin {
 
         // Close through the nested File menu and wait until reopening is possible.
         bool closeProjectFromMenu(ImGuiTestContext *ctx) {
+            // Wait for the menu to become available.
             if (!waitForProjectTasks(ctx))
                 return false;
 
+            // Closing must leave a temporary project with no providers.
             ctx->MenuClick(fmt::format("//##MainMenuBar/{}/{}/{}",
                 "hex.builtin.menu.file"_lang, "hex.builtin.menu.file.project"_lang,
                 "hex.builtin.menu.file.project.close"_lang).c_str());
@@ -66,8 +68,8 @@ namespace hex::plugin::builtin {
 
     }
 
-    // A saved project restores the source file, not merely an empty project.
     IMGUI_TEST_SEQUENCE("Project", "Save and reopen a project", ctx) {
+        // Start with a project backed by a known source file.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const std::vector<u8> bytes = { 0x11, 0x22, 0x33 };
@@ -75,10 +77,12 @@ namespace hex::plugin::builtin {
         IM_CHECK(openFileByInjectedDrop(ctx, filePath) != nullptr);
         const ProjectCleanup project { files.directory() / "project" };
 
+        // Close the saved project before loading it to force a fresh provider.
         IM_CHECK(ProjectManager::store(project.path));
         IM_CHECK(closeProjectFromMenu(ctx));
         IM_CHECK(ProjectManager::load(project.path));
 
+        // Check that the reopened provider has the original path and bytes.
         IM_CHECK(ImHexApi::Provider::getProviders().size() == 1);
         auto *restored = ImHexApi::Provider::get();
         const auto *file = dynamic_cast<prv::IProviderFilePicker *>(restored);
@@ -87,14 +91,15 @@ namespace hex::plugin::builtin {
         IM_CHECK(closeProjectFromMenu(ctx));
     };
 
-    // The restored bookmark must select its original range when used from the Bookmarks view.
     IMGUI_TEST_SEQUENCE("Project", "Restore a bookmark when reopening a project", ctx) {
+        // Start with a clean project and a three-byte source file.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const auto filePath = files.create("source.bin", { 0x11, 0x22, 0x33 });
         IM_CHECK(openFileByInjectedDrop(ctx, filePath) != nullptr);
         const ProjectCleanup project { files.directory() / "project" };
 
+        // Bookmark a two-byte range through the Edit menu.
         clickByte(ctx, "**/hex-byte-1");
         ctx->KeyDown(ImGuiMod_Shift);
         clickByte(ctx, "**/hex-byte-2");
@@ -102,14 +107,17 @@ namespace hex::plugin::builtin {
         clickMenu(ctx, "hex.builtin.menu.edit"_lang, "hex.builtin.menu.edit.bookmark.create"_lang);
         IM_CHECK(!ctx->IsError());
 
+        // Reopen the saved project to exercise bookmark persistence.
         IM_CHECK(ProjectManager::store(project.path));
         IM_CHECK(closeProjectFromMenu(ctx));
         IM_CHECK(ProjectManager::load(project.path));
 
+        // Move off the bookmarked range so navigation must change the selection.
         clickByte(ctx, "**/hex-byte-0");
         const auto before = ImHexApi::HexEditor::getSelection();
         IM_CHECK(before.has_value() && before->address == 0 && before->size == 1);
 
+        // Use the restored bookmark's jump action and preserve the view's previous state.
         auto *bookmarks = ContentRegistry::Views::getViewByName("hex.builtin.view.bookmarks.name"_unlocalized);
         IM_CHECK(bookmarks != nullptr);
         const bool wasOpen = bookmarks->getWindowOpenState();
@@ -121,6 +129,7 @@ namespace hex::plugin::builtin {
         ctx->SetRef("###hex.builtin.view.bookmarks.name");
         ctx->ItemClick("**/" ICON_VS_DEBUG_STEP_BACK);
 
+        // The jump should restore the original two-byte range.
         const auto selection = ImHexApi::HexEditor::getSelection();
         IM_CHECK(selection.has_value() && selection->address == 1 && selection->size == 2);
         IM_CHECK(closeProjectFromMenu(ctx));

@@ -8,12 +8,12 @@ namespace hex::plugin::builtin {
 
     using namespace ui_test;
 
-    // Verify both the editor and edit commands reject changes to a read-only file.
     IMGUI_TEST_SEQUENCE("Editing", "Read-only file cannot be edited", ctx) {
         // Root can bypass file permission bits.
         if (geteuid() == 0)
             return;
 
+        // Remove write permission before opening the file.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         const TestFiles files;
         const std::vector<u8> original = { 0x11, 0x22, 0x33 };
@@ -23,12 +23,15 @@ namespace hex::plugin::builtin {
         auto *provider = openFileByInjectedDrop(ctx, path);
         IM_CHECK(provider != nullptr);
         IM_CHECK(provider->isReadable() && !provider->isWritable() && !provider->isResizable());
+
+        // Typing over a byte should neither change it nor mark the file dirty.
         ctx->SetRef("###hex.builtin.view.hex_editor.name");
         ctx->ItemDoubleClick("**/hex-byte-1", ImGuiTestOpFlags_NoCheckHoveredId);
         ctx->KeyChars("A5");
         IM_CHECK(!provider->isDataDirty());
         IM_CHECK(hasBytes(*provider, original));
 
+        // Commands that modify the file should also be disabled.
         const auto editMenu = fmt::format("//##MainMenuBar/{}", "hex.builtin.menu.edit"_lang);
         ctx->MenuAction(ImGuiTestAction_Open, editMenu.c_str());
         for (const auto *item : { "hex.builtin.view.hex_editor.menu.edit.insert",
@@ -38,6 +41,8 @@ namespace hex::plugin::builtin {
             IM_CHECK((ctx->ItemInfo(itemPath.c_str()).ItemFlags & ImGuiItemFlags_Disabled) != 0);
         }
         ctx->KeyPress(ImGuiKey_Escape);
+
+        // Closing should leave the original bytes on disk.
         closeFile(ctx);
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
         wolv::io::File saved(path, wolv::io::File::Mode::Read);
