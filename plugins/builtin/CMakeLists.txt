@@ -169,7 +169,7 @@ if (IMHEX_ENABLE_IMGUI_TEST_ENGINE)
         tests/ui/read_only_file.cpp
         tests/ui/project_handling.cpp
         tests/ui/search.cpp
-        tests/ui/unsaved_close.cpp
+        tests/ui/unsaved_changes.cpp
     )
 endif ()
 

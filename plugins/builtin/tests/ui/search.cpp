@@ -1,81 +1,21 @@
-#include <hex/test/tests.hpp>
+#include "ui_test_helpers.hpp"
 
 #include <hex/api/content_registry/views.hpp>
-#include <hex/api/events/events_interaction.hpp>
 #include <hex/api/imhex_api/hex_editor.hpp>
-#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/system.hpp>
-#include <hex/api/localization_manager.hpp>
-#include <hex/api/task_manager.hpp>
-#include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
 
 #include <fonts/vscode_icons.hpp>
-#include <wolv/io/file.hpp>
-
-#include <chrono>
-#include <random>
 
 namespace hex::plugin::builtin {
 
+    using namespace ui_test;
+
     namespace {
 
-        // Injecting a file drop avoids native file dialogs in automated runs.
-        class SearchFile {
-        public:
-            SearchFile() {
-                m_directory = std::fs::temp_directory_path() / fmt::format("imhex-search-test-{}", std::random_device{}());
-                if (!std::fs::create_directory(m_directory)) {
-                    m_directory.clear();
-                    return;
-                }
-
-                m_path = m_directory / "search.bin";
-                wolv::io::File file(m_path, wolv::io::File::Mode::Create);
-                const std::vector<u8> bytes = {
-                    'a', 'l', 'p', 'h', 'a', 0, 'A', 'L', 'P', 'H', 'A', 0, 0x42, 0x43, 0,
-                    0xDE, 0xAD, 0xBE, 0xEF, 0x13, 0x37, 0xCE, 0xFA, 0
-                };
-                if (!file.isValid() || file.writeVector(bytes) != static_cast<i64>(bytes.size()))
-                    m_path.clear();
-            }
-
-            ~SearchFile() {
-                if (m_directory.empty())
-                    return;
-                TaskManager::doLater([directory = m_directory] {
-                    for (auto *provider : ImHexApi::Provider::getProviders()) {
-                        auto *file = dynamic_cast<prv::IProviderFilePicker *>(provider);
-                        if (file != nullptr && file->getPickedPath().parent_path() == directory)
-                            ImHexApi::Provider::remove(provider, true);
-                    }
-                    std::error_code error;
-                    std::fs::remove_all(directory, error);
-                });
-            }
-
-            bool open(ImGuiTestContext *ctx) const {
-                if (m_path.empty())
-                    return false;
-                TaskManager::doLater([path = m_path] { EventFileDropped::post(path); });
-                const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-                do {
-                    ctx->Yield();
-                    auto *provider = ImHexApi::Provider::get();
-                    auto *file = dynamic_cast<prv::IProviderFilePicker *>(provider);
-                    if (file != nullptr && file->getPickedPath() == m_path && provider->isAvailable() &&
-                        TaskManager::getRunningTaskCount() == 0)
-                        return true;
-                } while (!ctx->IsError() && std::chrono::steady_clock::now() < deadline);
-                return false;
-            }
-
-            const std::fs::path &directory() const {
-                return m_directory;
-            }
-
-        private:
-            std::fs::path m_directory, m_path;
+        const std::vector<u8> SearchBytes = {
+            'a', 'l', 'p', 'h', 'a', 0, 'A', 'L', 'P', 'H', 'A', 0, 0x42, 0x43, 0,
+            0xDE, 0xAD, 0xBE, 0xEF, 0x13, 0x37, 0xCE, 0xFA, 0
         };
 
         // Use a private constants directory rather than relying on installed lists.
@@ -188,12 +128,31 @@ namespace hex::plugin::builtin {
 
     }
 
-    IMGUI_TEST_SEQUENCE("Find (injected file setup)", "Sequence search and result navigation", ctx) {
+    IMGUI_TEST_SEQUENCE("Find", "Extract strings with a minimum length", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
-        const SearchFile file;
-        IM_CHECK(file.open(ctx));
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
+        openFind(ctx);
+        tab(ctx, "hex.builtin.view.find.strings"_lang);
+        ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
+        input(ctx, "hex.builtin.view.find.strings.min_length"_lang, "5");
+        IM_CHECK(search(ctx));
+        selectRow(ctx, 0);
+        IM_CHECK(selectionIs(0, 5));
+        selectRow(ctx, 1);
+        IM_CHECK(selectionIs(6, 5));
+        IM_CHECK(!ctx->ItemExists(row(2).c_str()));
+    };
+
+    IMGUI_TEST_SEQUENCE("Find", "Sequence search and result navigation", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
         tab(ctx, "hex.builtin.view.find.sequences"_lang);
+        ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
         input(ctx, "hex.ui.common.value"_lang, "alpha");
         ctx->ItemCheck(item("hex.builtin.view.find.sequences.ignore_case"_lang).c_str());
         IM_CHECK(search(ctx));
@@ -214,26 +173,11 @@ namespace hex::plugin::builtin {
         IM_CHECK(!ctx->ItemExists(row(1).c_str()));
     };
 
-    IMGUI_TEST_SEQUENCE("Find (injected file setup)", "Extract strings with a minimum length", ctx) {
+    IMGUI_TEST_SEQUENCE("Find", "Regex validation and matching", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
-        const SearchFile file;
-        IM_CHECK(file.open(ctx));
-        openFind(ctx);
-        tab(ctx, "hex.builtin.view.find.strings"_lang);
-        ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
-        input(ctx, "hex.builtin.view.find.strings.min_length"_lang, "5");
-        IM_CHECK(search(ctx));
-        selectRow(ctx, 0);
-        IM_CHECK(selectionIs(0, 5));
-        selectRow(ctx, 1);
-        IM_CHECK(selectionIs(6, 5));
-        IM_CHECK(!ctx->ItemExists(row(2).c_str()));
-    };
-
-    IMGUI_TEST_SEQUENCE("Find (injected file setup)", "Regex validation and matching", ctx) {
-        IM_CHECK(ImHexApi::Provider::getProviders().empty());
-        const SearchFile file;
-        IM_CHECK(file.open(ctx));
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
         tab(ctx, "hex.builtin.view.find.regex"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
@@ -248,10 +192,11 @@ namespace hex::plugin::builtin {
         IM_CHECK(!ctx->ItemExists(row(1).c_str()));
     };
 
-    IMGUI_TEST_SEQUENCE("Find (injected file setup)", "Binary wildcard and no matches", ctx) {
+    IMGUI_TEST_SEQUENCE("Find", "Binary wildcard and no matches", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
-        const SearchFile file;
-        IM_CHECK(file.open(ctx));
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
         tab(ctx, "hex.builtin.view.find.binary_pattern"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
@@ -267,10 +212,11 @@ namespace hex::plugin::builtin {
         IM_CHECK(!ctx->ItemExists(row(0).c_str()));
     };
 
-    IMGUI_TEST_SEQUENCE("Find (injected file setup)", "Numeric value search", ctx) {
+    IMGUI_TEST_SEQUENCE("Find", "Numeric value search", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
-        const SearchFile file;
-        IM_CHECK(file.open(ctx));
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
         tab(ctx, "hex.builtin.view.find.value"_lang);
         ctx->ItemClick(item("hex.ui.common.range.entire_data"_lang).c_str());
@@ -282,12 +228,13 @@ namespace hex::plugin::builtin {
         IM_CHECK(!ctx->ItemExists(row(1).c_str()));
     };
 
-    IMGUI_TEST_SEQUENCE("Find (injected file setup)", "Find a constant from a private list", ctx) {
+    IMGUI_TEST_SEQUENCE("Find", "Find a constant from a private list", ctx) {
         IM_CHECK(ImHexApi::Provider::getProviders().empty());
-        const SearchFile file;
-        const TestConstants constants(file.directory());
+        const TestFiles files;
+        const auto path = files.create("search.bin", SearchBytes);
+        const TestConstants constants(files.directory());
         IM_CHECK(constants.ready());
-        IM_CHECK(file.open(ctx));
+        IM_CHECK(openFileByInjectedDrop(ctx, path));
         openFind(ctx);
 
         // Constants inherits validity from the previous tab in the current UI.
