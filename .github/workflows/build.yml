@@ -271,10 +271,9 @@ jobs:
         uses: friendlyanon/setup-vcpkg@v1
         with:
           committish: 9e593bb18ea69cc5095e012465dcd675a822ed0d
-          cache-version: ${{github.run_number}}
+          cache-key: vcpkg-${{matrix.runner_os}}-${{github.sha}}
           cache-restore-keys: |
-            vcpkg-${{runner.os}}-${{github.run_number}}
-            vcpkg-${{runner.os}}
+            vcpkg-${{matrix.runner_os}}-
 
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v6
