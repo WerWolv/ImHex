@@ -14,19 +14,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci-gate:
-    name: 🛡️ Gatekeep CI
+  tests:
+    name: 🧪 Unit Tests (${{ matrix.crypto_backend }})
     if: >-
       ${{
         !(github.event_name == 'pull_request' && github.event.pull_request.user.login == 'WerWolvTranslationBot')
       }}
-    runs-on: ubuntu-26.04
-    steps:
-      - run: echo "Running CI"
-
-  tests:
-    needs: ci-gate
-    name: 🧪 Unit Tests (${{ matrix.crypto_backend }})
     runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
