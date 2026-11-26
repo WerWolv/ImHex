@@ -62,6 +62,13 @@
         "fallback": "en-US"
     },
     {
+        "name": "Bosnian",
+        "code": "bs-BA",
+        "native_name": "Bosanski",
+        "path": "lang/bs_BA.json",
+        "fallback": "en-US"
+    },
+    {
         "name": "Chinese (Simplified)",
         "code": "zh-CN",
         "native_name": "简体中文",
