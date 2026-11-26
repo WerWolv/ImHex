@@ -40,7 +40,6 @@ namespace hex::plugin::builtin {
 
         // Handle bookmark add requests sent by the API
         RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
-            m_baseAddress.get(ImHexApi::Provider::get()) = ImHexApi::Provider::get()->getBaseAddress();
             if (name.empty()) {
                 name = fmt::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
@@ -63,7 +62,8 @@ namespace hex::plugin::builtin {
             };
 
             auto commentDisplay = ui::Markdown(bookmark.comment);
-            m_bookmarks->emplace_back(std::move(bookmark), true, std::move(commentDisplay));
+            auto baseAddress = ImHexApi::Provider::get()->getBaseAddress();
+            m_bookmarks->emplace_back(std::move(bookmark), true, std::move(commentDisplay), baseAddress);
             m_bookmarks.markChanged();
 
             EventBookmarkCreated::post(m_bookmarks->back().entry);
@@ -82,15 +82,14 @@ namespace hex::plugin::builtin {
             std::ignore = data;
 
             i8 sign;
-            u64 baseAddressChange = baseAddressChangeHandler(sign);
             // Check all bookmarks for potential overlaps with the current address
             std::optional<ImColor> color;
             for (auto &bookmark : *m_bookmarks) {
                 if (!bookmark.highlightVisible)
                     continue;
-                if (baseAddressChange != 0) {
+                if (auto baseAddressChange = baseAddressChangeHandler(sign, bookmark.baseAddress); baseAddressChange != 0) {
                     bookmark.entry.region.address += sign * baseAddressChange;
-                    m_baseAddress.get(ImHexApi::Provider::get()) = ImHexApi::Provider::get()->getBaseAddress();
+                    bookmark.baseAddress = ImHexApi::Provider::get()->getBaseAddress();
                     EventHighlightingChanged::post();
                     m_bookmarks.markChanged();
                 }
@@ -108,7 +107,7 @@ namespace hex::plugin::builtin {
             std::ignore = data;
 
             // Loop over all bookmarks
-            for (auto &[bookmark, highlightVisible, commentDisplay] : *m_bookmarks) {
+            for (auto &[bookmark, highlightVisible, commentDisplay, baseAddress] : *m_bookmarks) {
                 if (!highlightVisible)
                     continue;
 
@@ -183,7 +182,7 @@ namespace hex::plugin::builtin {
 
             result += "## Bookmarks\n\n";
 
-            for (const auto &[bookmark, highlightVisible, commentDisplay] : bookmarks) {
+            for (const auto &[bookmark, highlightVisible, commentDisplay, baseAddress] : bookmarks) {
                 result += fmt::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianness(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                 for (const auto &line : wolv::util::splitString(bookmark.comment, "\n"))
@@ -201,12 +200,12 @@ namespace hex::plugin::builtin {
         this->registerMenuItems();
     }
 
-    u64 ViewBookmarks::baseAddressChangeHandler(i8 &sign) {
+    u64 ViewBookmarks::baseAddressChangeHandler(i8 &sign, u64 baseAddress) {
         auto provider = ImHexApi::Provider::get();
-        if (provider == nullptr || m_baseAddress.get(provider) == provider->getBaseAddress())
+        if (provider == nullptr || baseAddress == provider->getBaseAddress())
             return 0;
-        sign = ((provider->getBaseAddress() > m_baseAddress.get(provider)) << 1) - 1;
-        return std::abs(static_cast<i64>(provider->getBaseAddress() - m_baseAddress.get(provider)));
+        sign = ((provider->getBaseAddress() > baseAddress) << 1) - 1;
+        return std::abs(static_cast<i64>(provider->getBaseAddress() - baseAddress));
     }
 
     ViewBookmarks::~ViewBookmarks() {
@@ -326,7 +325,7 @@ namespace hex::plugin::builtin {
 
             // Draw all bookmarks
             for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
-                auto &[bookmark, highlightVisible, commentDisplay] = *it;
+                auto &[bookmark, highlightVisible, commentDisplay, baseAddress] = *it;
                 auto &[region, name, comment, color, locked, bookmarkId] = bookmark;
 
                 // Apply filter
@@ -584,7 +583,7 @@ namespace hex::plugin::builtin {
         nlohmann::json json;
         json["bookmarks"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &[bookmark, highlightVisible, commentDisplay] : bookmarks) {
+        for (const auto &[bookmark, highlightVisible, commentDisplay, baseAddress] : bookmarks) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
                     { "comment",    bookmark.comment },
@@ -596,7 +595,8 @@ namespace hex::plugin::builtin {
                     },
                     { "locked",     bookmark.locked },
                     { "id",         bookmark.id },
-                    { "highlightVisible", highlightVisible }
+                    { "highlightVisible", highlightVisible },
+                    { "baseAddress", baseAddress }
             };
 
             index++;
@@ -631,7 +631,8 @@ namespace hex::plugin::builtin {
                     .id         = id,
                 },
                 bookmark.contains("highlightVisible") ? bookmark["highlightVisible"].get<bool>() : true,
-                ui::Markdown(comment)
+                ui::Markdown(comment),
+                bookmark.contains("baseAddress") ? bookmark["baseAddress"].get<u64>() : 0
             });
             nextBookmarkId = std::max(nextBookmarkId, id + 1);
         }

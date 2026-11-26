@@ -17,19 +17,20 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawHelpText() override;
-        u64 baseAddressChangeHandler(i8 &sign);
 
     private:
         struct Bookmark {
             ImHexApi::Bookmarks::Entry entry;
             bool highlightVisible;
             ui::Markdown commentDisplay;
+            u64 baseAddress;
         };
 
         using Bookmarks = std::list<Bookmark>;
 
     private:
         void drawDropTarget(Bookmarks::iterator it, float height);
+        u64 baseAddressChangeHandler(i8 &sign, u64 baseAddress);
 
         static FileBackedProviderData<Bookmarks>::SerializedData encodeBookmarks(const Bookmarks &bookmarks);
         static std::optional<Bookmarks> decodeBookmarks(std::span<const u8> data);
@@ -47,7 +48,6 @@ namespace hex::plugin::builtin {
 
         FileBackedProviderData<Bookmarks> m_bookmarks;
         PerProvider<u64> m_currBookmarkId;
-        PerProvider<u64> m_baseAddress;
     };
 
 }
