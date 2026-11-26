@@ -16,19 +16,12 @@ on:
 
 jobs:
 
-  ci-gate:
-    name: 🛡️ Gatekeep CI
-    if: >-
+  windows:
+    name: 🪟 Windows
+    if: &run-build >-
       ${{
         !(github.event_name == 'pull_request' && github.event.pull_request.user.login == 'WerWolvTranslationBot')
       }}
-    runs-on: ubuntu-26.04
-    steps:
-      - run: echo "Running CI"
-
-  windows:
-    name: 🪟 Windows
-    needs: ci-gate
     uses: ./.github/workflows/build_windows.yml
     permissions:
       contents: read
@@ -37,7 +30,7 @@ jobs:
 
   macos:
     name: 🍎 macOS
-    needs: ci-gate
+    if: *run-build
     uses: ./.github/workflows/build_macos.yml
     permissions:
       contents: read
@@ -46,7 +39,7 @@ jobs:
 
   appimage:
     name: ⬇️ AppImage
-    needs: ci-gate
+    if: *run-build
     uses: ./.github/workflows/build_appimage.yml
     permissions:
       contents: read
@@ -55,7 +48,7 @@ jobs:
 
   archlinux:
     name: 🐧 ArchLinux
-    needs: ci-gate
+    if: *run-build
     uses: ./.github/workflows/build_archlinux.yml
     permissions:
       contents: read
@@ -64,7 +57,7 @@ jobs:
 
   snap:
     name: 🐧 Snap
-    needs: ci-gate
+    if: *run-build
     uses: ./.github/workflows/build_snap.yml
     permissions:
       contents: read
@@ -73,7 +66,7 @@ jobs:
 
   flatpak:
     name: 🐧 Flatpak
-    needs: ci-gate
+    if: *run-build
     uses: ./.github/workflows/build_flatpak.yml
     permissions:
       contents: read
@@ -82,7 +75,7 @@ jobs:
 
   wasm:
     name: 🌍 WebAssembly
-    needs: ci-gate
+    if: *run-build
     uses: ./.github/workflows/build_wasm.yml
     permissions:
       contents: read
