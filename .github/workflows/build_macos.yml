@@ -159,14 +159,14 @@ jobs:
         submodules: recursive
 
     - name: 📁 Restore docker /cache
-      uses: actions/cache@v6
+      uses: ./.github/actions/cache
       with:
         path: cache
         key: macos-arm64-build-cache-${{ github.run_id }}
         restore-keys: macos-arm64-build-cache-
 
     - name: 📁 Restore macOS SDK
-      uses: actions/cache@v6
+      uses: ./.github/actions/cache
       with:
         path: build-macos-sdk-cache/*.sdk.tar.xz
         key: macos-arm64-sdk

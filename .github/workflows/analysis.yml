@@ -33,7 +33,7 @@ jobs:
         max-size: 50M
 
     - name: 📜 Restore CMakeCache
-      uses: actions/cache@v6
+      uses: ./.github/actions/cache
       with:
         path: |
           build/CMakeCache.txt
