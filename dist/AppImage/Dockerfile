@@ -138,7 +138,9 @@ cmake -G "Ninja"                                                     \
     /imhex
 EOF
 
-ENV CCACHE_DIR=/cache/ccache
+# Reinstalling GCC changes its timestamps even when the binaries are identical.
+ENV CCACHE_DIR=/cache/ccache \
+    CCACHE_COMPILERCHECK=content
 RUN --mount=type=cache,target=/cache <<EOF
 # Build Imhex
 set -xe
