@@ -20,12 +20,14 @@ if (IMHEX_XVFB_RUN)
     set(command "${IMHEX_XVFB_RUN}" -a -s "-screen 0 1600x1000x24" ${command})
 endif ()
 
+# The debug warning banner can cover controls that UI tests need to click.
 execute_process(
     COMMAND "${CMAKE_COMMAND}" -E env
         "XDG_CONFIG_HOME=${IMHEX_UI_TEST_PROFILE}/config"
         "XDG_DATA_HOME=${IMHEX_UI_TEST_PROFILE}/data"
         "XDG_CACHE_HOME=${IMHEX_UI_TEST_PROFILE}/cache"
         "IMHEX_SKIP_SPLASH_SCREEN=1"
+        "NO_DEBUG_BANNER=1"
         ${command}
     RESULT_VARIABLE result)
 if (NOT result STREQUAL "0")
