@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
 
         void resizeRaw(u64 newSize) override;
 
-        void save() override;
+        SaveResult save() override;
 
         [[nodiscard]] std::string getName() const override;
 

@@ -5,9 +5,11 @@
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/imhex_api/provider.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/utils.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>
 #include <wolv/utils/string.hpp>
@@ -154,30 +156,41 @@ namespace hex::prv {
         this->markDataDirty();
     }
 
-    void Provider::save() {
+    Provider::SaveResult Provider::save() {
         if (!this->isWritable())
-            return;
+            return {};
 
         this->markDataDirty(false);
         EventProviderSaved::post(this);
+        return {};
     }
-    void Provider::saveAs(const std::fs::path &path) {
+    Provider::SaveResult Provider::saveAs(const std::fs::path &path) {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
 
-        if (file.isValid()) {
-            std::vector<u8> buffer(std::min<size_t>(2_MiB, this->getActualSize()), 0x00);
-            size_t bufferSize = 0;
-
-            for (u64 offset = 0; offset < this->getActualSize(); offset += bufferSize) {
-                bufferSize = std::min<size_t>(buffer.size(), this->getActualSize() - offset);
-
-                this->read(this->getBaseAddress() + offset, buffer.data(), bufferSize, true);
-                file.writeBuffer(buffer.data(), bufferSize);
-            }
-
-            this->markDataDirty(false);
-            EventProviderSaved::post(this);
+        if (!file.isValid()) {
+            std::string error = "hex.ui.common.save.export_open"_lang.get();
+            if (const auto code = file.getOpenError(); code.has_value())
+                error += fmt::format(" ({})", wolv::util::trim(formatSystemError(*code)));
+            return std::unexpected(fmt::format("hex.ui.common.save.export_failed"_lang, wolv::util::toUTF8String(path), error));
         }
+
+        std::vector<u8> buffer(std::min<size_t>(2_MiB, this->getActualSize()), 0x00);
+        size_t bufferSize = 0;
+
+        for (u64 offset = 0; offset < this->getActualSize(); offset += bufferSize) {
+            bufferSize = std::min<size_t>(buffer.size(), this->getActualSize() - offset);
+
+            this->read(this->getBaseAddress() + offset, buffer.data(), bufferSize, true);
+            if (file.writeBuffer(buffer.data(), bufferSize) != static_cast<i64>(bufferSize))
+                return std::unexpected(fmt::format("hex.ui.common.save.export_failed"_lang, wolv::util::toUTF8String(path), "hex.ui.common.save.export_write"_lang.get()));
+        }
+
+        if (!file.flush())
+            return std::unexpected(fmt::format("hex.ui.common.save.export_failed"_lang, wolv::util::toUTF8String(path), "hex.ui.common.save.export_flush"_lang.get()));
+
+        this->markDataDirty(false);
+        EventProviderSaved::post(this);
+        return {};
     }
 
     bool Provider::resize(u64 newSize) {

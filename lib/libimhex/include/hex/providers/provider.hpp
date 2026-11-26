@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 
+#include <expected>
 #include <list>
 #include <optional>
 #include <set>
@@ -332,8 +333,9 @@ namespace hex::prv {
         virtual void insertRaw(u64 offset, u64 size);
         virtual void removeRaw(u64 offset, u64 size);
 
-        virtual void save();
-        virtual void saveAs(const std::fs::path &path);
+        using SaveResult = std::expected<void, std::string>;
+        virtual SaveResult save();
+        [[nodiscard]] virtual SaveResult saveAs(const std::fs::path &path);
 
         [[nodiscard]] Overlay *newOverlay();
         void deleteOverlay(Overlay *overlay);

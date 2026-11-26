@@ -102,7 +102,10 @@ namespace hex::plugin::builtin {
             ImGui::SameLine(ImGui::GetWindowSize().x - 75_scaled);
             if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue))) {
                 fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const std::fs::path &path) {
-                    this->m_provider.saveAs(path);
+                    if (const auto result = this->m_provider.saveAs(path); !result) {
+                        ui::ToastError::open(result.error());
+                        return;
+                    }
                     this->m_provider.close();
                     this->m_runtime.reset();
                 });

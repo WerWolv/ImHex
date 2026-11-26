@@ -246,6 +246,29 @@ namespace hex::plugin::builtin {
         IM_CHECK(diskHasBytes(path, Edited));
     };
 
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Keep edits when Save As fails", ctx) {
+        const TestFiles files;
+        const auto path = files.create("source.bin", Original);
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr);
+        editByte(ctx, *provider);
+
+        // Use a directory as the destination to force an open failure without a native dialog.
+        const auto destination = files.directory() / "export.bin";
+        IM_CHECK(std::fs::create_directory(destination));
+        const auto failure = provider->saveAs(destination);
+        IM_CHECK(!failure.has_value());
+        IM_CHECK(failure.error().find("export.bin") != std::string::npos);
+        IM_CHECK(provider->isDataDirty() && hasBytes(*provider, Edited));
+
+        IM_CHECK(std::fs::remove(destination));
+        IM_CHECK(provider->saveAs(destination).has_value());
+        IM_CHECK(!provider->isDataDirty());
+        IM_CHECK(diskHasBytes(destination, Edited) && diskHasBytes(path, Original));
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+    };
+
     IMGUI_TEST_SEQUENCE("Unsaved Changes", "Restore a pattern after closing and reopening its file", ctx) {
         // Bind an empty pattern file and type a declaration in the editor.
         IM_CHECK(ImHexApi::Provider::getProviders().empty());

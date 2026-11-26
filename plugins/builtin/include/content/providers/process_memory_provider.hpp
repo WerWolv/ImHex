@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
         void writeRaw(u64 address, const void *buffer, size_t size) override;
         [[nodiscard]] u64 getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }
 
-        void save() override {}
+        SaveResult save() override { return {}; }
 
         [[nodiscard]] std::string getName() const override { return fmt::format("hex.builtin.provider.process_memory.name"_lang, m_selectedProcess != nullptr ? m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<Description> getDataDescription() const override {

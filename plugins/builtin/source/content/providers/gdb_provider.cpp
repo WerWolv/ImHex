@@ -228,8 +228,8 @@ namespace hex::plugin::builtin {
         gdb::writeMemory(m_socket, offset, buffer, size);
     }
 
-    void GDBProvider::save() {
-        Provider::save();
+    GDBProvider::SaveResult GDBProvider::save() {
+        return Provider::save();
     }
 
     u64 GDBProvider::getSourceSize() const {

@@ -75,21 +75,27 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void FileProvider::save() {
-        bool result = true;
+    FileProvider::SaveResult FileProvider::save() {
+        std::string error;
         if (m_loadedIntoMemory) {
             m_ignoreNextChangeEvent = true;
             this->createBackupIfNeeded(m_file.getPath());
             m_file.open();
-            result = m_file.isValid() &&
-                m_file.writeVectorAtomic(0x00, m_data) == static_cast<i64>(m_data.size());
-            if (result)
-                result = m_file.setSize(m_data.size());
-            if (result)
-                result = m_file.flush();
-        } else {
-            result = !m_writeFailed && m_file.flush();
+            if (!m_file.isValid()) {
+                error = "Could not open the file for writing";
+                if (const auto code = m_file.getOpenError(); code.has_value())
+                    error += fmt::format(" ({})", wolv::util::trim(formatSystemError(*code)));
+            } else if (m_file.writeVectorAtomic(0x00, m_data) != static_cast<i64>(m_data.size())) {
+                error = "Could not write all the data";
+            } else if (!m_file.setSize(m_data.size())) {
+                error = "Could not resize the file";
+            }
+        } else if (m_writeFailed) {
+            error = "Could not write all the data";
         }
+
+        if (error.empty() && !m_file.flush())
+            error = "Could not flush the file";
 
         #if defined(OS_WINDOWS)
             FILETIME ft;
@@ -107,17 +113,17 @@ namespace hex::plugin::builtin {
         if (m_loadedIntoMemory)
             m_file.close();
 
-        if (result) {
-            m_writeFailed = false;
-            Provider::save();
-        }
+        if (!error.empty())
+            return std::unexpected(fmt::format("hex.builtin.provider.file.error.save"_lang,
+                wolv::util::toUTF8String(getPickedPath()), error));
+
+        m_writeFailed = false;
+        return Provider::save();
     }
 
-    void FileProvider::saveAs(const std::fs::path &path) {
-        if (path == getPickedPath())
-            this->save();
-        else
-            Provider::saveAs(path);
+    FileProvider::SaveResult FileProvider::saveAs(const std::fs::path &path) {
+        if (path == getPickedPath()) return this->save();
+        else return Provider::saveAs(path);
     }
 
     void FileProvider::resizeRaw(u64 newSize) {

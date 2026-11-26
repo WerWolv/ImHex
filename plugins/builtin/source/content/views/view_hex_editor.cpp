@@ -313,9 +313,11 @@ namespace hex::plugin::builtin {
 
     static void save() {
         auto provider = ImHexApi::Provider::get();
+        if (provider == nullptr)
+            return;
 
-        if (provider != nullptr)
-            provider->save();
+        if (const auto result = provider->save(); !result)
+            ui::ToastError::open(result.error());
     }
 
     static void saveAs() {
@@ -325,7 +327,8 @@ namespace hex::plugin::builtin {
 
         fs::openFileBrowser(fs::DialogMode::Save, {}, [provider](const auto &path) {
             PopupBlockingTask::open(TaskManager::createTask("hex.builtin.task.saving_data"_unlocalized, ProgressValue::None(), [=](Task &){
-                provider->saveAs(path);
+                if (const auto result = provider->saveAs(path); !result)
+                    ui::ToastError::open(result.error());
             }));
         });
     }

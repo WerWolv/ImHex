@@ -245,10 +245,15 @@ namespace hex::plugin::builtin {
                     [dirtyStates]{
                         // A failed save leaves the provider dirty; don't discard its edits by closing it.
                         for (const auto &entry : dirtyStates) {
-                            if (entry.dataDirty && entry.provider->isSavable())
-                                entry.provider->save();
-                            if (entry.dataDirty && entry.provider->isDataDirty()) {
-                                ui::ToastError::open("hex.builtin.popup.error.save_data"_lang);
+                            if (!entry.dataDirty)
+                                continue;
+
+                            prv::Provider::SaveResult result;
+                            if (entry.provider->isSavable())
+                                result = entry.provider->save();
+                            if (!result || entry.provider->isDataDirty()) {
+                                if (!result)
+                                    ui::ToastError::open(result.error());
                                 ImHexApi::Provider::impl::resetClosingProviders();
                                 imhexClosing = false;
                                 return;

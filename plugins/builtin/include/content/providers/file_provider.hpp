@@ -42,8 +42,8 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] u64 getActualSize() const override;
 
-        void save() override;
-        void saveAs(const std::fs::path &path) override;
+        SaveResult save() override;
+        [[nodiscard]] SaveResult saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;

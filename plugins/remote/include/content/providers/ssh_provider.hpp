@@ -25,7 +25,7 @@ namespace hex::plugin::remote {
 
         OpenResult open() override;
         void close() override;
-        void save() override;
+        SaveResult save() override;
 
         void readFromSource(uint64_t offset, void* buffer, size_t size) override;
         void writeToSource(uint64_t offset, const void* buffer, size_t size) override;
