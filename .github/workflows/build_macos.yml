@@ -36,6 +36,7 @@ jobs:
         key: ${{ runner.os }}-ccache-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-ccache
         max-size: 1G
+        save: ${{ github.event_name != 'pull_request' }}
 
     - name: Set Xcode version
       run: |

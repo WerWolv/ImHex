@@ -42,6 +42,7 @@ jobs:
         key: ${{ runner.os }}-tests-${{ matrix.crypto_backend }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-tests-${{ matrix.crypto_backend }}-build
         max-size: 50M
+        save: ${{ github.event_name != 'pull_request' }}
 
     - name: ⬇️ Install dependencies
       run: |

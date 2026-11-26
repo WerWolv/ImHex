@@ -52,6 +52,7 @@ jobs:
           key: ${{ matrix.architecture }}-snap-${{ github.run_id }}
           restore-keys: ${{ matrix.architecture }}-snap
           max-size: 1G
+          save: ${{ github.event_name != 'pull_request' }}
 
       - name: 🛠️ Build
         uses: canonical/craft-actions/snapcraft/pack@main

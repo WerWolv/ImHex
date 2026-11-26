@@ -47,6 +47,7 @@ jobs:
         key: ${{ runner.os }}-mingw-ccache-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-mingw-ccache
         max-size: 1G
+        save: ${{ github.event_name != 'pull_request' }}
 
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
@@ -235,6 +236,7 @@ jobs:
           key: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-msvc-${{ matrix.vs_arch }}-ccache
           max-size: 1G
+          save: ${{ github.event_name != 'pull_request' }}
 
       - name: ⬇️ Install dependencies
         run: |
