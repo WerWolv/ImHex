@@ -26,7 +26,6 @@ jobs:
     steps:
       - run: echo "Running CI"
 
-  # Windows build
   windows:
     name: 🪟 Windows
     needs: ci-gate
@@ -36,7 +35,6 @@ jobs:
       id-token: write
       attestations: write
 
-  # MacOS build
   macos:
     name: 🍎 macOS
     needs: ci-gate
@@ -46,7 +44,6 @@ jobs:
       id-token: write
       attestations: write
 
-  # AppImage build
   appimage:
     name: ⬇️ AppImage
     needs: ci-gate
@@ -56,7 +53,6 @@ jobs:
       id-token: write
       attestations: write
 
-  # ArchLinux build
   archlinux:
     name: 🐧 ArchLinux
     needs: ci-gate
@@ -66,7 +62,6 @@ jobs:
       id-token: write
       attestations: write
 
-  # Snap build
   snap:
     name: 🐧 Snap
     needs: ci-gate
@@ -76,7 +71,6 @@ jobs:
       id-token: write
       attestations: write
 
-  # Flatpak build
   flatpak:
     name: 🐧 Flatpak
     needs: ci-gate
@@ -86,7 +80,6 @@ jobs:
       id-token: write
       attestations: write
 
-  # WebAssembly build
   wasm:
     name: 🌍 WebAssembly
     needs: ci-gate
