@@ -23,6 +23,19 @@ TEST_SEQUENCE("ExtractBits") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("ToEngineeringString") {
+    TEST_ASSERT(hex::toEngineeringString(5) == "5.000");
+    TEST_ASSERT(hex::toEngineeringString(1500) == "1.500k");
+    TEST_ASSERT(hex::toEngineeringString(0.002) == "2.000m");
+
+    // Negative values keep the same scaling as positive ones.
+    TEST_ASSERT(hex::toEngineeringString(-5) == "-5.000");
+    TEST_ASSERT(hex::toEngineeringString(-1500) == "-1.500k");
+    TEST_ASSERT(hex::toEngineeringString(-0.002) == "-2.000m");
+
+    TEST_SUCCESS();
+};
+
 TEST_SEQUENCE("EncodeByteString") {
     const auto encode = [](u8 byte) { return hex::encodeByteString({ byte }); };
 
