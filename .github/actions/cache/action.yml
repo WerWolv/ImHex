@@ -1,0 +1,32 @@
+name: Cache
+description: Always restore but do not save cache in pull requests
+
+inputs:
+  path:
+    description: Files or directories to cache.
+    required: true
+  key:
+    description: Primary cache key.
+    required: true
+  restore-keys:
+    description: Fallback key prefixes, one per line.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Restore cache
+      if: github.event_name == 'pull_request'
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}
+
+    - name: Restore and save cache
+      if: github.event_name != 'pull_request'
+      uses: actions/cache@v6
+      with:
+        path: ${{ inputs.path }}
+        key: ${{ inputs.key }}
+        restore-keys: ${{ inputs.restore-keys }}

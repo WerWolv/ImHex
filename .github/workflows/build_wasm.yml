@@ -15,8 +15,8 @@ jobs:
         with:
           submodules: recursive
 
-      - name: 📁 Restore docker /cache
-        uses: actions/cache@v6
+      - name: 📁 Cache docker /cache
+        uses: ./.github/actions/cache
         with:
           path: cache
           key: webassembly-ccache-${{ github.run_id }}
