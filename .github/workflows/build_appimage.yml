@@ -1,0 +1,108 @@
+name: Build AppImage
+
+on:
+  workflow_call:
+
+env:
+  BUILD_TYPE: RelWithDebInfo
+
+jobs:
+  # AppImage build
+  appimage:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            architecture_appimage_builder: "x86_64"
+            appimage_builder_image: "condaforge/linux-anvil-x86_64:alma8@sha256:0fab560017f2b4eda27cf0965f4547bac9fdde51508aa355443dd656576a6338"
+            vcpkg_triplet: "x64-linux-release"
+            image: ubuntu-26.04
+          - architecture: "arm64"
+            architecture_appimage_builder: "aarch64"
+            appimage_builder_image: "condaforge/linux-anvil-aarch64:alma8@sha256:8c86d53b9a047aa5de40f3847134b1c013dc105b1fe112be7ee2fb51359a1550"
+            vcpkg_triplet: "arm64-linux-release"
+            image: ubuntu-26.04-arm
+
+    runs-on: ${{ matrix.image }}
+    name: ⬇️ AppImage ${{ matrix.architecture }}
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: 📁 Restore docker /cache
+        uses: actions/cache@v6
+        with:
+          path: cache
+          key: appimage-ccache-${{ matrix.architecture }}-${{ github.run_id }}
+          restore-keys: appimage-ccache-${{ matrix.architecture }}
+
+      - name: 🐳 Inject /cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3
+        with:
+          cache-map: |
+            {
+              "cache": "/cache"
+            }
+
+      - name: 🛠️ Build using docker
+        run: |
+          docker buildx build . -f dist/AppImage/Dockerfile --progress=plain --build-arg "BUILD_TYPE=$BUILD_TYPE" \
+          --build-arg "GIT_COMMIT_HASH=$GITHUB_SHA" --build-arg "GIT_BRANCH=${GITHUB_REF##*/}" \
+          --build-arg "ARCHITECTURE_FILE_NAME=${{ matrix.architecture }}" --build-arg "ARCHITECTURE_APPIMAGE_BUILDER=${{ matrix.architecture_appimage_builder }}" \
+          --build-arg "APPIMAGE_BUILDER_IMAGE=${{ matrix.appimage_builder_image }}" --build-arg "VCPKG_TARGET_TRIPLET=${{ matrix.vcpkg_triplet }}" \
+          --output out
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v4
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            out/*.AppImage
+            out/*.AppImage.zsync
+
+      - name: ⬆️ Upload AppImage
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          name: Linux AppImage ${{ matrix.architecture }}
+          path: 'out/*.AppImage'
+
+      - name: ⬆️ Upload AppImage zsync
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          name: Linux AppImage zsync ${{ matrix.architecture }}
+          path: 'out/*.AppImage.zsync'
+
+  # Check that the AppImage starts on several distributions, see dist/AppImage/test
+  appimage-test:
+    permissions:
+      contents: read
+    needs: appimage
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    name: 🧪 AppImage x86_64 on other distributions
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: dist/AppImage/test
+
+      - name: ⬇️ Download AppImage
+        uses: actions/download-artifact@v8
+        with:
+          name: Linux AppImage x86_64
+          path: appimage
+
+      - name: 🧪 Start ImHex on each distribution
+        run: |
+          bash dist/AppImage/test/run-all.sh appimage/*.AppImage
