@@ -628,77 +628,14 @@ jobs:
           path: |
             build/imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst
 
-  snap-build:
+  # Snap build
+  snap:
     needs: ci-gate
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - architecture: "x86_64"
-            image: ubuntu-26.04
-          - architecture: "arm64"
-            image: ubuntu-26.04-arm
-    name: 🐧 Snap ${{ matrix.architecture }}
-    runs-on: ${{ matrix.image }}
-
+    uses: ./.github/workflows/build_snap.yml
     permissions:
+      contents: read
       id-token: write
       attestations: write
-    steps:
-      - name: ⬇️ Install setup dependencies
-        run: |
-          sudo apt update && sudo apt install -y git curl snapd ccache
-
-      - name: 🧰 Checkout
-        uses: actions/checkout@v7
-        with:
-          submodules: recursive
-
-      - name: 📜 Set version variable
-        run: |
-          export IMHEX_VERSION=$(cat VERSION)
-          echo "IMHEX_VERSION=$IMHEX_VERSION" >> $GITHUB_ENV
-          
-          if [[ "$IMHEX_VERSION" == *.WIP ]]; then
-              echo "IMHEX_VERSION_STRING=$IMHEX_VERSION-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
-          else
-              echo "IMHEX_VERSION_STRING=$IMHEX_VERSION" >> $GITHUB_ENV
-          fi
-          echo "CCACHE=ccache" >> $GITHUB_ENV
-
-      - name: 📜 Move snap directory to root
-        run: |
-          mkdir -p ./snap
-          envsubst '${IMHEX_VERSION_STRING},${CCACHE}' < ./dist/snap/snapcraft.yaml > ./snap/snapcraft.yaml
-
-      - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.23
-        with:
-          key: ${{ matrix.architecture }}-snap-${{ github.run_id }}
-          restore-keys: ${{ matrix.architecture }}-snap
-          max-size: 1G
-
-      - name: 🛠️ Build
-        uses: canonical/craft-actions/snapcraft/pack@main
-
-      - name: 🟩 Rename Snap
-        run: |
-          mv *.snap imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.snap
-
-      - name: 🗝️ Generate build provenance attestations
-        uses: actions/attest-build-provenance@v4
-        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
-        with:
-          subject-path: |
-            *.snap
-
-      - name: ⬆️ Upload Snap
-        uses: actions/upload-artifact@v7
-        with:
-          if-no-files-found: error
-          name: Snap ${{ matrix.architecture }}
-          path: |
-            *.snap
 
   flatpak-build:
     needs: ci-gate
