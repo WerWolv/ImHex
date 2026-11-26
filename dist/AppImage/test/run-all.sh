@@ -61,10 +61,18 @@ for distro in "${distros[@]}"; do
     for display in "${displays[@]}"; do
         test="${distro} ${display}"
         tests+=("${test}")
-        docker run --rm --init --network none \
-            --mount "type=bind,src=${appimage},dst=/tmp/ImHex.AppImage,readonly" \
-            "imhex-appimage-test:$(slug "${distro}")" "${display}" /tmp/ImHex.AppImage \
-            >"${log_dir}/$(slug "${distro}")-${display}.log" 2>&1 &
+        test_log="${log_dir}/$(slug "${distro}")-${display}"
+        (
+            # Measure each run independently of the order we wait for results.
+            SECONDS=0
+            status=0
+            docker run --rm --init --network none \
+                --mount "type=bind,src=${appimage},dst=/tmp/ImHex.AppImage,readonly" \
+                "imhex-appimage-test:$(slug "${distro}")" "${display}" /tmp/ImHex.AppImage \
+                >"${test_log}.log" 2>&1 || status=$?
+            echo "${SECONDS}" >"${test_log}.duration"
+            exit "${status}"
+        ) &
         test_pids[${test}]=$!
     done
 done
@@ -74,7 +82,7 @@ echo "==> Running ${#tests[@]} tests in parallel"
 # 3. Wait for each test, show its output, then summarize
 # ---------------------------------------------------------------------------
 
-declare -A results
+declare -A results durations
 for test in "${tests[@]}"; do
     read -r distro display <<< "${test}"
     if wait "${test_pids[${test}]}"; then
@@ -82,15 +90,17 @@ for test in "${tests[@]}"; do
     else
         results[${test}]=FAIL
     fi
+    test_log="${log_dir}/$(slug "${distro}")-${display}"
+    durations[${test}]=$(<"${test_log}.duration")
 
     # Fold passing tests away; keep failures visible.
     if [[ "${results[${test}]}" == PASS ]]; then
-        begin_section "PASS: ${test}"
-        cat "${log_dir}/$(slug "${distro}")-${display}.log"
+        begin_section "PASS: ${test} (${durations[${test}]}s)"
+        cat "${test_log}.log"
         end_section
     else
-        echo "======== FAIL: ${test}"
-        cat "${log_dir}/$(slug "${distro}")-${display}.log"
+        echo "======== FAIL: ${test} (${durations[${test}]}s)"
+        cat "${test_log}.log"
     fi
 done
 
@@ -98,7 +108,7 @@ echo
 echo "==> Summary"
 failures=0
 for test in "${tests[@]}"; do
-    printf '    %-4s  %s\n' "${results[${test}]}" "${test}"
+    printf '    %-4s  %s (%ss)\n' "${results[${test}]}" "${test}" "${durations[${test}]}"
     [[ "${results[${test}]}" == PASS ]] || failures=$((failures + 1))
 done
 
