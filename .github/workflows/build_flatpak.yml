@@ -1,0 +1,61 @@
+name: Build Flatpak
+
+on:
+  workflow_call:
+
+jobs:
+  flatpak-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: "x86_64"
+            flatpak_arch: "x86_64"
+            image: ubuntu-26.04
+          - architecture: "arm64"
+            flatpak_arch: "aarch64"
+            image: ubuntu-26.04-arm
+    name: 🐧 Flatpak ${{ matrix.architecture }}
+    runs-on: ${{ matrix.image }}
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
+
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
+      - name: 🛠️ Build
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
+          manifest-path: dist/flatpak/net.werwolv.ImHex.yaml
+          cache-key: flatpak-builder-${{ matrix.architecture }}
+          arch: ${{ matrix.flatpak_arch }}
+          upload-artifact: false
+
+
+      - name: 🗝️ Generate build provenance attestations
+        uses: actions/attest-build-provenance@v4
+        if: ${{ github.event.repository.fork == false && github.event_name != 'pull_request' }}
+        with:
+          subject-path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
+
+      - name: ⬆️ Upload Flatpak
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          name: Flatpak ${{ matrix.architecture }}
+          path: |
+            imhex-${{ env.IMHEX_VERSION }}-${{ matrix.architecture }}.flatpak
