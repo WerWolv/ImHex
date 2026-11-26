@@ -68,11 +68,11 @@ namespace hex::plugin::builtin {
                         }
                             break;
                         case Mode::Begin: {
-                            m_newAddress = provider->getBaseAddress() + provider->getCurrentPageAddress() + inputResult;
+                            m_newAddress = provider->getBaseAddress() + inputResult;
                         }
                             break;
                         case Mode::End: {
-                            m_newAddress = provider->getActualSize() - inputResult;
+                            m_newAddress = provider->getBaseAddress() + (provider->getActualSize() - 1) - inputResult;
                         }
                             break;
                     }
@@ -81,7 +81,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            bool isOffsetValid = m_newAddress <= ImHexApi::Provider::get()->getActualSize();
+            bool isOffsetValid = m_newAddress >= ImHexApi::Provider::get()->getBaseAddress() && m_newAddress <= ImHexApi::Provider::get()->getBaseAddress() + (ImHexApi::Provider::get()->getActualSize() - 1);
 
             bool executeGoto = false;
 
