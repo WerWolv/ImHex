@@ -25,13 +25,13 @@ RUN cp /osxcross/build/cctools-port/cctools/misc/install_name_tool /usr/bin/inst
 ### a cmake thing wants 'otool' and not '' apparently
 RUN cp /osxcross/target/bin/aarch64-apple-darwin24-otool /usr/bin/otool
 
-RUN --mount=type=cache,target=/cache <<EOF
+RUN --mount=type=cache,target=/macos-sdk-cache <<EOF
 ## Download SDK is missing (it may have been removed from the image)
 set -xe
 if [ ! -d /osxcross/target/SDK/MacOSX15.0.sdk ]; then
-    wget https://github.com/joseluisq/macosx-sdks/releases/download/15.0/MacOSX15.0.sdk.tar.xz -O /cache/MacOSX15.0.sdk.tar.xz -nc || true
+    wget https://github.com/joseluisq/macosx-sdks/releases/download/15.0/MacOSX15.0.sdk.tar.xz -O /macos-sdk-cache/MacOSX15.0.sdk.tar.xz -nc || true
     mkdir -p /osxcross/target/SDK
-    tar -C /osxcross/target/SDK -xf /cache/MacOSX15.0.sdk.tar.xz
+    tar -C /osxcross/target/SDK -xf /macos-sdk-cache/MacOSX15.0.sdk.tar.xz
 fi
 EOF
 

@@ -162,15 +162,22 @@ jobs:
       uses: actions/cache@v6
       with:
         path: cache
-        key: macos-arm64-cache-${{ github.run_id }}
-        restore-keys: macos-arm64-cache
+        key: macos-arm64-build-cache-${{ github.run_id }}
+        restore-keys: macos-arm64-build-cache-
+
+    - name: 📁 Restore macOS SDK
+      uses: actions/cache@v6
+      with:
+        path: build-macos-sdk-cache/*.sdk.tar.xz
+        key: macos-arm64-sdk
 
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v3
       with:
         cache-map: |
           {
-            "cache": "/cache"
+            "cache": "/cache",
+            "build-macos-sdk-cache": "/macos-sdk-cache"
           }
 
     - name: 🛠️ Build using docker
@@ -185,15 +192,6 @@ jobs:
       with:
         name: macos_arm64_intermediate
         path: out/
-
-      # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
-    - name: 🗑️ Delete old cache
-      continue-on-error: true
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-          gh extension install actions/gh-actions-cache
-          gh cache delete "macos-arm64-cache" --confirm || true
 
   macos-arm64-package:
     runs-on: macos-15-intel
