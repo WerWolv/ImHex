@@ -410,6 +410,7 @@ jobs:
 
   # MacOS build
   macos:
+    name: 🍎 macOS
     needs: ci-gate
     uses: ./.github/workflows/build_macos.yml
     permissions:
@@ -630,6 +631,7 @@ jobs:
 
   # Snap build
   snap:
+    name: 🐧 Snap
     needs: ci-gate
     uses: ./.github/workflows/build_snap.yml
     permissions:
