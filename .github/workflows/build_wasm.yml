@@ -1,0 +1,150 @@
+name: Build WebAssembly
+
+on:
+  workflow_call:
+
+jobs:
+  webassembly-build:
+    permissions:
+      contents: read
+    runs-on: ubuntu-26.04
+    name: 🌍 Web
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: 📁 Restore docker /cache
+        uses: actions/cache@v6
+        with:
+          path: cache
+          key: webassembly-ccache-${{ github.run_id }}
+          restore-keys: webassembly-ccache
+
+      - name: 🐳 Inject /cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3
+        with:
+          cache-map: |
+            {
+              "cache": "/cache"
+            }
+
+      - name: 🔨 Copy necessary files
+        run: |
+          mkdir -p out/nightly
+          cp dist/web/serve.py out/nightly/start_imhex_web.py
+
+      - name: 🛠️ Build using docker
+        run: |
+          docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out/nightly --target raw
+
+      - name: ⬇️ Download Release artifact
+        if: ${{ github.event.repository.fork == false }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh --repo $GITHUB_REPOSITORY release download --pattern "imhex-*-Web.zip"
+
+      - name: 🔨 Fix permissions
+        if: ${{ github.event.repository.fork == false }}
+        run: |
+          unzip imhex-*-Web.zip -d out
+          chmod -c -R +rX "out/"
+
+      - name: ⬆️ Upload artifacts
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: out/
+
+      - name: ⬆️ Upload package
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          name: ImHex Web
+          path: out/nightly/*
+
+        # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+      - name: 🗑️ Delete old cache
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache || true
+          gh actions-cache delete "build-web-cache" --confirm || true
+
+  webassembly-deploy:
+    environment:
+      name: ImHex Web
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      actions: write # to delete artifact
+    name: 📃 Deploy to GitHub Pages
+    runs-on: ubuntu-26.04
+
+    if: ${{ github.ref == 'refs/heads/master' && github.event.repository.fork == false }}
+    needs: webassembly-build
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+
+      - name: 🌍 Deploy WebAssembly Build to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: 🗑️ Delete artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          .github/scripts/delete-artifact.sh "github-pages"
+
+  webassembly-docker-image-deploy:
+    runs-on: ubuntu-26.04
+    if: github.ref == 'refs/heads/master'
+    needs: webassembly-build
+    name: 🐋 Deploy to ghcr.io
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v7
+
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: ImHex Web
+          path: out
+
+      - name: 📜 Login to ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ⛓️ Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}/imhex-web
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: 🔨 Build and push Docker image
+        uses: docker/build-push-action@v7
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          context: .
+          file: dist/web/Host.Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
