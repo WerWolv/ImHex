@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cctype>
 #include <limits>
+#include <optional>
 
 #include <hex/api/content_registry/provider.hpp>
 #include <hex/api/events/events_provider.hpp>
@@ -46,6 +47,40 @@ namespace hex::plugin::builtin::project::impl {
             return Lang(type->get<std::string>());
 
         return "hex.builtin.sidebar.project.provider_fallback"_lang;
+    }
+
+    std::optional<std::fs::path> getProviderPath(const nlohmann::json &descriptor) {
+        // hacky way to get the file provider "path", needs to be abstracted
+        const auto providerType = UnlocalizedString(descriptor.at("type").get<std::string>());
+        if (providerType != "hex.builtin.provider.file"_unlocalized)
+            return std::nullopt;
+
+        if (const auto settings = descriptor.find("settings"); settings != descriptor.end() && settings->is_object()) {
+            if (const auto path = settings->find("path"); path != settings->end() && path->is_string() && !path->empty()){
+                if (auto projectPath = ProjectManager::getProjectRoot(); !projectPath.empty()) {
+                    try {
+                        return std::fs::weakly_canonical(projectPath / path->get<std::string>());
+                    } catch (const std::fs::filesystem_error &) {
+                        return std::nullopt;
+                    }
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<std::fs::path> getProviderPath(u32 id) {
+        const auto &settings = state().projectProviderSettings;
+        const auto storedSettings = settings.find(id);
+        if (storedSettings == settings.end())
+            return std::nullopt;
+
+        try {
+            return getProviderPath(nlohmann::json::parse(storedSettings->second));
+        } catch (const std::exception &) {
+            return std::nullopt;
+        }
     }
 
     std::string getStoredProviderName(u32 id) {
