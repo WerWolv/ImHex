@@ -29,7 +29,7 @@ namespace hex::ui {
                 std::fs::path adjustedPath;
                 for (const auto &basePath : basePaths) {
                     if (isSubpath(basePath, path)) {
-                        adjustedPath = std::fs::relative(path, basePath);
+                        adjustedPath = path.lexically_relative(basePath);
                         break;
                     }
                 }
@@ -138,8 +138,12 @@ namespace hex::ui {
         }
 
     private:
+        /**
+         * @brief Checks if a path is in a base path
+         * @note The compare is lexical, with no file system access. The callers list the files from the base paths, so this is sufficient.
+         */
         static bool isSubpath(const std::fs::path &basePath, const std::fs::path &path) {
-            auto relativePath = std::fs::relative(path, basePath);
+            auto relativePath = path.lexically_relative(basePath);
 
             return !relativePath.empty() && relativePath.native()[0] != '.';
         }
