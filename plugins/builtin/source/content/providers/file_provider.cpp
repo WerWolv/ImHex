@@ -166,7 +166,9 @@ namespace hex::plugin::builtin {
         #if defined(OS_MACOS) || defined(OS_LINUX)
 
             constexpr static auto getxattrs = [](const char *path, char *list, size_t size) -> ssize_t {
-                #if defined(OS_LINUX)
+                #if defined(OS_FREEBSD)
+                    return ::extattr_list_file(path, EXTATTR_NAMESPACE_USER, list, size);
+                #elif defined(OS_LINUX)
                     return ::listxattr(path, list, size);
                 #elif defined(OS_MACOS)
                     return ::listxattr(path, list, size, 0);
@@ -180,8 +182,24 @@ namespace hex::plugin::builtin {
                     std::string xattrList(xattrSize, 0x00);
                     getxattrs(path.c_str(), xattrList.data(), xattrSize);
 
+                    #if defined(OS_FREEBSD)
+                        // FreeBSD returns a sequence of names prefixed by a length byte instead of NUL terminated names
+                        std::vector<std::string> xattrs;
+                        for (size_t i = 0; i < xattrList.size();) {
+                            const size_t length = u8(xattrList[i]);
+                            i += 1;
+                            if (i + length > xattrList.size())
+                                break;
+
+                            xattrs.emplace_back(xattrList.substr(i, length));
+                            i += length;
+                        }
+                    #else
+                        const auto xattrs = wolv::util::splitString(xattrList, std::string(1, 0x00));
+                    #endif
+
                     std::string formattedXattrs;
-                    for (const auto &xattr : wolv::util::splitString(xattrList, std::string(1, 0x00))) {
+                    for (const auto &xattr : xattrs) {
                         if (!xattr.empty())
                             formattedXattrs += fmt::format("- {}\n", xattr);
                     }
