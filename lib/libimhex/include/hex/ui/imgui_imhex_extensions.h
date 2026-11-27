@@ -257,37 +257,13 @@ namespace ImGuiExt {
             ImGui::PopTextWrapPos();
     }
 
+    /**
+     * @brief Draws read-only, selectable text that wraps to the available width
+     * @param text The text to draw
+     */
+    void TextUnformattedWrappedSelectable(const std::string &text);
     void TextFormattedWrappedSelectable(std::string_view fmt, auto &&...args) {
-        using namespace hex;
-        // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
-        auto text = wolv::util::trim(wolv::util::wrapMonospacedString(
-                fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...),
-                ImGui::CalcTextSize("M").x,
-                std::max(100_scaled, ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize)
-        ));
-
-        auto textSize = ImGui::CalcTextSize(text.c_str());
-
-        ImGui::PushID(text.c_str());
-
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0F);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
-
-        ImGui::PushItemWidth(textSize.x + ImGui::GetStyle().FramePadding.x * 2);
-        ImGui::InputTextMultiline(
-                "##",
-                const_cast<char *>(text.c_str()),
-                text.size() + 1,
-                ImVec2(0, textSize.y),
-                ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
-        );
-        ImGui::PopItemWidth();
-
-        ImGui::PopStyleColor();
-        ImGui::PopStyleVar(2);
-
-        ImGui::PopID();
+        TextUnformattedWrappedSelectable(wolv::util::trim(fmt::format(fmt::runtime(fmt), std::forward<decltype(args)>(args)...)));
     }
 
     void TextUnformattedCentered(const char *text);
