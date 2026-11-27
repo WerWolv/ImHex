@@ -3,6 +3,8 @@
 #include <hex/api/content_registry/user_interface.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <wolv/utils/guards.hpp>
+
 #include <fonts/vscode_icons.hpp>
 
 namespace hex::plugin::builtin {
@@ -52,19 +54,24 @@ namespace hex::plugin::builtin {
 
             ImGui::TableHeadersRow();
 
-            const auto &logs = log::impl::getLogEntries();
-            for (const auto &[project, level, message] : logs | std::views::reverse) {
-                if (!shouldDisplay(level, m_logLevel)) {
-                    continue;
-                }
+            {
+                log::impl::lockLoggerMutex();
+                ON_SCOPE_EXIT { log::impl::unlockLoggerMutex(); };
 
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(project.data(), project.data() + project.size());
-                ImGui::TableNextColumn();
-                ImGui::PushStyleColor(ImGuiCol_Text, getColor(level).Value);
-                ImGui::TextUnformatted(message.c_str());
-                ImGui::PopStyleColor();
+                const auto &logs = log::impl::getLogEntries();
+                for (const auto &[project, level, message] : logs | std::views::reverse) {
+                    if (!shouldDisplay(level, m_logLevel)) {
+                        continue;
+                    }
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(project.data(), project.data() + project.size());
+                    ImGui::TableNextColumn();
+                    ImGui::PushStyleColor(ImGuiCol_Text, getColor(level).Value);
+                    ImGui::TextUnformatted(message.c_str());
+                    ImGui::PopStyleColor();
+                }
             }
 
             ImGui::EndTable();
