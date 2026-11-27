@@ -9,6 +9,7 @@
 #include <wolv/io/file.hpp>
 #include <wolv/utils/string.hpp>
 
+#include <atomic>
 #include <mutex>
 #include <chrono>
 #include <fmt/chrono.h>
@@ -24,11 +25,11 @@ namespace hex::log {
         wolv::io::File s_loggerFile;
         bool s_colorOutputEnabled = false;
         std::recursive_mutex s_loggerMutex;
-        bool s_loggingSuspended = false;
+        std::atomic<bool> s_loggingSuspended = false;
 #if defined(DEBUG)
-        bool s_debugLoggingEnabled = true;
+        std::atomic<bool> s_debugLoggingEnabled = true;
 #else
-        bool s_debugLoggingEnabled = false;
+        std::atomic<bool> s_debugLoggingEnabled = false;
 #endif
 
     }
@@ -116,6 +117,7 @@ namespace hex::log {
         }
 
         void addLogEntry(std::string_view project, std::string_view level, std::string message) {
+            std::scoped_lock lock(s_loggerMutex);
             s_logEntries->emplace_back(
                 project,
                 level,
