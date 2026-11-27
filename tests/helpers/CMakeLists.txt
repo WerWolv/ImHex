@@ -13,6 +13,9 @@ set(AVAILABLE_TESTS
         TestProvider_write
         EncodingLineStartAddressCache
 
+    # Logger
+        ConcurrentLogEntryWrites
+
     # File
         FileAccess
         FileBackedProviderData
@@ -77,6 +80,7 @@ add_executable(${PROJECT_NAME}
         source/encoding_line_cache.cpp
         source/file.cpp
         source/line_comment.cpp
+        source/logger.cpp
         source/net.cpp
         source/utils.cpp
 
