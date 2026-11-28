@@ -877,7 +877,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 ImGui::BeginGroup();
-                if (ImGui::BeginTabBar("SearchMethods")) {
+                if (ImGui::BeginTabBar("SearchMethods", ImGuiTabBarFlags_FittingPolicyScroll)) {
                     const std::array<std::string, 6> StringTypes = {
                         "hex.ui.common.encoding.ascii"_lang,
                         "hex.ui.common.encoding.utf8"_lang,
