@@ -1,7 +1,7 @@
 <a href="https://imhex.werwolv.net">
   <h1 align="center">
     <picture>
-      <img height="300px" style="margin: 0; padding: 0" src="./resources/dist/common/logo/ImHexLogoSVGBG.svg">
+      <img height="300px" style="margin: 0; padding: 0" src="./resources/dist/common/logo/ImHexLogoSVGBGAnimated.svg">
     </picture>
   </h1>
 </a>
