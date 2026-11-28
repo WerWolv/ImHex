@@ -225,9 +225,10 @@ namespace hex::plugin::builtin {
         );
     }
 
-    void CommandProvider::save() {
-        Provider::save();
+    CommandProvider::SaveResult CommandProvider::save() {
+        auto result = Provider::save();
         std::ignore = executeCommand(m_saveCommand);
+        return result;
     }
 
     u64 CommandProvider::getSourceSize() const {

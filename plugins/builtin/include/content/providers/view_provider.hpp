@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isSavable() const override;
         [[nodiscard]] bool isSavableAsRecent() const override;
 
-        void save() override;
+        SaveResult save() override;
         [[nodiscard]] OpenResult open() override;
         void close() override;
 

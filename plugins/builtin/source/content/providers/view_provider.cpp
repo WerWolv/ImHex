@@ -44,8 +44,8 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    void ViewProvider::save() {
-        m_provider->save();
+    ViewProvider::SaveResult ViewProvider::save() {
+        return m_provider->save();
     }
 
     [[nodiscard]] prv::Provider::OpenResult ViewProvider::open() {

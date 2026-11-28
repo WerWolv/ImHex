@@ -53,10 +53,11 @@ namespace hex::plugin::remote {
         CachedProvider::close();
     }
 
-    void SSHProvider::save() {
+    SSHProvider::SaveResult SSHProvider::save() {
         if (m_sftpClient.isConnected() && m_remoteFile->isOpen()) {
             m_remoteFile->flush();
         }
+        return {};
     }
 
     void SSHProvider::readFromSource(u64 offset, void* buffer, size_t size) {

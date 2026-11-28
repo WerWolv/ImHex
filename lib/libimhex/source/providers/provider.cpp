@@ -8,6 +8,7 @@
 
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/utils.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/literals.hpp>
 #include <wolv/utils/string.hpp>
@@ -154,30 +155,44 @@ namespace hex::prv {
         this->markDataDirty();
     }
 
-    void Provider::save() {
+    Provider::SaveResult Provider::save() {
         if (!this->isWritable())
-            return;
+            return {};
 
         this->markDataDirty(false);
         EventProviderSaved::post(this);
+        return {};
     }
-    void Provider::saveAs(const std::fs::path &path) {
+    Provider::SaveResult Provider::saveAs(const std::fs::path &path) {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
+        const auto failed = [&path](const std::string &reason) {
+            return std::unexpected(fmt::format("Failed to export '{}': {}", wolv::util::toUTF8String(path), reason));
+        };
 
-        if (file.isValid()) {
-            std::vector<u8> buffer(std::min<size_t>(2_MiB, this->getActualSize()), 0x00);
-            size_t bufferSize = 0;
-
-            for (u64 offset = 0; offset < this->getActualSize(); offset += bufferSize) {
-                bufferSize = std::min<size_t>(buffer.size(), this->getActualSize() - offset);
-
-                this->read(this->getBaseAddress() + offset, buffer.data(), bufferSize, true);
-                file.writeBuffer(buffer.data(), bufferSize);
-            }
-
-            this->markDataDirty(false);
-            EventProviderSaved::post(this);
+        if (!file.isValid()) {
+            std::string error = "Could not open the file for writing";
+            if (const auto code = file.getOpenError(); code.has_value())
+                error += fmt::format(" ({})", wolv::util::trim(formatSystemError(*code)));
+            return failed(error);
         }
+
+        std::vector<u8> buffer(std::min<size_t>(2_MiB, this->getActualSize()), 0x00);
+        size_t bufferSize = 0;
+
+        for (u64 offset = 0; offset < this->getActualSize(); offset += bufferSize) {
+            bufferSize = std::min<size_t>(buffer.size(), this->getActualSize() - offset);
+
+            this->read(this->getBaseAddress() + offset, buffer.data(), bufferSize, true);
+            if (file.writeBuffer(buffer.data(), bufferSize) != static_cast<i64>(bufferSize))
+                return failed("Could not write all the data");
+        }
+
+        if (!file.flush())
+            return failed("Could not flush the file");
+
+        this->markDataDirty(false);
+        EventProviderSaved::post(this);
+        return {};
     }
 
     bool Provider::resize(u64 newSize) {

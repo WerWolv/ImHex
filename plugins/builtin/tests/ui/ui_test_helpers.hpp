@@ -3,9 +3,11 @@
 #include <hex/test/tests.hpp>
 
 #include <hex/api/events/events_interaction.hpp>
+#include <hex/api/events/events_lifecycle.hpp>
 #include <hex/api/events/events_provider.hpp>
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/project_manager.hpp>
 #include <hex/api/task_manager.hpp>
 #include <hex/providers/provider.hpp>
 
@@ -67,6 +69,27 @@ namespace hex::plugin::builtin::ui_test {
         std::fs::path m_directory;
     };
 
+    // Restore the temporary project on early failure, before TestFiles removes the fixture.
+    struct ProjectCleanup {
+        std::fs::path path;
+
+        ~ProjectCleanup() {
+            if (ProjectManager::getPath() != path)
+                return;
+
+            TaskManager::doLater([path = path] {
+                if (ProjectManager::getPath() != path)
+                    return;
+
+                ProjectManager::clearPath();
+                EventProjectClosed::post();
+                for (auto *provider : ImHexApi::Provider::getProviders())
+                    ImHexApi::Provider::remove(provider, true);
+                ProjectManager::loadTemporaryProject();
+            });
+        }
+    };
+
     // Inject file opening as setup, bypassing the native dialog and actual drag-and-drop.
     inline prv::Provider *openFileByInjectedDrop(ImGuiTestContext *ctx, const std::fs::path &path) {
         if (path.empty())
@@ -100,6 +123,13 @@ namespace hex::plugin::builtin::ui_test {
     // Exercise the same close command a user would.
     inline void closeFile(ImGuiTestContext *ctx) {
         clickMenu(ctx, "hex.builtin.menu.file"_lang, "hex.builtin.menu.file.close"_lang);
+    }
+
+    // Request a project close without assuming whether it will prompt.
+    inline void requestProjectClose(ImGuiTestContext *ctx) {
+        ctx->MenuClick(fmt::format("//##MainMenuBar/{}/{}/{}",
+            "hex.builtin.menu.file"_lang, "hex.builtin.menu.file.project"_lang,
+            "hex.builtin.menu.file.project.close"_lang).c_str());
     }
 
     // Check the length too, so an edit cannot leave trailing bytes unnoticed.

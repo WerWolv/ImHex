@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
         void writeToSource(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] u64 getSourceSize() const override;
 
-        void save() override;
+        SaveResult save() override;
 
         [[nodiscard]] std::string getName() const override;
 

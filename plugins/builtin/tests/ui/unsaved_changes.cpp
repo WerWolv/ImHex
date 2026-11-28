@@ -1,10 +1,13 @@
 #include "ui_test_helpers.hpp"
 
+#include <content/providers/file_provider.hpp>
+#include <content/views/view_pattern_editor.hpp>
 #include <hex/api/content_registry/views.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
 
 #include <fonts/vscode_icons.hpp>
 #include <imgui_internal.h>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -14,6 +17,7 @@ namespace hex::plugin::builtin {
         // Shared baseline and expected result for the file edits.
         const std::vector<u8> Original = { 0x11, 0x22, 0x33 };
         const std::vector<u8> Edited = { 0x11, 0x22, 0xA5 };
+        constexpr auto PatternSource = "u8 value @ 0;";
 
         // Produce and verify the same unsaved hex edit in each data-only test.
         void editByte(ImGuiTestContext *ctx, prv::Provider &provider) {
@@ -68,23 +72,41 @@ namespace hex::plugin::builtin {
             return file.isValid() && file.readVector() == expected;
         }
 
+        // Load a backing pattern through the file drop handler and wait for it to bind.
+        bool openPattern(ImGuiTestContext *ctx, const prv::Provider *provider,
+                         const FileBackedProviderDataBase &pattern, const std::fs::path &path) {
+            TaskManager::doLater([path] { EventFileDropped::post(path); });
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+            do {
+                ctx->Yield();
+                if (pattern.getBinding(provider) == path && TaskManager::getRunningTaskCount() == 0)
+                    return !ctx->IsError();
+            } while (!ctx->IsError() && std::chrono::steady_clock::now() < deadline);
+            return false;
+        }
+
+        // Read the editor for the current provider, not the pattern backing file.
+        ViewPatternEditor *getPatternEditor() {
+            return static_cast<ViewPatternEditor *>(ContentRegistry::Views::getViewByName("hex.builtin.view.pattern_editor.name"_unlocalized));
+        }
+
         // The code editor is a custom child window, not an ImGui input widget.
         void editPattern(ImGuiTestContext *ctx) {
-            auto *view = ContentRegistry::Views::getViewByName("hex.builtin.view.pattern_editor.name"_unlocalized);
+            auto *view = getPatternEditor();
             IM_CHECK(view != nullptr);
             if (!view->getWindowOpenState())
                 clickMenu(ctx, "hex.builtin.menu.view"_lang, "hex.builtin.view.pattern_editor.name"_lang);
 
-        constexpr auto Window = "###hex.builtin.view.pattern_editor.name";
-        ctx->WindowFocus("//###hex.builtin.view.pattern_editor.name");
-        // The pattern view skips drawing its editor on the first frame after appearing.
-        ctx->Yield(3);
-        ctx->SetRef(Window);
+            constexpr auto Window = "###hex.builtin.view.pattern_editor.name";
+            ctx->WindowFocus("//###hex.builtin.view.pattern_editor.name");
+            // The pattern view skips drawing its editor on the first frame after appearing.
+            ctx->Yield(3);
+            ctx->SetRef(Window);
             const auto editor = ctx->WindowInfo("##pattern_editor_resizer/##pattern_editor");
             IM_CHECK(editor.ID != 0);
             ctx->MouseMoveToPos(editor.RectClipped.GetCenter());
             ctx->MouseClick();
-            ctx->KeyChars("u8 value @ 0;");
+            ctx->KeyChars(PatternSource);
         }
 
     }
@@ -166,14 +188,7 @@ namespace hex::plugin::builtin {
         // Wait for the dropped pattern to bind as a clean backing file.
         auto *pattern = FileBackedProviderDataRegistry::get("hex.builtin.pattern-source");
         IM_CHECK(pattern != nullptr);
-        TaskManager::doLater([patternPath] { EventFileDropped::post(patternPath); });
-        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-        do {
-            ctx->Yield();
-        } while (!ctx->IsError() && std::chrono::steady_clock::now() < deadline &&
-                (pattern->getBinding(provider) != patternPath || TaskManager::getRunningTaskCount() != 0));
-        IM_CHECK(pattern->getBinding(provider) == patternPath);
-        IM_CHECK(TaskManager::getRunningTaskCount() == 0);
+        IM_CHECK(openPattern(ctx, provider, *pattern, patternPath));
         IM_CHECK(!pattern->hasPendingData(provider));
 
         // Leave only a pending pattern edit, not a provider edit.
@@ -198,6 +213,148 @@ namespace hex::plugin::builtin {
         IM_CHECK(getUnsavedPopup(ctx) == nullptr);
         IM_CHECK(ImHexApi::Provider::get() == provider);
         IM_CHECK(pattern->hasPendingData(provider));
+        IM_CHECK(diskHasBytes(path, Original));
+    };
+
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Keep edits when Save Data Only fails on close", ctx) {
+        // Replace the backing file with a directory after a real in-memory edit.
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("save-fails.bin", Original);
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr);
+        editByte(ctx, *provider);
+        const auto originalPath = files.directory() / "original.bin";
+        std::fs::rename(path, originalPath);
+        IM_CHECK(std::fs::create_directory(path));
+
+        // A failed save must abort the close without discarding the edit.
+        closeFile(ctx);
+        IM_CHECK(setUnsavedPopupRef(ctx));
+        ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.save.data_only"_lang).c_str());
+        ctx->Yield(2);
+        IM_CHECK(ImHexApi::Provider::get() == provider);
+        IM_CHECK(provider->isDataDirty() && hasBytes(*provider, Edited));
+        IM_CHECK(diskHasBytes(originalPath, Original));
+
+        // Restore the file and verify the same edit can still be saved.
+        IM_CHECK(std::fs::remove(path));
+        std::fs::rename(originalPath, path);
+        closeFile(ctx);
+        IM_CHECK(setUnsavedPopupRef(ctx));
+        ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.save.data_only"_lang).c_str());
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        IM_CHECK(diskHasBytes(path, Edited));
+    };
+
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Save Data Only closes a direct-access file", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("direct-access.bin", Original);
+        auto *provider = dynamic_cast<FileProvider *>(openFileByInjectedDrop(ctx, path));
+        IM_CHECK(provider != nullptr);
+        TaskManager::doLater([provider] { provider->convertToDirectAccess(); });
+        ctx->Yield();
+        IM_CHECK(!provider->isSavable());
+        editByte(ctx, *provider);
+
+        // Direct-access edits reach disk before Save; verify the save happened too.
+        bool saved = false;
+        const auto subscription = EventProviderSaved::subscribe([&](prv::Provider *source) {
+            if (source == provider)
+                saved = true;
+        });
+        auto unsubscribe = SCOPE_GUARD { EventManager::unsubscribe(subscription); };
+        closeFile(ctx);
+        IM_CHECK(setUnsavedPopupRef(ctx));
+        ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.save.data_only"_lang).c_str());
+        IM_CHECK(saved);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        IM_CHECK(diskHasBytes(path, Edited));
+    };
+
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Keep edits when Save As fails", ctx) {
+        const TestFiles files;
+        const auto path = files.create("source.bin", Original);
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr);
+        editByte(ctx, *provider);
+
+        // Use a directory as the destination to force an open failure without a native dialog.
+        const auto destination = files.directory() / "export.bin";
+        IM_CHECK(std::fs::create_directory(destination));
+        const auto failure = provider->saveAs(destination);
+        IM_CHECK(!failure.has_value());
+        IM_CHECK(failure.error().find("export.bin") != std::string::npos);
+        IM_CHECK(failure.error().find("Could not open the file for writing") != std::string::npos);
+        IM_CHECK(provider->isDataDirty() && hasBytes(*provider, Edited));
+
+        IM_CHECK(std::fs::remove(destination));
+        IM_CHECK(provider->saveAs(destination).has_value());
+        IM_CHECK(!provider->isDataDirty());
+        IM_CHECK(diskHasBytes(destination, Edited) && diskHasBytes(path, Original));
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+    };
+
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Restore a pattern after closing and reopening its file", ctx) {
+        // Bind an empty pattern file and type a declaration in the editor.
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("pattern.bin", Original);
+        const auto patternPath = files.create("pattern.hexpat", {});
+        IM_CHECK(!patternPath.empty());
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        auto *pattern = FileBackedProviderDataRegistry::get("hex.builtin.pattern-source");
+        IM_CHECK(provider != nullptr && pattern != nullptr);
+        IM_CHECK(openPattern(ctx, provider, *pattern, patternPath));
+        editPattern(ctx);
+        ctx->Yield();
+        IM_CHECK(pattern->hasPendingData(provider));
+
+        // Close normally and verify the edited text reached the backing file.
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        {
+            wolv::io::File saved(patternPath, wolv::io::File::Mode::Read);
+            IM_CHECK(saved.isValid() && wolv::util::trim(saved.readString()) == PatternSource);
+        }
+
+        // Reopen the data and pattern through the same handlers and inspect the new editor.
+        auto *reopened = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(reopened != nullptr);
+        IM_CHECK(openPattern(ctx, reopened, *pattern, patternPath));
+        auto *view = getPatternEditor();
+        IM_CHECK(view != nullptr && wolv::util::trim(view->getTextEditor()->getText()) == PatternSource);
+        IM_CHECK(!pattern->hasPendingData(reopened));
+        closeFile(ctx);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+    };
+
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Cancel closing a project with unsaved byte edits", ctx) {
+        // Load a fresh project directly so setup cannot promote the default project.
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        IM_CHECK(!files.directory().empty());
+        const ProjectCleanup project { files.directory() };
+        IM_CHECK(ProjectManager::load(project.path));
+        const auto path = files.create("project-data.bin", Original);
+        auto *provider = openFileByInjectedDrop(ctx, path);
+        IM_CHECK(provider != nullptr);
+        IM_CHECK(ProjectManager::store());
+        editByte(ctx, *provider);
+
+        // Cancel Close Project, not Close File.
+        requestProjectClose(ctx);
+        IM_CHECK(setUnsavedPopupRef(ctx));
+        ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.cancel"_lang).c_str());
+        ctx->Yield(2);
+
+        // The same project and dirty provider should remain open.
+        IM_CHECK(getUnsavedPopup(ctx) == nullptr);
+        IM_CHECK(ProjectManager::getPath() == project.path && !ProjectManager::isTemporaryProject());
+        IM_CHECK(ImHexApi::Provider::get() == provider);
+        IM_CHECK(provider->isDataDirty() && hasBytes(*provider, Edited));
         IM_CHECK(diskHasBytes(path, Original));
     };
 

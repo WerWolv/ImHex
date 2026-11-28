@@ -3,6 +3,7 @@
 #include <popups/popup_text_input.hpp>
 
 #include <cstring>
+#include <memory>
 
 #include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/localization_manager.hpp>
@@ -41,19 +42,24 @@ namespace hex::plugin::builtin {
         std::memcpy(&m_data.front() + offset, buffer, size);
     }
 
-    void MemoryFileProvider::save() {
-        fs::openFileBrowser(fs::DialogMode::Save, { }, [this](const std::fs::path &path) {
-            if (path.empty())
+    MemoryFileProvider::SaveResult MemoryFileProvider::save() {
+        auto saveResult = std::make_shared<SaveResult>();
+        fs::openFileBrowser(fs::DialogMode::Save, { }, [this, pending = std::weak_ptr{saveResult}](const std::fs::path &path) {
+            auto result = pending.lock();
+            if (!result || path.empty())
                 return;
 
-            this->saveAs(path);
+            *result = this->saveAs(path);
+            if (!*result)
+                return;
 
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file"_unlocalized, true);
 
             if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider.get()); fileProvider != nullptr) {
                 fileProvider->setPickedPath(path);
 
-                if (fileProvider->open().isFailure()) {
+                if (const auto opened = fileProvider->open(); opened.isFailure()) {
+                    *result = std::unexpected(std::string(opened.getErrorMessage()));
                     ImHexApi::Provider::remove(newProvider.get());
                 } else {
                     MovePerProviderData::post(this, fileProvider);
@@ -64,6 +70,7 @@ namespace hex::plugin::builtin {
                 }
             }
         });
+        return std::move(*saveResult);
     }
 
     void MemoryFileProvider::resizeRaw(u64 newSize) {

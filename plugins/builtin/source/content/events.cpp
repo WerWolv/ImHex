@@ -243,10 +243,21 @@ namespace hex::plugin::builtin {
 
                 PopupUnsavedChanges::open(dirtyStates,
                     [dirtyStates]{
-                        // Save data: write file data to disk for each dirty provider
+                        // Direct-access files still need a flush even though they don't offer Save.
                         for (const auto &entry : dirtyStates) {
-                            if (entry.dataDirty && entry.provider->isSavable())
-                                entry.provider->save();
+                            if (!entry.dataDirty)
+                                continue;
+
+                            prv::Provider::SaveResult result;
+                            if (entry.provider->isSavable() || dynamic_cast<FileProvider *>(entry.provider) != nullptr)
+                                result = entry.provider->save();
+                            if (!result || entry.provider->isDataDirty()) {
+                                if (!result)
+                                    ui::ToastError::open(result.error());
+                                ImHexApi::Provider::impl::resetClosingProviders();
+                                imhexClosing = false;
+                                return;
+                            }
                         }
 
                         // Once saved, close requested providers and close the window if it was closing
