@@ -1,8 +1,11 @@
 #include "content/popups/popup_unsaved_changes.hpp"
 
 #include <fonts/vscode_icons.hpp>
+#include <hex/api/imhex_api/provider.hpp>
 #include <hex/api/imhex_api/system.hpp>
 #include <hex/helpers/scaling.hpp>
+
+#include <algorithm>
 
 namespace hex::plugin::builtin {
 
@@ -15,6 +18,15 @@ namespace hex::plugin::builtin {
               m_discardFunction(std::move(discardFunction)), m_cancelFunction(std::move(cancelFunction)) { }
 
     void PopupUnsavedChanges::drawContent() {
+        // A provider can be force-closed while the prompt is still open or queued.
+        const auto providers = ImHexApi::Provider::getProviders();
+        if (std::ranges::any_of(m_providers, [&](const auto &entry) {
+            return std::ranges::find(providers, entry.provider) == providers.end();
+        })) {
+            this->close();
+            return;
+        }
+
         ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.popup.unsaved_changes.desc"_lang.get());
         ImGui::NewLine();
 

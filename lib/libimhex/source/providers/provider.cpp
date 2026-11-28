@@ -5,7 +5,6 @@
 #include <hex/api/events/events_interaction.hpp>
 #include <hex/api/content_registry/settings.hpp>
 #include <hex/api/imhex_api/provider.hpp>
-#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/auto_reset.hpp>
@@ -166,12 +165,15 @@ namespace hex::prv {
     }
     Provider::SaveResult Provider::saveAs(const std::fs::path &path) {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
+        const auto failed = [&path](const std::string &reason) {
+            return std::unexpected(fmt::format("Failed to export '{}': {}", wolv::util::toUTF8String(path), reason));
+        };
 
         if (!file.isValid()) {
-            std::string error = "hex.ui.common.save.export_open"_lang.get();
+            std::string error = "Could not open the file for writing";
             if (const auto code = file.getOpenError(); code.has_value())
                 error += fmt::format(" ({})", wolv::util::trim(formatSystemError(*code)));
-            return std::unexpected(fmt::format("hex.ui.common.save.export_failed"_lang, wolv::util::toUTF8String(path), error));
+            return failed(error);
         }
 
         std::vector<u8> buffer(std::min<size_t>(2_MiB, this->getActualSize()), 0x00);
@@ -182,11 +184,11 @@ namespace hex::prv {
 
             this->read(this->getBaseAddress() + offset, buffer.data(), bufferSize, true);
             if (file.writeBuffer(buffer.data(), bufferSize) != static_cast<i64>(bufferSize))
-                return std::unexpected(fmt::format("hex.ui.common.save.export_failed"_lang, wolv::util::toUTF8String(path), "hex.ui.common.save.export_write"_lang.get()));
+                return failed("Could not write all the data");
         }
 
         if (!file.flush())
-            return std::unexpected(fmt::format("hex.ui.common.save.export_failed"_lang, wolv::util::toUTF8String(path), "hex.ui.common.save.export_flush"_lang.get()));
+            return failed("Could not flush the file");
 
         this->markDataDirty(false);
         EventProviderSaved::post(this);

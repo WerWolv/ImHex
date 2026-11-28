@@ -1,5 +1,6 @@
 #include "ui_test_helpers.hpp"
 
+#include <content/providers/file_provider.hpp>
 #include <content/views/view_pattern_editor.hpp>
 #include <hex/api/content_registry/views.hpp>
 #include <hex/providers/file_backed_provider_data.hpp>
@@ -246,6 +247,32 @@ namespace hex::plugin::builtin {
         IM_CHECK(diskHasBytes(path, Edited));
     };
 
+    IMGUI_TEST_SEQUENCE("Unsaved Changes", "Save Data Only closes a direct-access file", ctx) {
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        const TestFiles files;
+        const auto path = files.create("direct-access.bin", Original);
+        auto *provider = dynamic_cast<FileProvider *>(openFileByInjectedDrop(ctx, path));
+        IM_CHECK(provider != nullptr);
+        TaskManager::doLater([provider] { provider->convertToDirectAccess(); });
+        ctx->Yield();
+        IM_CHECK(!provider->isSavable());
+        editByte(ctx, *provider);
+
+        // Direct-access edits reach disk before Save; verify the save happened too.
+        bool saved = false;
+        const auto subscription = EventProviderSaved::subscribe([&](prv::Provider *source) {
+            if (source == provider)
+                saved = true;
+        });
+        auto unsubscribe = SCOPE_GUARD { EventManager::unsubscribe(subscription); };
+        closeFile(ctx);
+        IM_CHECK(setUnsavedPopupRef(ctx));
+        ctx->ItemClick(fmt::format("**/{}", "hex.ui.common.save.data_only"_lang).c_str());
+        IM_CHECK(saved);
+        IM_CHECK(ImHexApi::Provider::getProviders().empty());
+        IM_CHECK(diskHasBytes(path, Edited));
+    };
+
     IMGUI_TEST_SEQUENCE("Unsaved Changes", "Keep edits when Save As fails", ctx) {
         const TestFiles files;
         const auto path = files.create("source.bin", Original);
@@ -259,6 +286,7 @@ namespace hex::plugin::builtin {
         const auto failure = provider->saveAs(destination);
         IM_CHECK(!failure.has_value());
         IM_CHECK(failure.error().find("export.bin") != std::string::npos);
+        IM_CHECK(failure.error().find("Could not open the file for writing") != std::string::npos);
         IM_CHECK(provider->isDataDirty() && hasBytes(*provider, Edited));
 
         IM_CHECK(std::fs::remove(destination));

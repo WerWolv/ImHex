@@ -243,13 +243,13 @@ namespace hex::plugin::builtin {
 
                 PopupUnsavedChanges::open(dirtyStates,
                     [dirtyStates]{
-                        // A failed save leaves the provider dirty; don't discard its edits by closing it.
+                        // Direct-access files still need a flush even though they don't offer Save.
                         for (const auto &entry : dirtyStates) {
                             if (!entry.dataDirty)
                                 continue;
 
                             prv::Provider::SaveResult result;
-                            if (entry.provider->isSavable())
+                            if (entry.provider->isSavable() || dynamic_cast<FileProvider *>(entry.provider) != nullptr)
                                 result = entry.provider->save();
                             if (!result || entry.provider->isDataDirty()) {
                                 if (!result)
