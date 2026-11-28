@@ -4,6 +4,11 @@ project(imgui_imgui)
 
 set(CMAKE_CXX_STANDARD 23)
 
+add_library(imgui_includes INTERFACE)
+target_include_directories(imgui_includes INTERFACE include ../include)
+target_compile_definitions(imgui_includes INTERFACE IMGUI_USER_CONFIG="imgui_config.h")
+target_link_libraries(imgui_all_includes INTERFACE imgui_includes)
+
 if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(imgui_imgui OBJECT
             source/imgui.cpp
@@ -28,10 +33,8 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
 
     target_include_directories(imgui_imgui PUBLIC ${FREETYPE_INCLUDE_DIRS})
     target_link_directories(imgui_imgui PUBLIC ${FREETYPE_LIBRARY_DIRS})
-    target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES} ${LUNASVG_LIBRARIES})
+    target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES} ${LUNASVG_LIBRARIES} imgui_includes)
     target_compile_definitions(imgui_imgui PRIVATE EXPORT_SYMBOLS=1)
 endif()
 
-add_library(imgui_includes INTERFACE)
-target_include_directories(imgui_includes INTERFACE include)
 target_include_directories(imgui_all_includes INTERFACE include include/misc/freetype)

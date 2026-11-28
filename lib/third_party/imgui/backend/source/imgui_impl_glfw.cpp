@@ -177,13 +177,6 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
-
-// IMHEX PATCH BEGIN
-#include <emscripten_browser_clipboard.h>
-
-static std::string clipboardContent;
-// IMHEX PATCH END
-
 #ifdef EMSCRIPTEN_USE_PORT_CONTRIB_GLFW3
 #include <GLFW/emscripten_glfw3.h>
 #else
@@ -796,15 +789,6 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
 #ifdef __EMSCRIPTEN__
     platform_io.Platform_OpenInShellFn = [](ImGuiContext*, const char* url) { ImGui_ImplGlfw_EmscriptenOpenURL(url); return true; };
 #endif
-
-// IMHEX PATCH BEGIN
-#ifdef __EMSCRIPTEN__
-    // Callback to handle clipboard paste from browser
-    emscripten_browser_clipboard::paste([](std::string const &paste_data, void *callback_data [[maybe_unused]]) {
-        clipboardContent = std::move(paste_data);
-    });
-#endif
-// IMHEX PATCH END
 
     // Create mouse cursors
     // (By design, on X11 cursors are user configurable and some cursors may be missing. When a cursor doesn't exist,

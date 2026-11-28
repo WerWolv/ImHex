@@ -14,28 +14,10 @@
 
 #pragma once
 
-#include <assert.h>
-
-// For alloc() on ARM64 Windows
-#if __has_include(<malloc.h>)
-    #include <malloc.h>
-#endif
-
 //---- Define assertion handler. Defaults to calling assert().
 // If your macro uses multiple statements, make sure is enclosed in a 'do { .. } while (0)' block so it can be used as a single statement.
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
 //#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
-namespace hex::dbg {
-    [[noreturn]] void assertionHandler(const char* file, int line, const char *function, const char* exprString);
-}
-
-#if defined(__PRETTY_FUNCTION__)
-    #define IM_ASSERT(_EXPR) do { if (!(_EXPR)) [[unlikely]] { hex::dbg::assertionHandler(__FILE__, __LINE__, __PRETTY_FUNCTION__, #_EXPR); } } while(0)
-#elif defined(__FUNCSIG__)
-    #define IM_ASSERT(_EXPR) do { if (!(_EXPR)) [[unlikely]] { hex::dbg::assertionHandler(__FILE__, __LINE__, __FUNCSIG__, #_EXPR); } } while(0)
-#else
-    #define IM_ASSERT(_EXPR) do { if (!(_EXPR)) [[unlikely]] { hex::dbg::assertionHandler(__FILE__, __LINE__, __FUNCTION__, #_EXPR); } } while(0)
-#endif
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows
 // Using Dear ImGui via a shared library is not recommended, because of function call overhead and because we don't guarantee backward nor forward ABI compatibility.
@@ -43,24 +25,6 @@ namespace hex::dbg {
 // for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for more details.
 //#define IMGUI_API __declspec( dllexport )
 //#define IMGUI_API __declspec( dllimport )
-
-#if defined(_MSC_VER)
-    #if EXPORT_SYMBOLS == 1
-        #define IMGUI_API           __declspec(dllexport)
-        #define IMGUI_IMPL_API      __declspec(dllexport)
-        #define IMPLOT_API          __declspec(dllexport)
-        #define IMPLOT_IMPL_API     __declspec(dllexport)
-        #define IMPLOT3D_API        __declspec(dllexport)
-        #define IMPLOT3D_IMPL_API   __declspec(dllexport)
-    #else
-        #define IMGUI_API           __declspec(dllimport)
-        #define IMGUI_IMPL_API      __declspec(dllimport)
-        #define IMPLOT_API          __declspec(dllimport)
-        #define IMPLOT_IMPL_API     __declspec(dllimport)
-        #define IMPLOT3D_API        __declspec(dllimport)
-        #define IMPLOT3D_IMPL_API   __declspec(dllimport)
-    #endif
-#endif
 
 //---- Don't define obsolete functions/enums/behaviors. Consider enabling from time to time after updating to avoid using soon-to-be obsolete function/names.
 //#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -156,25 +120,3 @@ namespace ImGui
     void MyFunction(const char* name, const MyMatrix44& v);
 }
 */
-
-#define IMGUI_ENABLE_TEST_ENGINE
-
-
-// IMPLOT CONFIG
-#define IMPLOT_CUSTOM_NUMERIC_TYPES (ImS8)(ImU8)(ImS16)(ImU16)(ImS32)(ImU32)(ImS64)(ImU64)(float)(double)(long double)
-
-#define IM_OFFSETOF(_TYPE,_MEMBER)  offsetof(_TYPE, _MEMBER)
-#define IM_FLOOR IM_TRUNC
-
-#define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#define IMGUI_DISABLE_OBSOLETE_KEYIO
-#define IMGUI_ENABLE_FREETYPE
-#define ImDrawIdx unsigned int
-#define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX
-#define IMGUI_USE_WCHAR32
-#define IMGUI_USE_LEGACY_CRC32_ADLER 1
-
-#if defined(IMGUI_TEST_ENGINE)
-    #include "imgui_te_imconfig.h"
-#endif
